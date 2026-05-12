@@ -1,0 +1,15 @@
+invalid_users:
+  wrong_password:
+    email: qa.user@example.com
+    password: wrong-password
+  unknown_email:
+    email: missing.user@example.com
+    password: any-password
+attendance:
+  locations:
+    - Office
+    - Remote
+directory:
+  search_name: Trang
+  department: Engineering
+
