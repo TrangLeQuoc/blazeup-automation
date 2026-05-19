@@ -45,7 +45,7 @@ Set real values in `.env`:
 
 ```env
 BASE_URL=https://terralogic.blazeup.ai
-API_BASE_URL=https://terralogic.blazeup.ai/api/v1
+API_BASE_URL=API_BASE_URL = https://api.prod.blazeup.ai
 TEST_EMAIL=your-user@example.com
 TEST_PASSWORD=your-password
 HEADLESS=true
