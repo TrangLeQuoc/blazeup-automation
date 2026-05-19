@@ -27,7 +27,7 @@ jobs:
           python -m playwright install --with-deps
 
       - name: Run smoke tests
-        working-directory: blazeup_automation
+        working-directory: .
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
@@ -42,8 +42,8 @@ jobs:
         with:
           name: smoke-reports
           path: |
-            blazeup_automation/reports
-            blazeup_automation/allure-results
+            reports
+            allure-results
 
   regression:
     if: github.event_name == 'schedule'
@@ -64,7 +64,7 @@ jobs:
           python -m playwright install --with-deps
 
       - name: Run full regression
-        working-directory: blazeup_automation
+        working-directory: .
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
@@ -79,6 +79,6 @@ jobs:
         with:
           name: regression-reports
           path: |
-            blazeup_automation/reports
-            blazeup_automation/allure-results
+            reports
+            allure-results
 
