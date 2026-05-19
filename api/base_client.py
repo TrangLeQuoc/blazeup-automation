@@ -1,6 +1,7 @@
 """Base HTTP client with retries, timing assertions, and schema validation."""
 
 import asyncio
+import os
 import time
 from typing import Any, TypeVar
 
@@ -43,6 +44,10 @@ class BaseClient:
         """Send a request, retry 5xx responses, validate timing and optional schema."""
 
         headers = dict(kwargs.pop("headers", {}) or {})
+        app_origin = os.getenv("BASE_URL", "https://terralogic.blazeup.ai").rstrip("/")
+        headers.setdefault("Origin", app_origin)
+        headers.setdefault("Referer", f"{app_origin}/")
+        headers.setdefault("X-PLATFORM", "WEB")
         if self.token:
             headers.setdefault("Authorization", f"Bearer {self.token}")
 
@@ -83,4 +88,3 @@ class BaseClient:
         """Send a POST request."""
 
         return await self.request("POST", endpoint, **kwargs)
-

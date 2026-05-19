@@ -8,9 +8,17 @@ class HomeSelectors:
         "[data-testid='greeting'], "
         "[data-testid='dashboard-greeting'], "
         "h1:has-text('Hi'), "
-        "h1:has-text('Hello')"
+        "h1:has-text('Hello'), "
+        "h1:has-text('Good'), "
+        "h2:has-text('Good')"
     )
-    GREETING_TEXT_PATTERN = r"^(Hi|Hello|Good morning|Good afternoon|Good evening)"
+    GREETING_TEXT_PATTERN = r"^(Hi|Hello|Good morning|Good afternoon|Good evening|Chào|Xin chào)"
+    DASHBOARD_READY_CSS = (
+        "[data-testid='home-page'], "
+        "[data-testid='dashboard'], "
+        "[data-testid='quick-links']"
+    )
+    DASHBOARD_READY_TEXT_PATTERN = r"^(Quick Links|Celebrations|All Posts|Liên kết nhanh|Kỷ niệm)"
     LOCATION_DROPDOWN = (
         "select[name*='location' i], "
         "[role='combobox']:has-text('Location'), "

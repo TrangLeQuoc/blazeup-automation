@@ -58,6 +58,9 @@ VIEWPORT_HEIGHT=900
 
 Never commit `.env`.
 
+Keep `API_BASE_URL` as the host only, for example `https://api.prod.blazeup.ai`.
+The API clients add service prefixes such as `/auth-api` and `/time-api` internally.
+
 ## 4. Running Tests
 
 Use the custom runner for official TC execution:

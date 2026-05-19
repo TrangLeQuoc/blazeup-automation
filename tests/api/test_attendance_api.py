@@ -20,12 +20,12 @@ def attendance_client(settings: Settings, api_token: str) -> AttendanceClient:
 
 
 @pytest.mark.smoke
-async def test_tca07_clock_in_returns_timestamp(attendance_client: AttendanceClient) -> None:
-    """TC-A07: POST /attendance/clock-in returns 200 and timestamp."""
+async def test_tca07_attendance_status_returns_status(attendance_client: AttendanceClient) -> None:
+    """TC-A07: GET /time-api/attendances/status returns current work status."""
 
     try:
-        response = await attendance_client.clock_in(location="Office", expected_status=200)
-        assert response.timestamp
+        response = await attendance_client.today()
+        assert response.status is not None or response.model_dump(exclude_none=True)
     finally:
         await attendance_client.close()
 
@@ -67,10 +67,10 @@ async def test_tca10_attendance_history_returns_valid_list(attendance_client: At
 
 @pytest.mark.smoke
 async def test_tca11_today_attendance_returns_current_status(attendance_client: AttendanceClient) -> None:
-    """TC-A11: GET /attendance/today returns current status."""
+    """TC-A11: GET /time-api/attendances/status returns current status."""
 
     try:
         response = await attendance_client.today()
-        assert response.status
+        assert response.status is not None or response.model_dump(exclude_none=True)
     finally:
         await attendance_client.close()

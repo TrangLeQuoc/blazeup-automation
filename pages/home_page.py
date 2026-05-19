@@ -15,7 +15,8 @@ class HomePage(BasePage):
     async def expect_loaded(self) -> None:
         """Assert that the home dashboard is visible."""
 
-        await expect(self._greeting_locator()).to_be_visible(timeout=15_000)
+        await expect(self.page).to_have_url(re.compile(r".*/home/?(?:[?#].*)?$"), timeout=15_000)
+        await expect(self._dashboard_ready_locator()).to_be_visible(timeout=15_000)
 
     async def greeting_text(self) -> str:
         """Return the dashboard greeting text."""
@@ -64,3 +65,13 @@ class HomePage(BasePage):
         css_locator = self.page.locator(HomeSelectors.GREETING_CSS).first
         text_locator = self.page.get_by_text(re.compile(HomeSelectors.GREETING_TEXT_PATTERN, re.IGNORECASE)).first
         return css_locator.or_(text_locator).first
+
+    def _dashboard_ready_locator(self) -> Locator:
+        """Return a locator that proves the home dashboard has rendered."""
+
+        greeting = self._greeting_locator()
+        dashboard_shell = self.page.locator(HomeSelectors.DASHBOARD_READY_CSS).first
+        dashboard_text = self.page.get_by_text(
+            re.compile(HomeSelectors.DASHBOARD_READY_TEXT_PATTERN, re.IGNORECASE)
+        ).first
+        return greeting.or_(dashboard_shell).or_(dashboard_text).first

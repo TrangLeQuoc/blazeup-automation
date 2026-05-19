@@ -50,6 +50,9 @@ SLOW_MO=0
 
 Do not commit `.env`.
 
+`API_BASE_URL` should be the API host only, for example `https://api.prod.blazeup.ai`.
+The API clients add BlazeUp service prefixes such as `/auth-api` and `/time-api` internally.
+
 ## Run Tests
 
 Run by TC ID:

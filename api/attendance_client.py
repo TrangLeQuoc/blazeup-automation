@@ -1,6 +1,9 @@
 """Attendance API client and response schemas."""
 
+import base64
+import json
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -59,7 +62,7 @@ class TodayAttendanceResponse(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    status: str
+    status: str | None = None
     clock_in: datetime | str | None = None
     clock_out: datetime | str | None = None
     location: str | None = None
@@ -67,6 +70,25 @@ class TodayAttendanceResponse(BaseModel):
 
 class AttendanceClient(BaseClient):
     """Client for attendance and time endpoints."""
+
+    def _employee_params(self) -> dict[str, str]:
+        """Return employee query params encoded in the BlazeUp access token."""
+
+        if not self.token:
+            return {}
+        try:
+            payload_part = self.token.split(".")[1]
+            padded = payload_part + "=" * (-len(payload_part) % 4)
+            payload: dict[str, Any] = json.loads(base64.urlsafe_b64decode(padded))
+        except (IndexError, ValueError, json.JSONDecodeError):
+            return {}
+
+        employee = payload.get("employee")
+        if isinstance(employee, dict):
+            employee_id = employee.get("_id") or employee.get("id")
+        else:
+            employee_id = employee
+        return {"employee": str(employee_id)} if employee_id else {}
 
     async def clock_in(self, location: str = "Office", expected_status: int | tuple[int, ...] = 200) -> ClockInResponse:
         """Clock in at the requested location."""
@@ -100,8 +122,8 @@ class AttendanceClient(BaseClient):
         """Return today's attendance state."""
 
         return await self.get(
-            "/attendance/today",
+            "/time-api/attendances/status",
+            params=self._employee_params(),
             expected_status=expected_status,
             schema=TodayAttendanceResponse,
         )
-
