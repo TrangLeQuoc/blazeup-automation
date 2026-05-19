@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     base_url: AnyHttpUrl = Field(default="https://terralogic.blazeup.ai")
-    api_base_url: AnyHttpUrl = Field(default="API_BASE_URL = https://api.prod.blazeup.ai")
+    api_base_url: AnyHttpUrl = Field(default="https://api.prod.blazeup.ai")
     test_email: str | None = Field(default=None)
     test_password: str | None = Field(default=None)
     headless: bool = Field(default=True)
