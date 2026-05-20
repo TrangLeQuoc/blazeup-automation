@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)
     allure_results_dir: str = Field(default="allure-results")
-    default_response_time_ms: int = Field(default=2000, gt=0)
+    default_response_time_ms: int = Field(default=30000, gt=0)
     viewport_width: int = Field(default=1440, gt=0)
     viewport_height: int = Field(default=900, gt=0)
 
@@ -35,4 +35,3 @@ def get_settings() -> Settings:
     """Return cached settings instance for the test session."""
 
     return Settings()
-

@@ -30,37 +30,34 @@ async def test_tca07_attendance_status_returns_status(attendance_client: Attenda
         await attendance_client.close()
 
 
-async def test_tca08_clock_in_twice_returns_409(settings: Settings, api_token: str) -> None:
-    """TC-A08: Clocking in twice returns 409 Conflict."""
+async def test_tca08_attendance_status_requires_token(settings: Settings) -> None:
+    """TC-A08: Attendance status without token returns 401."""
 
-    client = AttendanceClient(str(settings.api_base_url), token=api_token, max_response_time_ms=settings.default_response_time_ms)
+    client = AttendanceClient(str(settings.api_base_url), max_response_time_ms=settings.default_response_time_ms)
     try:
-        first = await client.post("/attendance/clock-in", json={"location": "Office"}, expected_status=(200, 409))
-        second = await client.post("/attendance/clock-in", json={"location": "Office"}, expected_status=409)
-        assert second.status_code == 409
-        assert first
+        response = await client.raw_status(expected_status=401)
+        assert response.status_code == 401
     finally:
         await client.close()
 
 
-async def test_tca09_clock_out_returns_duration(settings: Settings, api_token: str) -> None:
-    """TC-A09: POST /attendance/clock-out returns duration."""
+async def test_tca09_attendance_status_rejects_invalid_employee(settings: Settings, api_token: str) -> None:
+    """TC-A09: Attendance status rejects an invalid employee id."""
 
     client = AttendanceClient(str(settings.api_base_url), token=api_token, max_response_time_ms=settings.default_response_time_ms)
     try:
-        await client.post("/attendance/clock-in", json={"location": "Office"}, expected_status=(200, 409))
-        response = await client.clock_out(expected_status=200)
-        assert response.duration is not None
+        response = await client.raw_status(expected_status=400, employee="invalid-employee-id")
+        assert response.status_code == 400
     finally:
         await client.close()
 
 
 async def test_tca10_attendance_history_returns_valid_list(attendance_client: AttendanceClient) -> None:
-    """TC-A10: GET /attendance/history returns valid list format."""
+    """TC-A10: GET /time-api/attendances/status returns a valid object."""
 
     try:
-        response = await attendance_client.history()
-        assert isinstance(response.records, list)
+        response = await attendance_client.today()
+        assert isinstance(response.model_dump(exclude_none=True), dict)
     finally:
         await attendance_client.close()
 

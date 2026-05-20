@@ -12,7 +12,7 @@ except ModuleNotFoundError:
     from tc_registry import TC_REGISTRY, list_by_marker, list_by_module, list_by_type
 
 # Default TC IDs to execute when running `python -m runner.run_test` without arguments.
-Execute_list_TC: list[str] = ["1001-1004"]
+Execute_list_TC: list[str] = ["1-1004"]
 
 # TC IDs to skip when using the default execute list.
 Skip_list_TC: list[str] = []

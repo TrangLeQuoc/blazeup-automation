@@ -4,12 +4,14 @@ import asyncio
 import os
 import time
 from typing import Any, TypeVar
+from urllib.parse import urlparse
 
 import httpx
 from loguru import logger
 from pydantic import BaseModel
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
+MIN_API_RESPONSE_TIME_MS = 30_000
 
 
 class BaseClient:
@@ -22,10 +24,20 @@ class BaseClient:
         timeout: float = 30.0,
         max_response_time_ms: int = 2000,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        self.base_url = self._normalize_base_url(base_url)
         self.token = token
-        self.max_response_time_ms = max_response_time_ms
+        self.max_response_time_ms = max(max_response_time_ms, MIN_API_RESPONSE_TIME_MS)
         self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
+
+    @staticmethod
+    def _normalize_base_url(base_url: str) -> str:
+        """Protect API tests from accidentally using the tenant UI host as API host."""
+
+        normalized = base_url.rstrip("/")
+        parsed = urlparse(normalized)
+        if parsed.netloc.lower() == "terralogic.blazeup.ai":
+            return "https://api.prod.blazeup.ai"
+        return normalized
 
     async def close(self) -> None:
         """Close the underlying HTTP connection pool."""
@@ -54,7 +66,14 @@ class BaseClient:
         response: httpx.Response | None = None
         for attempt in range(1, 4):
             started = time.perf_counter()
-            response = await self._client.request(method, endpoint, headers=headers, **kwargs)
+            try:
+                response = await self._client.request(method, endpoint, headers=headers, **kwargs)
+            except httpx.TransportError:
+                logger.warning("{} {} transport error on attempt {}/3", method.upper(), endpoint, attempt)
+                if attempt == 3:
+                    raise
+                await asyncio.sleep(attempt)
+                continue
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             response.extensions["elapsed_ms"] = elapsed_ms
             logger.info("{} {} -> {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms)

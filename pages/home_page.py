@@ -57,7 +57,11 @@ class HomePage(BasePage):
     async def logout(self) -> None:
         """Log out from the application."""
 
-        await self.click(HomeSelectors.LOGOUT_BUTTON)
+        logout = self.page.locator(HomeSelectors.LOGOUT_BUTTON).first
+        if not await logout.is_visible(timeout=1_000):
+            logger.info("Opening user menu before logout")
+            await self.click(HomeSelectors.USER_MENU_BUTTON, label="User Menu")
+        await self.click(HomeSelectors.LOGOUT_BUTTON, label="Logout Button")
 
     def _greeting_locator(self) -> Locator:
         """Return a locator for the dashboard greeting."""

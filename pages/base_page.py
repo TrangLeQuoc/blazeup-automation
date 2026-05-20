@@ -21,7 +21,12 @@ class BasePage:
 
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url
         logger.info("STEP | Navigate to: {}", url)
-        await self.page.goto(url, wait_until="domcontentloaded")
+        try:
+            await self.page.goto(url, wait_until="commit", timeout=60_000)
+        except PlaywrightTimeoutError:
+            if self.page.url.rstrip("/") != url.rstrip("/"):
+                raise
+            logger.warning("Navigation timed out after URL commit; continuing with element waits")
 
     async def wait_for_element(self, selector: str, timeout: int = 10_000, label: str | None = None) -> Locator:
         """Wait for an element to become visible and return its locator."""
@@ -84,7 +89,6 @@ class BasePage:
     @staticmethod
     def _selector_id(selector: str) -> str:
         """Return a readable snippet of the selector for logs."""
-        # Nếu là selector dài hoặc phức tạp, lấy 30 ký tự đầu và cuối
         clean = " ".join(selector.split())
         if len(clean) <= 40:
             return clean

@@ -12,13 +12,19 @@ class HomeSelectors:
         "h1:has-text('Good'), "
         "h2:has-text('Good')"
     )
-    GREETING_TEXT_PATTERN = r"^(Hi|Hello|Good morning|Good afternoon|Good evening|Chào|Xin chào)"
+    GREETING_TEXT_PATTERN = r"^(Hi|Hello|Good morning|Good afternoon|Good evening)"
     DASHBOARD_READY_CSS = (
         "[data-testid='home-page'], "
         "[data-testid='dashboard'], "
         "[data-testid='quick-links']"
     )
-    DASHBOARD_READY_TEXT_PATTERN = r"^(Quick Links|Celebrations|All Posts|Liên kết nhanh|Kỷ niệm)"
+    DASHBOARD_READY_TEXT_PATTERN = r"^(Quick Links|Celebrations|All Posts)"
+    USER_MENU_BUTTON = (
+        "[class*='container_avatar'], "
+        "[class*='account'], "
+        ".ant-avatar, "
+        "button:has(.ant-avatar)"
+    )
     LOCATION_DROPDOWN = (
         "select[name*='location' i], "
         "[role='combobox']:has-text('Location'), "
@@ -34,5 +40,8 @@ class HomeSelectors:
         "button:has-text('Log out'), "
         "a:has-text('Logout'), "
         "a:has-text('Log out'), "
+        "li:has-text('Logout'), "
+        "[role='menuitem']:has-text('Logout'), "
+        "[class*='menuItemLogout'], "
         "[data-testid='logout']"
     )

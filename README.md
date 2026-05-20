@@ -46,6 +46,7 @@ TEST_PASSWORD=your-password
 HEADLESS=true
 BROWSER=chromium
 SLOW_MO=0
+DEFAULT_RESPONSE_TIME_MS=30000
 ```
 
 Do not commit `.env`.

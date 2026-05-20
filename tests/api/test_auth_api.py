@@ -36,7 +36,7 @@ async def test_tca02_login_wrong_password_returns_401(settings: Settings, test_d
 
 
 async def test_tca03_logout_revokes_token(auth_client: AuthClient) -> None:
-    """TC-A03: POST /auth/logout returns 200 and revokes token."""
+    """TC-A03: Client-side logout clears the bearer token."""
 
     await auth_client.logout(expected_status=200)
     response = await auth_client.get("/auth-api/current-user", expected_status=(401, 403))
@@ -45,7 +45,7 @@ async def test_tca03_logout_revokes_token(auth_client: AuthClient) -> None:
 
 @pytest.mark.smoke
 async def test_tca04_get_me_returns_user_info(auth_client: AuthClient) -> None:
-    """TC-A04: GET /auth/me returns authenticated user information."""
+    """TC-A04: GET /auth-api/current-user returns authenticated user information."""
 
     user = await auth_client.me()
     assert isinstance(user, UserInfo)
@@ -72,7 +72,7 @@ async def test_tca06_api_with_expired_token_returns_401_or_403(settings: Setting
         max_response_time_ms=settings.default_response_time_ms,
     )
     try:
-        response = await client.get("/auth/me", expected_status=(401, 403))
+        response = await client.get("/auth-api/current-user", expected_status=(401, 403))
         assert response.status_code in {401, 403}
     finally:
         await client.close()
