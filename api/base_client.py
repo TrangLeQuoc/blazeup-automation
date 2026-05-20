@@ -95,7 +95,10 @@ class BaseClient:
                 f"Expected status {allowed}, got {response.status_code}: {response.text}"
             )
         if schema is not None:
-            return schema.model_validate(response.json())
+            payload = response.json()
+            if isinstance(payload, dict) and "data" in payload:
+                payload = payload["data"]
+            return schema.model_validate(payload)
         return response
 
     async def get(self, endpoint: str, **kwargs: Any) -> httpx.Response | SchemaT:

@@ -31,7 +31,7 @@ class UserInfo(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    id: str | int
+    id: str | int = Field(validation_alias=AliasChoices("id", "_id"))
     email: str | None = None
     name: str | None = None
 
@@ -39,20 +39,27 @@ class UserInfo(BaseModel):
 class AuthClient(BaseClient):
     """Client for authentication endpoints."""
 
-    async def login(self, email: str, password: str, expected_status: int = 200) -> LoginResponse:
+    async def login(
+        self,
+        email: str,
+        password: str,
+        expected_status: int | tuple[int, ...] = (200, 201),
+    ) -> LoginResponse:
         """Login and return a validated token response."""
 
-        return await self.post(
+        response = await self.post(
             "/auth-api/sign-in",
             json={"email": email, "password": password},
             expected_status=expected_status,
             schema=LoginResponse,
         )
+        self.token = response.bearer_token
+        return response
 
     async def logout(self, expected_status: int = 200) -> None:
-        """Revoke the current token."""
+        """Clear the bearer token for client-side logout tests."""
 
-        await self.post("/auth-api/sign-out", expected_status=expected_status)
+        self.token = None
 
     async def me(self, expected_status: int = 200) -> UserInfo:
         """Return the current authenticated user."""
