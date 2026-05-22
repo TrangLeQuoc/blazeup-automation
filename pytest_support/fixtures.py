@@ -14,6 +14,7 @@ from faker import Faker
 from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
+from api.attendance_client import AttendanceClient
 from api.auth_client import AuthClient
 from config.settings import Settings, get_settings
 from pages.home_page import HomePage
@@ -76,17 +77,6 @@ def fake() -> Faker:
     """Return a Faker generator for dynamic test data."""
 
     return Faker()
-
-
-@pytest.fixture(scope="session")
-def browser_type_launch_args(settings: Settings) -> dict[str, Any]:
-    """Customize pytest-playwright browser launch options."""
-
-    return {
-        "headless": settings.headless,
-        "slow_mo": settings.slow_mo,
-        "args": ["--no-sandbox", "--disable-dev-shm-usage"],
-    }
 
 
 @pytest_asyncio.fixture
@@ -166,7 +156,11 @@ async def api_token(settings: Settings) -> str:
     """Return a fresh JWT access token for each test."""
 
     email, password = require_credentials(settings.test_email, settings.test_password)
-    client = AuthClient(str(settings.api_base_url), max_response_time_ms=settings.default_response_time_ms)
+    client = AuthClient(
+        str(settings.api_base_url),
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
     try:
         response = await client.login(email, password)
         return response.bearer_token
@@ -178,22 +172,37 @@ async def api_token(settings: Settings) -> str:
 async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[AuthClient, None]:
     """Return an authenticated AuthClient."""
 
-    client = AuthClient(str(settings.api_base_url), token=api_token, max_response_time_ms=settings.default_response_time_ms)
+    client = AuthClient(
+        str(settings.api_base_url),
+        token=api_token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
     yield client
     await client.close()
 
 
 @pytest_asyncio.fixture
-async def test_user(fake: Faker) -> AsyncGenerator[dict[str, str], None]:
-    """Create test user data and reserve teardown point for future user API cleanup."""
+async def attendance_client(settings: Settings, api_token: str) -> AsyncGenerator[AttendanceClient, None]:
+    """Return an authenticated AttendanceClient."""
 
-    user = {
+    client = AttendanceClient(
+        str(settings.api_base_url),
+        token=api_token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
+    yield client
+    await client.close()
+
+
+@pytest.fixture
+def test_user(fake: Faker) -> dict[str, str]:
+    """Return a dict of generated user data for use as test input."""
+
+    return {
         "first_name": fake.first_name(),
         "last_name": fake.last_name(),
         "email": fake.unique.email(),
         "department": fake.job(),
     }
-    logger.info("Prepared temporary user {}", user["email"])
-    yield user
-    logger.info("Temporary user cleanup hook completed for {}", user["email"])
-

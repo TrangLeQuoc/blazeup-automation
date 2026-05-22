@@ -27,21 +27,22 @@ class TestCase:
 TC_REGISTRY: dict[int, TestCase] = {
     1: TestCase(1, "api", "auth", "BlazeUp sign-in returns a bearer token.", "tests/api/test_auth_api.py", "test_tca01_login_returns_jwt_token", ['smoke'], "P1"),
     2: TestCase(2, "api", "auth", "BlazeUp sign-in with wrong password is rejected.", "tests/api/test_auth_api.py", "test_tca02_login_wrong_password_returns_401", [], "P2"),
-    3: TestCase(3, "api", "auth", "Client-side logout clears the bearer token.", "tests/api/test_auth_api.py", "test_tca03_logout_revokes_token", [], "P2"),
+    3: TestCase(3, "api", "auth", "After client-side logout the bearer token is cleared and the next request is rejected.", "tests/api/test_auth_api.py", "test_tca03_client_logout_clears_token_and_subsequent_request_is_rejected", [], "P2"),
     4: TestCase(4, "api", "auth", "GET /auth-api/current-user returns authenticated user information.", "tests/api/test_auth_api.py", "test_tca04_get_me_returns_user_info", ['smoke'], "P1"),
     5: TestCase(5, "api", "auth", "Calling a protected API without token returns 401.", "tests/api/test_auth_api.py", "test_tca05_api_without_token_returns_401", [], "P2"),
     6: TestCase(6, "api", "auth", "Calling protected API with invalid/expired token returns 401 or 403.", "tests/api/test_auth_api.py", "test_tca06_api_with_expired_token_returns_401_or_403", [], "P2"),
-    7: TestCase(7, "api", "attendance", "GET /time-api/attendances/status returns current work status.", "tests/api/test_attendance_api.py", "test_tca07_attendance_status_returns_status", ['smoke'], "P1"),
+    7: TestCase(7, "api", "attendance", "GET /time-api/attendances/status returns a non-empty response body.", "tests/api/test_attendance_api.py", "test_tca07_attendance_status_returns_status", ['smoke'], "P1"),
     8: TestCase(8, "api", "attendance", "Attendance status without token returns 401.", "tests/api/test_attendance_api.py", "test_tca08_attendance_status_requires_token", [], "P2"),
     9: TestCase(9, "api", "attendance", "Attendance status rejects an invalid employee id.", "tests/api/test_attendance_api.py", "test_tca09_attendance_status_rejects_invalid_employee", [], "P2"),
-    10: TestCase(10, "api", "attendance", "GET /time-api/attendances/status returns a valid object.", "tests/api/test_attendance_api.py", "test_tca10_attendance_history_returns_valid_list", [], "P2"),
-    11: TestCase(11, "api", "attendance", "GET /time-api/attendances/status returns current status.", "tests/api/test_attendance_api.py", "test_tca11_today_attendance_returns_current_status", ['smoke'], "P1"),
+    10: TestCase(10, "api", "attendance", "GET /time-api/attendances/status response contains at least one known field.", "tests/api/test_attendance_api.py", "test_tca10_attendance_status_has_expected_shape", [], "P2"),
+    11: TestCase(11, "api", "attendance", "GET /time-api/attendances/status returns a recognised status string when present.", "tests/api/test_attendance_api.py", "test_tca11_today_attendance_returns_valid_status_value", ['smoke'], "P1"),
     1001: TestCase(1001, "ui", "login", "Login succeeds with valid credentials.", "tests/ui/test_login.py", "test_tc01_login_success_with_valid_credentials", ['smoke'], "P1"),
     1002: TestCase(1002, "ui", "login", "Login fails with wrong password and shows an error.", "tests/ui/test_login.py", "test_tc02_login_fails_with_wrong_password", [], "P2"),
     1003: TestCase(1003, "ui", "login", "Login fails for an email that does not exist.", "tests/ui/test_login.py", "test_tc03_login_fails_with_unknown_email", [], "P2"),
     1004: TestCase(1004, "ui", "login", "User is redirected to the home page after login.", "tests/ui/test_login.py", "test_tc04_redirects_to_home_after_login", ['smoke'], "P1"),
     1005: TestCase(1005, "ui", "login", "Logout clears the browser session.", "tests/ui/test_login.py", "test_tc05_logout_clears_session", [], "P2"),
 }
+
 
 def get_tc(tc_id: int) -> TestCase:
     if tc_id not in TC_REGISTRY:
@@ -65,5 +66,7 @@ def list_by_module(module: str) -> list[TestCase]:
 
 def list_by_type(tc_type: str) -> list[TestCase]:
     return [tc for tc in TC_REGISTRY.values() if tc.type == tc_type]
+
+
 def list_by_marker(marker: str) -> list[TestCase]:
     return [tc for tc in TC_REGISTRY.values() if marker in tc.markers]

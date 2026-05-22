@@ -13,6 +13,11 @@ from locator.login_ui import LoginSelectors
 class LoginPage(BasePage):
     """Actions and assertions for authentication screens."""
 
+    _ERROR_REGEX = re.compile(
+        r"invalid|incorrect|not found|unauthorized|does not exist|wrong",
+        re.IGNORECASE,
+    )
+
     async def open(self) -> None:
         """Open the login page."""
 
@@ -37,12 +42,10 @@ class LoginPage(BasePage):
     async def expect_error(self, timeout: int = 10_000) -> str:
         """Assert that an authentication error is visible and return it."""
 
-        error_regex = re.compile(r"invalid|incorrect|not found|unauthorized|does not exist|wrong", re.IGNORECASE)
         css_locator = self.page.locator(LoginSelectors.ERROR_CONTAINERS).first
-        text_locator = self.page.get_by_text(error_regex).first
+        text_locator = self.page.get_by_text(self._ERROR_REGEX).first
 
         # Combine both locators to wait for either one simultaneously
-        # Add .first to the combined result to satisfy Playwright's strict mode
         combined_locator = css_locator.or_(text_locator).first
 
         logger.info("Waiting for error message...")
