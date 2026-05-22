@@ -101,6 +101,9 @@ async def test_tc05_logout_clears_session(authenticated_page: Page, settings: Se
     await home_page.logout()
 
     await expect(authenticated_page).to_have_url(re.compile(r".*/(login|auth).*"), timeout=10_000)
-    cookies = await authenticated_page.context.cookies()
-    auth_cookies = [cookie for cookie in cookies if "token" in cookie["name"].lower() or "session" in cookie["name"].lower()]
+    cookies = await authenticated_page.context.cookies(str(settings.base_url))
+    auth_cookies = [
+        cookie for cookie in cookies
+        if "token" in cookie["name"].lower() or "session" in cookie["name"].lower()
+    ]
     assert not auth_cookies
