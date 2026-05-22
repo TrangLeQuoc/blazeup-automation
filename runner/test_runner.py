@@ -269,6 +269,6 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
 if __name__ == "__main__":
     ids = [int(arg) for arg in sys.argv[1:] if arg.isdigit()]
     if not ids:
-        print("Usage: python -m runner.test_runner <tc_id> [<tc_id> ...]")
-        sys.exit(1)
+        # No IDs provided — run every registered test case
+        ids = sorted(TC_REGISTRY.keys())
     sys.exit(run_tc_ids(ids))
