@@ -1,9 +1,8 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Core BlazeUp HRMS test execution helper."""
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +10,6 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from typing import Sequence
 
 from loguru import logger
 
@@ -24,6 +22,19 @@ try:
     from runner.tc_registry import TC_REGISTRY, TestCase, get_tc
 except ModuleNotFoundError:
     from tc_registry import TC_REGISTRY, TestCase, get_tc
+
+# ANSI color codes (used in print_summary and run_tc_ids)
+_GREEN = "\033[92m"
+_RED = "\033[91m"
+_YELLOW = "\033[93m"
+_BLUE = "\033[94m"
+_CYAN = "\033[96m"
+_BOLD = "\033[1m"
+_RESET = "\033[0m"
+
+
+def _bold(text: str) -> str:
+    return f"{_BOLD}{text}{_RESET}"
 
 
 def make_result_dir(base_dir: Path = Path('.')) -> Path:
@@ -41,7 +52,7 @@ def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = F
 
     node_ids = [tc.node_id for tc in tcs]
     log_level = "DEBUG" if debug_log else "INFO"
-    args = [
+    return [
         sys.executable,
         "-m",
         "pytest",
@@ -62,7 +73,6 @@ def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = F
         "-p",
         "no:cacheprovider",
     ]
-    return args
 
 
 def resolve_tcs(tc_ids: list[int]) -> list[TestCase]:
@@ -76,7 +86,7 @@ def resolve_tcs(tc_ids: list[int]) -> list[TestCase]:
     for tc_id in tc_ids:
         try:
             selected.append(get_tc(tc_id))
-        except KeyError as exc:
+        except KeyError:
             logger.warning("TC ID {} not found in registry. Try running sync_registry.py.", tc_id)
     return selected
 
@@ -128,7 +138,6 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
                 message = matched.find("skipped").attrib.get("message", "")
             else:
                 status = "PASSED"
-                message = ""
 
         rows.append(
             {
@@ -146,28 +155,28 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
 def print_summary(summary_rows: list[dict[str, str]]) -> None:
     """Print a clean summary table for the selected test cases."""
 
-    # ANSI escape codes for colors
-    GREEN = "\033[92m"
-    RED = "\033[91m"
-    YELLOW = "\033[93m"
-    BLUE = "\033[94m"
-    BOLD = "\033[1m"
-    RESET = "\033[0m"
-
     status_colors = {
-        "PASSED": f"{GREEN}PASSED{RESET}",
-        "FAILED": f"{RED}FAILED{RESET}",
-        "ERROR": f"{RED}ERROR{RESET}",
-        "SKIPPED": f"{YELLOW}SKIPPED{RESET}",
+        "PASSED": f"{_GREEN}PASSED{_RESET}",
+        "FAILED": f"{_RED}FAILED{_RESET}",
+        "ERROR": f"{_RED}ERROR{_RESET}",
+        "SKIPPED": f"{_YELLOW}SKIPPED{_RESET}",
     }
 
-    headers = [f"{BOLD}TC ID{RESET}", f"{BOLD}Status{RESET}", f"{BOLD}Time{RESET}", f"{BOLD}Title{RESET}", f"{BOLD}Message{RESET}"]
-    table_data = []
-    for r in summary_rows:
-        status = status_colors.get(r["status"], r["status"])
-        table_data.append([f"{BLUE}{r['tc_id']}{RESET}", status, f"{r['time']}s", r["title"], r["message"]])
+    headers = [
+        _bold("TC ID"), _bold("Status"), _bold("Time"), _bold("Title"), _bold("Message"),
+    ]
+    table_data = [
+        [
+            f"{_BLUE}{r['tc_id']}{_RESET}",
+            status_colors.get(r["status"], r["status"]),
+            f"{r['time']}s",
+            r["title"],
+            r["message"],
+        ]
+        for r in summary_rows
+    ]
 
-    print(f"\n{BOLD}=== TEST EXECUTION SUMMARY ==={RESET}")
+    print(f"\n{_bold('=== TEST EXECUTION SUMMARY ===')}")
     if tabulate is not None:
         print(tabulate(table_data, headers=headers, tablefmt="github"))
     else:
@@ -200,8 +209,7 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
         print("No valid test cases selected. Use numeric TC IDs only.")
         return 1
 
-    result_dir = make_result_dir(base_dir)
-    result_dir = result_dir.resolve()
+    result_dir = make_result_dir(base_dir).resolve()
     metadata = {
         "run_at": datetime.now().isoformat(),
         "tc_ids": [tc.tc_id for tc in tcs],
@@ -215,7 +223,7 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
     env["BLAZEUP_LOG_LEVEL"] = "DEBUG" if debug_log else "INFO"
     pytest_args = build_pytest_args(tcs, result_dir, debug_log=debug_log)
 
-    print(f"\033[94m{bold('Starting BlazeUp Automation Run')}\033[0m")
+    print(f"{_BLUE}{_bold('Starting BlazeUp Automation Run')}{_RESET}")
     print(f"Results: {result_dir}")
     print(f"Total:   {len(tcs)} test cases")
     for tc in tcs:
@@ -223,7 +231,6 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
     print("-" * 50)
 
     started = time.time()
-    # Run without capture_output to stream logs to terminal in real-time
     result = subprocess.run(pytest_args, env=env, cwd=base_dir)
     elapsed = time.time() - started
 
@@ -231,29 +238,20 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
     summary_rows = parse_junit_xml(junit_path, tcs)
     print_summary(summary_rows)
 
-    # Calculate detailed metrics
     total = len(summary_rows)
     passed_ids = [r["tc_id"] for r in summary_rows if r["status"] == "PASSED"]
     failed_ids = [r["tc_id"] for r in summary_rows if r["status"] in ("FAILED", "ERROR")]
     skipped_ids = [r["tc_id"] for r in summary_rows if r["status"] == "SKIPPED"]
 
-    GREEN = "\033[92m"
-    RED = "\033[91m"
-    YELLOW = "\033[93m"
-    CYAN = "\033[96m"
-    BOLD = "\033[1m"
-    RESET = "\033[0m"
-
     print("\n" + "=" * 60)
-    print(f"{BOLD}TEST EXECUTION RESULTS{RESET}")
-    print(f"Total TCs Run: {CYAN}{total}{RESET}")
-
+    print(_bold("TEST EXECUTION RESULTS"))
+    print(f"Total TCs Run: {_CYAN}{total}{_RESET}")
     if passed_ids:
-        print(f"PASS {GREEN}PASSED{RESET} ({len(passed_ids)}): {', '.join(passed_ids)}")
+        print(f"PASS {_GREEN}PASSED{_RESET} ({len(passed_ids)}): {', '.join(passed_ids)}")
     if failed_ids:
-        print(f"FAIL {RED}FAILED{RESET} ({len(failed_ids)}): {', '.join(failed_ids)}")
+        print(f"FAIL {_RED}FAILED{_RESET} ({len(failed_ids)}): {', '.join(failed_ids)}")
     if skipped_ids:
-        print(f"SKIP {YELLOW}SKIPPED/BLOCKED{RESET} ({len(skipped_ids)}): {', '.join(skipped_ids)}")
+        print(f"SKIP {_YELLOW}SKIPPED/BLOCKED{_RESET} ({len(skipped_ids)}): {', '.join(skipped_ids)}")
 
     print(f"\nDuration: {elapsed:.1f}s | Logs: {result_dir / 'logs' / 'test.log'}")
     print(f"Report: {result_dir / 'report.html'}")
@@ -268,13 +266,9 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
     return result.returncode
 
 
-def bold(text: str) -> str:
-    return f"\033[1m{text}\033[0m"
-
-
 if __name__ == "__main__":
     ids = [int(arg) for arg in sys.argv[1:] if arg.isdigit()]
     if not ids:
-        print("Usage: python -m runner.test_runner <tc_id> [<tc_id> ...]")
-        sys.exit(1)
+        # No IDs provided — run every registered test case
+        ids = sorted(TC_REGISTRY.keys())
     sys.exit(run_tc_ids(ids))

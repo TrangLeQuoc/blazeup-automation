@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Light wrapper to run BlazeUp HRMS tests by TC number."""
 
 import argparse
@@ -11,11 +11,11 @@ except ModuleNotFoundError:
     from test_runner import run_tc_ids
     from tc_registry import TC_REGISTRY, list_by_marker, list_by_module, list_by_type
 
-# Default TC IDs to execute when running `python -m runner.run_test` without arguments.
-Execute_list_TC: list[str] = ["1-1004"]
+# Empty list = run all registered test cases when no filter flags are passed.
+DEFAULT_EXECUTE_IDS: list[str] = []
 
 # TC IDs to skip when using the default execute list.
-Skip_list_TC: list[str] = []
+DEFAULT_SKIP_IDS: list[str] = []
 
 
 def parse_tc_range(tc_inputs: list[str]) -> list[int]:
@@ -25,9 +25,7 @@ def parse_tc_range(tc_inputs: list[str]) -> list[int]:
         if '-' in item:
             try:
                 start, end = item.split('-')
-                start_int = int(start)
-                end_int = int(end)
-                result.extend(range(start_int, end_int + 1))
+                result.extend(range(int(start), int(end) + 1))
             except (ValueError, AttributeError):
                 print(f"Warning: Invalid range format '{item}'. Expected format: 1001-1010")
         else:
@@ -44,13 +42,13 @@ def main() -> int:
         "--execute",
         nargs="+",
         type=str,
-        help="Override Execute_list_TC with a custom list of TC IDs. Supports ranges: 1001-1010 or individual: 1001 1002 1003",
+        help="TC IDs to run. Supports ranges (1001-1010) or individual IDs (1001 1002).",
     )
     parser.add_argument(
         "--skip",
         nargs="+",
         type=str,
-        help="Skip these TC IDs. Supports ranges: 1001-1005 or individual: 1001 1003",
+        help="TC IDs to skip. Supports ranges (1001-1005) or individual IDs.",
     )
     parser.add_argument(
         "--serve",
@@ -58,7 +56,7 @@ def main() -> int:
         help="Run Allure serve automatically after test execution.",
     )
     parser.add_argument("--list", action="store_true", help="List registered test cases.")
-    parser.add_argument("--module", type=str, help="Run test cases from a module, for example: auth or login.")
+    parser.add_argument("--module", type=str, help="Run test cases from a module, e.g. auth or login.")
     parser.add_argument("--type", choices=["api", "ui"], action="append", help="Run test cases by type.")
     parser.add_argument("--marker", type=str, help="Run test cases by pytest marker.")
     parser.add_argument("--debug-log", action="store_true", help="Write DEBUG level logs to the run log file.")
@@ -70,9 +68,6 @@ def main() -> int:
             print(f"{tc_id}: {tc.type}/{tc.module} - {tc.title}{markers}")
         return 0
 
-    default_execute_ids = parse_tc_range(Execute_list_TC)
-    default_skip_ids = parse_tc_range(Skip_list_TC)
-
     if args.execute:
         execute_ids = parse_tc_range(args.execute)
     elif args.module:
@@ -82,13 +77,14 @@ def main() -> int:
     elif args.marker:
         execute_ids = [tc.tc_id for tc in list_by_marker(args.marker)]
     else:
-        execute_ids = default_execute_ids
+        # Default: run every registered test case
+        execute_ids = sorted(TC_REGISTRY.keys())
 
-    skip_ids = parse_tc_range(args.skip) if args.skip else default_skip_ids
-    selected_ids = [tc_id for tc_id in execute_ids if tc_id not in set(skip_ids)]
+    skip_ids = set(parse_tc_range(args.skip)) if args.skip else set(parse_tc_range(DEFAULT_SKIP_IDS))
+    selected_ids = [tc_id for tc_id in execute_ids if tc_id not in skip_ids]
 
     if not selected_ids:
-        print("No TC IDs to run. Update Execute_list_TC or pass --execute.")
+        print("No TC IDs to run. Use --list to see available test cases.")
         return 1
 
     return run_tc_ids(selected_ids, debug_log=args.debug_log, serve_allure=args.serve)

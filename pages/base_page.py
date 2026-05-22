@@ -34,7 +34,8 @@ class BasePage:
         locator = self.page.locator(selector).first
         desc = label or self._selector_id(selector)
         logger.debug("Waiting for element [{}]", desc)
-        await self._retry(lambda: locator.wait_for(state="visible", timeout=timeout))
+        # wait_for has its own retry/poll loop — do not wrap in _retry to avoid multiplying timeouts
+        await locator.wait_for(state="visible", timeout=timeout)
         return locator
 
     async def click(self, selector: str, timeout: int = 10_000, label: str | None = None) -> None:
@@ -71,7 +72,7 @@ class BasePage:
         retries: int = 3,
         delay_ms: int = 500,
     ) -> T:
-        """Retry flaky Playwright actions before surfacing the final error."""
+        """Retry a Playwright action (click, fill, inner_text) on transient timeout errors."""
 
         last_error: Exception | None = None
         for attempt in range(1, retries + 1):

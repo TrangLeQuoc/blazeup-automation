@@ -1,7 +1,6 @@
 """Base HTTP client with retries, timing assertions, and schema validation."""
 
 import asyncio
-import os
 import time
 from typing import Any, TypeVar
 from urllib.parse import urlparse
@@ -11,7 +10,6 @@ from loguru import logger
 from pydantic import BaseModel
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
-MIN_API_RESPONSE_TIME_MS = 30_000
 
 
 class BaseClient:
@@ -23,10 +21,12 @@ class BaseClient:
         token: str | None = None,
         timeout: float = 30.0,
         max_response_time_ms: int = 2000,
+        app_origin: str | None = None,
     ) -> None:
         self.base_url = self._normalize_base_url(base_url)
         self.token = token
-        self.max_response_time_ms = max(max_response_time_ms, MIN_API_RESPONSE_TIME_MS)
+        self.max_response_time_ms = max_response_time_ms
+        self.app_origin = (app_origin or self.base_url).rstrip("/")
         self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
 
     @staticmethod
@@ -56,9 +56,8 @@ class BaseClient:
         """Send a request, retry 5xx responses, validate timing and optional schema."""
 
         headers = dict(kwargs.pop("headers", {}) or {})
-        app_origin = os.getenv("BASE_URL", "https://terralogic.blazeup.ai").rstrip("/")
-        headers.setdefault("Origin", app_origin)
-        headers.setdefault("Referer", f"{app_origin}/")
+        headers.setdefault("Origin", self.app_origin)
+        headers.setdefault("Referer", f"{self.app_origin}/")
         headers.setdefault("X-PLATFORM", "WEB")
         if self.token:
             headers.setdefault("Authorization", f"Bearer {self.token}")
