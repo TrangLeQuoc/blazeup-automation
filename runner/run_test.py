@@ -28,6 +28,17 @@ except ModuleNotFoundError:
     from test_runner import run_performance_plan, run_tc_ids
     from tc_registry import TC_REGISTRY, TestCase, list_by_marker, list_by_module, list_by_type
 
+# ---------------------------------------------------------------------------
+# Default run lists — edit these directly instead of passing CLI flags every time
+# ---------------------------------------------------------------------------
+
+# TC IDs to run when no --execute / --mode / --module / --marker is passed.
+# Supports individual IDs and ranges, e.g. ["1", "4", "7-11", "1001-1005"]
+# Leave empty [] to run ALL registered test cases.
+DEFAULT_EXECUTE_IDS: list[str] = []
+
+# TC IDs to always skip (blacklist).
+# Supports individual IDs and ranges, e.g. ["3", "1003"]
 DEFAULT_SKIP_IDS: list[str] = []
 
 _BOLD = "\033[1m"
@@ -90,7 +101,9 @@ def resolve_base_ids(args: argparse.Namespace) -> list[int]:
     if args.marker:
         return [tc.tc_id for tc in list_by_marker(args.marker)]
 
-    # Absolute default: every registered TC
+    # Absolute default: use DEFAULT_EXECUTE_IDS if set, otherwise run every registered TC
+    if DEFAULT_EXECUTE_IDS:
+        return parse_tc_range(DEFAULT_EXECUTE_IDS)
     return sorted(TC_REGISTRY.keys())
 
 
