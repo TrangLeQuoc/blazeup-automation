@@ -35,7 +35,7 @@ except ModuleNotFoundError:
 # TC IDs to run when no --execute / --mode / --module / --marker is passed.
 # Supports individual IDs and ranges, e.g. ["1", "4", "7-11", "1001-1005"]
 # Leave empty [] to run ALL registered test cases.
-DEFAULT_EXECUTE_IDS: list[str] = []
+DEFAULT_EXECUTE_IDS: list[str] = ["1-1010"]
 
 # TC IDs to always skip (blacklist).
 # Supports individual IDs and ranges, e.g. ["3", "1003"]
@@ -78,12 +78,21 @@ def filter_by_priority(tcs: list[TestCase], priority: str) -> list[TestCase]:
     return [tc for tc in tcs if tc.priority == priority]
 
 
+def _filter_to_registry(ids: list[int]) -> list[int]:
+    """Keep only IDs that exist in the registry; silently drop the rest.
+
+    This makes range notation like '1-1010' intuitive — you get whatever
+    exists in that range without warnings for gaps.
+    """
+    return [tc_id for tc_id in ids if tc_id in TC_REGISTRY]
+
+
 def resolve_base_ids(args: argparse.Namespace) -> list[int]:
     """Resolve the initial list of TC IDs from mode/execute/module/type/marker args."""
 
-    # Explicit --execute always wins
+    # Explicit --execute: honour range notation, silently skip non-existent IDs
     if args.execute:
-        return parse_tc_range(args.execute)
+        return _filter_to_registry(parse_tc_range(args.execute))
 
     mode = args.mode
 
@@ -103,7 +112,7 @@ def resolve_base_ids(args: argparse.Namespace) -> list[int]:
 
     # Absolute default: use DEFAULT_EXECUTE_IDS if set, otherwise run every registered TC
     if DEFAULT_EXECUTE_IDS:
-        return parse_tc_range(DEFAULT_EXECUTE_IDS)
+        return _filter_to_registry(parse_tc_range(DEFAULT_EXECUTE_IDS))
     return sorted(TC_REGISTRY.keys())
 
 
