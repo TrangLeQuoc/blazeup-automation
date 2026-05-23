@@ -7,8 +7,8 @@ Execution Modes (--mode):
   smoke       Auto-select all smoke-marked TCs
 
 Repeat Modes (--repeat N + --repeat-mode):
-  batch       Run full list × N  →  [1,2,3, 1,2,3, ...]  (system stability)
-  each        Run each TC × N   →  [1,1,1, 2,2,2, ...]  (flaky detection)
+  batch       Run full list x N  ->  [1,2,3, 1,2,3, ...]  (system stability)
+  each        Run each TC x N   ->  [1,1,1, 2,2,2, ...]  (flaky detection)
 
 Examples:
   python -m runner.run_test --mode regression
@@ -82,7 +82,7 @@ def resolve_base_ids(args: argparse.Namespace) -> list[int]:
     if mode == "smoke":
         return [tc.tc_id for tc in TC_REGISTRY.values() if "smoke" in tc.markers]
 
-    # normal mode — narrow down by secondary filters if present
+    # normal mode -- narrow down by secondary filters if present
     if args.module:
         return [tc.tc_id for tc in list_by_module(args.module)]
     if args.type:
@@ -105,8 +105,8 @@ def apply_repeat_strategy(base_ids: list[int], repeat: int, repeat_mode: str) ->
     Returns a list of batches where each batch is a list of TC IDs for one
     pytest invocation.
 
-    batch  →  [[1,2,3], [1,2,3], [1,2,3]]          N full-suite runs
-    each   →  [[1],[1],[1],[2],[2],[2]]              each TC × N before next
+    batch  ->  [[1,2,3], [1,2,3], [1,2,3]]          N full-suite runs
+    each   ->  [[1],[1],[1],[2],[2],[2]]              each TC x N before next
     """
     if repeat <= 1:
         return [base_ids]
@@ -132,10 +132,10 @@ def print_dry_run(base_ids: list[int], repeat: int, repeat_mode: str) -> None:
     total_invocations = len(base_ids) * repeat if repeat_mode == "each" else len(base_ids) + (repeat - 1) * len(base_ids)
     total_runs = len(base_ids) * repeat
 
-    print(f"\n{_BLUE}{_BOLD}=== DRY RUN — Execution Plan ==={_RESET}")
+    print(f"\n{_BLUE}{_BOLD}=== DRY RUN -- Execution Plan ==={_RESET}")
     print(f"  Mode           : {repeat_mode}")
     print(f"  Unique TCs     : {len(unique_ids)}")
-    print(f"  Repeat         : {repeat}×")
+    print(f"  Repeat         : {repeat}x")
     print(f"  Total TC runs  : {total_runs}")
     print()
 
@@ -150,7 +150,7 @@ def print_dry_run(base_ids: list[int], repeat: int, repeat_mode: str) -> None:
     if repeat > 1:
         batches = apply_repeat_strategy(base_ids, repeat, repeat_mode)
         preview_labels = [str(b[0]) if len(b) == 1 else f"[{','.join(str(i) for i in b)}]" for b in batches[:8]]
-        suffix = f"  … (+{len(batches) - 8} more)" if len(batches) > 8 else ""
+        suffix = f"  ... (+{len(batches) - 8} more)" if len(batches) > 8 else ""
         print(f"\n  Batch order: {', '.join(preview_labels)}{suffix}")
 
 
@@ -186,7 +186,7 @@ def main() -> int:
                       help="Run selected TCs N times (default: 1).")
     perf.add_argument("--repeat-mode", choices=["each", "batch"], default="batch",
                       dest="repeat_mode",
-                      help="each=[TC1×N,TC2×N] (flaky), batch=[[TC1,TC2]×N] (stability)  (default: batch)")
+                      help="each=[TC1xN,TC2xN] (flaky), batch=[[TC1,TC2]xN] (stability)  (default: batch)")
     perf.add_argument("--fail-fast-count", type=int, default=0, metavar="N",
                       dest="fail_fast_count",
                       help="Abort after N total failures across all iterations (0 = disabled).")

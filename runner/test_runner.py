@@ -315,7 +315,7 @@ def print_performance_summary(
         fails = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
         skips = sum(1 for r in runs if r["status"] == "SKIPPED")
         times = [float(r["time"]) for r in runs if r["time"] and r["status"] != "MISSING"]
-        avg_time = f"{sum(times) / len(times):.2f}s" if times else "—"
+        avg_time = f"{sum(times) / len(times):.2f}s" if times else "--"
         total = len(runs)
         pass_rate = passes / total * 100 if total else 0.0
 
@@ -328,7 +328,7 @@ def print_performance_summary(
 
         table_data.append([
             f"{_BLUE}{tc.tc_id}{_RESET}",
-            tc.title[:45] + ("…" if len(tc.title) > 45 else ""),
+            tc.title[:45] + ("..." if len(tc.title) > 45 else ""),
             f"{_GREEN}{passes}{_RESET}",
             f"{_RED}{fails}{_RESET}" if fails else "0",
             f"{pass_rate:.0f}%",
@@ -370,13 +370,13 @@ def run_performance_plan(
     """
     Run tests multiple times and produce a stability/performance report.
 
-    repeat_mode='batch' — run full list × N  →  [1,2,3, 1,2,3, …]
+    repeat_mode='batch' -- run full list x N  ->  [1,2,3, 1,2,3, ...]
                           Good for: system stability, memory-leak detection.
 
-    repeat_mode='each'  — run each TC × N    →  [1,1,1, 2,2,2, …]
+    repeat_mode='each'  -- run each TC x N    ->  [1,1,1, 2,2,2, ...]
                           Good for: detecting flaky behaviour in one function.
 
-    fail_fast_count     — stop when this many total failures accumulate (0 = off).
+    fail_fast_count     -- stop when this many total failures accumulate (0 = off).
     """
     base_dir = Path(__file__).resolve().parents[1]
     tcs = resolve_tcs(base_ids)
@@ -456,6 +456,6 @@ def run_performance_plan(
 if __name__ == "__main__":
     ids = [int(arg) for arg in sys.argv[1:] if arg.isdigit()]
     if not ids:
-        # No IDs provided — run every registered test case
+        # No IDs provided -- run every registered test case
         ids = sorted(TC_REGISTRY.keys())
     sys.exit(run_tc_ids(ids))
