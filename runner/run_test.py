@@ -1,22 +1,44 @@
 #!/usr/bin/env python3
-"""Light wrapper to run BlazeUp HRMS tests by TC number."""
+"""Light wrapper to run BlazeUp HRMS tests by TC number.
+
+Execution Modes (--mode):
+  normal      Run TCs by explicit ID list (default)
+  regression  Auto-select all P1 priority TCs
+  smoke       Auto-select all smoke-marked TCs
+
+Repeat Modes (--repeat N + --repeat-mode):
+  batch       Run full list × N  →  [1,2,3, 1,2,3, ...]  (system stability)
+  each        Run each TC × N   →  [1,1,1, 2,2,2, ...]  (flaky detection)
+
+Examples:
+  python -m runner.run_test --mode regression
+  python -m runner.run_test --execute 1 2 3 --repeat 10 --repeat-mode each
+  python -m runner.run_test --mode smoke --repeat 5 --repeat-mode batch
+  python -m runner.run_test --execute 1001 1002 --repeat 20 --dry-run
+  python -m runner.run_test --mode regression --priority P1 --type api
+"""
 
 import argparse
 import sys
 
 try:
-    from runner.test_runner import run_tc_ids
-    from runner.tc_registry import TC_REGISTRY, list_by_marker, list_by_module, list_by_type
+    from runner.test_runner import run_performance_plan, run_tc_ids
+    from runner.tc_registry import TC_REGISTRY, TestCase, list_by_marker, list_by_module, list_by_type
 except ModuleNotFoundError:
-    from test_runner import run_tc_ids
-    from tc_registry import TC_REGISTRY, list_by_marker, list_by_module, list_by_type
+    from test_runner import run_performance_plan, run_tc_ids
+    from tc_registry import TC_REGISTRY, TestCase, list_by_marker, list_by_module, list_by_type
 
-# Empty list = run all registered test cases when no filter flags are passed.
-DEFAULT_EXECUTE_IDS: list[str] = []
-
-# TC IDs to skip when using the default execute list.
 DEFAULT_SKIP_IDS: list[str] = []
 
+_BOLD = "\033[1m"
+_BLUE = "\033[94m"
+_CYAN = "\033[96m"
+_RESET = "\033[0m"
+
+
+# ---------------------------------------------------------------------------
+# Helper: ID parsing
+# ---------------------------------------------------------------------------
 
 def parse_tc_range(tc_inputs: list[str]) -> list[int]:
     """Parse TC IDs from input, supporting ranges like '1001-1010' and individual IDs."""
@@ -24,10 +46,10 @@ def parse_tc_range(tc_inputs: list[str]) -> list[int]:
     for item in tc_inputs:
         if '-' in item:
             try:
-                start, end = item.split('-')
+                start, end = item.split('-', 1)
                 result.extend(range(int(start), int(end) + 1))
             except (ValueError, AttributeError):
-                print(f"Warning: Invalid range format '{item}'. Expected format: 1001-1010")
+                print(f"Warning: Invalid range format '{item}'. Expected: 1001-1010")
         else:
             try:
                 result.append(int(item))
@@ -36,58 +58,193 @@ def parse_tc_range(tc_inputs: list[str]) -> list[int]:
     return result
 
 
+# ---------------------------------------------------------------------------
+# Helper: filtering
+# ---------------------------------------------------------------------------
+
+def filter_by_priority(tcs: list[TestCase], priority: str) -> list[TestCase]:
+    """Return only TCs matching the given priority."""
+    return [tc for tc in tcs if tc.priority == priority]
+
+
+def resolve_base_ids(args: argparse.Namespace) -> list[int]:
+    """Resolve the initial list of TC IDs from mode/execute/module/type/marker args."""
+
+    # Explicit --execute always wins
+    if args.execute:
+        return parse_tc_range(args.execute)
+
+    mode = args.mode
+
+    if mode == "regression":
+        return [tc.tc_id for tc in TC_REGISTRY.values() if tc.priority == "P1"]
+
+    if mode == "smoke":
+        return [tc.tc_id for tc in TC_REGISTRY.values() if "smoke" in tc.markers]
+
+    # normal mode — narrow down by secondary filters if present
+    if args.module:
+        return [tc.tc_id for tc in list_by_module(args.module)]
+    if args.type:
+        return [tc.tc_id for tc_type in args.type for tc in list_by_type(tc_type)]
+    if args.marker:
+        return [tc.tc_id for tc in list_by_marker(args.marker)]
+
+    # Absolute default: every registered TC
+    return sorted(TC_REGISTRY.keys())
+
+
+# ---------------------------------------------------------------------------
+# Helper: repeat strategy
+# ---------------------------------------------------------------------------
+
+def apply_repeat_strategy(base_ids: list[int], repeat: int, repeat_mode: str) -> list[list[int]]:
+    """
+    Build the list of *batches* to execute.
+
+    Returns a list of batches where each batch is a list of TC IDs for one
+    pytest invocation.
+
+    batch  →  [[1,2,3], [1,2,3], [1,2,3]]          N full-suite runs
+    each   →  [[1],[1],[1],[2],[2],[2]]              each TC × N before next
+    """
+    if repeat <= 1:
+        return [base_ids]
+
+    if repeat_mode == "each":
+        batches: list[list[int]] = []
+        for tc_id in base_ids:
+            batches.extend([[tc_id]] * repeat)
+        return batches
+
+    # batch (default)
+    return [list(base_ids)] * repeat
+
+
+# ---------------------------------------------------------------------------
+# Helper: dry-run display
+# ---------------------------------------------------------------------------
+
+def print_dry_run(base_ids: list[int], repeat: int, repeat_mode: str) -> None:
+    """Print what would be executed without actually running any tests."""
+
+    unique_ids = list(dict.fromkeys(base_ids))  # preserve order, deduplicate
+    total_invocations = len(base_ids) * repeat if repeat_mode == "each" else len(base_ids) + (repeat - 1) * len(base_ids)
+    total_runs = len(base_ids) * repeat
+
+    print(f"\n{_BLUE}{_BOLD}=== DRY RUN — Execution Plan ==={_RESET}")
+    print(f"  Mode           : {repeat_mode}")
+    print(f"  Unique TCs     : {len(unique_ids)}")
+    print(f"  Repeat         : {repeat}×")
+    print(f"  Total TC runs  : {total_runs}")
+    print()
+
+    for tc_id in unique_ids:
+        tc = TC_REGISTRY.get(tc_id)
+        if tc:
+            markers = f"  [{', '.join(tc.markers)}]" if tc.markers else ""
+            print(f"  {_CYAN}TC {tc_id:>5}{_RESET}  [{tc.priority}]  {tc.type}/{tc.module}  {tc.title}{markers}")
+        else:
+            print(f"  TC {tc_id:>5}  ⚠ NOT IN REGISTRY")
+
+    if repeat > 1:
+        batches = apply_repeat_strategy(base_ids, repeat, repeat_mode)
+        preview_labels = [str(b[0]) if len(b) == 1 else f"[{','.join(str(i) for i in b)}]" for b in batches[:8]]
+        suffix = f"  … (+{len(batches) - 8} more)" if len(batches) > 8 else ""
+        print(f"\n  Batch order: {', '.join(preview_labels)}{suffix}")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run BlazeUp HRMS tests by TC ID")
-    parser.add_argument(
-        "--execute",
-        nargs="+",
-        type=str,
-        help="TC IDs to run. Supports ranges (1001-1010) or individual IDs (1001 1002).",
+    parser = argparse.ArgumentParser(
+        description="Run BlazeUp HRMS tests by TC ID",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
     )
-    parser.add_argument(
-        "--skip",
-        nargs="+",
-        type=str,
-        help="TC IDs to skip. Supports ranges (1001-1005) or individual IDs.",
-    )
-    parser.add_argument(
-        "--serve",
-        action="store_true",
-        help="Run Allure serve automatically after test execution.",
-    )
-    parser.add_argument("--list", action="store_true", help="List registered test cases.")
-    parser.add_argument("--module", type=str, help="Run test cases from a module, e.g. auth or login.")
-    parser.add_argument("--type", choices=["api", "ui"], action="append", help="Run test cases by type.")
-    parser.add_argument("--marker", type=str, help="Run test cases by pytest marker.")
-    parser.add_argument("--debug-log", action="store_true", help="Write DEBUG level logs to the run log file.")
+
+    # ── Selection ──────────────────────────────────────────────────────────
+    sel = parser.add_argument_group("selection")
+    sel.add_argument("--execute", nargs="+", type=str,
+                     help="Explicit TC IDs. Supports ranges (1001-1010) and individual IDs.")
+    sel.add_argument("--skip", nargs="+", type=str,
+                     help="TC IDs to exclude. Supports ranges and individual IDs.")
+    sel.add_argument("--mode", choices=["normal", "regression", "smoke"], default="normal",
+                     help="normal=by ID, regression=P1 only, smoke=smoke-marked (default: normal)")
+    sel.add_argument("--priority", choices=["P1", "P2", "P3"],
+                     help="Additional priority filter applied after mode/module/marker.")
+    sel.add_argument("--module", type=str, help="Run TCs from a module, e.g. auth or login.")
+    sel.add_argument("--type", choices=["api", "ui"], action="append",
+                     help="Filter by test type (may be repeated: --type api --type ui).")
+    sel.add_argument("--marker", type=str, help="Filter by pytest marker.")
+
+    # ── Performance ────────────────────────────────────────────────────────
+    perf = parser.add_argument_group("performance / stability")
+    perf.add_argument("--repeat", type=int, default=1, metavar="N",
+                      help="Run selected TCs N times (default: 1).")
+    perf.add_argument("--repeat-mode", choices=["each", "batch"], default="batch",
+                      dest="repeat_mode",
+                      help="each=[TC1×N,TC2×N] (flaky), batch=[[TC1,TC2]×N] (stability)  (default: batch)")
+    perf.add_argument("--fail-fast-count", type=int, default=0, metavar="N",
+                      dest="fail_fast_count",
+                      help="Abort after N total failures across all iterations (0 = disabled).")
+
+    # ── Output ─────────────────────────────────────────────────────────────
+    out = parser.add_argument_group("output")
+    out.add_argument("--list", action="store_true",
+                     help="List all registered TCs and exit.")
+    out.add_argument("--dry-run", action="store_true", dest="dry_run",
+                     help="Show execution plan without running tests.")
+    out.add_argument("--serve", action="store_true",
+                     help="Open Allure report after execution.")
+    out.add_argument("--debug-log", action="store_true",
+                     help="Write DEBUG-level logs to the run log file.")
+
     args = parser.parse_args()
 
+    # ── --list ──────────────────────────────────────────────────────────────
     if args.list:
         for tc_id, tc in sorted(TC_REGISTRY.items()):
-            markers = f" [{', '.join(tc.markers)}]" if tc.markers else ""
-            print(f"{tc_id}: {tc.type}/{tc.module} - {tc.title}{markers}")
+            markers = f"  [{', '.join(tc.markers)}]" if tc.markers else ""
+            print(f"  {tc_id:>5}  [{tc.priority}]  {tc.type}/{tc.module}  {tc.title}{markers}")
         return 0
 
-    if args.execute:
-        execute_ids = parse_tc_range(args.execute)
-    elif args.module:
-        execute_ids = [tc.tc_id for tc in list_by_module(args.module)]
-    elif args.type:
-        execute_ids = [tc.tc_id for tc_type in args.type for tc in list_by_type(tc_type)]
-    elif args.marker:
-        execute_ids = [tc.tc_id for tc in list_by_marker(args.marker)]
-    else:
-        # Default: run every registered test case
-        execute_ids = sorted(TC_REGISTRY.keys())
+    # ── Resolve TC IDs ──────────────────────────────────────────────────────
+    base_ids = resolve_base_ids(args)
+
+    if args.priority:
+        base_ids = [
+            tc_id for tc_id in base_ids
+            if TC_REGISTRY.get(tc_id) and TC_REGISTRY[tc_id].priority == args.priority
+        ]
 
     skip_ids = set(parse_tc_range(args.skip)) if args.skip else set(parse_tc_range(DEFAULT_SKIP_IDS))
-    selected_ids = [tc_id for tc_id in execute_ids if tc_id not in skip_ids]
+    base_ids = [tc_id for tc_id in base_ids if tc_id not in skip_ids]
 
-    if not selected_ids:
-        print("No TC IDs to run. Use --list to see available test cases.")
+    if not base_ids:
+        print("No TC IDs matched the given filters. Use --list to see available test cases.")
         return 1
 
-    return run_tc_ids(selected_ids, debug_log=args.debug_log, serve_allure=args.serve)
+    repeat = max(1, args.repeat)
+
+    # ── --dry-run ───────────────────────────────────────────────────────────
+    if args.dry_run:
+        print_dry_run(base_ids, repeat, args.repeat_mode)
+        return 0
+
+    # ── Execute ─────────────────────────────────────────────────────────────
+    if repeat > 1:
+        return run_performance_plan(
+            base_ids,
+            repeat=repeat,
+            repeat_mode=args.repeat_mode,
+            debug_log=args.debug_log,
+            fail_fast_count=args.fail_fast_count,
+        )
+
+    return run_tc_ids(base_ids, debug_log=args.debug_log, serve_allure=args.serve)
 
 
 if __name__ == "__main__":

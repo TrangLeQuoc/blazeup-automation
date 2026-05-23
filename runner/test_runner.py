@@ -266,6 +266,193 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
     return result.returncode
 
 
+# ---------------------------------------------------------------------------
+# Performance / stability runner
+# ---------------------------------------------------------------------------
+
+def _run_single_batch(
+    batch_tcs: list[TestCase],
+    base_dir: Path,
+    debug_log: bool,
+) -> tuple[Path, list[dict[str, str]]]:
+    """Execute one pytest invocation for a batch and return (result_dir, rows)."""
+
+    result_dir = make_result_dir(base_dir).resolve()
+    env = os.environ.copy()
+    env["BLAZEUP_RESULT_DIR"] = str(result_dir)
+    env["BLAZEUP_LOG_LEVEL"] = "DEBUG" if debug_log else "INFO"
+
+    pytest_args = build_pytest_args(batch_tcs, result_dir, debug_log=debug_log)
+    # Suppress live output during performance runs; summary shown per-iteration
+    subprocess.run(pytest_args, env=env, cwd=base_dir, capture_output=True)
+
+    rows = parse_junit_xml(result_dir / "logs" / "junit.xml", batch_tcs)
+    return result_dir, rows
+
+
+def print_performance_summary(
+    perf_results: dict[int, list[dict[str, str]]],
+    tcs: list[TestCase],
+    repeat: int,
+    repeat_mode: str,
+) -> None:
+    """Print aggregated stability/performance table after all iterations."""
+
+    print(f"\n{_bold('=== PERFORMANCE RUN SUMMARY ===')} "
+          f"mode={repeat_mode}  iterations={repeat}")
+
+    headers = [
+        _bold("TC ID"), _bold("Title"), _bold("Pass"), _bold("Fail"),
+        _bold("Pass Rate"), _bold("Avg Time"), _bold("Stability"),
+    ]
+    table_data = []
+
+    for tc in tcs:
+        runs = perf_results.get(tc.tc_id, [])
+        if not runs:
+            continue
+        passes = sum(1 for r in runs if r["status"] == "PASSED")
+        fails = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
+        skips = sum(1 for r in runs if r["status"] == "SKIPPED")
+        times = [float(r["time"]) for r in runs if r["time"] and r["status"] != "MISSING"]
+        avg_time = f"{sum(times) / len(times):.2f}s" if times else "—"
+        total = len(runs)
+        pass_rate = passes / total * 100 if total else 0.0
+
+        if fails == 0:
+            stability = f"{_GREEN}✓ STABLE{_RESET}"
+        elif passes == 0:
+            stability = f"{_RED}✗ FAILING{_RESET}"
+        else:
+            stability = f"{_YELLOW}⚠ FLAKY{_RESET}"
+
+        table_data.append([
+            f"{_BLUE}{tc.tc_id}{_RESET}",
+            tc.title[:45] + ("…" if len(tc.title) > 45 else ""),
+            f"{_GREEN}{passes}{_RESET}",
+            f"{_RED}{fails}{_RESET}" if fails else "0",
+            f"{pass_rate:.0f}%",
+            avg_time,
+            stability,
+        ])
+
+    if tabulate is not None:
+        print(tabulate(table_data, headers=headers, tablefmt="github"))
+    else:
+        for row in table_data:
+            print("  |  ".join(str(c) for c in row))
+
+    # Overall verdict
+    all_runs = [r for runs in perf_results.values() for r in runs]
+    total_pass = sum(1 for r in all_runs if r["status"] == "PASSED")
+    total_fail = sum(1 for r in all_runs if r["status"] in ("FAILED", "ERROR"))
+    flaky_tcs = [
+        tc.tc_id for tc in tcs
+        if perf_results.get(tc.tc_id)
+        and any(r["status"] == "PASSED" for r in perf_results[tc.tc_id])
+        and any(r["status"] in ("FAILED", "ERROR") for r in perf_results[tc.tc_id])
+    ]
+
+    print(f"\n  Total runs: {len(all_runs)} | "
+          f"{_GREEN}Passed: {total_pass}{_RESET} | "
+          f"{_RED}Failed: {total_fail}{_RESET}")
+    if flaky_tcs:
+        print(f"  {_YELLOW}Flaky TCs: {', '.join(str(i) for i in flaky_tcs)}{_RESET}")
+
+
+def run_performance_plan(
+    base_ids: list[int],
+    repeat: int,
+    repeat_mode: str,
+    debug_log: bool = False,
+    fail_fast_count: int = 0,
+) -> int:
+    """
+    Run tests multiple times and produce a stability/performance report.
+
+    repeat_mode='batch' — run full list × N  →  [1,2,3, 1,2,3, …]
+                          Good for: system stability, memory-leak detection.
+
+    repeat_mode='each'  — run each TC × N    →  [1,1,1, 2,2,2, …]
+                          Good for: detecting flaky behaviour in one function.
+
+    fail_fast_count     — stop when this many total failures accumulate (0 = off).
+    """
+    base_dir = Path(__file__).resolve().parents[1]
+    tcs = resolve_tcs(base_ids)
+    if not tcs:
+        print("No valid test cases selected.")
+        return 1
+
+    # Build batch list
+    if repeat_mode == "each":
+        batches: list[list[TestCase]] = []
+        for tc in tcs:
+            batches.extend([[tc]] * repeat)
+    else:
+        batches = [list(tcs)] * repeat
+
+    total_batches = len(batches)
+    perf_results: dict[int, list[dict[str, str]]] = {tc.tc_id: [] for tc in tcs}
+
+    print(f"\n{_BLUE}{_bold('BlazeUp Performance Run')}{_RESET}")
+    print(f"  Mode       : {repeat_mode}")
+    print(f"  TCs        : {len(tcs)}")
+    print(f"  Iterations : {repeat}")
+    print(f"  Batches    : {total_batches}")
+    if fail_fast_count:
+        print(f"  Fail-fast  : stop after {fail_fast_count} failure(s)")
+    print("-" * 60)
+
+    total_failures = 0
+
+    for idx, batch_tcs in enumerate(batches, start=1):
+        # Progress label
+        if repeat_mode == "each":
+            tc = batch_tcs[0]
+            run_num = (idx - 1) % repeat + 1
+            label = f"TC {tc.tc_id}  run {run_num}/{repeat}"
+        else:
+            label = f"Iteration {idx}/{total_batches}"
+
+        print(f"\n  [{label}]", end="  ", flush=True)
+
+        _, rows = _run_single_batch(batch_tcs, base_dir, debug_log)
+
+        # Print per-TC status on same line
+        for row in rows:
+            status_str = (
+                f"{_GREEN}PASS{_RESET}" if row["status"] == "PASSED"
+                else f"{_RED}FAIL{_RESET}" if row["status"] in ("FAILED", "ERROR")
+                else f"{_YELLOW}SKIP{_RESET}"
+            )
+            print(f"TC{row['tc_id']}={status_str}({row['time']}s)", end="  ")
+            perf_results[int(row["tc_id"])].append(row)
+            if row["status"] in ("FAILED", "ERROR"):
+                total_failures += 1
+
+        print()  # newline after inline statuses
+
+        # Fail-fast check
+        if fail_fast_count and total_failures >= fail_fast_count:
+            print(f"\n  {_YELLOW}Stopping: reached {total_failures} failure(s) "
+                  f"(--fail-fast-count {fail_fast_count}){_RESET}")
+            break
+
+    print_performance_summary(perf_results, tcs, repeat, repeat_mode)
+
+    any_failed = any(
+        r["status"] in ("FAILED", "ERROR")
+        for runs in perf_results.values()
+        for r in runs
+    )
+    return 1 if any_failed else 0
+
+
+# ---------------------------------------------------------------------------
+# Direct invocation
+# ---------------------------------------------------------------------------
+
 if __name__ == "__main__":
     ids = [int(arg) for arg in sys.argv[1:] if arg.isdigit()]
     if not ids:
