@@ -43,6 +43,28 @@ def _visible_len(s: str) -> int:
     return len(re.sub(r"\x1b\[[0-9;]*[mK]", "", s))
 
 
+def _strip_ansi(s: str) -> str:
+    """Return s with all ANSI escape codes removed (plain text)."""
+    return re.sub(r"\x1b\[[0-9;]*[mK]", "", s)
+
+
+def _append_summary_to_log(lines: list[str], log_path: Path) -> None:
+    """Append the ANSI-stripped summary block to an existing log file.
+
+    The summary is wrapped in a dated header/footer so it's easy to locate
+    at the bottom of the log with ``grep -A9999 'SUMMARY'``.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    plain_lines = [_strip_ansi(ln) for ln in lines]
+    try:
+        with log_path.open("a", encoding="utf-8") as fh:
+            fh.write(f"\n# ===== TEST RUN SUMMARY  ({timestamp}) =====\n")
+            fh.write("\n".join(plain_lines))
+            fh.write("\n# ===== END OF SUMMARY =====\n")
+    except OSError as exc:
+        logger.warning("Could not write summary to {}: {}", log_path, exc)
+
+
 def _fmt_table(rows: list[list], headers: list[str]) -> str:
     """Left-aligned pipe table that handles ANSI colour codes correctly.
 
@@ -365,9 +387,12 @@ def print_run_summary(
     Single run  (repeat=1)  ->  Status | Time | Failure columns.
     Multi-run   (repeat>1)  ->  Runs | Pass | Fail | Rate | Avg | Stability.
 
-    The header block always shows mode, TC count, and duration.
-    Multi-run adds repeat count and total-runs count.
-    The footer shows totals + lists of failed / flaky TCs.
+    Output strategy
+    ---------------
+    All lines are first collected into a list so they can be:
+    1. Printed to the terminal with ANSI colour codes intact.
+    2. Written to ``result_dir/logs/test.log`` with colour codes stripped,
+       so the summary is searchable alongside the structured test logs.
     """
     W = 66  # separator width
     total_tcs     = len(tc_summaries)
@@ -377,60 +402,71 @@ def print_run_summary(
     total_skipped = sum(s["skipped"] for s in tc_summaries)
     is_multi      = repeat > 1
 
+    out: list[str] = []  # collects every line before printing
+
     # ── Header ────────────────────────────────────────────────────────────────
-    print(f"\n{_BOLD}{_BLUE}{'=' * W}{_RESET}")
-    print(f"{_BOLD}  BlazeUp HRMS  --  Test Run Summary{_RESET}")
-    print(f"  Mode        : {_CYAN}{mode}{_RESET}")
+    out.append(f"\n{_BOLD}{_BLUE}{'=' * W}{_RESET}")
+    out.append(f"{_BOLD}  BlazeUp HRMS  --  Test Run Summary{_RESET}")
+    out.append(f"  Mode        : {_CYAN}{mode}{_RESET}")
     if is_multi:
-        print(f"  Repeat      : {repeat}x  ({repeat_mode})")
-        print(f"  Total TCs   : {total_tcs}   Total runs : {total_runs}")
+        out.append(f"  Repeat      : {repeat}x  ({repeat_mode})")
+        out.append(f"  Total TCs   : {total_tcs}   Total runs : {total_runs}")
     else:
-        print(f"  Total TCs   : {total_tcs}")
-    print(f"  Duration    : {duration_s:.1f}s")
-    print(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
-    print()
+        out.append(f"  Total TCs   : {total_tcs}")
+    out.append(f"  Duration    : {duration_s:.1f}s")
+    out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
+    out.append("")
 
     # ── Table ─────────────────────────────────────────────────────────────────
     if is_multi:
-        print(_render_multi_run_table(tc_summaries))
+        out.append(_render_multi_run_table(tc_summaries))
     else:
-        print(_render_single_run_table(tc_summaries))
+        out.append(_render_single_run_table(tc_summaries))
 
     # ── Footer ────────────────────────────────────────────────────────────────
-    print()
+    out.append("")
     if is_multi:
         flaky_ids   = [str(s["tc_id"]) for s in tc_summaries if s["passed"] > 0 and s["failed"] > 0]
         failing_ids = [str(s["tc_id"]) for s in tc_summaries if s["passed"] == 0 and s["failed"] > 0]
-        print(
+        out.append(
             f"  Total runs  : {total_runs}   "
             f"{_GREEN}Pass: {total_passed}{_RESET}   "
             f"{_RED}Fail: {total_failed}{_RESET}   "
             f"{_YELLOW}Skip: {total_skipped}{_RESET}"
         )
         if flaky_ids:
-            print(f"  {_YELLOW}Flaky  : TC {', '.join(flaky_ids)}{_RESET}")
+            out.append(f"  {_YELLOW}Flaky  : TC {', '.join(flaky_ids)}{_RESET}")
         if failing_ids:
-            print(f"  {_RED}Failing: TC {', '.join(failing_ids)}{_RESET}")
+            out.append(f"  {_RED}Failing: TC {', '.join(failing_ids)}{_RESET}")
     else:
         fail_ids = [str(s["tc_id"]) for s in tc_summaries if s["failed"]  > 0]
         skip_ids = [str(s["tc_id"]) for s in tc_summaries if s["skipped"] > 0]
-        print(
+        out.append(
             f"  Total : {total_tcs}   "
             f"{_GREEN}PASS: {total_passed}{_RESET}   "
             f"{_RED}FAIL: {total_failed}{_RESET}   "
             f"{_YELLOW}SKIP: {total_skipped}{_RESET}"
         )
         if fail_ids:
-            print(f"  {_RED}Failed : TC {', '.join(fail_ids)}{_RESET}")
+            out.append(f"  {_RED}Failed : TC {', '.join(fail_ids)}{_RESET}")
         if skip_ids:
-            print(f"  {_YELLOW}Skipped: TC {', '.join(skip_ids)}{_RESET}")
+            out.append(f"  {_YELLOW}Skipped: TC {', '.join(skip_ids)}{_RESET}")
 
     if result_dir is not None:
-        print(f"\n  Logs   : {result_dir / 'logs' / 'test.log'}")
-        print(f"  Report : {result_dir / 'report.html'}")
-        print(f"  Allure : {result_dir / 'allure-results'}")
+        out.append(f"\n  Logs   : {result_dir / 'logs' / 'test.log'}")
+        out.append(f"  Report : {result_dir / 'report.html'}")
+        out.append(f"  Allure : {result_dir / 'allure-results'}")
 
-    print(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
+    out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
+
+    # ── Emit ──────────────────────────────────────────────────────────────────
+    # 1. Terminal: print with colours
+    for line in out:
+        print(line)
+
+    # 2. Log file: append plain-text (ANSI-stripped) copy
+    if result_dir is not None:
+        _append_summary_to_log(out, result_dir / "logs" / "test.log")
 
 
 def serve_allure_report(allure_dir: Path, env: dict[str, str], cwd: Path) -> int:
