@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -14,27 +15,64 @@ from pathlib import Path
 from loguru import logger
 
 try:
-    from tabulate import tabulate
-except ImportError:
-    tabulate = None  # type: ignore[assignment]
-
-try:
     from runner.tc_registry import TC_REGISTRY, TestCase, get_tc
 except ModuleNotFoundError:
     from tc_registry import TC_REGISTRY, TestCase, get_tc
 
-# ANSI color codes (used in print_summary and run_tc_ids)
+# ANSI color codes
 _GREEN = "\033[92m"
 _RED = "\033[91m"
 _YELLOW = "\033[93m"
 _BLUE = "\033[94m"
 _CYAN = "\033[96m"
 _BOLD = "\033[1m"
+_DIM = "\033[2m"
 _RESET = "\033[0m"
 
 
 def _bold(text: str) -> str:
     return f"{_BOLD}{text}{_RESET}"
+
+
+# ---------------------------------------------------------------------------
+# ANSI-aware table formatter
+# ---------------------------------------------------------------------------
+
+def _visible_len(s: str) -> int:
+    """Return the number of *visible* characters (strips ANSI escape codes)."""
+    return len(re.sub(r"\x1b\[[0-9;]*[mK]", "", s))
+
+
+def _fmt_table(rows: list[list], headers: list[str]) -> str:
+    """Left-aligned pipe table that handles ANSI colour codes correctly.
+
+    Standard ``tabulate`` counts escape sequences as visible characters,
+    producing misaligned columns when cells contain colour codes.  This
+    formatter strips codes only for *width measurement*, preserving colours
+    in the rendered output.
+    """
+    str_rows = [[str(c) for c in row] for row in rows]
+    ncols = len(headers)
+
+    # Compute each column's required visible width
+    widths = [_visible_len(h) for h in headers]
+    for row in str_rows:
+        for i in range(ncols):
+            widths[i] = max(widths[i], _visible_len(row[i]) if i < len(row) else 0)
+
+    def pad(cell: str, width: int) -> str:
+        return cell + " " * (width - _visible_len(cell))
+
+    divider = "+-" + "-+-".join("-" * w for w in widths) + "-+"
+    fmt_row = lambda cells: "| " + " | ".join(pad(cells[i], widths[i]) for i in range(ncols)) + " |"  # noqa: E731
+
+    lines = [divider, fmt_row(headers), divider]
+    for row in str_rows:
+        # Pad row to ncols in case of short rows
+        padded = row + [""] * (ncols - len(row))
+        lines.append(fmt_row(padded))
+    lines.append(divider)
+    return "\n".join(lines)
 
 
 def make_result_dir(base_dir: Path = Path('.')) -> Path:
@@ -166,36 +204,233 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
     return rows
 
 
-def print_summary(summary_rows: list[dict[str, str]]) -> None:
-    """Print a clean summary table for the selected test cases."""
+# ---------------------------------------------------------------------------
+# Unified summary helpers
+# ---------------------------------------------------------------------------
 
-    status_colors = {
-        "PASSED": f"{_GREEN}PASSED{_RESET}",
-        "FAILED": f"{_RED}FAILED{_RESET}",
-        "ERROR": f"{_RED}ERROR{_RESET}",
-        "SKIPPED": f"{_YELLOW}SKIPPED{_RESET}",
+def _build_tc_summaries_from_rows(summary_rows: list[dict[str, str]]) -> list[dict]:
+    """Convert single-run JUnit rows into the unified TC-summary dict format."""
+    result: list[dict] = []
+    for row in summary_rows:
+        tc_id = int(row["tc_id"])
+        tc = TC_REGISTRY.get(tc_id)
+        status = row["status"]
+        result.append({
+            "tc_id":    tc_id,
+            "priority": tc.priority if tc else "--",
+            "type":     tc.type     if tc else "--",
+            "module":   tc.module   if tc else "--",
+            "title":    row["title"],
+            "runs":     1,
+            "passed":   1 if status == "PASSED" else 0,
+            "failed":   1 if status in ("FAILED", "ERROR") else 0,
+            "skipped":  1 if status == "SKIPPED" else 0,
+            "avg_time": float(row["time"] or 0),
+            "last_msg": row["message"],
+        })
+    return result
+
+
+def _build_tc_summaries_from_perf(
+    perf_results: dict[int, list[dict[str, str]]],
+    tcs: list[TestCase],
+) -> list[dict]:
+    """Convert multi-run perf_results into the unified TC-summary dict format."""
+    result: list[dict] = []
+    for tc in tcs:
+        runs = perf_results.get(tc.tc_id, [])
+        if not runs:
+            continue
+        passed  = sum(1 for r in runs if r["status"] == "PASSED")
+        failed  = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
+        skipped = sum(1 for r in runs if r["status"] == "SKIPPED")
+        times   = [float(r["time"]) for r in runs if r.get("time") and r["status"] != "MISSING"]
+        avg_t   = sum(times) / len(times) if times else 0.0
+        last_msg = next(
+            (r["message"] for r in reversed(runs) if r["status"] in ("FAILED", "ERROR")),
+            "",
+        )
+        result.append({
+            "tc_id":    tc.tc_id,
+            "priority": tc.priority,
+            "type":     tc.type,
+            "module":   tc.module,
+            "title":    tc.title,
+            "runs":     len(runs),
+            "passed":   passed,
+            "failed":   failed,
+            "skipped":  skipped,
+            "avg_time": avg_t,
+            "last_msg": last_msg,
+        })
+    return result
+
+
+def _render_single_run_table(summaries: list[dict]) -> str:
+    """Table for a single run: Status | Time | Failure (first line)."""
+    _STATUS = {
+        "pass":    f"{_GREEN}PASS   {_RESET}",
+        "fail":    f"{_RED}FAIL   {_RESET}",
+        "skip":    f"{_YELLOW}SKIP   {_RESET}",
+        "missing": f"{_DIM}MISSING{_RESET}",
     }
 
     headers = [
-        _bold("TC ID"), _bold("Status"), _bold("Time"), _bold("Title"), _bold("Message"),
+        _bold("TC"), _bold("P"), _bold("Type"),
+        _bold("Title"),
+        _bold("Status"), _bold("Time"), _bold("Failure (first line)"),
     ]
-    table_data = [
-        [
-            f"{_BLUE}{r['tc_id']}{_RESET}",
-            status_colors.get(r["status"], r["status"]),
-            f"{r['time']}s",
-            r["title"],
-            r["message"],
-        ]
-        for r in summary_rows
-    ]
+    rows = []
+    for s in summaries:
+        if s["passed"]:
+            key = "pass"
+        elif s["failed"]:
+            key = "fail"
+        elif s["skipped"]:
+            key = "skip"
+        else:
+            key = "missing"
 
-    print(f"\n{_bold('=== TEST EXECUTION SUMMARY ===')}")
-    if tabulate is not None:
-        print(tabulate(table_data, headers=headers, tablefmt="github"))
+        title = s["title"]
+        if len(title) > 42:
+            title = title[:39] + "..."
+        msg = s["last_msg"]
+        if len(msg) > 45:
+            msg = msg[:42] + "..."
+
+        rows.append([
+            f"{_BLUE}{s['tc_id']}{_RESET}",
+            s["priority"],
+            s["type"],
+            title,
+            _STATUS[key],
+            f"{s['avg_time']:.2f}s",
+            msg,
+        ])
+    return _fmt_table(rows, headers)
+
+
+def _render_multi_run_table(summaries: list[dict]) -> str:
+    """Table for multi-run: Runs | Pass | Fail | Rate | Avg Time | Stability."""
+    headers = [
+        _bold("TC"), _bold("P"), _bold("Type"),
+        _bold("Title"),
+        _bold("Runs"), _bold("Pass"), _bold("Fail"),
+        _bold("Rate"), _bold("Avg"), _bold("Stability"),
+    ]
+    rows = []
+    for s in summaries:
+        runs   = s["runs"]
+        passed = s["passed"]
+        failed = s["failed"]
+        rate   = f"{passed / runs * 100:.0f}%" if runs else "--"
+
+        if failed == 0:
+            stability = f"{_GREEN}STABLE {_RESET}"
+        elif passed == 0:
+            stability = f"{_RED}FAILING{_RESET}"
+        else:
+            stability = f"{_YELLOW}FLAKY  {_RESET}"
+
+        title = s["title"]
+        if len(title) > 42:
+            title = title[:39] + "..."
+
+        rows.append([
+            f"{_BLUE}{s['tc_id']}{_RESET}",
+            s["priority"],
+            s["type"],
+            title,
+            str(runs),
+            f"{_GREEN}{passed}{_RESET}",
+            f"{_RED}{failed}{_RESET}" if failed else "0",
+            rate,
+            f"{s['avg_time']:.2f}s" if s["avg_time"] else "--",
+            stability,
+        ])
+    return _fmt_table(rows, headers)
+
+
+def print_run_summary(
+    tc_summaries: list[dict],
+    *,
+    mode: str = "normal",
+    repeat: int = 1,
+    repeat_mode: str = "batch",
+    duration_s: float = 0.0,
+    result_dir: Path | None = None,
+) -> None:
+    """Unified test-run summary for all execution modes.
+
+    Single run  (repeat=1)  ->  Status | Time | Failure columns.
+    Multi-run   (repeat>1)  ->  Runs | Pass | Fail | Rate | Avg | Stability.
+
+    The header block always shows mode, TC count, and duration.
+    Multi-run adds repeat count and total-runs count.
+    The footer shows totals + lists of failed / flaky TCs.
+    """
+    W = 66  # separator width
+    total_tcs     = len(tc_summaries)
+    total_runs    = sum(s["runs"]    for s in tc_summaries)
+    total_passed  = sum(s["passed"]  for s in tc_summaries)
+    total_failed  = sum(s["failed"]  for s in tc_summaries)
+    total_skipped = sum(s["skipped"] for s in tc_summaries)
+    is_multi      = repeat > 1
+
+    # ── Header ────────────────────────────────────────────────────────────────
+    print(f"\n{_BOLD}{_BLUE}{'=' * W}{_RESET}")
+    print(f"{_BOLD}  BlazeUp HRMS  --  Test Run Summary{_RESET}")
+    print(f"  Mode        : {_CYAN}{mode}{_RESET}")
+    if is_multi:
+        print(f"  Repeat      : {repeat}x  ({repeat_mode})")
+        print(f"  Total TCs   : {total_tcs}   Total runs : {total_runs}")
     else:
-        for row in table_data:
-            print(f"ID: {row[0]} | {row[1]} | {row[2]} | {row[3]}")
+        print(f"  Total TCs   : {total_tcs}")
+    print(f"  Duration    : {duration_s:.1f}s")
+    print(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
+    print()
+
+    # ── Table ─────────────────────────────────────────────────────────────────
+    if is_multi:
+        print(_render_multi_run_table(tc_summaries))
+    else:
+        print(_render_single_run_table(tc_summaries))
+
+    # ── Footer ────────────────────────────────────────────────────────────────
+    print()
+    if is_multi:
+        flaky_ids   = [str(s["tc_id"]) for s in tc_summaries if s["passed"] > 0 and s["failed"] > 0]
+        failing_ids = [str(s["tc_id"]) for s in tc_summaries if s["passed"] == 0 and s["failed"] > 0]
+        print(
+            f"  Total runs  : {total_runs}   "
+            f"{_GREEN}Pass: {total_passed}{_RESET}   "
+            f"{_RED}Fail: {total_failed}{_RESET}   "
+            f"{_YELLOW}Skip: {total_skipped}{_RESET}"
+        )
+        if flaky_ids:
+            print(f"  {_YELLOW}Flaky  : TC {', '.join(flaky_ids)}{_RESET}")
+        if failing_ids:
+            print(f"  {_RED}Failing: TC {', '.join(failing_ids)}{_RESET}")
+    else:
+        fail_ids = [str(s["tc_id"]) for s in tc_summaries if s["failed"]  > 0]
+        skip_ids = [str(s["tc_id"]) for s in tc_summaries if s["skipped"] > 0]
+        print(
+            f"  Total : {total_tcs}   "
+            f"{_GREEN}PASS: {total_passed}{_RESET}   "
+            f"{_RED}FAIL: {total_failed}{_RESET}   "
+            f"{_YELLOW}SKIP: {total_skipped}{_RESET}"
+        )
+        if fail_ids:
+            print(f"  {_RED}Failed : TC {', '.join(fail_ids)}{_RESET}")
+        if skip_ids:
+            print(f"  {_YELLOW}Skipped: TC {', '.join(skip_ids)}{_RESET}")
+
+    if result_dir is not None:
+        print(f"\n  Logs   : {result_dir / 'logs' / 'test.log'}")
+        print(f"  Report : {result_dir / 'report.html'}")
+        print(f"  Allure : {result_dir / 'allure-results'}")
+
+    print(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
 
 
 def serve_allure_report(allure_dir: Path, env: dict[str, str], cwd: Path) -> int:
@@ -214,7 +449,12 @@ def serve_allure_report(allure_dir: Path, env: dict[str, str], cwd: Path) -> int
     return result.returncode
 
 
-def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = False) -> int:
+def run_tc_ids(
+    tc_ids: list[int],
+    mode: str = "normal",
+    debug_log: bool = False,
+    serve_allure: bool = False,
+) -> int:
     """Run the given test case IDs and return the pytest return code."""
 
     base_dir = Path(__file__).resolve().parents[1]
@@ -225,57 +465,49 @@ def run_tc_ids(tc_ids: list[int], debug_log: bool = False, serve_allure: bool = 
 
     result_dir = make_result_dir(base_dir).resolve()
     metadata = {
-        "run_at": datetime.now().isoformat(),
-        "tc_ids": [tc.tc_id for tc in tcs],
+        "run_at":   datetime.now().isoformat(),
+        "mode":     mode,
+        "tc_ids":   [tc.tc_id for tc in tcs],
         "node_ids": [tc.node_id for tc in tcs],
         "result_dir": str(result_dir),
     }
-    (result_dir / "run_meta.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8")
+    (result_dir / "run_meta.json").write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8",
+    )
 
     env = os.environ.copy()
     env["BLAZEUP_RESULT_DIR"] = str(result_dir)
     env["BLAZEUP_LOG_LEVEL"] = "DEBUG" if debug_log else "INFO"
     pytest_args = build_pytest_args(tcs, result_dir, debug_log=debug_log)
 
-    print(f"{_BLUE}{_bold('Starting BlazeUp Automation Run')}{_RESET}")
-    print(f"Results: {result_dir}")
-    print(f"Total:   {len(tcs)} test cases")
+    print(f"\n{_BLUE}{_bold('BlazeUp Automation Run')}{_RESET}")
+    print(f"  Mode    : {_CYAN}{mode}{_RESET}")
+    print(f"  Results : {result_dir}")
+    print(f"  TCs     : {len(tcs)}")
     for tc in tcs:
-        print(f"   - TC {tc.tc_id}: {tc.title}")
-    print("-" * 50)
+        print(f"            TC {tc.tc_id:>5}  [{tc.priority}]  {tc.title}")
+    print("-" * 56)
 
     started = time.time()
-    result = subprocess.run(pytest_args, env=env, cwd=base_dir)
+    result  = subprocess.run(pytest_args, env=env, cwd=base_dir)
     elapsed = time.time() - started
 
-    junit_path = result_dir / "logs" / "junit.xml"
-    summary_rows = parse_junit_xml(junit_path, tcs)
-    print_summary(summary_rows)
+    summary_rows  = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
+    tc_summaries  = _build_tc_summaries_from_rows(summary_rows)
 
-    total = len(summary_rows)
-    passed_ids = [r["tc_id"] for r in summary_rows if r["status"] == "PASSED"]
-    failed_ids = [r["tc_id"] for r in summary_rows if r["status"] in ("FAILED", "ERROR")]
-    skipped_ids = [r["tc_id"] for r in summary_rows if r["status"] == "SKIPPED"]
-
-    print("\n" + "=" * 60)
-    print(_bold("TEST EXECUTION RESULTS"))
-    print(f"Total TCs Run: {_CYAN}{total}{_RESET}")
-    if passed_ids:
-        print(f"PASS {_GREEN}PASSED{_RESET} ({len(passed_ids)}): {', '.join(passed_ids)}")
-    if failed_ids:
-        print(f"FAIL {_RED}FAILED{_RESET} ({len(failed_ids)}): {', '.join(failed_ids)}")
-    if skipped_ids:
-        print(f"SKIP {_YELLOW}SKIPPED/BLOCKED{_RESET} ({len(skipped_ids)}): {', '.join(skipped_ids)}")
-
-    print(f"\nDuration: {elapsed:.1f}s | Logs: {result_dir / 'logs' / 'test.log'}")
-    print(f"Report: {result_dir / 'report.html'}")
-    print(f"Allure: {result_dir / 'allure-results'}")
-    print("=" * 60)
+    print_run_summary(
+        tc_summaries,
+        mode=mode,
+        repeat=1,
+        repeat_mode="batch",
+        duration_s=elapsed,
+        result_dir=result_dir,
+    )
 
     if serve_allure:
-        serve_returncode = serve_allure_report(result_dir / "allure-results", env, base_dir)
-        if serve_returncode != 0:
-            print("Allure serve failed. Please check the Allure CLI installation and try again.")
+        rc = serve_allure_report(result_dir / "allure-results", env, base_dir)
+        if rc != 0:
+            print("Allure serve failed. Check the Allure CLI installation and retry.")
 
     return result.returncode
 
@@ -304,85 +536,17 @@ def _run_single_batch(
     return result_dir, rows
 
 
-def print_performance_summary(
-    perf_results: dict[int, list[dict[str, str]]],
-    tcs: list[TestCase],
-    repeat: int,
-    repeat_mode: str,
-) -> None:
-    """Print aggregated stability/performance table after all iterations."""
-
-    print(f"\n{_bold('=== PERFORMANCE RUN SUMMARY ===')} "
-          f"mode={repeat_mode}  iterations={repeat}")
-
-    headers = [
-        _bold("TC ID"), _bold("Title"), _bold("Pass"), _bold("Fail"),
-        _bold("Pass Rate"), _bold("Avg Time"), _bold("Stability"),
-    ]
-    table_data = []
-
-    for tc in tcs:
-        runs = perf_results.get(tc.tc_id, [])
-        if not runs:
-            continue
-        passes = sum(1 for r in runs if r["status"] == "PASSED")
-        fails = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
-        skips = sum(1 for r in runs if r["status"] == "SKIPPED")
-        times = [float(r["time"]) for r in runs if r["time"] and r["status"] != "MISSING"]
-        avg_time = f"{sum(times) / len(times):.2f}s" if times else "--"
-        total = len(runs)
-        pass_rate = passes / total * 100 if total else 0.0
-
-        if fails == 0:
-            stability = f"{_GREEN}✓ STABLE{_RESET}"
-        elif passes == 0:
-            stability = f"{_RED}✗ FAILING{_RESET}"
-        else:
-            stability = f"{_YELLOW}⚠ FLAKY{_RESET}"
-
-        table_data.append([
-            f"{_BLUE}{tc.tc_id}{_RESET}",
-            tc.title[:45] + ("..." if len(tc.title) > 45 else ""),
-            f"{_GREEN}{passes}{_RESET}",
-            f"{_RED}{fails}{_RESET}" if fails else "0",
-            f"{pass_rate:.0f}%",
-            avg_time,
-            stability,
-        ])
-
-    if tabulate is not None:
-        print(tabulate(table_data, headers=headers, tablefmt="github"))
-    else:
-        for row in table_data:
-            print("  |  ".join(str(c) for c in row))
-
-    # Overall verdict
-    all_runs = [r for runs in perf_results.values() for r in runs]
-    total_pass = sum(1 for r in all_runs if r["status"] == "PASSED")
-    total_fail = sum(1 for r in all_runs if r["status"] in ("FAILED", "ERROR"))
-    flaky_tcs = [
-        tc.tc_id for tc in tcs
-        if perf_results.get(tc.tc_id)
-        and any(r["status"] == "PASSED" for r in perf_results[tc.tc_id])
-        and any(r["status"] in ("FAILED", "ERROR") for r in perf_results[tc.tc_id])
-    ]
-
-    print(f"\n  Total runs: {len(all_runs)} | "
-          f"{_GREEN}Passed: {total_pass}{_RESET} | "
-          f"{_RED}Failed: {total_fail}{_RESET}")
-    if flaky_tcs:
-        print(f"  {_YELLOW}Flaky TCs: {', '.join(str(i) for i in flaky_tcs)}{_RESET}")
 
 
 def run_performance_plan(
     base_ids: list[int],
     repeat: int,
     repeat_mode: str,
+    mode: str = "normal",
     debug_log: bool = False,
     fail_fast_count: int = 0,
 ) -> int:
-    """
-    Run tests multiple times and produce a stability/performance report.
+    """Run tests multiple times and produce a stability/performance report.
 
     repeat_mode='batch' -- run full list x N  ->  [1,2,3, 1,2,3, ...]
                           Good for: system stability, memory-leak detection.
@@ -410,15 +574,15 @@ def run_performance_plan(
     perf_results: dict[int, list[dict[str, str]]] = {tc.tc_id: [] for tc in tcs}
 
     print(f"\n{_BLUE}{_bold('BlazeUp Performance Run')}{_RESET}")
-    print(f"  Mode       : {repeat_mode}")
-    print(f"  TCs        : {len(tcs)}")
-    print(f"  Iterations : {repeat}")
-    print(f"  Batches    : {total_batches}")
+    print(f"  Mode       : {_CYAN}{mode}{_RESET}")
+    print(f"  Repeat     : {repeat}x  ({repeat_mode})")
+    print(f"  TCs        : {len(tcs)}   Batches : {total_batches}")
     if fail_fast_count:
         print(f"  Fail-fast  : stop after {fail_fast_count} failure(s)")
     print("-" * 60)
 
     total_failures = 0
+    wall_start = time.time()
 
     for idx, batch_tcs in enumerate(batches, start=1):
         # Progress label
@@ -433,27 +597,36 @@ def run_performance_plan(
 
         _, rows = _run_single_batch(batch_tcs, base_dir, debug_log)
 
-        # Print per-TC status on same line
+        # Print per-TC inline status
         for row in rows:
-            status_str = (
-                f"{_GREEN}PASS{_RESET}" if row["status"] == "PASSED"
-                else f"{_RED}FAIL{_RESET}" if row["status"] in ("FAILED", "ERROR")
-                else f"{_YELLOW}SKIP{_RESET}"
-            )
-            print(f"TC{row['tc_id']}={status_str}({row['time']}s)", end="  ")
+            if row["status"] == "PASSED":
+                tag = f"{_GREEN}PASS{_RESET}"
+            elif row["status"] in ("FAILED", "ERROR"):
+                tag = f"{_RED}FAIL{_RESET}"
+            else:
+                tag = f"{_YELLOW}SKIP{_RESET}"
+            print(f"TC{row['tc_id']}={tag}({row['time']}s)", end="  ")
             perf_results[int(row["tc_id"])].append(row)
             if row["status"] in ("FAILED", "ERROR"):
                 total_failures += 1
 
         print()  # newline after inline statuses
 
-        # Fail-fast check
         if fail_fast_count and total_failures >= fail_fast_count:
             print(f"\n  {_YELLOW}Stopping: reached {total_failures} failure(s) "
                   f"(--fail-fast-count {fail_fast_count}){_RESET}")
             break
 
-    print_performance_summary(perf_results, tcs, repeat, repeat_mode)
+    elapsed = time.time() - wall_start
+    tc_summaries = _build_tc_summaries_from_perf(perf_results, tcs)
+
+    print_run_summary(
+        tc_summaries,
+        mode=mode,
+        repeat=repeat,
+        repeat_mode=repeat_mode,
+        duration_s=elapsed,
+    )
 
     any_failed = any(
         r["status"] in ("FAILED", "ERROR")

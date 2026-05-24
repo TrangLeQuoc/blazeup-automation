@@ -44,7 +44,37 @@ DEFAULT_SKIP_IDS: list[str] = []
 _BOLD = "\033[1m"
 _BLUE = "\033[94m"
 _CYAN = "\033[96m"
+_YELLOW = "\033[93m"
 _RESET = "\033[0m"
+
+
+# ---------------------------------------------------------------------------
+# Helper: build a human-readable mode label for the summary header
+# ---------------------------------------------------------------------------
+
+def _display_mode(args: argparse.Namespace) -> str:
+    """Return a short human-readable label describing how TCs were selected.
+
+    Examples::
+
+        regression              -> "regression"
+        regression + --priority -> "regression (priority=P1)"
+        normal + --module auth  -> "normal (module=auth)"
+        normal + --execute 1 2  -> "normal (ids=2 specified)"
+    """
+    base = args.mode  # "normal", "regression", "smoke"
+    extras: list[str] = []
+    if args.priority:
+        extras.append(f"priority={args.priority}")
+    if args.module:
+        extras.append(f"module={args.module}")
+    if getattr(args, "type", None):
+        extras.append(f"type={'+'.join(args.type)}")
+    if args.marker:
+        extras.append(f"marker={args.marker}")
+    if args.execute:
+        extras.append(f"ids={len(args.execute)} specified")
+    return f"{base} ({', '.join(extras)})" if extras else base
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +280,7 @@ def main() -> int:
         return 1
 
     repeat = max(1, args.repeat)
+    mode   = _display_mode(args)
 
     # ── --dry-run ───────────────────────────────────────────────────────────
     if args.dry_run:
@@ -262,11 +293,12 @@ def main() -> int:
             base_ids,
             repeat=repeat,
             repeat_mode=args.repeat_mode,
+            mode=mode,
             debug_log=args.debug_log,
             fail_fast_count=args.fail_fast_count,
         )
 
-    return run_tc_ids(base_ids, debug_log=args.debug_log, serve_allure=args.serve)
+    return run_tc_ids(base_ids, mode=mode, debug_log=args.debug_log, serve_allure=args.serve)
 
 
 if __name__ == "__main__":
