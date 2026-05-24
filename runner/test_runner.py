@@ -48,10 +48,23 @@ def make_result_dir(base_dir: Path = Path('.')) -> Path:
 
 
 def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = False) -> list[str]:
-    """Build pytest CLI arguments for the selected test cases."""
+    """Build pytest CLI arguments for the selected test cases.
 
+    Logging strategy
+    ----------------
+    All terminal and file logging is handled exclusively by **loguru** (configured
+    in pytest_support/fixtures.py::result_dir).  Pytest's built-in log-capture is
+    kept only for failure tracebacks — NOT for live CLI display or duplicate file
+    output.
+
+    Removed intentionally:
+      --log-cli-level   -> was causing '--- live log setup/call ---' banners and
+                           duplicating httpx noise in the terminal.
+      --log-file / --log-file-level -> was writing a second copy of logs into the
+                           same test.log that loguru already owns, creating a
+                           mixed-format file.
+    """
     node_ids = [tc.node_id for tc in tcs]
-    log_level = "DEBUG" if debug_log else "INFO"
     return [
         sys.executable,
         "-m",
@@ -63,12 +76,13 @@ def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = F
         f"--html={result_dir / 'report.html'}",
         "--self-contained-html",
         f"--alluredir={result_dir / 'allure-results'}",
-        f"--log-file={result_dir / 'logs' / 'test.log'}",
-        f"--log-file-level={log_level}",
-        "--log-cli-level=INFO",
+        # Suppress noisy third-party loggers from pytest's internal capture
+        # (these would appear in the '--- Captured log call ---' section on failure)
         "--log-disable=faker",
         "--log-disable=faker.factory",
         "--log-disable=asyncio",
+        "--log-disable=httpx",
+        "--log-disable=httpcore",
         f"--junitxml={result_dir / 'logs' / 'junit.xml'}",
         "-p",
         "no:cacheprovider",

@@ -30,6 +30,8 @@ RESULT_DIR = Path(os.getenv("BLAZEUP_RESULT_DIR", f"results/run_{datetime.now().
 logging.getLogger("faker").setLevel(logging.WARNING)
 logging.getLogger("faker.factory").setLevel(logging.WARNING)
 logging.getLogger("asyncio").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 @pytest.fixture(scope="session")
@@ -151,6 +153,8 @@ async def tc_logger(
     start = time.perf_counter()
 
     with logger.contextualize(tc_id=f"TC-{tc_id}"):
+        # Blank line before each TC banner so tests are visually separated
+        print("", file=sys.stderr, flush=True)
         logger.log("START", "[TC-{}] {}", tc_id, title)
         try:
             yield
