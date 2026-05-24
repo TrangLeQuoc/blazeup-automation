@@ -2,7 +2,9 @@
 
 import logging
 import os
+import re
 import sys
+import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
@@ -39,30 +41,135 @@ def settings() -> Settings:
 
 @pytest.fixture(scope="session")
 def result_dir() -> Path:
-    """Return the current run artifact directory."""
+    """Return the current run artifact directory and configure loguru sinks."""
 
     for subfolder in ["logs", "videos", "screenshots", "traces", "allure-results"]:
         (RESULT_DIR / subfolder).mkdir(parents=True, exist_ok=True)
+
+    # Ensure custom log levels (STEP, START, PASSED, FAILED) are registered.
+    import utils.log_helper  # noqa: F401 — side-effect import registers levels
+
     log_level = os.getenv("BLAZEUP_LOG_LEVEL", "INFO")
     logger.remove()
+
+    # ── Terminal: compact & beautiful ────────────────────────────────────────
+    # Shows only the time, coloured level badge, and message.
+    # Level colours come from the loguru level definition (custom + built-in).
     logger.add(
         sys.stderr,
-        format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+        format=(
+            "<green>{time:HH:mm:ss}</green> | "
+            "<level>{level: <8}</level> | "
+            "<level>{message}</level>"
+        ),
         level=log_level,
         enqueue=True,
         colorize=True,
         backtrace=False,
         diagnose=False,
     )
+
+    # ── File: detailed & grep-friendly ───────────────────────────────────────
+    # Includes timestamp (ms), TC ID (set via logger.contextualize), source
+    # location, and full message.  Use: grep "TC-A01" results/.../test.log
+    def _add_tc_id_default(record: dict) -> bool:
+        record["extra"].setdefault("tc_id", "--")
+        return True
+
     logger.add(
         RESULT_DIR / "logs" / "test.log",
+        format=(
+            "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
+            "{level: <8} | "
+            "{extra[tc_id]: <10} | "
+            "{file.name}:{function}:{line} | "
+            "{message}"
+        ),
         level=log_level,
+        filter=_add_tc_id_default,
         encoding="utf-8",
         enqueue=True,
         backtrace=True,
         diagnose=False,
     )
     return RESULT_DIR
+
+
+# ---------------------------------------------------------------------------
+# TC-logger helpers
+# ---------------------------------------------------------------------------
+
+def _parse_tc_id(node_name: str) -> str:
+    """Extract a short TC ID string from a pytest node name.
+
+    Examples::
+
+        test_tca01_login_returns_jwt  ->  'A01'
+        test_tc01_login_success       ->  '1001'
+        test_something_else           ->  '???'
+    """
+    m = re.search(r"test_tc(a?)(\d+)", node_name)
+    if not m:
+        return "???"
+    if m.group(1):          # 'a' present -> API test  (tca01 -> A01)
+        return f"A{int(m.group(2)):02d}"
+    return str(1000 + int(m.group(2)))  # UI test  (tc01 -> 1001)
+
+
+def _parse_tc_title(item: pytest.Item) -> str:
+    """Return the first docstring line of the test function (strips TC prefix)."""
+    fn = getattr(item, "function", None) or getattr(item, "obj", None)
+    doc = (getattr(fn, "__doc__", None) or "").strip()
+    if not doc:
+        return item.name
+    first_line = doc.split("\n")[0]
+    # Strip "TC-A01: " or "TC01: " style prefix if present
+    return first_line.split(": ", 1)[-1] if ": " in first_line else first_line
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def tc_logger(
+    request: pytest.FixtureRequest,
+    result_dir: Path,
+) -> AsyncGenerator[None, None]:
+    """Autouse fixture: emits TC START/PASSED/FAILED banners and binds the
+    TC ID to every log record produced during the test via loguru contextualize.
+
+    Terminal output (compact):
+        10:25:01 | START    | [TC-A01] Login returns JWT token
+        10:25:01 | STEP     | Step 1: Login with valid credentials  [email='...']
+        10:25:01 | INFO     | POST /auth-api/login | 200 (342ms)
+        10:25:02 | PASSED   | [TC-A01] PASSED (1.23s)
+
+    File output (detailed, grep-friendly):
+        2026-05-24 10:25:01.342 | START    | TC-A01    | fixtures.py:tc_logger:95   | [TC-A01] Login returns JWT token
+        2026-05-24 10:25:01.688 | INFO     | TC-A01    | base_client.py:request:78  | POST /auth-api/login | 200 (342ms)
+        2026-05-24 10:25:02.155 | PASSED   | TC-A01    | fixtures.py:tc_logger:107  | [TC-A01] PASSED (1.23s)
+    """
+    tc_id = _parse_tc_id(request.node.name)
+    title = _parse_tc_title(request.node)
+    start = time.perf_counter()
+
+    with logger.contextualize(tc_id=f"TC-{tc_id}"):
+        logger.log("START", "[TC-{}] {}", tc_id, title)
+        try:
+            yield
+        finally:
+            elapsed = time.perf_counter() - start
+            rep_call = getattr(request.node, "rep_call", None)
+            rep_setup = getattr(request.node, "rep_setup", None)
+
+            failed = (rep_call is not None and rep_call.failed) or (
+                rep_setup is not None and rep_setup.failed
+            )
+            skipped = rep_call is not None and rep_call.skipped
+
+            if failed:
+                logger.log("FAILED", "[TC-{}] FAILED ({:.2f}s)", tc_id, elapsed)
+            elif skipped:
+                logger.warning("[TC-{}] SKIPPED ({:.2f}s)", tc_id, elapsed)
+            else:
+                logger.log("PASSED", "[TC-{}] PASSED ({:.2f}s)", tc_id, elapsed)
 
 
 @pytest.fixture(scope="session")

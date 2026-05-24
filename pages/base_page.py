@@ -20,7 +20,7 @@ class BasePage:
         """Navigate to an application path."""
 
         url = f"{self.base_url}/{path.lstrip('/')}" if path else self.base_url
-        logger.info("STEP | Navigate to: {}", url)
+        logger.log("STEP", "Navigate  {}", url)
         try:
             await self.page.goto(url, wait_until="commit", timeout=60_000)
         except PlaywrightTimeoutError:
@@ -43,7 +43,7 @@ class BasePage:
 
         locator = await self.wait_for_element(selector, timeout=timeout, label=label)
         desc = label or self._selector_id(selector)
-        logger.info("STEP | Click on: [{}]", desc)
+        logger.log("STEP", "Click  [{}]", desc)
         logger.debug("Click selector: {}", selector)
         await self._retry(lambda: locator.click(timeout=timeout))
 
@@ -53,7 +53,7 @@ class BasePage:
         locator = await self.wait_for_element(selector, timeout=timeout, label=label)
         desc = label or self._selector_id(selector)
         masked_value = "***" if "password" in (label or "").lower() or "password" in selector.lower() else value
-        logger.info("STEP | Fill [{}] with: {}", desc, masked_value)
+        logger.log("STEP", "Fill  [{}] = {}", desc, masked_value)
         logger.debug("Fill selector: {} | Value: {}", selector, value)
         await self._retry(lambda: locator.fill(value, timeout=timeout))
 
@@ -61,7 +61,7 @@ class BasePage:
         """Return normalized visible text from an element."""
 
         desc = self._selector_id(selector)
-        logger.info("STEP | Read text from: [{}]", desc)
+        logger.log("STEP", "Read text  [{}]", desc)
         locator = await self.wait_for_element(selector, timeout=timeout, label=desc)
         text = await self._retry(lambda: locator.inner_text(timeout=timeout))
         return " ".join(text.split())

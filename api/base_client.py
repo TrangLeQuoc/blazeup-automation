@@ -62,6 +62,17 @@ class BaseClient:
         if self.token:
             headers.setdefault("Authorization", f"Bearer {self.token}")
 
+        # Log the outgoing request at DEBUG level (body masked for sensitive keys)
+        json_body = kwargs.get("json") or kwargs.get("data")
+        if json_body and isinstance(json_body, dict):
+            masked = {
+                k: ("***" if any(s in k.lower() for s in ("password", "token", "secret", "key", "pwd")) else v)
+                for k, v in json_body.items()
+            }
+            logger.debug("--> {} {}  body={}", method.upper(), endpoint, masked)
+        else:
+            logger.debug("--> {} {}", method.upper(), endpoint)
+
         response: httpx.Response | None = None
         for attempt in range(1, 4):
             started = time.perf_counter()
@@ -75,7 +86,7 @@ class BaseClient:
                 continue
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             response.extensions["elapsed_ms"] = elapsed_ms
-            logger.info("{} {} -> {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms)
+            logger.info("{} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms)
 
             if response.status_code < 500 or attempt == 3:
                 break

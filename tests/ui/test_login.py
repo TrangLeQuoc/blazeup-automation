@@ -10,6 +10,7 @@ from config.settings import Settings
 from pages.home_page import HomePage
 from pages.login_page import LoginPage
 from utils.helpers import require_credentials
+from utils.log_helper import async_step
 
 pytestmark = [pytest.mark.ui, pytest.mark.regression]
 
@@ -25,11 +26,15 @@ async def test_tc01_login_success_with_valid_credentials(page: Page, settings: S
     login_page = LoginPage(page, str(settings.base_url))
     home_page = HomePage(page, str(settings.base_url))
 
-    await login_page.open()
-    await login_page.login(email, password)
+    async with async_step("Step 1: Open the login page"):
+        await login_page.open()
 
-    await home_page.expect_loaded()
-    assert "/login" not in page.url
+    async with async_step("Step 2: Enter credentials and submit the login form", email=email):
+        await login_page.login(email, password)
+
+    async with async_step("Step 3: Verify successful redirect to the home page"):
+        await home_page.expect_loaded()
+        assert "/login" not in page.url
 
 
 @allure.epic("BlazeUp HRMS")
@@ -46,12 +51,16 @@ async def test_tc02_login_fails_with_wrong_password(
     password = test_data["invalid_users"]["wrong_password"]["password"]
     login_page = LoginPage(page, str(settings.base_url))
 
-    await login_page.open()
-    await login_page.login(email, password)
+    async with async_step("Step 1: Open the login page"):
+        await login_page.open()
 
-    error = await login_page.expect_error()
-    assert error
-    assert "/login" in page.url
+    async with async_step("Step 2: Submit login form with wrong password", email=email):
+        await login_page.login(email, password)
+
+    async with async_step("Step 3: Verify error message is shown and URL stays on /login"):
+        error = await login_page.expect_error()
+        assert error
+        assert "/login" in page.url
 
 
 @allure.epic("BlazeUp HRMS")
@@ -67,11 +76,15 @@ async def test_tc03_login_fails_with_unknown_email(
     user = test_data["invalid_users"]["unknown_email"]
     login_page = LoginPage(page, str(settings.base_url))
 
-    await login_page.open()
-    await login_page.login(user["email"], user["password"])
+    async with async_step("Step 1: Open the login page"):
+        await login_page.open()
 
-    error = await login_page.expect_error()
-    assert error
+    async with async_step("Step 2: Submit login form with unknown email", email=user["email"]):
+        await login_page.login(user["email"], user["password"])
+
+    async with async_step("Step 3: Verify an error message is shown"):
+        error = await login_page.expect_error()
+        assert error
 
 
 @allure.epic("BlazeUp HRMS")
@@ -84,11 +97,15 @@ async def test_tc04_redirects_to_home_after_login(page: Page, settings: Settings
     email, password = require_credentials(settings.test_email, settings.test_password)
     login_page = LoginPage(page, str(settings.base_url))
 
-    await login_page.open()
-    await login_page.login(email, password)
+    async with async_step("Step 1: Open the login page"):
+        await login_page.open()
 
-    await HomePage(page, str(settings.base_url)).expect_loaded()
-    assert "/login" not in page.url
+    async with async_step("Step 2: Enter credentials and submit", email=email):
+        await login_page.login(email, password)
+
+    async with async_step("Step 3: Verify URL is no longer on /login"):
+        await HomePage(page, str(settings.base_url)).expect_loaded()
+        assert "/login" not in page.url
 
 
 @allure.epic("BlazeUp HRMS")
@@ -98,12 +115,17 @@ async def test_tc05_logout_clears_session(authenticated_page: Page, settings: Se
     """TC05: Logout clears the browser session."""
 
     home_page = HomePage(authenticated_page, str(settings.base_url))
-    await home_page.logout()
 
-    await expect(authenticated_page).to_have_url(re.compile(r".*/(login|auth).*"), timeout=10_000)
-    cookies = await authenticated_page.context.cookies(str(settings.base_url))
-    auth_cookies = [
-        cookie for cookie in cookies
-        if "token" in cookie["name"].lower() or "session" in cookie["name"].lower()
-    ]
-    assert not auth_cookies
+    async with async_step("Step 1: Click the logout button"):
+        await home_page.logout()
+
+    async with async_step("Step 2: Verify redirect to the login/auth page"):
+        await expect(authenticated_page).to_have_url(re.compile(r".*/(login|auth).*"), timeout=10_000)
+
+    async with async_step("Step 3: Verify auth/session cookies are cleared"):
+        cookies = await authenticated_page.context.cookies(str(settings.base_url))
+        auth_cookies = [
+            cookie for cookie in cookies
+            if "token" in cookie["name"].lower() or "session" in cookie["name"].lower()
+        ]
+        assert not auth_cookies

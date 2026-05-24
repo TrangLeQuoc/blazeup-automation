@@ -14,6 +14,7 @@ from pytest_support.fixtures import (
     page,
     result_dir,
     settings,
+    tc_logger,
     test_data,
     test_user,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "pytest_runtest_makereport",
     "result_dir",
     "settings",
+    "tc_logger",
     "test_data",
     "test_user",
 ]

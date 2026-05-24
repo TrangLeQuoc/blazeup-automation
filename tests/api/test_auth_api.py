@@ -5,6 +5,7 @@ import pytest
 from api.auth_client import AuthClient, UserInfo
 from config.settings import Settings
 from utils.helpers import require_credentials
+from utils.log_helper import async_step
 
 pytestmark = [pytest.mark.api, pytest.mark.regression]
 
@@ -14,12 +15,17 @@ async def test_tca01_login_returns_jwt_token(settings: Settings, auth_client: Au
     """TC-A01: BlazeUp sign-in returns a bearer token."""
 
     email, password = require_credentials(settings.test_email, settings.test_password)
-    response = await auth_client.login(email, password)
-    assert response.bearer_token, "Login response did not contain a token"
-    # A JWT has exactly 2 dots; a plain opaque token has 0
-    assert response.bearer_token.count(".") in {0, 2}, (
-        f"Token format looks invalid: {response.bearer_token[:20]}..."
-    )
+
+    async with async_step("Step 1: Login with valid credentials", email=email):
+        response = await auth_client.login(email, password)
+
+    async with async_step("Step 2: Verify bearer token is present"):
+        assert response.bearer_token, "Login response did not contain a token"
+
+    async with async_step("Step 3: Verify token format (JWT has 2 dots; opaque has 0)"):
+        assert response.bearer_token.count(".") in {0, 2}, (
+            f"Token format looks invalid: {response.bearer_token[:20]}..."
+        )
 
 
 async def test_tca02_login_wrong_password_returns_401(settings: Settings, test_data: dict) -> None:
@@ -33,8 +39,11 @@ async def test_tca02_login_wrong_password_returns_401(settings: Settings, test_d
         app_origin=str(settings.base_url),
     )
     try:
-        response = await client.raw_login({"email": email, "password": password}, expected_status=(400, 401))
-        assert response.status_code in {400, 401}
+        async with async_step("Step 1: Attempt login with wrong password", email=email):
+            response = await client.raw_login({"email": email, "password": password}, expected_status=(400, 401))
+
+        async with async_step("Step 2: Verify response status is 400 or 401"):
+            assert response.status_code in {400, 401}
     finally:
         await client.close()
 
@@ -52,22 +61,29 @@ async def test_tca03_client_logout_clears_token_and_subsequent_request_is_reject
     confirmed.
     """
 
-    await auth_client.logout()
-    assert auth_client.token is None, "logout() should clear client.token"
+    async with async_step("Step 1: Call logout — clears client-side token"):
+        await auth_client.logout()
 
-    response = await auth_client.get("/auth-api/current-user", expected_status=(401, 403))
-    assert response.status_code in {401, 403}, (
-        f"Expected 401/403 after logout, got {response.status_code}"
-    )
+    async with async_step("Step 2: Verify client.token is now None"):
+        assert auth_client.token is None, "logout() should clear client.token"
+
+    async with async_step("Step 3: Call protected endpoint without token — expect 401 or 403"):
+        response = await auth_client.get("/auth-api/current-user", expected_status=(401, 403))
+        assert response.status_code in {401, 403}, (
+            f"Expected 401/403 after logout, got {response.status_code}"
+        )
 
 
 @pytest.mark.smoke
 async def test_tca04_get_me_returns_user_info(auth_client: AuthClient) -> None:
     """TC-A04: GET /auth-api/current-user returns authenticated user information."""
 
-    user = await auth_client.me()
-    assert isinstance(user, UserInfo)
-    assert user.id, "User id must be non-empty"
+    async with async_step("Step 1: Fetch current user info"):
+        user = await auth_client.me()
+
+    async with async_step("Step 2: Verify response is a UserInfo object with a non-empty id"):
+        assert isinstance(user, UserInfo)
+        assert user.id, "User id must be non-empty"
 
 
 async def test_tca05_api_without_token_returns_401(settings: Settings) -> None:
@@ -79,8 +95,11 @@ async def test_tca05_api_without_token_returns_401(settings: Settings) -> None:
         app_origin=str(settings.base_url),
     )
     try:
-        response = await client.get("/auth-api/current-user", expected_status=401)
-        assert response.status_code == 401
+        async with async_step("Step 1: Call protected endpoint without any token"):
+            response = await client.get("/auth-api/current-user", expected_status=401)
+
+        async with async_step("Step 2: Verify status code is 401"):
+            assert response.status_code == 401
     finally:
         await client.close()
 
@@ -95,7 +114,10 @@ async def test_tca06_api_with_expired_token_returns_401_or_403(settings: Setting
         app_origin=str(settings.base_url),
     )
     try:
-        response = await client.get("/auth-api/current-user", expected_status=(401, 403))
-        assert response.status_code in {401, 403}
+        async with async_step("Step 1: Call protected endpoint with an invalid/expired token"):
+            response = await client.get("/auth-api/current-user", expected_status=(401, 403))
+
+        async with async_step("Step 2: Verify status code is 401 or 403"):
+            assert response.status_code in {401, 403}
     finally:
         await client.close()
