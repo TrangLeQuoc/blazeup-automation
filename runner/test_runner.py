@@ -44,8 +44,50 @@ def _visible_len(s: str) -> int:
 
 
 def _strip_ansi(s: str) -> str:
-    """Return s with all ANSI escape codes removed (plain text)."""
-    return re.sub(r"\x1b\[[0-9;]*[mK]", "", s)
+    """Return s with ANSI SGR codes AND OSC 8 hyperlinks removed (plain text).
+
+    OSC 8 format:  ESC]8;;URL ESC\\ VISIBLE_TEXT ESC]8;; ESC\\
+    The regex keeps VISIBLE_TEXT and discards the surrounding escape sequences.
+    """
+    # Remove ANSI SGR / erase codes  (e.g. \x1b[92m, \x1b[0m, \x1b[2K)
+    s = re.sub(r"\x1b\[[0-9;]*[mK]", "", s)
+    # Remove OSC 8 hyperlinks, preserving the visible link text
+    s = re.sub(r"\x1b\]8;;[^\x1b]*\x1b\\(.*?)\x1b\]8;;\x1b\\", r"\1", s)
+    return s
+
+
+def _terminal_link(text: str, url: str) -> str:
+    """Wrap *text* in an OSC 8 hyperlink escape sequence.
+
+    Modern terminals (Windows Terminal, iTerm2, GNOME Terminal >=3.26) render
+    this as a clickable hyperlink.  Terminals that don't understand OSC 8 show
+    the raw text without escape sequences (safe fallback).
+    """
+    return f"\x1b]8;;{url}\x1b\\{text}\x1b]8;;\x1b\\"
+
+
+def _generate_allure_html(results_dir: Path, output_dir: Path) -> Path | None:
+    """Generate a static Allure HTML report from *results_dir*.
+
+    Runs ``allure generate <results_dir> -o <output_dir> --clean`` and
+    returns the path to ``index.html`` on success.  Returns ``None`` if the
+    Allure CLI is not installed, the results directory is empty, or generation
+    fails for any reason.
+    """
+    if shutil.which("allure") is None:
+        return None
+    if not results_dir.exists() or not any(results_dir.iterdir()):
+        return None
+    try:
+        subprocess.run(
+            ["allure", "generate", str(results_dir), "-o", str(output_dir), "--clean"],
+            capture_output=True,
+            timeout=120,
+        )
+        index = output_dir / "index.html"
+        return index if index.exists() else None
+    except (OSError, subprocess.TimeoutExpired):
+        return None
 
 
 def _append_summary_to_log(lines: list[str], log_path: Path) -> None:
@@ -381,6 +423,7 @@ def print_run_summary(
     repeat_mode: str = "batch",
     duration_s: float = 0.0,
     result_dir: Path | None = None,
+    allure_html: Path | None = None,
 ) -> None:
     """Unified test-run summary for all execution modes.
 
@@ -390,9 +433,12 @@ def print_run_summary(
     Output strategy
     ---------------
     All lines are first collected into a list so they can be:
-    1. Printed to the terminal with ANSI colour codes intact.
-    2. Written to ``result_dir/logs/test.log`` with colour codes stripped,
-       so the summary is searchable alongside the structured test logs.
+    1. Printed to the terminal with ANSI colour codes and OSC 8 hyperlinks.
+    2. Written to ``result_dir/logs/test.log`` with codes stripped (plain text).
+
+    When *allure_html* is provided (path to a generated ``index.html``), the
+    Allure row becomes an OSC 8 clickable link — Ctrl+Click (Windows Terminal)
+    or plain click (iTerm2) opens the report directly in the browser.
     """
     W = 66  # separator width
     total_tcs     = len(tc_summaries)
@@ -453,9 +499,21 @@ def print_run_summary(
             out.append(f"  {_YELLOW}Skipped: TC {', '.join(skip_ids)}{_RESET}")
 
     if result_dir is not None:
-        out.append(f"\n  Logs   : {result_dir / 'logs' / 'test.log'}")
-        out.append(f"  Report : {result_dir / 'report.html'}")
-        out.append(f"  Allure : {result_dir / 'allure-results'}")
+        log_path    = result_dir / "logs" / "test.log"
+        report_path = result_dir / "report.html"
+        out.append(f"\n  Logs   : {_terminal_link(str(log_path),    log_path.as_uri())}")
+        out.append(f"  Report : {_terminal_link(str(report_path), report_path.as_uri())}")
+        if allure_html is not None:
+            allure_url = allure_html.as_uri()
+            out.append(
+                f"  Allure : {_terminal_link(allure_url, allure_url)}"
+                f"  {_DIM}(Ctrl+Click to open){_RESET}"
+            )
+        else:
+            out.append(
+                f"  Allure : {result_dir / 'allure-results'}"
+                f"  {_DIM}(install allure CLI to auto-generate){_RESET}"
+            )
 
     out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
 
@@ -528,8 +586,16 @@ def run_tc_ids(
     result  = subprocess.run(pytest_args, env=env, cwd=base_dir)
     elapsed = time.time() - started
 
-    summary_rows  = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
-    tc_summaries  = _build_tc_summaries_from_rows(summary_rows)
+    summary_rows = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
+    tc_summaries = _build_tc_summaries_from_rows(summary_rows)
+
+    # Generate static Allure HTML so the summary can show a one-click link.
+    # Falls back to None (path to allure-results shown instead) when allure CLI
+    # is not installed or the results folder is empty.
+    allure_html = _generate_allure_html(
+        result_dir / "allure-results",
+        result_dir / "allure-report",
+    )
 
     print_run_summary(
         tc_summaries,
@@ -538,6 +604,7 @@ def run_tc_ids(
         repeat_mode="batch",
         duration_s=elapsed,
         result_dir=result_dir,
+        allure_html=allure_html,
     )
 
     if serve_allure:
