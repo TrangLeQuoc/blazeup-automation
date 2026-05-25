@@ -70,17 +70,23 @@ def _generate_allure_html(results_dir: Path, output_dir: Path) -> Path | None:
     """Generate a static Allure HTML report from *results_dir*.
 
     Runs ``allure generate <results_dir> -o <output_dir> --clean`` and
-    returns the path to ``index.html`` on success.  Returns ``None`` if the
-    Allure CLI is not installed, the results directory is empty, or generation
-    fails for any reason.
+    returns the path to ``index.html`` on success.  Returns ``None`` when
+    the results directory is empty or generation fails for any reason.
+
+    Uses ``shell=True`` so Windows `.bat` / `.cmd` wrappers (the typical
+    Allure install on Windows) are found without needing ``shutil.which()``.
     """
-    if shutil.which("allure") is None:
+    if not results_dir.exists():
         return None
-    if not results_dir.exists() or not any(results_dir.iterdir()):
+    try:
+        if not any(results_dir.iterdir()):
+            return None
+    except OSError:
         return None
     try:
         subprocess.run(
-            ["allure", "generate", str(results_dir), "-o", str(output_dir), "--clean"],
+            f'allure generate "{results_dir}" -o "{output_dir}" --clean',
+            shell=True,
             capture_output=True,
             timeout=120,
         )
@@ -88,6 +94,39 @@ def _generate_allure_html(results_dir: Path, output_dir: Path) -> Path | None:
         return index if index.exists() else None
     except (OSError, subprocess.TimeoutExpired):
         return None
+
+
+def _launch_allure_browser(report_dir: Path) -> bool:
+    """Open *report_dir* in the browser via ``allure open`` (detached process).
+
+    ``allure open`` starts a lightweight HTTP server on a random local port
+    and immediately opens the default browser at that address.  Running it
+    detached means the test runner exits normally while the dashboard stays
+    accessible in the background.
+
+    Returns True when the subprocess was spawned successfully.
+    """
+    if not report_dir.exists():
+        return False
+    try:
+        kw: dict = {
+            "stdout": subprocess.DEVNULL,
+            "stderr": subprocess.DEVNULL,
+        }
+        if sys.platform == "win32":
+            kw["creationflags"] = (
+                subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+        else:
+            kw["start_new_session"] = True
+        subprocess.Popen(
+            f'allure open "{report_dir}"',
+            shell=True,
+            **kw,
+        )
+        return True
+    except OSError:
+        return False
 
 
 def _append_summary_to_log(lines: list[str], log_path: Path) -> None:
@@ -424,6 +463,7 @@ def print_run_summary(
     duration_s: float = 0.0,
     result_dir: Path | None = None,
     allure_html: Path | None = None,
+    allure_launched: bool = False,
 ) -> None:
     """Unified test-run summary for all execution modes.
 
@@ -436,9 +476,9 @@ def print_run_summary(
     1. Printed to the terminal with ANSI colour codes and OSC 8 hyperlinks.
     2. Written to ``result_dir/logs/test.log`` with codes stripped (plain text).
 
-    When *allure_html* is provided (path to a generated ``index.html``), the
-    Allure row becomes an OSC 8 clickable link — Ctrl+Click (Windows Terminal)
-    or plain click (iTerm2) opens the report directly in the browser.
+    When *allure_launched* is True, the Allure row shows "Dashboard opened in
+    browser automatically" — no clicking needed, the browser is already open.
+    When *allure_html* exists but wasn't launched, shows a clickable path link.
     """
     W = 66  # separator width
     total_tcs     = len(tc_summaries)
@@ -503,16 +543,25 @@ def print_run_summary(
         report_path = result_dir / "report.html"
         out.append(f"\n  Logs   : {_terminal_link(str(log_path),    log_path.as_uri())}")
         out.append(f"  Report : {_terminal_link(str(report_path), report_path.as_uri())}")
-        if allure_html is not None:
+
+        if allure_launched:
+            # Dashboard auto-opened — no action needed from the user
+            out.append(
+                f"  Allure : {_GREEN}Dashboard opened in browser automatically{_RESET}"
+            )
+        elif allure_html is not None:
+            # Generated but not launched (e.g. --serve not requested)
             allure_url = allure_html.as_uri()
             out.append(
-                f"  Allure : {_terminal_link(allure_url, allure_url)}"
-                f"  {_DIM}(Ctrl+Click to open){_RESET}"
+                f"  Allure : {_terminal_link(str(allure_html.parent), allure_url)}"
+                f"  {_DIM}(Ctrl+Click or run: allure open \"{allure_html.parent}\"){_RESET}"
             )
         else:
+            # Allure CLI not available / results empty
+            allure_results = result_dir / "allure-results"
             out.append(
-                f"  Allure : {result_dir / 'allure-results'}"
-                f"  {_DIM}(install allure CLI to auto-generate){_RESET}"
+                f"  Allure : {allure_results}"
+                f"  {_DIM}(run: allure serve \"{allure_results}\"){_RESET}"
             )
 
     out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
@@ -589,13 +638,17 @@ def run_tc_ids(
     summary_rows = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
     tc_summaries = _build_tc_summaries_from_rows(summary_rows)
 
-    # Generate static Allure HTML so the summary can show a one-click link.
-    # Falls back to None (path to allure-results shown instead) when allure CLI
-    # is not installed or the results folder is empty.
+    # Generate static Allure HTML then auto-open it in the browser.
+    # shell=True makes this work on Windows where allure is a .bat/.cmd file.
     allure_html = _generate_allure_html(
         result_dir / "allure-results",
         result_dir / "allure-report",
     )
+
+    # Launch the dashboard in the default browser (detached — runner exits normally).
+    allure_launched = False
+    if allure_html is not None:
+        allure_launched = _launch_allure_browser(allure_html.parent)
 
     print_run_summary(
         tc_summaries,
@@ -605,6 +658,7 @@ def run_tc_ids(
         duration_s=elapsed,
         result_dir=result_dir,
         allure_html=allure_html,
+        allure_launched=allure_launched,
     )
 
     if serve_allure:

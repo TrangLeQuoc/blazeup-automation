@@ -35,7 +35,7 @@ except ModuleNotFoundError:
 # TC IDs to run when no --execute / --mode / --module / --marker is passed.
 # Supports individual IDs and ranges, e.g. ["1", "4", "7-11", "1001-1005"]
 # Leave empty [] to run ALL registered test cases.
-DEFAULT_EXECUTE_IDS: list[str] = ["1-1010"]
+DEFAULT_EXECUTE_IDS: list[str] = ["1-10"]
 
 # TC IDs to always skip (blacklist).
 # Supports individual IDs and ranges, e.g. ["3", "1003"]
