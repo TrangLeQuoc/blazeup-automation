@@ -25,3 +25,6 @@ faker==40.15.0
 
 # Logging
 loguru==0.7.3
+
+# Spreadsheet (sync_registry.py reads test plan metadata from Excel)
+openpyxl==3.1.5
