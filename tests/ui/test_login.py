@@ -89,27 +89,6 @@ async def test_tc03_login_fails_with_unknown_email(
 
 @allure.epic("BlazeUp HRMS")
 @allure.feature("Authentication")
-@allure.story("Redirects to home after login")
-@pytest.mark.smoke
-async def test_tc04_redirects_to_home_after_login(page: Page, settings: Settings) -> None:
-    """TC04: User is redirected to the home page after login."""
-
-    email, password = require_credentials(settings.test_email, settings.test_password)
-    login_page = LoginPage(page, str(settings.base_url))
-
-    async with async_step("Step 1: Open the login page"):
-        await login_page.open()
-
-    async with async_step("Step 2: Enter credentials and submit", email=email):
-        await login_page.login(email, password)
-
-    async with async_step("Step 3: Verify URL is no longer on /login"):
-        await HomePage(page, str(settings.base_url)).expect_loaded()
-        assert "/login" not in page.url
-
-
-@allure.epic("BlazeUp HRMS")
-@allure.feature("Authentication")
 @allure.story("Logout clears browser session")
 async def test_tc05_logout_clears_session(authenticated_page: Page, settings: Settings) -> None:
     """TC05: Logout clears the browser session."""

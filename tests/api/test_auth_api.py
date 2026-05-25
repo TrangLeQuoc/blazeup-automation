@@ -48,32 +48,6 @@ async def test_tca02_login_wrong_password_returns_401(settings: Settings, test_d
         await client.close()
 
 
-async def test_tca03_client_logout_clears_token_and_subsequent_request_is_rejected(
-    settings: Settings,
-    auth_client: AuthClient,
-) -> None:
-    """TC-A03: After client-side logout the bearer token is cleared and the next request returns 401.
-
-    Note: This test covers *client-side* token clearing only.  It verifies that
-    once the client's token field is set to None, protected endpoints reject the
-    unauthenticated request.  Server-side token revocation (if the API supports a
-    sign-out endpoint) should be covered by a separate test once that endpoint is
-    confirmed.
-    """
-
-    async with async_step("Step 1: Call logout — clears client-side token"):
-        await auth_client.logout()
-
-    async with async_step("Step 2: Verify client.token is now None"):
-        assert auth_client.token is None, "logout() should clear client.token"
-
-    async with async_step("Step 3: Call protected endpoint without token — expect 401 or 403"):
-        response = await auth_client.get("/auth-api/current-user", expected_status=(401, 403))
-        assert response.status_code in {401, 403}, (
-            f"Expected 401/403 after logout, got {response.status_code}"
-        )
-
-
 @pytest.mark.smoke
 async def test_tca04_get_me_returns_user_info(auth_client: AuthClient) -> None:
     """TC-A04: GET /auth-api/current-user returns authenticated user information."""

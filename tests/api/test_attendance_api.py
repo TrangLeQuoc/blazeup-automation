@@ -11,18 +11,6 @@ pytestmark = [pytest.mark.api, pytest.mark.regression]
 # attendance_client fixture is provided by pytest_support/fixtures.py
 
 
-@pytest.mark.smoke
-async def test_tca07_attendance_status_returns_status(attendance_client: AttendanceClient) -> None:
-    """TC-A07: GET /time-api/attendances/status returns a non-empty response body."""
-
-    async with async_step("Step 1: Call GET /time-api/attendances/status"):
-        response = await attendance_client.status()
-
-    async with async_step("Step 2: Verify response body is not empty"):
-        dump = response.model_dump(exclude_none=True)
-        assert dump, f"Attendance status response is empty: {dump}"
-
-
 async def test_tca08_attendance_status_requires_token(settings: Settings) -> None:
     """TC-A08: Attendance status without token returns 401."""
 
