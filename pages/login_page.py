@@ -23,12 +23,17 @@ class LoginPage(BasePage):
 
         await self.goto("/login")
 
-    async def login(self, email: str, password: str) -> None:
-        """Submit credentials through BlazeUp's two-step login flow."""
+    async def login(self, email: str, password: str, timeout: int = 30_000) -> None:
+        """Submit credentials through BlazeUp's two-step login flow.
 
+        Args:
+            timeout: Max ms to wait for the email input to appear.
+                     Defaults to 30s — the login page can render slowly on
+                     cold browser starts (first test in a session).
+        """
         logger.info("Logging in with configured user {}", self._mask_email(email))
-        await self.fill(LoginSelectors.IDENTIFIER_INPUT, email, label="Email/Phone Input")
-        await self.click(LoginSelectors.PROCEED_BUTTON, label="Proceed Button")
+        await self.fill(LoginSelectors.IDENTIFIER_INPUT, email, label="Email/Phone Input", timeout=timeout)
+        await self.click(LoginSelectors.PROCEED_BUTTON, label="Proceed Button", timeout=timeout)
 
         try:
             await self.wait_for_element(LoginSelectors.PASSWORD_INPUT, timeout=5_000, label="Password Input")

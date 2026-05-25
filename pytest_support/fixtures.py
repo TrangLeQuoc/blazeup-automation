@@ -102,20 +102,34 @@ def result_dir() -> Path:
 # ---------------------------------------------------------------------------
 
 def _parse_tc_id(node_name: str) -> str:
-    """Extract a short TC ID string from a pytest node name.
+    """Return the registry TC ID string for a pytest node name.
 
-    Examples::
+    Looks up TC_REGISTRY by test_func — single source of truth, handles
+    any numbering scheme (sequential demo IDs, structured Partner IDs, …).
+    Falls back to regex extraction for tests not yet registered.
 
-        test_tca01_login_returns_jwt  ->  'A01'
-        test_tc01_login_success       ->  '1001'
-        test_something_else           ->  '???'
+    Examples (sequential demo numbering)::
+
+        test_tca08_attendance_status_requires_token  ->  '1'
+        test_tca01_login_returns_jwt_token           ->  '5'
+        test_tc01_login_success_with_valid_creds     ->  '10'
+        test_partner_ui_dashboard_001                ->  '1010201'
     """
+    try:
+        from runner.tc_registry import TC_REGISTRY
+        for tc_id, tc in TC_REGISTRY.items():
+            if tc.test_func == node_name:
+                return str(tc_id)
+    except ImportError:
+        pass
+
+    # Fallback: parse from function name (unregistered tests)
     m = re.search(r"test_tc(a?)(\d+)", node_name)
     if not m:
         return "???"
-    if m.group(1):          # 'a' present -> API test  (tca01 -> A01)
+    if m.group(1):
         return f"A{int(m.group(2)):02d}"
-    return str(1000 + int(m.group(2)))  # UI test  (tc01 -> 1001)
+    return str(1000 + int(m.group(2)))
 
 
 def _parse_tc_title(item: pytest.Item) -> str:
@@ -264,12 +278,17 @@ async def authenticated_page(page: Page, settings: Settings) -> Page:
 
 @pytest_asyncio.fixture
 async def api_token(settings: Settings) -> str:
-    """Return a fresh JWT access token for each test."""
+    """Return a fresh JWT access token for each test.
 
+    Uses a relaxed response-time limit (5× the default) because this is
+    test *setup*, not the assertion under test.  A slow login here should
+    not fail an unrelated API test — only actual test calls are measured
+    against the strict SLA.
+    """
     email, password = require_credentials(settings.test_email, settings.test_password)
     client = AuthClient(
         str(settings.api_base_url),
-        max_response_time_ms=settings.default_response_time_ms,
+        max_response_time_ms=settings.default_response_time_ms * 5,
         app_origin=str(settings.base_url),
     )
     try:
