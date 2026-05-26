@@ -17,7 +17,15 @@ from loguru import logger
 try:
     from runner.tc_registry import TC_REGISTRY, TestCase, get_tc
 except ModuleNotFoundError:
-    from tc_registry import TC_REGISTRY, TestCase, get_tc
+    from tc_registry import TC_REGISTRY, TestCase, get_tc  # type: ignore[no-redef]
+
+# Ensure project root is on sys.path so utils.* is importable regardless of
+# how this file is invoked (python -m runner.run_test  vs  python runner/run_test.py)
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from utils.excel_reporter import write_excel_report  # noqa: E402
 
 # ANSI color codes
 _GREEN = "\033[92m"
@@ -463,6 +471,7 @@ def print_run_summary(
     duration_s: float = 0.0,
     result_dir: Path | None = None,
     allure_html: Path | None = None,
+    excel_report_path: "Path | None" = None,
 ) -> None:
     """Unified test-run summary for all execution modes.
 
@@ -554,6 +563,9 @@ def print_run_summary(
             out.append(f"  Allure : {allure_results}")
             out.append(f"           {_DIM}run: allure serve \"{allure_results}\"{_RESET}")
 
+        if excel_report_path is not None:
+            out.append(f"  Excel  : {_terminal_link(str(excel_report_path), excel_report_path.as_uri())}")
+
     out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
 
     # ── Emit ──────────────────────────────────────────────────────────────────
@@ -587,6 +599,7 @@ def run_tc_ids(
     mode: str = "normal",
     debug_log: bool = False,
     serve_allure: bool = False,
+    excel_report: bool = False,
 ) -> int:
     """Run the given test case IDs and return the pytest return code."""
 
@@ -635,6 +648,12 @@ def run_tc_ids(
         result_dir / "allure-report",
     )
 
+    # Optionally write results back to a copy of the test-plan Excel workbook.
+    excel_report_path = None
+    if excel_report:
+        excel_path = base_dir / "Partner_Platform_Test_Plan.xlsx"
+        excel_report_path = write_excel_report(tc_summaries, result_dir, excel_path)
+
     print_run_summary(
         tc_summaries,
         mode=mode,
@@ -643,6 +662,7 @@ def run_tc_ids(
         duration_s=elapsed,
         result_dir=result_dir,
         allure_html=allure_html,
+        excel_report_path=excel_report_path,
     )
 
     if serve_allure:

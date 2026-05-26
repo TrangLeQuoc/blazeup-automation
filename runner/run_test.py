@@ -41,6 +41,10 @@ DEFAULT_EXECUTE_IDS: list[str] = ["1-13"]
 # Supports individual IDs and ranges, e.g. ["3", "1003"]
 DEFAULT_SKIP_IDS: list[str] = []
 
+# Set True to export results to a timestamped copy of Partner_Platform_Test_Plan.xlsx
+# after every run.  Override from the CLI with --no-excel-report to skip for one run.
+REPORT_EXCEL: bool = True
+
 _BOLD = "\033[1m"
 _BLUE = "\033[94m"
 _CYAN = "\033[96m"
@@ -181,7 +185,6 @@ def print_dry_run(base_ids: list[int], repeat: int, repeat_mode: str) -> None:
     """Print what would be executed without actually running any tests."""
 
     unique_ids = list(dict.fromkeys(base_ids))  # preserve order, deduplicate
-    total_invocations = len(base_ids) * repeat if repeat_mode == "each" else len(base_ids) + (repeat - 1) * len(base_ids)
     total_runs = len(base_ids) * repeat
 
     print(f"\n{_BLUE}{_BOLD}=== DRY RUN -- Execution Plan ==={_RESET}")
@@ -251,6 +254,10 @@ def main() -> int:
                      help="Show execution plan without running tests.")
     out.add_argument("--serve", action="store_true",
                      help="Open Allure report after execution.")
+    out.add_argument("--excel-report", action=argparse.BooleanOptionalAction,
+                     default=REPORT_EXCEL, dest="excel_report",
+                     help=f"Export results to a timestamped copy of Partner_Platform_Test_Plan.xlsx "
+                          f"(default: {REPORT_EXCEL}). Use --no-excel-report to skip for one run.")
     out.add_argument("--debug-log", action="store_true",
                      help="Write DEBUG-level logs to the run log file.")
 
@@ -298,7 +305,13 @@ def main() -> int:
             fail_fast_count=args.fail_fast_count,
         )
 
-    return run_tc_ids(base_ids, mode=mode, debug_log=args.debug_log, serve_allure=args.serve)
+    return run_tc_ids(
+        base_ids,
+        mode=mode,
+        debug_log=args.debug_log,
+        serve_allure=args.serve,
+        excel_report=args.excel_report,
+    )
 
 
 if __name__ == "__main__":
