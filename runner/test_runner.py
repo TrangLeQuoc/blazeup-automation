@@ -463,7 +463,6 @@ def print_run_summary(
     duration_s: float = 0.0,
     result_dir: Path | None = None,
     allure_html: Path | None = None,
-    allure_launched: bool = False,
 ) -> None:
     """Unified test-run summary for all execution modes.
 
@@ -544,25 +543,16 @@ def print_run_summary(
         out.append(f"\n  Logs   : {_terminal_link(str(log_path),    log_path.as_uri())}")
         out.append(f"  Report : {_terminal_link(str(report_path), report_path.as_uri())}")
 
-        if allure_launched:
-            # Dashboard auto-opened — no action needed from the user
-            out.append(
-                f"  Allure : {_GREEN}Dashboard opened in browser automatically{_RESET}"
-            )
-        elif allure_html is not None:
-            # Generated but not launched (e.g. --serve not requested)
-            allure_url = allure_html.as_uri()
-            out.append(
-                f"  Allure : {_terminal_link(str(allure_html.parent), allure_url)}"
-                f"  {_DIM}(Ctrl+Click or run: allure open \"{allure_html.parent}\"){_RESET}"
-            )
+        if allure_html is not None:
+            # Report generated — show the open command to copy-paste or click
+            report_dir = allure_html.parent
+            out.append(f"  Allure : {report_dir}")
+            out.append(f"           {_DIM}run: allure open \"{report_dir}\"{_RESET}")
         else:
             # Allure CLI not available / results empty
             allure_results = result_dir / "allure-results"
-            out.append(
-                f"  Allure : {allure_results}"
-                f"  {_DIM}(run: allure serve \"{allure_results}\"){_RESET}"
-            )
+            out.append(f"  Allure : {allure_results}")
+            out.append(f"           {_DIM}run: allure serve \"{allure_results}\"{_RESET}")
 
     out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
 
@@ -638,17 +628,12 @@ def run_tc_ids(
     summary_rows = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
     tc_summaries = _build_tc_summaries_from_rows(summary_rows)
 
-    # Generate static Allure HTML then auto-open it in the browser.
+    # Generate static Allure HTML report (link shown in summary — Ctrl+Click to open).
     # shell=True makes this work on Windows where allure is a .bat/.cmd file.
     allure_html = _generate_allure_html(
         result_dir / "allure-results",
         result_dir / "allure-report",
     )
-
-    # Launch the dashboard in the default browser (detached — runner exits normally).
-    allure_launched = False
-    if allure_html is not None:
-        allure_launched = _launch_allure_browser(allure_html.parent)
 
     print_run_summary(
         tc_summaries,
@@ -658,7 +643,6 @@ def run_tc_ids(
         duration_s=elapsed,
         result_dir=result_dir,
         allure_html=allure_html,
-        allure_launched=allure_launched,
     )
 
     if serve_allure:

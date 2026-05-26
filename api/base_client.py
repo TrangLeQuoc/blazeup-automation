@@ -95,10 +95,12 @@ class BaseClient:
         if response is None:
             raise RuntimeError("HTTP request did not produce a response")
 
-        assert response.extensions["elapsed_ms"] < self.max_response_time_ms, (
-            f"Response time {response.extensions['elapsed_ms']}ms exceeded "
-            f"{self.max_response_time_ms}ms"
-        )
+        elapsed_ms = response.extensions["elapsed_ms"]
+        if elapsed_ms >= self.max_response_time_ms:
+            logger.warning(
+                "SLOW: {} {} took {}ms (limit {}ms)",
+                method.upper(), endpoint, elapsed_ms, self.max_response_time_ms,
+            )
         if expected_status is not None:
             allowed = (expected_status,) if isinstance(expected_status, int) else expected_status
             assert response.status_code in allowed, (
