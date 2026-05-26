@@ -1,5 +1,4 @@
-Set-Content ".gitignore" -Encoding utf8 -Value @"
-# -- Credentials & secrets
+﻿# -- Credentials & secrets
 .env
 
 # -- Python
@@ -45,6 +44,3 @@ desktop.ini
 
 # -- Claude Code CLI
 .claude/
-"@
-
-Write-Host "Done!"
