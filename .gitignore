@@ -1,15 +1,50 @@
+Set-Content ".gitignore" -Encoding utf8 -Value @"
+# -- Credentials & secrets
 .env
+
+# -- Python
 .venv/
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# -- Pytest & tooling cache
 .pytest_cache/
+.pytest_tmp/
+.mypy_cache/
+.ruff_cache/
 
-# Claude Code CLI local config (machine-specific, not for version control)
-.claude/
-
+# -- Test run artifacts
 results/
 reports/
 allure-results/
 allure-report/
-playwright-report/
 allure_report_test/
+playwright-report/
+.playwright/
+
+# -- Excel result exports
+*_result_*.xlsx
+
+# -- IDE & editor
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# -- OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -- Claude Code CLI
+.claude/
+"@
+
+Write-Host "Done!"
