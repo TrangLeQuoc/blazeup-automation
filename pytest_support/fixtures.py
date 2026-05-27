@@ -25,7 +25,6 @@ from utils.helpers import load_yaml, require_credentials
 from utils.screenshot_on_fail import attach_screenshot
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RESULT_DIR = Path(os.getenv("BLAZEUP_RESULT_DIR", f"results/run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"))
 
 logging.getLogger("faker").setLevel(logging.WARNING)
 logging.getLogger("faker.factory").setLevel(logging.WARNING)
@@ -43,10 +42,26 @@ def settings() -> Settings:
 
 @pytest.fixture(scope="session")
 def result_dir() -> Path:
-    """Return the current run artifact directory and configure loguru sinks."""
+    """Return the current run artifact directory and configure loguru sinks.
+
+    The path is resolved here (at first fixture call = test-execution time),
+    NOT at module-import time.  This ensures the fallback timestamp is
+    accurate even when test collection takes several seconds.
+
+    Priority:
+      1. $BLAZEUP_RESULT_DIR env var  — set by runner/test_runner.py
+      2. Fallback: results/run_<timestamp>  — used when pytest is run directly
+    """
+    # Issue #6 fix: compute path at fixture-call time, not import time.
+    run_dir = Path(
+        os.getenv(
+            "BLAZEUP_RESULT_DIR",
+            f"results/run_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        )
+    )
 
     for subfolder in ["logs", "videos", "screenshots", "traces", "allure-results"]:
-        (RESULT_DIR / subfolder).mkdir(parents=True, exist_ok=True)
+        (run_dir / subfolder).mkdir(parents=True, exist_ok=True)
 
     # Ensure custom log levels (STEP, START, PASSED, FAILED) are registered.
     import utils.log_helper  # noqa: F401 — side-effect import registers levels
@@ -79,7 +94,7 @@ def result_dir() -> Path:
         return True
 
     logger.add(
-        RESULT_DIR / "logs" / "test.log",
+        run_dir / "logs" / "test.log",
         format=(
             "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
             "{level: <8} | "
@@ -94,7 +109,7 @@ def result_dir() -> Path:
         backtrace=True,
         diagnose=False,
     )
-    return RESULT_DIR
+    return run_dir
 
 
 # ---------------------------------------------------------------------------

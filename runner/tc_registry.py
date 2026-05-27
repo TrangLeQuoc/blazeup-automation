@@ -1,17 +1,23 @@
-"""Central registry mapping numeric TC IDs to pytest nodes.  (AUTO-GENERATED — do not edit)
+"""Central registry mapping numeric TC IDs to pytest nodes.
+
+Maintenance
+-----------
+Edit this file directly when adding, removing, or renaming test cases.
+Run ``python utils/sync_registry.py`` to regenerate entries automatically
+from the test files — then review the diff before committing.
 
 TC ID Encoding
 --------------
 New-style  :  {type}{module:02d}{section:02d}{seq:02d}
               type 1=UI / 0=API   module 01=PARTNER   section/feature 01-17
-              UI IDs >= 1_000_000 * API IDs <= 999_999 -> no collision.
+              UI IDs >= 1_000_000   API IDs <= 999_999  (no collision).
 
 Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
 
 Traceability
 ------------
 tc_string  links each registry entry back to the TestcaseId column in
-Partner_Platform_Test_Plan.xlsx.  Empty string for legacy (HRMS) tests.
+Partner_Platform_Test_Plan.xlsx.  Use empty string for legacy (HRMS) tests.
 """
 
 from dataclasses import dataclass, field

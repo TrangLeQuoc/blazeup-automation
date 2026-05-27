@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,6 +28,27 @@ class Settings(BaseSettings):
     default_response_time_ms: int = Field(default=30000, gt=0)
     viewport_width: int = Field(default=1440, gt=0)
     viewport_height: int = Field(default=900, gt=0)
+
+    @model_validator(mode="after")
+    def _check_url_confusion(self) -> "Settings":
+        """Fail fast when api_base_url is accidentally identical to base_url.
+
+        Catches the copy-paste mistake where both BASE_URL and API_BASE_URL
+        are set to the exact same value in .env, which would cause all API
+        calls to hit the UI server and return HTML instead of JSON.
+
+        Note: API and UI may legitimately share the same hostname with
+        different paths (e.g. base_url=https://app.example.com and
+        api_base_url=https://app.example.com/api/v1) — that is allowed.
+        Only an exact full-URL match is rejected.
+        """
+        if str(self.base_url).rstrip("/") == str(self.api_base_url).rstrip("/"):
+            raise ValueError(
+                f"api_base_url is identical to base_url ({self.base_url}). "
+                "API_BASE_URL must point to the API root, not the UI root. "
+                "Example: API_BASE_URL=https://app.example.com/api/v1"
+            )
+        return self
 
 
 @lru_cache

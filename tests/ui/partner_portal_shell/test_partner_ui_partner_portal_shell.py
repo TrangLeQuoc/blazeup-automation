@@ -9,7 +9,7 @@ async def test_partner_ui_partner_portal_shell_001(page):
 
 
 async def test_partner_ui_partner_portal_shell_002(page):
-    """PARTNER_UI_PARTNER_PORTAL_SHELL_002: Navigate - Sidebar collapses and expands correctly."""
+    """PARTNER_UI_PARTNER_PORTAL_SHELL_002: Responsive - Partner portal mobile layout - Controls remain usable."""
     pytest.skip("Not implemented yet")
 
 async def test_partner_ui_partner_portal_shell_003(page):

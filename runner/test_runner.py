@@ -682,16 +682,37 @@ def _run_single_batch(
     base_dir: Path,
     debug_log: bool,
 ) -> tuple[Path, list[dict[str, str]]]:
-    """Execute one pytest invocation for a batch and return (result_dir, rows)."""
+    """Execute one pytest invocation for a batch and return (result_dir, rows).
 
+    Output strategy during performance/repeat runs
+    -----------------------------------------------
+    Live pytest output is suppressed so the terminal stays clean (only the
+    per-iteration status line TC5=PASS(0.32s) is printed).
+
+    The captured stdout + stderr are written to
+    ``result_dir/logs/pytest_output.txt`` so the full traceback and fixture
+    errors are available for debugging when a batch fails — without having
+    to rerun in non-repeat mode.
+    """
     result_dir = make_result_dir(base_dir).resolve()
     env = os.environ.copy()
     env["BLAZEUP_RESULT_DIR"] = str(result_dir)
     env["BLAZEUP_LOG_LEVEL"] = "DEBUG" if debug_log else "INFO"
 
     pytest_args = build_pytest_args(batch_tcs, result_dir, debug_log=debug_log)
-    # Suppress live output during performance runs; summary shown per-iteration
-    subprocess.run(pytest_args, env=env, cwd=base_dir, capture_output=True)
+
+    # capture_output=True keeps the terminal clean during multi-iteration runs.
+    proc = subprocess.run(pytest_args, env=env, cwd=base_dir, capture_output=True)
+
+    # Persist the full pytest output so failures are debuggable after the run.
+    # The file sits next to test.log; open it when a batch shows ERROR/FAIL.
+    batch_log = result_dir / "logs" / "pytest_output.txt"
+    try:
+        stdout = (proc.stdout or b"").decode("utf-8", errors="replace")
+        stderr = (proc.stderr or b"").decode("utf-8", errors="replace")
+        batch_log.write_text(stdout + stderr, encoding="utf-8")
+    except OSError as exc:
+        logger.warning("Could not write batch log to {}: {}", batch_log, exc)
 
     rows = parse_junit_xml(result_dir / "logs" / "junit.xml", batch_tcs)
     return result_dir, rows

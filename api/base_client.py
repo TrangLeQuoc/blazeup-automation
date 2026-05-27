@@ -23,16 +23,23 @@ class BaseClient:
         max_response_time_ms: int = 2000,
         app_origin: str | None = None,
     ) -> None:
-        self.base_url = self._normalize_base_url(base_url)
+        normalized = self._normalize_base_url(base_url)
+        # Trailing slash ensures httpx appends endpoint paths correctly
+        # when base_url contains a sub-path (e.g. https://host/api/v1/).
+        self.base_url = normalized.rstrip("/") + "/"
         self.token = token
         self.max_response_time_ms = max_response_time_ms
-        self.app_origin = (app_origin or self.base_url).rstrip("/")
+        self.app_origin = (app_origin or base_url).rstrip("/")
         self._client = httpx.AsyncClient(base_url=self.base_url, timeout=timeout)
 
     @staticmethod
     def _normalize_base_url(base_url: str) -> str:
-        """Protect API tests from accidentally using the tenant UI host as API host."""
+        """Redirect the tenant UI host to the API host when used as base URL.
 
+        Prevents tests from accidentally sending API calls to the UI server
+        (which returns HTML) when API_BASE_URL in .env points to the tenant
+        domain instead of the dedicated API domain.
+        """
         normalized = base_url.rstrip("/")
         parsed = urlparse(normalized)
         if parsed.netloc.lower() == "terralogic.blazeup.ai":
@@ -54,6 +61,11 @@ class BaseClient:
         **kwargs: Any,
     ) -> httpx.Response | SchemaT:
         """Send a request, retry 5xx responses, validate timing and optional schema."""
+
+        # Strip leading "/" so the endpoint is always relative to base_url.
+        # httpx treats a leading "/" as an absolute path (RFC 3986), which
+        # would drop any path prefix in base_url (e.g. /api/v1).
+        endpoint = endpoint.lstrip("/")
 
         headers = dict(kwargs.pop("headers", {}) or {})
         headers.setdefault("Origin", self.app_origin)
