@@ -1,0 +1,13 @@
+# Normalize line endings to LF for all text files in the repository.
+# This prevents noisy diffs when collaborating across Windows / Mac / Linux.
+* text=auto eol=lf
+
+# Explicitly binary — never touch line endings
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.xlsx binary
+*.pdf  binary
+*.zip  binary
