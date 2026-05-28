@@ -1,23 +1,17 @@
-"""Central registry mapping numeric TC IDs to pytest nodes.
-
-Maintenance
------------
-Edit this file directly when adding, removing, or renaming test cases.
-Run ``python utils/sync_registry.py`` to regenerate entries automatically
-from the test files — then review the diff before committing.
+"""Central registry mapping numeric TC IDs to pytest nodes.  (AUTO-GENERATED — do not edit)
 
 TC ID Encoding
 --------------
 New-style  :  {type}{module:02d}{section:02d}{seq:02d}
               type 1=UI / 0=API   module 01=PARTNER   section/feature 01-17
-              UI IDs >= 1_000_000   API IDs <= 999_999  (no collision).
+              UI IDs >= 1_000_000 * API IDs <= 999_999 -> no collision.
 
 Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
 
 Traceability
 ------------
 tc_string  links each registry entry back to the TestcaseId column in
-Partner_Platform_Test_Plan.xlsx.  Use empty string for legacy (HRMS) tests.
+Partner_Platform_Test_Plan.xlsx.  Empty string for legacy (HRMS) tests.
 """
 
 from dataclasses import dataclass, field
@@ -60,7 +54,7 @@ TC_REGISTRY: dict[int, TestCase] = {
     13: TestCase(13, "demo", "ui", "login", "Logout clears the browser session.", "tests/ui/test_login.py", "test_tc05_logout_clears_session", [], "P2"),
     1010101: TestCase(1010101, "PARTNER_UI_PARTNER_PORTAL_SHELL_001", "ui", "partner", "Navigate - Open main menu routes - Correct page content is shown", "tests/ui/partner_portal_shell/test_partner_ui_partner_portal_shell.py", "test_partner_ui_partner_portal_shell_001", [], "P1"),
     1010102: TestCase(1010102, "PARTNER_UI_PARTNER_PORTAL_SHELL_002", "ui", "partner", "Responsive - Partner portal mobile layout - Controls remain usable", "tests/ui/partner_portal_shell/test_partner_ui_partner_portal_shell.py", "test_partner_ui_partner_portal_shell_002", [], "P2"),
-    1010103: TestCase(1010103, "PARTNER_UI_PARTNER_PORTAL_SHELL_003", "ui", "partner", "Branding - Custom logo is displayed.", "tests/ui/partner_portal_shell/test_partner_ui_partner_portal_shell.py", "test_partner_ui_partner_portal_shell_003", [], "P2"),
+    1010103: TestCase(1010103, "PARTNER_UI_PARTNER_PORTAL_SHELL_003", "ui", "partner", "Switch - Dual account partner activates account switcher - Pack and Channel dashboards toggle correctly", "tests/ui/partner_portal_shell/test_partner_ui_partner_portal_shell.py", "test_partner_ui_partner_portal_shell_003", [], "P2"),
 }
 
 
