@@ -50,13 +50,10 @@ async def test_tca02_login_wrong_password_returns_401(settings: Settings, test_d
     )
     try:
         async with async_step("Step 1: Attempt login with wrong password", email=email):
-            response = await client.raw_login({"email": email, "password": password}, expected_status=None)
+            response = await client.raw_login({"email": email, "password": password}, expected_status=(400, 401))
 
-        async with async_step("Step 2: Verify server returns 400 or 401"):
-            assert response.status_code in {400, 401}, (
-                f"BUG (backend): POST /sa-auth-api/sign-in/credentials"
-                f" — expected: 400 or 401, actual: {response.status_code}"
-            )
+        async with async_step("Step 2: Verify response status is 400 or 401"):
+            assert response.status_code in {400, 401}
     finally:
         await client.close()
 
