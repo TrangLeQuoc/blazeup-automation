@@ -42,8 +42,8 @@ class BaseClient:
         """
         normalized = base_url.rstrip("/")
         parsed = urlparse(normalized)
-        if parsed.netloc.lower() == "terralogic.blazeup.ai":
-            return "https://api.prod.blazeup.ai"
+        if parsed.netloc.lower() == "stgsa.blazeup.ai":
+            return "https://api.stg.blazeup.ai"
         return normalized
 
     async def close(self) -> None:

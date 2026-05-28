@@ -281,13 +281,21 @@ async def page(
 
 @pytest_asyncio.fixture
 async def authenticated_page(page: Page, settings: Settings) -> Page:
-    """Return a Playwright page already authenticated through the UI."""
+    """Return a Playwright page already authenticated through the UI.
+
+    Uses a URL-based check (not a content-based check) so the fixture does not
+    race against the SA Dashboard's slow content render.  The dashboard content
+    can take >15 s to appear after the URL redirect; the individual tests that
+    need specific elements should wait for them themselves.
+    """
+    from playwright.async_api import expect as pw_expect
 
     email, password = require_credentials(settings.test_email, settings.test_password)
     login_page = LoginPage(page, str(settings.base_url))
     await login_page.open()
     await login_page.login(email, password)
-    await HomePage(page, str(settings.base_url)).expect_loaded()
+    # Wait up to 30 s for the browser to navigate away from the login page.
+    await pw_expect(page).not_to_have_url(re.compile(r".*/login.*"), timeout=30_000)
     return page
 
 

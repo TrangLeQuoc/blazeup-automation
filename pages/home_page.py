@@ -13,10 +13,22 @@ class HomePage(BasePage):
     """Actions and assertions for the HRMS home dashboard."""
 
     async def expect_loaded(self) -> None:
-        """Assert that the home dashboard is visible."""
+        """Assert that the dashboard has loaded.
 
-        await expect(self.page).to_have_url(re.compile(r".*/home/?(?:[?#].*)?$"), timeout=15_000)
-        await expect(self._dashboard_ready_locator()).to_be_visible(timeout=15_000)
+        Uses URL-based checks only — dashboard content varies between portals
+        (HRMS employee portal vs SA Dashboard) and loads asynchronously.
+        """
+
+        # Primary: confirm we left the login page
+        await expect(self.page).not_to_have_url(
+            re.compile(r".*/(login|auth).*"),
+            timeout=30_000,
+        )
+        # Secondary: confirm we landed on a known dashboard path
+        await expect(self.page).to_have_url(
+            re.compile(r".*/(?:home|sa-dashboard|dashboard)/?(?:[?#].*)?$"),
+            timeout=10_000,
+        )
 
     async def greeting_text(self) -> str:
         """Return the dashboard greeting text."""
@@ -60,7 +72,12 @@ class HomePage(BasePage):
         logout = self.page.locator(HomeSelectors.LOGOUT_BUTTON).first
         if not await logout.is_visible(timeout=1_000):
             logger.info("Opening user menu before logout")
-            await self.click(HomeSelectors.USER_MENU_BUTTON, label="User Menu")
+            # Use .last — the user-avatar trigger is the last matching element in
+            # the header; sidebar nav dropdown triggers appear earlier in DOM order.
+            user_menu = self.page.locator(HomeSelectors.USER_MENU_BUTTON).last
+            await user_menu.wait_for(state="visible", timeout=10_000)
+            logger.log("STEP", "Click  [User Menu]")
+            await user_menu.click()
         await self.click(HomeSelectors.LOGOUT_BUTTON, label="Logout Button")
 
     def _greeting_locator(self) -> Locator:

@@ -48,7 +48,7 @@ class AuthClient(BaseClient):
         """Login and return a validated token response."""
 
         response = await self.post(
-            "/auth-api/sign-in",
+            "/sa-auth-api/sign-in/credentials",
             json={"email": email, "password": password},
             expected_status=expected_status,
             schema=LoginResponse,
@@ -64,9 +64,9 @@ class AuthClient(BaseClient):
     async def me(self, expected_status: int = 200) -> UserInfo:
         """Return the current authenticated user."""
 
-        return await self.get("/auth-api/current-user", expected_status=expected_status, schema=UserInfo)
+        return await self.get("/sa-auth-api/current-user", expected_status=expected_status, schema=UserInfo)
 
-    async def raw_login(self, payload: dict[str, Any], expected_status: int | tuple[int, ...]) -> Any:
+    async def raw_login(self, payload: dict[str, Any], expected_status: int | tuple[int, ...] | None) -> Any:
         """Submit arbitrary login payloads for negative testing."""
 
-        return await self.post("/auth-api/sign-in", json=payload, expected_status=expected_status)
+        return await self.post("/sa-auth-api/sign-in/credentials", json=payload, expected_status=expected_status)

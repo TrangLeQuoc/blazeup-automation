@@ -507,6 +507,87 @@ def scan_legacy_tcs() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Registry diff helpers
+# ---------------------------------------------------------------------------
+
+def _parse_registry_snapshot(registry_file: Path) -> dict[int, str]:
+    """Parse the existing registry into {tc_id: args_string} for diff comparison.
+
+    Each line in the registry looks like:
+        1010101: TestCase(1010101, "PARTNER_UI_...", "ui", ..., "P2"),
+    We capture the args string inside TestCase(...) keyed by tc_id.
+    Returns {} if the file doesn't exist yet (first-time sync).
+    """
+    if not registry_file.exists():
+        return {}
+    snapshot: dict[int, str] = {}
+    for line in registry_file.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\s+(\d+):\s*TestCase\((.+)\),\s*$", line)
+        if m:
+            snapshot[int(m.group(1))] = m.group(2)
+    return snapshot
+
+
+def _extract_fields(args_str: str) -> dict[str, str]:
+    """Extract key fields from a raw TestCase args string.
+
+    Double-quoted positional fields (0-indexed, markers use single quotes so they
+    are not captured):
+        0=tc_string  1=type  2=module  3=title  4=path  5=func  6=priority
+    """
+    quoted = re.findall(r'"([^"]*)"', args_str)
+    return {
+        "tc_string": quoted[0] if len(quoted) > 0 else "",
+        "title":     quoted[3] if len(quoted) > 3 else "",
+        "path":      quoted[4] if len(quoted) > 4 else "",
+        "func":      quoted[5] if len(quoted) > 5 else "",
+        "priority":  quoted[6] if len(quoted) > 6 else "",
+    }
+
+
+def _print_diff(
+    old: dict[int, str],
+    new: dict[int, str],
+    new_tcs: list[dict],
+) -> None:
+    """Print a human-readable diff of registry changes."""
+    added   = sorted(set(new) - set(old))
+    removed = sorted(set(old) - set(new))
+    changed = sorted(tc_id for tc_id in set(new) & set(old) if new[tc_id] != old[tc_id])
+
+    if not added and not removed and not changed:
+        print("  No changes since last sync.")
+        return
+
+    tc_by_id = {tc["id"]: tc for tc in new_tcs}
+    print(f"  Changes since last sync  "
+          f"({len(added)} added, {len(removed)} removed, {len(changed)} changed):")
+
+    for tc_id in added:
+        tc    = tc_by_id.get(tc_id, {})
+        title = tc.get("title", "")[:55]
+        print(f"    +  TC {tc_id:<12} ADDED    {tc.get('func', '?')}  \"{title}\"")
+
+    for tc_id in removed:
+        old_f = _extract_fields(old[tc_id])
+        print(f"    -  TC {tc_id:<12} REMOVED  {old_f.get('func', '?')}")
+
+    for tc_id in changed:
+        old_f  = _extract_fields(old[tc_id])
+        new_f  = _extract_fields(new[tc_id])
+        diffs: list[str] = []
+        if old_f["title"] != new_f["title"]:
+            diffs.append(f'title: "{old_f["title"][:30]}" → "{new_f["title"][:30]}"')
+        if old_f["priority"] != new_f["priority"]:
+            diffs.append(f'priority: {old_f["priority"]} → {new_f["priority"]}')
+        if old_f["path"] != new_f["path"]:
+            diffs.append("path changed")
+        detail = "  |  ".join(diffs) if diffs else "content updated"
+        tc     = tc_by_id.get(tc_id, {})
+        print(f"    ~  TC {tc_id:<12} CHANGED  {tc.get('func', '?')}  ({detail})")
+
+
+# ---------------------------------------------------------------------------
 # Main sync
 # ---------------------------------------------------------------------------
 
@@ -544,11 +625,14 @@ def sync() -> None:
             seen[tc["id"]] = tc["func"]
 
     # Step 6: Render and write registry file
-    items_lines = []
+    # Snapshot the current registry BEFORE overwriting so we can diff it.
+    old_snapshot = _parse_registry_snapshot(REGISTRY_FILE)
+
+    items_lines: list[str] = []
+    new_snapshot: dict[int, str] = {}
     for tc in all_tcs:
         tc_string = tc.get("tc_string", "")   # "" for legacy tests
-        items_lines.append(
-            f'    {tc["id"]}: TestCase('
+        args_str = (
             f'{tc["id"]}, '
             f'"{tc_string}", '
             f'"{tc["type"]}", '
@@ -557,8 +641,10 @@ def sync() -> None:
             f'"{tc["path"]}", '
             f'"{tc["func"]}", '
             f'{tc["markers"]}, '
-            f'"{tc["priority"]}"),'
+            f'"{tc["priority"]}"'
         )
+        new_snapshot[tc["id"]] = args_str
+        items_lines.append(f'    {tc["id"]}: TestCase({args_str}),')
 
     REGISTRY_FILE.write_text(
         _TEMPLATE.format(items="\n".join(items_lines)),
@@ -580,6 +666,10 @@ def sync() -> None:
     else:
         print("  Tip: Add more test_partner_* functions to any test file and")
         print("       re-run sync — they will be auto-registered.")
+
+    # Step 8: Print diff vs previous registry
+    print()
+    _print_diff(old_snapshot, new_snapshot, all_tcs)
 
 
 # ---------------------------------------------------------------------------
