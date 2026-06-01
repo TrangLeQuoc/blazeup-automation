@@ -5,6 +5,22 @@ invalid_users:
   unknown_email:
     email: missing.user@example.com
     password: any-password
+
+# Partner Platform test accounts
+# Update these with real staging credentials before running Partner API tests.
+partner_users:
+  primary:
+    email: partner@mailinator.com
+    password: "12345678@Tc"
+    partner_id: "partner-001"        # partnerId from JWT / profile endpoint
+  secondary:
+    email: partner2@mailinator.com
+    password: "12345678@Tc"
+    partner_id: "partner-002"        # used in TC003 cross-partner isolation test
+  msp:
+    email: msp.user@mailinator.com
+    password: "12345678@Tc"
+    partner_id: "partner-msp-001"    # MSP-role partner — used in TC005/TC006
 attendance:
   locations:
     - Office

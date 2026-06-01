@@ -18,8 +18,8 @@ from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from api.attendance_client import AttendanceClient
 from api.auth_client import AuthClient
+from api.partner_auth_client import PartnerAuthClient
 from config.settings import Settings, get_settings
-from pages.home_page import HomePage
 from pages.login_page import LoginPage
 from utils.helpers import load_yaml, require_credentials
 from utils.screenshot_on_fail import attach_screenshot
@@ -333,6 +333,43 @@ async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[Auth
     )
     yield client
     await client.close()
+
+
+@pytest_asyncio.fixture
+async def partner_client(settings: Settings) -> AsyncGenerator[PartnerAuthClient, None]:
+    """Return an authenticated PartnerAuthClient for each test.
+
+    Logs in with PARTNER_EMAIL / PARTNER_PASSWORD from .env and caches both
+    the access token and the refresh token so individual tests can use them.
+    Tests are skipped automatically when partner credentials are not configured.
+    """
+    email, password = require_credentials(settings.partner_email, settings.partner_password)
+    client = PartnerAuthClient(
+        str(settings.api_base_url),
+        max_response_time_ms=settings.default_response_time_ms * 5,  # relaxed for setup
+        app_origin=str(settings.base_url),
+    )
+    try:
+        resp = await client.raw_login({"email": email, "password": password}, expected_status=None)
+        if resp.status_code == 404:
+            pytest.fail(
+                "NOT IMPLEMENTED (backend): POST /v1/partner/auth/login returned 404 — "
+                "Partner Platform auth API has not been deployed to staging yet."
+            )
+        if resp.status_code not in {200, 201}:
+            pytest.fail(
+                f"partner_client setup failed: POST /v1/partner/auth/login "
+                f"returned {resp.status_code} — expected 200/201."
+            )
+        from api.partner_auth_client import PartnerLoginResponse
+        login_data = PartnerLoginResponse.model_validate(resp.json())
+        client.token = login_data.bearer_token
+        client.refresh_token = login_data.refresh_token
+        # Tighten the limit back for actual test assertions
+        client.max_response_time_ms = settings.default_response_time_ms
+        yield client
+    finally:
+        await client.close()
 
 
 @pytest_asyncio.fixture

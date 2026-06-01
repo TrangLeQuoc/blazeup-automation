@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     api_base_url: AnyHttpUrl = Field(default="https://api.stg.blazeup.ai")
     test_email: str | None = Field(default=None)
     test_password: str | None = Field(default=None)
+    partner_email: str | None = Field(default=None)
+    partner_password: str | None = Field(default=None)
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)

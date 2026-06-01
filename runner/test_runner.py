@@ -823,8 +823,40 @@ def run_performance_plan(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    ids = [int(arg) for arg in sys.argv[1:] if arg.isdigit()]
-    if not ids:
-        # No IDs provided -- run every registered test case
-        ids = sorted(TC_REGISTRY.keys())
+
+    def _parse_cli_ids(tokens: list[str]) -> list[int]:
+        """Parse individual IDs and range notation (e.g. '10101-10109')."""
+        out: list[int] = []
+        for token in tokens:
+            if "-" in token:
+                try:
+                    s, e = token.split("-", 1)
+                    out.extend(range(int(s), int(e) + 1))
+                except ValueError:
+                    logger.warning("Invalid range token '{}' — skipped", token)
+            else:
+                try:
+                    out.append(int(token))
+                except ValueError:
+                    logger.warning("Invalid TC ID '{}' — skipped", token)
+        # Drop IDs that don't exist in the registry
+        return [tc_id for tc_id in out if tc_id in TC_REGISTRY]
+
+    raw_args = sys.argv[1:]
+
+    if raw_args:
+        ids = _parse_cli_ids(raw_args)
+    else:
+        # No CLI args — fall back to DEFAULT_EXECUTE_IDS defined in run_test.py.
+        # Import lazily to avoid a circular-import issue at module level
+        # (run_test.py imports run_tc_ids from this file).
+        try:
+            try:
+                from runner.run_test import DEFAULT_EXECUTE_IDS as _defaults
+            except ImportError:
+                from run_test import DEFAULT_EXECUTE_IDS as _defaults  # type: ignore[no-redef]
+            ids = _parse_cli_ids(_defaults) if _defaults else sorted(TC_REGISTRY.keys())
+        except Exception:
+            ids = sorted(TC_REGISTRY.keys())
+
     sys.exit(run_tc_ids(ids))
