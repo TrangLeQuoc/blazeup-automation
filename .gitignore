@@ -1,5 +1,7 @@
 ﻿# -- Credentials & secrets
 .env
+config/*/.env
+config/**/.env
 
 # -- Python
 .venv/

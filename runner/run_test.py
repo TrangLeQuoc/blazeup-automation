@@ -20,6 +20,7 @@ Examples:
 
 import argparse
 import sys
+from pathlib import Path
 
 try:
     from runner.test_runner import run_performance_plan, run_tc_ids
@@ -35,7 +36,9 @@ except ModuleNotFoundError:
 # TC IDs to run when no --execute / --mode / --module / --marker is passed.
 # Supports individual IDs and ranges, e.g. ["1", "4", "7-11", "1001-1005"]
 # Leave empty [] to run ALL registered test cases.
-DEFAULT_EXECUTE_IDS: list[str] = ["1-13"]
+# Note: Currently empty because all demo TCs have been removed. Real test cases
+# will be added once test plans for each domain are finalized.
+DEFAULT_EXECUTE_IDS: list[str] = []
 
 # TC IDs to always skip (blacklist).
 # Supports individual IDs and ranges, e.g. ["3", "1003"]
@@ -44,6 +47,12 @@ DEFAULT_SKIP_IDS: list[str] = []
 # Set True to export results to a timestamped copy of Partner_Platform_Test_Plan.xlsx
 # after every run.  Override from the CLI with --no-excel-report to skip for one run.
 REPORT_EXCEL: bool = True
+
+# Test-plan workbook used for --excel-report.
+#   None  -> auto-resolve per domain from BLAZEUP_DOMAIN:
+#            docs/{domain}/Partner_Platform_Test_Plan.xlsx
+#   Path  -> explicit override (domain runners patch this).
+EXCEL_FILE: "Path | None" = None
 
 _BOLD = "\033[1m"
 _BLUE = "\033[94m"
@@ -311,6 +320,7 @@ def main() -> int:
         debug_log=args.debug_log,
         serve_allure=args.serve,
         excel_report=args.excel_report,
+        excel_path=EXCEL_FILE,
     )
 
 

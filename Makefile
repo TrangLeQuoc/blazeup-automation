@@ -1,21 +1,41 @@
+# BlazeUp Automation — common tasks.
+#
+# Pick the domain with DOMAIN=... (default: blazeup_admin).  Each domain runner
+# sets BLAZEUP_DOMAIN so the matching config/{domain}/.env is loaded and only
+# that domain's test cases are scoped.
+#
+#   make tc 10101 10102                  # run TCs on the default domain
+#   make tc DOMAIN=blazeup_partner 10101 # run TCs on the partner domain
+#   make smoke DOMAIN=blazeup_partner    # smoke-marked TCs for a domain
+#   make regression                      # P1 regression suite
+#   make sync                            # regenerate the TC registry
+#   make report                          # open the latest Allure results
+
+DOMAIN ?= blazeup_admin
+RUN = python -m runner.$(DOMAIN).run_test
+
 # Run selected TC numbers: make tc 1 5 1001
 tc:
-	python -m runner.run_test --execute $(filter-out $@,$(MAKECMDGOALS))
+	$(RUN) --execute $(filter-out $@,$(MAKECMDGOALS))
 
 smoke:
-	python -m runner.run_test --marker smoke
+	$(RUN) --mode smoke
 
 regression:
-	python -m runner.run_test --type api --type ui
+	$(RUN) --mode regression
 
 api:
-	python -m runner.run_test --type api
+	$(RUN) --type api
 
 ui:
-	python -m runner.run_test --type ui
+	$(RUN) --type ui
 
 list:
-	python -m runner.run_test --list
+	$(RUN) --list
+
+# Regenerate runner/{domain}/registry.py from tests/{domain}/ (all domains).
+sync:
+	python utils/sync_registry.py
 
 report:
 	allure serve $$(ls -dt results/run_* | head -1)/allure-results

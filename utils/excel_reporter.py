@@ -32,7 +32,7 @@ from loguru import logger
 # ---------------------------------------------------------------------------
 
 MODULE_TO_SHEET: dict[str, str] = {
-    "partner": "Partner Platform",
+    "blazeup_partner": "Partner Platform",
     # "health": "Health System",   # uncomment when that sheet exists
 }
 

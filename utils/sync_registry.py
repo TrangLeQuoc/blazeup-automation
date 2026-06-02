@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Regenerate runner/tc_registry.py from implemented test functions + Excel metadata.
+"""Regenerate runner/{domain}/registry.py from implemented test functions + Excel metadata.
+
+Each domain gets its own registry file; runner/tc_registry.py then auto-merges
+every runner/*/registry.py into one central TC_REGISTRY at import time.
 
 How it works
 ------------
-1. Scan tests/**/*.py for functions named:
+1. Scan tests/{domain}/**/*.py for functions named:
        test_partner_{ui|api}_{section}_{NNN}
    e.g. test_partner_ui_partner_portal_shell_001
         test_partner_api_auth_access_control_002
 2. For each function, compute the numeric TC ID from the function name alone.
-3. Look up title & priority from Partner_Platform_Test_Plan.xlsx (optional).
+3. Look up title & priority from docs/{domain}/Partner_Platform_Test_Plan.xlsx (optional).
    Falls back to function docstring / "P2" default if Excel is unavailable.
 4. Also pick up legacy test_tc* / test_tca* functions (BlazeUp HRMS demo tests).
-5. Write runner/tc_registry.py.
+5. Write runner/{domain}/registry.py.
 
 Only IMPLEMENTED test cases (i.e. functions that already exist in a test file)
 are registered.  Unimplemented TCs produce no registry entry — just write the
@@ -19,9 +22,9 @@ function and run sync again.
 
 File layout (both flat and section-subfolder are supported)
 -----------------------------------------------------------
-    tests/ui/test_partner_ui_dashboard.py          <- flat, all Dashboard TCs
-    tests/ui/partner_portal_shell/
-        test_partner_ui_partner_portal_shell.py    <- section file, all Shell TCs
+    tests/{domain}/ui/test_partner_ui_dashboard.py          <- flat, all Dashboard TCs
+    tests/{domain}/ui/partner_portal_shell/
+        test_partner_ui_partner_portal_shell.py             <- section file, all Shell TCs
 
 Function naming convention
 --------------------------
@@ -57,8 +60,9 @@ Legacy-style (BlazeUp HRMS demo tests, preserved for backward-compat):
 
 Usage
 -----
-    python utils/sync_registry.py           # sync registry
-    python utils/sync_registry.py --table   # print ID reference table
+    python utils/sync_registry.py                          # sync ALL domains
+    python utils/sync_registry.py --domain blazeup_admin   # sync one domain only
+    python utils/sync_registry.py --table                  # print ID reference table
 """
 
 import ast
@@ -73,9 +77,8 @@ except ImportError:
     _HAS_OPENPYXL = False
 
 PROJECT_ROOT  = Path(__file__).resolve().parent.parent
-EXCEL_FILE    = PROJECT_ROOT / "Partner_Platform_Test_Plan.xlsx"
-TESTS_DIR     = PROJECT_ROOT / "tests"
-REGISTRY_FILE = PROJECT_ROOT / "runner" / "tc_registry.py"
+TESTS_DIR     = PROJECT_ROOT / "tests"       # tests/{domain}/api|ui/...
+RUNNER_DIR    = PROJECT_ROOT / "runner"      # runner/{domain}/registry.py output
 
 # ---------------------------------------------------------------------------
 # Excel sheet -> module name mapping
@@ -118,7 +121,6 @@ MODULE_SECTIONS: dict[str, dict[str, dict[str, int]]] = {
             "SECURITY_COMPLIANCE":            10,   # 10
         },
         "API": {
-            "AUTH_ACCESS_CONTROL":             1,   # 01
             "DASHBOARD_DATA":                  2,   # 02
             "DEAL_REGISTRATION":               3,   # 03
             "DEAL_REGISTRATION_PIPELINE":      4,   # 04
@@ -288,8 +290,11 @@ def _func_name_to_tc_string(func_name: str) -> str | None:
     # Must end with a 3-digit sequence number
     if len(parts) < 4 or not re.match(r"^\d{3}$", parts[-1]):
         return None
-    # First part must be a registered module (e.g. "partner")
-    # This prevents legacy functions like test_tca02_..._401 from matching.
+    # First part must be a registered module key from MODULES (e.g. "partner").
+    # NOTE: this is the MODULE prefix in the function name, not the test folder
+    # domain — test_partner_ui_* lives under tests/blazeup_admin/ or
+    # tests/blazeup_partner/ but the function still starts with "partner".
+    # This also prevents legacy functions like test_tca02_..._401 from matching.
     if parts[0].upper() not in MODULES:
         return None
     return body.upper()  # PARTNER_UI_PARTNER_PORTAL_SHELL_001
@@ -309,62 +314,28 @@ def _extract_markers(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# Excel metadata source (lookup only — not the driver of what gets registered)
-# ---------------------------------------------------------------------------
-
-def build_excel_lookup() -> dict[str, dict]:
-    """Build a title/priority lookup table from all module sheets in the Excel test plan.
-
-    Reads every sheet listed in EXCEL_SHEETS. Returns:
-        { "PARTNER_UI_DASHBOARD_001": {"title": "...", "priority": "P1"}, ... }
-
-    Returns an empty dict if Excel is unavailable — sync still works using
-    function docstrings and P2 defaults.
-    """
-    if not _HAS_OPENPYXL:
-        print("[WARN] openpyxl not installed — Excel metadata unavailable. "
-              "Install with: pip install openpyxl")
-        return {}
-    if not EXCEL_FILE.exists():
-        print(f"[WARN] Excel not found: {EXCEL_FILE} — titles from docstrings, priority P2 default")
-        return {}
-
-    # Column indices (0-based in values_only rows) — same layout assumed for all sheets
-    C_TC_STRING = 2   # C -> TestcaseId   (PARTNER_UI_DASHBOARD_001)
-    C_TITLE     = 3   # D -> Testcase name
-    C_PRIORITY  = 5   # F -> Priority
-
-    wb     = openpyxl.load_workbook(EXCEL_FILE, data_only=True)
-    lookup: dict[str, dict] = {}
-
-    for sheet_name, module_name in EXCEL_SHEETS.items():
-        if sheet_name not in wb.sheetnames:
-            print(f"[WARN] Sheet '{sheet_name}' not found in Excel — skipping {module_name}")
-            continue
-
-        ws      = wb[sheet_name]
-        before  = len(lookup)
-
-        for row in ws.iter_rows(min_row=13, values_only=True):
-            tc_string = row[C_TC_STRING]
-            if not tc_string or not str(tc_string).startswith(f"{module_name}_"):
-                continue
-            tc_string = str(tc_string).strip()
-            title    = str(row[C_TITLE]    or "No Title").strip().replace('"', "'")
-            priority = str(row[C_PRIORITY] or "P2").strip()
-            lookup[tc_string] = {"title": title, "priority": priority}
-
-        count = len(lookup) - before
-        print(f"[Excel] {count:4d} TC definitions loaded from sheet '{sheet_name}' ({module_name})")
-
-    return lookup
-
-
-# ---------------------------------------------------------------------------
 # Partner Platform test scanner (new-style naming)
 # ---------------------------------------------------------------------------
 
-def scan_implemented_tcs(excel_lookup: dict[str, dict]) -> list[dict]:
+def _get_test_files(domain: str | None = None) -> list[Path]:
+    """Return all test_*.py files.
+
+    If domain is given (e.g. "blazeup_admin", "blazeup_partner"), scan only tests/{domain}/.
+    Otherwise scan tests/*/ for all domains (auto-discover).
+    """
+    if domain:
+        domain_dir = TESTS_DIR / domain
+        return sorted(domain_dir.rglob("test_*.py")) if domain_dir.exists() else []
+    # Auto-discover: any subfolder of tests/ that contains test files
+    return sorted(
+        py_file
+        for domain_dir in sorted(TESTS_DIR.iterdir())
+        if domain_dir.is_dir()
+        for py_file in domain_dir.rglob("test_*.py")
+    )
+
+
+def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = None) -> list[dict]:
     """Scan test files for implemented Partner Platform test functions.
 
     Discovers functions named:
@@ -376,7 +347,9 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict]) -> list[dict]:
     results: list[dict] = []
     seen_ids: set[int] = set()
 
-    for py_file in sorted(TESTS_DIR.rglob("test_*.py")):
+    _all_test_files = _get_test_files(domain)
+
+    for py_file in _all_test_files:
         rel_path = py_file.relative_to(PROJECT_ROOT).as_posix()
 
         try:
@@ -441,7 +414,7 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict]) -> list[dict]:
 # Legacy BlazeUp HRMS scanner (old test_tc* / test_tca* naming)
 # ---------------------------------------------------------------------------
 
-def scan_legacy_tcs() -> list[dict]:
+def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
     """Scan test files for old-style test_tc* / test_tca* functions.
 
     These are BlazeUp HRMS demo tests.
@@ -455,7 +428,9 @@ def scan_legacy_tcs() -> list[dict]:
     """
     raw: list[dict] = []
 
-    for py_file in sorted(TESTS_DIR.rglob("test_*.py")):
+    _all_test_files = _get_test_files(domain)
+
+    for py_file in _all_test_files:
         rel_path = py_file.relative_to(PROJECT_ROOT).as_posix()
         tc_type  = "api" if "/api/" in rel_path else "ui"
 
@@ -577,9 +552,9 @@ def _print_diff(
         new_f  = _extract_fields(new[tc_id])
         diffs: list[str] = []
         if old_f["title"] != new_f["title"]:
-            diffs.append(f'title: "{old_f["title"][:30]}" → "{new_f["title"][:30]}"')
+            diffs.append(f'title: "{old_f["title"][:30]}" -> "{new_f["title"][:30]}"')
         if old_f["priority"] != new_f["priority"]:
-            diffs.append(f'priority: {old_f["priority"]} → {new_f["priority"]}')
+            diffs.append(f'priority: {old_f["priority"]} -> {new_f["priority"]}')
         if old_f["path"] != new_f["path"]:
             diffs.append("path changed")
         detail = "  |  ".join(diffs) if diffs else "content updated"
@@ -591,47 +566,73 @@ def _print_diff(
 # Main sync
 # ---------------------------------------------------------------------------
 
-def sync() -> None:
-    """Regenerate runner/tc_registry.py."""
+def _sync_domain(domain: str) -> None:
+    """Sync registry for a single domain → runner/{domain}/registry.py."""
 
-    print("Syncing TC registry ...")
-    print(f"  Excel : {EXCEL_FILE}")
-    print(f"  Tests : {TESTS_DIR}")
-    print()
+    registry_file = RUNNER_DIR / domain / "registry.py"
+    excel_file    = PROJECT_ROOT / "docs" / domain / "Partner_Platform_Test_Plan.xlsx"
 
-    # Step 1: Build Excel metadata lookup (title/priority only, not the driver)
-    excel_lookup = build_excel_lookup()
+    print(f"\n{'='*55}")
+    print(f"  Domain  : {domain}")
+    print(f"  Tests   : {TESTS_DIR / domain}")
+    print(f"  Excel   : {excel_file}")
+    print(f"  Output  : {registry_file.relative_to(PROJECT_ROOT)}")
+    print(f"{'='*55}")
 
-    # Step 2: Scan implemented Partner Platform TCs from test files
-    partner_tcs = scan_implemented_tcs(excel_lookup)
+    # Build Excel lookup for this domain's excel file
+    excel_lookup: dict[str, dict] = {}
+    if _HAS_OPENPYXL and excel_file.exists():
+        import openpyxl  # type: ignore
+        C_TC_STRING, C_TITLE, C_PRIORITY = 2, 3, 5
+        wb = openpyxl.load_workbook(excel_file, data_only=True)
+        for sheet_name, module_name in EXCEL_SHEETS.items():
+            if sheet_name not in wb.sheetnames:
+                continue
+            ws = wb[sheet_name]
+            before = len(excel_lookup)
+            for row in ws.iter_rows(min_row=13, values_only=True):
+                tc_string = row[C_TC_STRING]
+                if not tc_string or not str(tc_string).startswith(f"{module_name}_"):
+                    continue
+                tc_string = str(tc_string).strip()
+                title    = str(row[C_TITLE]    or "No Title").strip().replace('"', "'")
+                priority = str(row[C_PRIORITY] or "P2").strip()
+                excel_lookup[tc_string] = {"title": title, "priority": priority}
+            print(f"[Excel] {len(excel_lookup)-before:4d} TCs from sheet '{sheet_name}'")
+    else:
+        print("[Excel] Skipped (file not found or openpyxl missing)")
+
+    # Scan implemented TCs
+    partner_tcs = scan_implemented_tcs(excel_lookup, domain=domain)
     partner_ids = {tc["id"] for tc in partner_tcs}
-    print(f"[Scan]  {len(partner_tcs)} implemented Partner Platform TCs found")
+    print(f"[Scan]   {len(partner_tcs):4d} implemented module TCs found")
 
-    # Step 3: Scan legacy TCs, skip any IDs already covered by partner scan
-    legacy_tcs = [tc for tc in scan_legacy_tcs() if tc["id"] not in partner_ids]
-    print(f"[Legacy] {len(legacy_tcs)} BlazeUp HRMS demo TCs loaded")
+    # Scan legacy TCs (for SA domain)
+    legacy_tcs = [tc for tc in scan_legacy_tcs(domain=domain) if tc["id"] not in partner_ids]
+    print(f"[Legacy] {len(legacy_tcs):4d} legacy test_tc* TCs found")
 
-    # Step 4: Merge and sort by TC ID
-    all_tcs = partner_tcs + legacy_tcs
-    all_tcs.sort(key=lambda x: x["id"])
+    all_tcs = sorted(partner_tcs + legacy_tcs, key=lambda x: x["id"])
 
-    # Step 5: Check for ID collisions across sources
+    # Check duplicates
     seen: dict[int, str] = {}
     for tc in all_tcs:
         if tc["id"] in seen:
-            print(f"  [ERROR] Duplicate TC ID {tc['id']}: "
-                  f"{seen[tc['id']]} vs {tc['func']}")
+            print(f"  [ERROR] Duplicate TC ID {tc['id']}: {seen[tc['id']]} vs {tc['func']}")
         else:
             seen[tc["id"]] = tc["func"]
 
-    # Step 6: Render and write registry file
-    # Snapshot the current registry BEFORE overwriting so we can diff it.
-    old_snapshot = _parse_registry_snapshot(REGISTRY_FILE)
+    # Ensure output directory exists
+    registry_file.parent.mkdir(parents=True, exist_ok=True)
+    (registry_file.parent / "__init__.py").touch(exist_ok=True)
 
+    # Snapshot before overwrite
+    old_snapshot = _parse_registry_snapshot(registry_file)
+
+    # Build registry content
     items_lines: list[str] = []
     new_snapshot: dict[int, str] = {}
     for tc in all_tcs:
-        tc_string = tc.get("tc_string", "")   # "" for legacy tests
+        tc_string = tc.get("tc_string", "")
         args_str = (
             f'{tc["id"]}, '
             f'"{tc_string}", '
@@ -646,30 +647,38 @@ def sync() -> None:
         new_snapshot[tc["id"]] = args_str
         items_lines.append(f'    {tc["id"]}: TestCase({args_str}),')
 
-    REGISTRY_FILE.write_text(
+    registry_file.write_text(
         _TEMPLATE.format(items="\n".join(items_lines)),
         encoding="utf-8",
     )
 
-    # Step 7: Print summary
-    n_partner = sum(1 for tc in all_tcs if tc["source"] == "scan")
-    n_legacy  = sum(1 for tc in all_tcs if tc["source"] == "legacy")
-
-    print()
-    print(f"  Total   : {len(all_tcs):4d}  TCs written to {REGISTRY_FILE.relative_to(PROJECT_ROOT)}")
-    print(f"  Partner : {n_partner:4d}  (implemented Partner Platform tests)")
-    print(f"  Legacy  : {n_legacy:4d}  (BlazeUp HRMS demo tests)")
-    print()
-    if n_partner == 0:
-        print("  Tip: Create test functions named test_partner_ui_<section>_NNN")
-        print("       or test_partner_api_<feature>_NNN and re-run sync.")
-    else:
-        print("  Tip: Add more test_partner_* functions to any test file and")
-        print("       re-run sync — they will be auto-registered.")
-
-    # Step 8: Print diff vs previous registry
-    print()
+    print(f"\n  Total : {len(all_tcs):4d} TCs written to {registry_file.relative_to(PROJECT_ROOT)}")
     _print_diff(old_snapshot, new_snapshot, all_tcs)
+
+
+def sync(domain: str | None = None) -> None:
+    """Regenerate runner/{domain}/registry.py for one or all domains.
+
+    domain=None  → sync all domains found in tests/*/
+    domain="blazeup_admin"  → sync SA only  → runner/blazeup_admin/registry.py
+    """
+    print("Syncing TC registry ...")
+    print(f"  Tests root : {TESTS_DIR}")
+
+    if domain:
+        _sync_domain(domain)
+    else:
+        # Auto-discover all domains in tests/
+        domains = sorted(
+            d.name for d in TESTS_DIR.iterdir()
+            if d.is_dir() and not d.name.startswith("_")
+        )
+        if not domains:
+            print("  No domains found in tests/. Create tests/{domain}/ first.")
+            return
+        print(f"  Domains    : {', '.join(domains)}")
+        for d in domains:
+            _sync_domain(d)
 
 
 # ---------------------------------------------------------------------------
@@ -694,4 +703,10 @@ if __name__ == "__main__":
     if "--table" in sys.argv:
         print_id_table()
     else:
-        sync()
+        # Support: python utils/sync_registry.py --domain sa
+        _domain_arg: str | None = None
+        if "--domain" in sys.argv:
+            _idx = sys.argv.index("--domain")
+            if _idx + 1 < len(sys.argv):
+                _domain_arg = sys.argv[_idx + 1]
+        sync(domain=_domain_arg)

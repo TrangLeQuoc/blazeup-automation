@@ -1,17 +1,36 @@
 """Runtime settings loaded from environment variables and .env files."""
 
+import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import AnyHttpUrl, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _resolve_env_file() -> Path | None:
+    """Return domain-specific .env path, or None if BLAZEUP_DOMAIN is not set.
+
+    Set BLAZEUP_DOMAIN before running:
+        python -m runner.blazeup_admin.run_test    → loads config/blazeup_admin/.env
+        python -m runner.blazeup_partner.run_test  → loads config/blazeup_partner/.env
+    """
+    domain = os.getenv("BLAZEUP_DOMAIN")
+    if domain:
+        path = _PROJECT_ROOT / "config" / domain / ".env"
+        if path.exists():
+            return path
+    return None
 
 
 class Settings(BaseSettings):
     """Typed configuration for UI, API, browser, and report settings."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_resolve_env_file(),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -26,7 +45,6 @@ class Settings(BaseSettings):
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)
-    allure_results_dir: str = Field(default="allure-results")
     default_response_time_ms: int = Field(default=30000, gt=0)
     viewport_width: int = Field(default=1440, gt=0)
     viewport_height: int = Field(default=900, gt=0)

@@ -16,12 +16,11 @@ from faker import Faker
 from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
-from api.attendance_client import AttendanceClient
-from api.auth_client import AuthClient
-from api.partner_auth_client import PartnerAuthClient
+from api_clients.blazeup_admin.attendance_client import AttendanceClient
+from api_clients.blazeup_admin.auth_client import AuthClient
 from config.settings import Settings, get_settings
-from pages.login_page import LoginPage
 from utils.helpers import load_yaml, require_credentials
+from utils.login_helpers import login_api, login_ui
 from utils.screenshot_on_fail import attach_screenshot
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +51,6 @@ def result_dir() -> Path:
       1. $BLAZEUP_RESULT_DIR env var  — set by runner/test_runner.py
       2. Fallback: results/run_<timestamp>  — used when pytest is run directly
     """
-    # Issue #6 fix: compute path at fixture-call time, not import time.
     run_dir = Path(
         os.getenv(
             "BLAZEUP_RESULT_DIR",
@@ -70,8 +68,6 @@ def result_dir() -> Path:
     logger.remove()
 
     # ── Terminal: compact & beautiful ────────────────────────────────────────
-    # Shows only the time, coloured level badge, and message.
-    # Level colours come from the loguru level definition (custom + built-in).
     logger.add(
         sys.stderr,
         format=(
@@ -87,8 +83,6 @@ def result_dir() -> Path:
     )
 
     # ── File: detailed & grep-friendly ───────────────────────────────────────
-    # Includes timestamp (ms), TC ID (set via logger.contextualize), source
-    # location, and full message.  Use: grep "TC-A01" results/.../test.log
     def _add_tc_id_default(record: dict) -> bool:
         record["extra"].setdefault("tc_id", "--")
         return True
@@ -122,13 +116,6 @@ def _parse_tc_id(node_name: str) -> str:
     Looks up TC_REGISTRY by test_func — single source of truth, handles
     any numbering scheme (sequential demo IDs, structured Partner IDs, …).
     Falls back to regex extraction for tests not yet registered.
-
-    Examples (sequential demo numbering)::
-
-        test_tca08_attendance_status_requires_token  ->  '1'
-        test_tca01_login_returns_jwt_token           ->  '5'
-        test_tc01_login_success_with_valid_creds     ->  '10'
-        test_partner_ui_dashboard_001                ->  '1010201'
     """
     try:
         from runner.tc_registry import TC_REGISTRY
@@ -154,7 +141,6 @@ def _parse_tc_title(item: pytest.Item) -> str:
     if not doc:
         return item.name
     first_line = doc.split("\n")[0]
-    # Strip "TC-A01: " or "TC01: " style prefix if present
     return first_line.split(": ", 1)[-1] if ": " in first_line else first_line
 
 
@@ -165,24 +151,12 @@ async def tc_logger(
 ) -> AsyncGenerator[None, None]:
     """Autouse fixture: emits TC START/PASSED/FAILED banners and binds the
     TC ID to every log record produced during the test via loguru contextualize.
-
-    Terminal output (compact):
-        10:25:01 | START    | [TC-A01] Login returns JWT token
-        10:25:01 | STEP     | Step 1: Login with valid credentials  [email='...']
-        10:25:01 | INFO     | POST /auth-api/login | 200 (342ms)
-        10:25:02 | PASSED   | [TC-A01] PASSED (1.23s)
-
-    File output (detailed, grep-friendly):
-        2026-05-24 10:25:01.342 | START    | TC-A01    | fixtures.py:tc_logger:95   | [TC-A01] Login returns JWT token
-        2026-05-24 10:25:01.688 | INFO     | TC-A01    | base_client.py:request:78  | POST /auth-api/login | 200 (342ms)
-        2026-05-24 10:25:02.155 | PASSED   | TC-A01    | fixtures.py:tc_logger:107  | [TC-A01] PASSED (1.23s)
     """
     tc_id = _parse_tc_id(request.node.name)
     title = _parse_tc_title(request.node)
     start = time.perf_counter()
 
     with logger.contextualize(tc_id=f"TC-{tc_id}"):
-        # Blank line before each TC banner so tests are visually separated
         print("", file=sys.stderr, flush=True)
         logger.log("START", "[TC-{}] {}", tc_id, title)
         try:
@@ -219,33 +193,92 @@ def fake() -> Faker:
     return Faker()
 
 
+# ---------------------------------------------------------------------------
+# Browser context helper
+# ---------------------------------------------------------------------------
+
+async def _create_browser_context(
+    playwright_obj: Any,
+    settings: Settings,
+    result_dir: Path,
+    storage_state: dict | None = None,
+) -> tuple[Browser, BrowserContext]:
+    """Launch a browser and create a context.
+
+    Args:
+        playwright_obj: The async_playwright instance.
+        settings:       Runtime settings (browser type, viewport, etc.).
+        result_dir:     Artifact directory for video recording.
+        storage_state:  Playwright storage state dict (cookies + localStorage).
+                        Pass the value from the ``auth_state`` fixture to create
+                        a pre-authenticated context without re-logging in.
+
+    Returns:
+        ``(Browser, BrowserContext)`` — both must be closed by the caller.
+    """
+    browser_launcher = getattr(playwright_obj, settings.browser)
+    launch_options: dict[str, Any] = {
+        "headless": settings.headless,
+        "slow_mo": settings.slow_mo,
+        "args": ["--no-sandbox", "--disable-dev-shm-usage"],
+    }
+    if settings.browser == "chromium":
+        launch_options["channel"] = "chromium"
+
+    browser: Browser = await browser_launcher.launch(**launch_options)
+
+    context_options: dict[str, Any] = {
+        "viewport": {"width": settings.viewport_width, "height": settings.viewport_height},
+        "base_url": str(settings.base_url),
+        "record_video_dir": str(result_dir / "videos"),
+        "record_video_size": {"width": settings.viewport_width, "height": settings.viewport_height},
+    }
+    if storage_state is not None:
+        context_options["storage_state"] = storage_state
+
+    context = await browser.new_context(**context_options)
+    await context.tracing.start(screenshots=True, snapshots=True, sources=True)
+    return browser, context
+
+
+async def _save_page_artifacts(
+    page_obj: Page,
+    request: pytest.FixtureRequest,
+    result_dir: Path,
+) -> None:
+    """Take a screenshot (pass or fail) and attach it to the run artifacts."""
+    report = getattr(request.node, "rep_call", None)
+    status = "failed" if report and report.failed else "passed"
+    timestamp = datetime.now().strftime("%H%M%S")
+    safe_name = request.node.name.replace("/", "_").replace("\\", "_")
+    screenshot_name = f"{safe_name}_{status}_{timestamp}"
+    if status == "failed":
+        await attach_screenshot(page_obj, screenshot_name, output_dir=str(result_dir / "screenshots"))
+    else:
+        screenshot_path = result_dir / "screenshots" / f"{screenshot_name}.png"
+        await page_obj.screenshot(path=str(screenshot_path), full_page=True)
+        logger.info("Saved final screenshot to {}", screenshot_path)
+
+
+# ---------------------------------------------------------------------------
+# Unauthenticated browser fixtures  (login-page tests, non-auth scenarios)
+# ---------------------------------------------------------------------------
+
 @pytest_asyncio.fixture
 async def browser_context(
     request: pytest.FixtureRequest,
     settings: Settings,
     result_dir: Path,
 ) -> AsyncGenerator[BrowserContext, None]:
-    """Create a browser context with the required viewport and tracing."""
+    """Unauthenticated browser context.
 
+    Use this (via the ``page`` fixture) when the test itself exercises the
+    login flow or does not require an authenticated session.
+    """
+    trace_name = request.node.name.replace("/", "_").replace("\\", "_")
     async with async_playwright() as playwright:
-        browser_launcher = getattr(playwright, settings.browser)
-        launch_options: dict[str, Any] = {
-            "headless": settings.headless,
-            "slow_mo": settings.slow_mo,
-            "args": ["--no-sandbox", "--disable-dev-shm-usage"],
-        }
-        if settings.browser == "chromium":
-            launch_options["channel"] = "chromium"
-        browser: Browser = await browser_launcher.launch(**launch_options)
-        context = await browser.new_context(
-            viewport={"width": settings.viewport_width, "height": settings.viewport_height},
-            base_url=str(settings.base_url),
-            record_video_dir=str(result_dir / "videos"),
-            record_video_size={"width": settings.viewport_width, "height": settings.viewport_height},
-        )
-        trace_name = request.node.name.replace("/", "_").replace("\\", "_")
+        browser, context = await _create_browser_context(playwright, settings, result_dir)
         try:
-            await context.tracing.start(screenshots=True, snapshots=True, sources=True)
             yield context
         finally:
             await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
@@ -259,71 +292,106 @@ async def page(
     browser_context: BrowserContext,
     result_dir: Path,
 ) -> AsyncGenerator[Page, None]:
-    """Create a new page for each test."""
+    """Unauthenticated page — one fresh page per test."""
 
     page_obj = await browser_context.new_page()
     setattr(request.node, "_playwright_page", page_obj)
     yield page_obj
     if "ui" in request.node.keywords:
-        report = getattr(request.node, "rep_call", None)
-        status = "failed" if report and report.failed else "passed"
-        timestamp = datetime.now().strftime("%H%M%S")
-        safe_name = request.node.name.replace("/", "_").replace("\\", "_")
-        screenshot_name = f"{safe_name}_{status}_{timestamp}"
-        if status == "failed":
-            await attach_screenshot(page_obj, screenshot_name, output_dir=str(result_dir / "screenshots"))
-        else:
-            screenshot_path = result_dir / "screenshots" / f"{screenshot_name}.png"
-            await page_obj.screenshot(path=str(screenshot_path), full_page=True)
-            logger.info("Saved final screenshot to {}", screenshot_path)
+        await _save_page_artifacts(page_obj, request, result_dir)
     await page_obj.close()
 
 
-@pytest_asyncio.fixture
-async def authenticated_page(page: Page, settings: Settings) -> Page:
-    """Return a Playwright page already authenticated through the UI.
+# ---------------------------------------------------------------------------
+# Auth — session-scoped  (login once for the entire test run)
+# ---------------------------------------------------------------------------
 
-    Uses a URL-based check (not a content-based check) so the fixture does not
-    race against the SA Dashboard's slow content render.  The dashboard content
-    can take >15 s to appear after the URL redirect; the individual tests that
-    need specific elements should wait for them themselves.
+@pytest_asyncio.fixture(scope="session")
+async def auth_state(settings: Settings) -> dict:
+    """Log in once and cache the Playwright storage state (cookies + localStorage).
+
+    Session-scoped: runs exactly once per test run regardless of how many tests
+    request ``authenticated_page``.  The returned dict is injected into every
+    new browser context via ``storage_state=``, so each test starts already
+    authenticated without repeating the login flow.
     """
-    from playwright.async_api import expect as pw_expect
+    async with async_playwright() as p:
+        browser_launcher = getattr(p, settings.browser)
+        browser = await browser_launcher.launch(headless=settings.headless)
+        context = await browser.new_context(
+            viewport={"width": settings.viewport_width, "height": settings.viewport_height},
+            base_url=str(settings.base_url),
+        )
+        page_obj = await context.new_page()
+        email, password = require_credentials(settings.test_email, settings.test_password)
+        await login_ui(page_obj, str(settings.base_url), email, password)
+        state = await context.storage_state()
+        await context.close()
+        await browser.close()
 
-    email, password = require_credentials(settings.test_email, settings.test_password)
-    login_page = LoginPage(page, str(settings.base_url))
-    await login_page.open()
-    await login_page.login(email, password)
-    # Wait up to 30 s for the browser to navigate away from the login page.
-    await pw_expect(page).not_to_have_url(re.compile(r".*/login.*"), timeout=30_000)
-    return page
+    logger.info("auth_state: session login complete — storage state cached for all UI tests")
+    return state
 
 
 @pytest_asyncio.fixture
+async def authenticated_page(
+    request: pytest.FixtureRequest,
+    settings: Settings,
+    auth_state: dict,
+    result_dir: Path,
+) -> AsyncGenerator[Page, None]:
+    """Pre-authenticated page — fresh isolated context per test, login only once.
+
+    Each test gets its own browser context (full isolation — no shared cookies
+    between tests) but the context is pre-loaded with ``auth_state`` so the
+    login page is never visited again after the first test in the session.
+
+    Timeline:
+        Session start  →  auth_state fixture logs in once, saves storage state
+        Test 1  →  new context + storage_state injected  →  page is authenticated
+        Test 2  →  new context + storage_state injected  →  page is authenticated
+        ...
+        Test N  →  new context + storage_state injected  →  page is authenticated
+    """
+    trace_name = request.node.name.replace("/", "_").replace("\\", "_")
+    async with async_playwright() as playwright:
+        browser, context = await _create_browser_context(
+            playwright, settings, result_dir, storage_state=auth_state
+        )
+        page_obj = await context.new_page()
+        setattr(request.node, "_playwright_page", page_obj)
+        try:
+            yield page_obj
+        finally:
+            await _save_page_artifacts(page_obj, request, result_dir)
+            await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
+            await page_obj.close()
+            await context.close()
+            await browser.close()
+
+
+@pytest_asyncio.fixture(scope="session")
 async def api_token(settings: Settings) -> str:
-    """Return a fresh JWT access token for each test.
+    """JWT token valid for the entire test session.
 
-    Uses a relaxed response-time limit (5× the default) because this is
-    test *setup*, not the assertion under test.  A slow login here should
-    not fail an unrelated API test — only actual test calls are measured
-    against the strict SLA.
+    Session-scoped: one API login per run.  Tokens typically live for hours,
+    so there is no need to re-authenticate before every test.
+
+    Delegates to :func:`utils.login_helpers.login_api`.
     """
     email, password = require_credentials(settings.test_email, settings.test_password)
-    client = AuthClient(
+    return await login_api(
         str(settings.api_base_url),
+        str(settings.base_url),
+        email,
+        password,
         max_response_time_ms=settings.default_response_time_ms * 5,
-        app_origin=str(settings.base_url),
     )
-    try:
-        response = await client.login(email, password)
-        return response.bearer_token
-    finally:
-        await client.close()
 
 
 @pytest_asyncio.fixture
 async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[AuthClient, None]:
-    """Return an authenticated AuthClient."""
+    """Authenticated AuthClient — fresh instance per test, token from session."""
 
     client = AuthClient(
         str(settings.api_base_url),
@@ -336,45 +404,8 @@ async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[Auth
 
 
 @pytest_asyncio.fixture
-async def partner_client(settings: Settings) -> AsyncGenerator[PartnerAuthClient, None]:
-    """Return an authenticated PartnerAuthClient for each test.
-
-    Logs in with PARTNER_EMAIL / PARTNER_PASSWORD from .env and caches both
-    the access token and the refresh token so individual tests can use them.
-    Tests are skipped automatically when partner credentials are not configured.
-    """
-    email, password = require_credentials(settings.partner_email, settings.partner_password)
-    client = PartnerAuthClient(
-        str(settings.api_base_url),
-        max_response_time_ms=settings.default_response_time_ms * 5,  # relaxed for setup
-        app_origin=str(settings.base_url),
-    )
-    try:
-        resp = await client.raw_login({"email": email, "password": password}, expected_status=None)
-        if resp.status_code == 404:
-            pytest.fail(
-                "NOT IMPLEMENTED (backend): POST /v1/partner/auth/login returned 404 — "
-                "Partner Platform auth API has not been deployed to staging yet."
-            )
-        if resp.status_code not in {200, 201}:
-            pytest.fail(
-                f"partner_client setup failed: POST /v1/partner/auth/login "
-                f"returned {resp.status_code} — expected 200/201."
-            )
-        from api.partner_auth_client import PartnerLoginResponse
-        login_data = PartnerLoginResponse.model_validate(resp.json())
-        client.token = login_data.bearer_token
-        client.refresh_token = login_data.refresh_token
-        # Tighten the limit back for actual test assertions
-        client.max_response_time_ms = settings.default_response_time_ms
-        yield client
-    finally:
-        await client.close()
-
-
-@pytest_asyncio.fixture
 async def attendance_client(settings: Settings, api_token: str) -> AsyncGenerator[AttendanceClient, None]:
-    """Return an authenticated AttendanceClient."""
+    """Authenticated AttendanceClient — fresh instance per test, token from session."""
 
     client = AttendanceClient(
         str(settings.api_base_url),

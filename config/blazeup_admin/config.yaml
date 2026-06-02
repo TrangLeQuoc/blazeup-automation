@@ -1,0 +1,11 @@
+# SA domain configuration
+tc_prefix: "SA"
+module_number: 2
+
+excel:
+  file: SA_Test_Plan.xlsx
+  sheet: "SA Platform"
+  col_tc_string: 3
+  col_auto_flag: 10
+  col_auto_status: 11
+  data_start_row: 13

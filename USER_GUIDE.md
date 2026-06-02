@@ -25,36 +25,52 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
 ## 1. Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                        runner/run_test.py                    │
-│           CLI: modes, filters, repeat, Excel flag            │
-└────────────────────────────┬─────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│            runner/{domain}/run_test.py                             │
+│   Domain CLI: sets BLAZEUP_DOMAIN env var before any imports       │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │ delegates to
+┌────────────────────────────▼────────────────────────────────────────┐
+│                  runner/run_test.py  (shared)                      │
+│        CLI: modes, filters, repeat, Excel flag                     │
+└────────────────────────────┬────────────────────────────────────────┘
                              │ calls
-┌────────────────────────────▼─────────────────────────────────┐
-│                     runner/test_runner.py                    │
-│   builds pytest args · launches subprocess · parses JUnit   │
-│   prints colour summary · generates Allure · writes Excel    │
-└────────────────────────────┬─────────────────────────────────┘
+┌────────────────────────────▼────────────────────────────────────────┐
+│                    runner/test_runner.py                           │
+│  builds pytest args · subprocess · JUnit parse · Allure · Excel   │
+└────────────────────────────┬────────────────────────────────────────┘
                              │ pytest subprocess
-┌────────────────────────────▼─────────────────────────────────┐
-│                           pytest                             │
-│  conftest.py → pytest_support/fixtures.py (fixtures/hooks)   │
-│  tests/api/**   tests/ui/**                                  │
-└───────────┬────────────────────────┬─────────────────────────┘
-            │                        │
-   ┌────────▼────────┐     ┌────────▼────────┐
-   │   api/          │     │   pages/        │
-   │  httpx clients  │     │  Playwright POM │
-   │  Pydantic models│     │  async/await    │
-   └─────────────────┘     └─────────────────┘
+┌────────────────────────────▼────────────────────────────────────────┐
+│                          pytest                                    │
+│ conftest.py → fixtures.py (auth_state session-scoped: login once) │
+│ tests/{domain}/api/**  tests/{domain}/ui/**                       │
+└────────┬──────────────────────────────────────┬────────────────────┘
+         │                                      │
+┌────────▼────────────────┐        ┌───────────▼─────────────────┐
+│  api_clients/           │        │   pages/                    │
+│  ├── base_client.py     │        │   ├── base_page.py          │
+│  ├── {domain}/          │        │   ├── {domain}/             │
+│  │   ├── auth_client    │        │   │   ├── login_page        │
+│  │   └── ...            │        │   │   └── ...               │
+│  └── httpx + Pydantic   │        │   └── Playwright async POM  │
+└─────────────────────────┘        └─────────────────────────────┘
 ```
+
+**Multi-domain support:**
+
+Each domain (e.g. `blazeup_admin`, `blazeup_partner`) has:
+- Its own `.env` file (`config/{domain}/.env`)
+- Its own TC registry (`runner/{domain}/registry.py`)
+- Its own CLI entry point (`runner/{domain}/run_test.py`)
+
+The shared runner merges all domain registries at runtime.
 
 **Two test layers:**
 
 | Layer | Tech | Location |
 |-------|------|----------|
-| API | `httpx` + `Pydantic` models | `api/` + `tests/api/` |
-| UI | `Playwright` async + Page Object Model | `pages/` + `tests/ui/` |
+| API | `httpx` + `Pydantic` models | `api_clients/` + `tests/{domain}/api/` |
+| UI | `Playwright` async + Page Object Model | `pages/` + `tests/{domain}/ui/` |
 
 **Key design decisions:**
 - All tests are `async def` — powered by `pytest-asyncio` in `auto` mode.
@@ -114,36 +130,51 @@ python -m runner.run_test --list
 
 ## 3. Configuration Reference
 
-All settings live in `.env` (never committed). `config/settings.py` loads them with Pydantic validation.
+Each domain has its own `.env` file: `config/{domain}/.env` (never committed).  
+`config/settings.py` loads it based on the `BLAZEUP_DOMAIN` environment variable set by domain-specific run_test.py.
 
+### BlazeUp Admin (.env)
 ```env
-# ── URLs ─────────────────────────────────────────────────────
-BASE_URL=https://terralogic.blazeup.ai
-# UI host — used as browser base_url and Referer/Origin header
-
-API_BASE_URL=https://api.prod.blazeup.ai
-# API host ONLY (no trailing slash, no service path)
-# ✅ correct:  https://api.prod.blazeup.ai
-# ❌ wrong:    https://api.prod.blazeup.ai/auth-api   ← service prefix added by client
-
-# ── Credentials ──────────────────────────────────────────────
-TEST_EMAIL=your-email@example.com
-TEST_PASSWORD=your-password
-
-# ── Browser ──────────────────────────────────────────────────
-HEADLESS=true          # false = visible browser window (good for debugging)
-BROWSER=chromium       # chromium | firefox | webkit
-SLOW_MO=0              # ms delay between each Playwright action (0 = full speed)
-
-# ── Viewport ─────────────────────────────────────────────────
-VIEWPORT_WIDTH=1440
-VIEWPORT_HEIGHT=900
-
-# ── Timing ───────────────────────────────────────────────────
-DEFAULT_RESPONSE_TIME_MS=30000
-# Soft SLA for API responses. Slow responses log a WARNING but do NOT fail the test.
-# Setup fixtures use 5× this value to avoid false failures on cold starts.
+BASE_URL=https://stgsa.blazeup.ai
+API_BASE_URL=https://api.stg.blazeup.ai
+TEST_EMAIL=ceo@mailinator.com
+TEST_PASSWORD=12345678@Tc
+HEADLESS=true
+BROWSER=chromium
+SLOW_MO=0
+DEFAULT_RESPONSE_TIME_MS=2000
 ```
+
+### BlazeUp Partner (.env)
+```env
+BASE_URL=https://partner.stgsa.blazeup.ai
+API_BASE_URL=https://api.stg.blazeup.ai
+PARTNER_EMAIL=ceo@mailinator.com
+PARTNER_PASSWORD=12345678@Tc
+HEADLESS=true
+BROWSER=chromium
+SLOW_MO=0
+DEFAULT_RESPONSE_TIME_MS=2000
+```
+
+### Settings reference
+
+| Variable | Example | Purpose |
+|----------|---------|---------|
+| `BASE_URL` | `https://stgsa.blazeup.ai` | UI root; used as browser base_url & Origin header |
+| `API_BASE_URL` | `https://api.stg.blazeup.ai` | API root (no trailing slash, no service path) |
+| `TEST_EMAIL` | `ceo@mailinator.com` | Admin domain login (BlazeUp Admin) |
+| `TEST_PASSWORD` | `12345678@Tc` | Admin domain password |
+| `PARTNER_EMAIL` | `ceo@mailinator.com` | Partner domain login (BlazeUp Partner) |
+| `PARTNER_PASSWORD` | `12345678@Tc` | Partner domain password |
+| `HEADLESS` | `true` / `false` | false = visible browser (good for debugging) |
+| `BROWSER` | `chromium` | chromium / firefox / webkit |
+| `SLOW_MO` | `0` | ms delay between Playwright actions (0 = full speed) |
+| `DEFAULT_RESPONSE_TIME_MS` | `2000` | Soft SLA for API responses (warning, not failure) |
+| `VIEWPORT_WIDTH` | `1440` | Browser viewport width |
+| `VIEWPORT_HEIGHT` | `900` | Browser viewport height |
+
+> **Tip:** Set `HEADLESS=false` and `SLOW_MO=500` when writing new UI tests to watch the browser in real time.
 
 > **Tip:** Set `HEADLESS=false` and `SLOW_MO=500` while writing a new UI test to watch the browser in real time.
 
@@ -151,13 +182,29 @@ DEFAULT_RESPONSE_TIME_MS=30000
 
 ## 4. Running Tests
 
-### 4.1 Custom runner (recommended)
+### 4.1 Domain-specific runner (recommended)
+
+**BlazeUp Admin (HRMS):**
+```powershell
+python -m runner.blazeup_admin.run_test
+python -m runner.blazeup_admin.run_test --execute 1 2 3
+python -m runner.blazeup_admin.run_test --mode smoke
+```
+
+**BlazeUp Partner Platform:**
+```powershell
+python -m runner.blazeup_partner.run_test
+python -m runner.blazeup_partner.run_test --execute 1010101 1010102
+python -m runner.blazeup_partner.run_test --mode regression
+```
+
+### 4.2 Shared runner (all domains)
 
 ```powershell
-# Run default TCs (defined by DEFAULT_EXECUTE_IDS in run_test.py)
+# Run ALL registered TCs from all domains
 python -m runner.run_test
 
-# Run specific TC IDs
+# Run specific TC IDs (mixed domains)
 python -m runner.run_test --execute 5
 python -m runner.run_test --execute 1 2 3 10 11
 
@@ -288,16 +335,29 @@ UI IDs are always ≥ 1 000 000. API IDs are always < 1 000 000. No collision po
 Run after adding, renaming, or deleting any test function:
 
 ```powershell
-python utils/sync_registry.py
+python utils/sync_registry.py                          # sync ALL domains
+python utils/sync_registry.py --domain blazeup_admin   # sync only one domain's folder
+python utils/sync_registry.py --domain blazeup_partner # sync only the partner folder
+python utils/sync_registry.py --table                  # just print the TC-ID reference table
 ```
 
-What it does:
-1. Scans `tests/**/*.py` for functions matching `test_partner_{ui|api}_*_NNN`.
-2. Looks up title and priority from `Partner_Platform_Test_Plan.xlsx`.
-3. Scans legacy `test_tc*` / `test_tca*` functions and assigns sequential IDs.
-4. Overwrites `runner/tc_registry.py`.
+Use `--domain <name>` when you only touched your own domain's tests and don't want
+to regenerate the other domain's registry. Without the flag, every domain found
+under `tests/*/` is synced.
 
-> CI also runs this and will fail the build if `tc_registry.py` is out of sync with the test files.
+What it does (per domain):
+1. Scans `tests/{domain}/**/*.py` for functions matching `test_partner_{ui|api}_*_NNN`.
+2. Looks up title and priority from `docs/{domain}/Partner_Platform_Test_Plan.xlsx`
+   (falls back to the function docstring + `P2` if no Excel file exists).
+3. Scans legacy `test_tc*` / `test_tca*` functions and assigns sequential IDs.
+4. Overwrites `runner/{domain}/registry.py`.
+
+`runner/tc_registry.py` then auto-merges every `runner/*/registry.py` into one
+central `TC_REGISTRY` at import time — so the merged total is the sum of all
+domains (e.g. 2 admin + 2 partner = 4).
+
+> CI also runs this and will fail the build if any `runner/{domain}/registry.py`
+> is out of sync with the test files.
 
 ---
 
@@ -605,22 +665,23 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 
 | Fixture | Type | Description |
 |---------|------|-------------|
-| `settings` | `Settings` | Pydantic config loaded from `.env` |
+| `settings` | `Settings` | Pydantic config loaded from `config/{domain}/.env` |
 | `result_dir` | `Path` | Timestamped run folder; configures loguru sinks |
 | `test_data` | `dict` | Parsed `fixtures/test_data.yaml` |
 | `fake` | `Faker` | Faker instance for generating test data |
+| `auth_state` | `dict` | **NEW**: Playwright storage state (cookies + localStorage) cached from one login; injected into every `authenticated_page` context |
+| `api_token` | `str` | **Session-scoped**: One JWT per session; reused across all API tests. Avoids repeated login. |
 
 ### Function-scoped (created fresh per test)
 
 | Fixture | Type | Description |
 |---------|------|-------------|
-| `browser_context` | `BrowserContext` | Playwright context with viewport + tracing |
-| `page` | `Page` | Fresh Playwright page; takes screenshot on finish |
+| `browser_context` | `BrowserContext` | Unauthenticated Playwright context with viewport + tracing |
+| `page` | `Page` | Fresh unauthenticated Playwright page; takes screenshot on finish |
 | `test_user` | `dict` | Generated user dict (`first_name`, `last_name`, `email`, `department`) |
-| `api_token` | `str` | Fresh JWT via login API; uses 5× response-time limit |
-| `auth_client` | `AuthClient` | Authenticated API client (auto-closed after test) |
-| `attendance_client` | `AttendanceClient` | Authenticated attendance client (auto-closed) |
-| `authenticated_page` | `Page` | Page already logged in through the UI |
+| `auth_client` | `AuthClient` | Authenticated API client (token from session `api_token`); auto-closed |
+| `attendance_client` | `AttendanceClient` | Authenticated attendance client (token from session `api_token`); auto-closed |
+| `authenticated_page` | `Page` | **NEW**: Fresh isolated page context per test, pre-authenticated via `auth_state` storage injection (no per-test login) |
 | `tc_logger` *(autouse)* | — | Emits START / PASSED / FAILED banners; binds TC ID to logs |
 
 ### Usage examples

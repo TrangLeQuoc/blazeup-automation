@@ -600,8 +600,14 @@ def run_tc_ids(
     debug_log: bool = False,
     serve_allure: bool = False,
     excel_report: bool = False,
+    excel_path: "Path | None" = None,
 ) -> int:
-    """Run the given test case IDs and return the pytest return code."""
+    """Run the given test case IDs and return the pytest return code.
+
+    excel_path:  Test-plan workbook used when ``excel_report`` is True.
+                 When None, it is auto-resolved per domain from the
+                 BLAZEUP_DOMAIN env var: docs/{domain}/Partner_Platform_Test_Plan.xlsx.
+    """
 
     base_dir = Path(__file__).resolve().parents[1]
     tcs = resolve_tcs(tc_ids)
@@ -649,9 +655,12 @@ def run_tc_ids(
     )
 
     # Optionally write results back to a copy of the test-plan Excel workbook.
+    # Path precedence: explicit excel_path arg > BLAZEUP_DOMAIN auto-resolve.
     excel_report_path = None
     if excel_report:
-        excel_path = base_dir / "Partner_Platform_Test_Plan.xlsx"
+        if excel_path is None:
+            domain = os.environ.get("BLAZEUP_DOMAIN", "blazeup_admin")
+            excel_path = base_dir / "docs" / domain / "Partner_Platform_Test_Plan.xlsx"
         excel_report_path = write_excel_report(tc_summaries, result_dir, excel_path)
 
     print_run_summary(

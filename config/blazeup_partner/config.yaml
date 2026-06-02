@@ -1,0 +1,11 @@
+# Partner domain configuration
+tc_prefix: "PARTNER"
+module_number: 1
+
+excel:
+  file: Partner_Platform_Test_Plan.xlsx
+  sheet: "Partner Platform"
+  col_tc_string: 3
+  col_auto_flag: 10
+  col_auto_status: 11
+  data_start_row: 13
