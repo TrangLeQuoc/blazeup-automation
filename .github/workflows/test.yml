@@ -34,11 +34,11 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps
 
-      - name: Validate tc_registry.py is up-to-date
+      - name: Validate registries are up-to-date
         run: |
           python utils/sync_registry.py
-          git diff --exit-code runner/tc_registry.py || \
-            (echo "::error::tc_registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
+          git diff --exit-code runner/*/registry.py || \
+            (echo "::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
 
       - name: Run smoke tests
         env:
@@ -47,7 +47,15 @@ jobs:
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           HEADLESS: "true"
-        run: pytest -m smoke -n auto --tb=short -q --junitxml=reports/junit-smoke.xml
+        run: |
+          pytest -m smoke -n auto --tb=short -q --junitxml=reports/junit-smoke.xml || ec=$?
+          # pytest exit code 5 = "no tests collected" — not a failure while the
+          # smoke suite is still empty. Any other non-zero code is a real failure.
+          if [ "${ec:-0}" -eq 5 ]; then
+            echo "::warning::No smoke-marked tests collected — nothing to run yet."
+            exit 0
+          fi
+          exit "${ec:-0}"
 
       - name: Upload reports
         if: always()
@@ -84,11 +92,11 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps
 
-      - name: Validate tc_registry.py is up-to-date
+      - name: Validate registries are up-to-date
         run: |
           python utils/sync_registry.py
-          git diff --exit-code runner/tc_registry.py || \
-            (echo "::error::tc_registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
+          git diff --exit-code runner/*/registry.py || \
+            (echo "::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
 
       - name: Run full regression
         env:
@@ -97,7 +105,15 @@ jobs:
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           HEADLESS: "true"
-        run: pytest -m regression -n auto --tb=short -q --junitxml=reports/junit-regression.xml
+        run: |
+          pytest -m regression -n auto --tb=short -q --junitxml=reports/junit-regression.xml || ec=$?
+          # pytest exit code 5 = "no tests collected" — not a failure while the
+          # regression suite is still empty. Any other non-zero code is a real failure.
+          if [ "${ec:-0}" -eq 5 ]; then
+            echo "::warning::No regression-marked tests collected — nothing to run yet."
+            exit 0
+          fi
+          exit "${ec:-0}"
 
       - name: Upload reports
         if: always()
