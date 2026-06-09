@@ -1,16 +1,89 @@
 name: BlazeUp Automation Tests
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Triggers
+#   push        → smoke suite, all domains (fast feedback on every push)
+#   schedule    → full regression, all domains (nightly at 02:00 UTC)
+#   manual      → you pick suite + domain (works from the GitHub Mobile app:
+#                 Actions tab → this workflow → "Run workflow" → choose options)
+#
+# Multi-domain: the `tests` job runs once PER domain via a matrix. Picking
+# domain=all fans out into parallel jobs (one per domain), each loading that
+# domain's own BASE_URL + credentials from per-domain secrets.
+# ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
     branches: ["main", "master", "develop"]
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      suite:
+        description: "Which test suite to run"
+        type: choice
+        default: smoke
+        options:
+          - smoke
+          - regression
+          - all
+      domain:
+        description: "Which domain to test"
+        type: choice
+        default: blazeup_admin
+        options:
+          - blazeup_admin
+          - blazeup_partner
+          - all
+
+# Opt the JavaScript-based actions (checkout / setup-python / cache /
+# upload-artifact) into the Node.js 24 runtime now, silencing the
+# "Node.js 20 actions are deprecated" warning ahead of the June 2026 cutoff.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  smoke:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+  # ── Decide what to run, then hand the matrix to the `tests` job ────────────
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      marker: ${{ steps.cfg.outputs.marker }}
+      domains: ${{ steps.cfg.outputs.domains }}
+    steps:
+      - name: Resolve suite + domain matrix
+        id: cfg
+        run: |
+          EVENT="${{ github.event_name }}"
+          if [ "$EVENT" = "push" ]; then
+            SUITE=smoke;       DOMAIN=all
+          elif [ "$EVENT" = "schedule" ]; then
+            SUITE=regression;  DOMAIN=all
+          else
+            SUITE="${{ inputs.suite }}";  DOMAIN="${{ inputs.domain }}"
+          fi
+
+          case "$SUITE" in
+            smoke)      MARKER="smoke" ;;
+            regression) MARKER="regression" ;;
+            all)        MARKER="smoke or regression" ;;
+          esac
+
+          # domain=all fans out into one matrix entry per domain.
+          case "$DOMAIN" in
+            all) DOMAINS='["blazeup_admin","blazeup_partner"]' ;;
+            *)   DOMAINS="[\"$DOMAIN\"]" ;;
+          esac
+
+          echo "marker=$MARKER"   >> "$GITHUB_OUTPUT"
+          echo "domains=$DOMAINS" >> "$GITHUB_OUTPUT"
+          echo "::notice::suite='$SUITE' marker='$MARKER' domains=$DOMAINS"
+
+  tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false   # one domain failing must not cancel the others
+      matrix:
+        domain: ${{ fromJSON(needs.setup.outputs.domains) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,86 +113,68 @@ jobs:
           git diff --exit-code runner/*/registry.py || \
             (echo "::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
 
-      - name: Run smoke tests
-        env:
-          BASE_URL: ${{ secrets.BASE_URL }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
-          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-          HEADLESS: "true"
+      # ── Load THIS domain's URL + credentials from per-domain secrets ───────
+      # Secret values written to $GITHUB_ENV stay masked in logs. settings.py
+      # reads them from the environment (no per-domain .env needed on CI).
+      - name: Map domain secrets
         run: |
-          pytest -m smoke -n auto --tb=short -q --junitxml=reports/junit-smoke.xml || ec=$?
-          # pytest exit code 5 = "no tests collected" — not a failure while the
-          # smoke suite is still empty. Any other non-zero code is a real failure.
-          if [ "${ec:-0}" -eq 5 ]; then
-            echo "::warning::No smoke-marked tests collected — nothing to run yet."
-            exit 0
-          fi
-          exit "${ec:-0}"
+          case "${{ matrix.domain }}" in
+            blazeup_admin)
+              echo "BASE_URL=${{ secrets.ADMIN_BASE_URL }}"            >> "$GITHUB_ENV"
+              echo "API_BASE_URL=${{ secrets.ADMIN_API_BASE_URL }}"    >> "$GITHUB_ENV"
+              echo "TEST_EMAIL=${{ secrets.ADMIN_TEST_EMAIL }}"        >> "$GITHUB_ENV"
+              echo "TEST_PASSWORD=${{ secrets.ADMIN_TEST_PASSWORD }}"  >> "$GITHUB_ENV"
+              ;;
+            blazeup_partner)
+              echo "BASE_URL=${{ secrets.PARTNER_BASE_URL }}"            >> "$GITHUB_ENV"
+              echo "API_BASE_URL=${{ secrets.PARTNER_API_BASE_URL }}"    >> "$GITHUB_ENV"
+              echo "TEST_EMAIL=${{ secrets.PARTNER_TEST_EMAIL }}"        >> "$GITHUB_ENV"
+              echo "TEST_PASSWORD=${{ secrets.PARTNER_TEST_PASSWORD }}"  >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "::error::Unknown domain '${{ matrix.domain }}' — no secrets mapped."
+              exit 1
+              ;;
+          esac
 
-      - name: Upload reports
+      - name: Run tests
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HEADLESS: "true"
+          BLAZEUP_DOMAIN: ${{ matrix.domain }}
+          # Fixed run dir so test.log lands at a known path for artifacts + triage.
+          BLAZEUP_RESULT_DIR: results/run_ci
+        run: |
+          set +e
+          pytest -m "${{ needs.setup.outputs.marker }}" tests/${{ matrix.domain }} \
+            -n auto --tb=short -q --junitxml=reports/junit.xml
+          ec=$?
+          set -e
+          # pytest exit code 5 = "no tests collected" — not a failure (a suite or
+          # domain may still be empty). Any other non-zero code is a real failure.
+          if [ "$ec" -eq 5 ]; then
+            echo "::warning::No tests collected for ${{ matrix.domain }} / this suite — nothing to run yet."
+            ec=0
+          fi
+          # Remember the result but DON'T fail here, so artifact upload (and,
+          # later, AI triage + notifications) still run on failure.
+          echo "PYTEST_EXIT=$ec" >> "$GITHUB_ENV"
+
+      - name: Upload reports & logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-reports
+          name: test-artifacts-${{ matrix.domain }}
           path: |
             reports
             allure-results
+            results
 
-  regression:
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          python -m playwright install --with-deps
-
-      - name: Validate registries are up-to-date
-        run: |
-          python utils/sync_registry.py
-          git diff --exit-code runner/*/registry.py || \
-            (echo "::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
-
-      - name: Run full regression
-        env:
-          BASE_URL: ${{ secrets.BASE_URL }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
-          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-          HEADLESS: "true"
-        run: |
-          pytest -m regression -n auto --tb=short -q --junitxml=reports/junit-regression.xml || ec=$?
-          # pytest exit code 5 = "no tests collected" — not a failure while the
-          # regression suite is still empty. Any other non-zero code is a real failure.
-          if [ "${ec:-0}" -eq 5 ]; then
-            echo "::warning::No regression-marked tests collected — nothing to run yet."
-            exit 0
-          fi
-          exit "${ec:-0}"
-
-      - name: Upload reports
+      - name: Fail job if tests failed
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: regression-reports
-          path: |
-            reports
-            allure-results
+        run: |
+          if [ "${PYTEST_EXIT:-0}" -ne 0 ]; then
+            echo "::error::Tests failed for ${{ matrix.domain }} (pytest exit code ${PYTEST_EXIT})."
+            exit "${PYTEST_EXIT}"
+          fi
+          echo "All selected tests passed (or none collected) for ${{ matrix.domain }}."
