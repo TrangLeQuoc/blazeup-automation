@@ -49,6 +49,15 @@ class Settings(BaseSettings):
     viewport_width: int = Field(default=1440, gt=0)
     viewport_height: int = Field(default=900, gt=0)
 
+    # ── AI failure-triage (utils/ai_triage.py) ──────────────────────────────
+    # Provider-agnostic by design: switch backends via AI_PROVIDER. Only the
+    # selected provider's key is required. Keys live in the gitignored .env.
+    ai_provider: Literal["gemini", "groq", "ollama"] = Field(default="gemini")
+    ai_model: str = Field(default="gemini-2.0-flash")
+    gemini_api_key: str | None = Field(default=None)
+    groq_api_key: str | None = Field(default=None)
+    ollama_base_url: AnyHttpUrl = Field(default="http://localhost:11434")
+
     @model_validator(mode="after")
     def _check_url_confusion(self) -> "Settings":
         """Fail fast when api_base_url is accidentally identical to base_url.

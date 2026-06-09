@@ -34,25 +34,29 @@ Function naming convention
 
 TC ID Encoding
 --------------
-New-style (Partner Platform):
-    {type}{module:02d}{section:02d}{seq:02d}  -- 7-char string, int drops leading zero
+New-style:
+    {type}{project}{module:02d}{section:02d}{seq:02d}
 
     Digit   Meaning         Values
     ------  --------------  -----------------------------------------------
     type    1 = UI, 0 = API
-    module  01 = PARTNER    (future: 02 … 15)
-    section 01-10 UI / 01-17 API   (see MODULE_SECTIONS below)
-    seq     01-99           sequential within section
+    project 1 = blazeup_partner, 2 = blazeup_admin   (see PROJECTS below)
+    module  01-99   PER DOMAIN   (see MODULES below)
+    section 01-99   PER MODULE   (see MODULE_SECTIONS below)
+    seq     01-99   sequential within section
+
+    The project digit makes IDs globally unique even when two domains reuse the
+    SAME module name (e.g. both have a "PARTNERS" module) — so the merged
+    registry never silently overwrites across projects.
 
     Examples
-    PARTNER_UI_PARTNER_PORTAL_SHELL_001  ->  1*01*01*01  ->  1010101
-    PARTNER_UI_DASHBOARD_001             ->  1*01*02*01  ->  1010201
-    PARTNER_API_AUTH_ACCESS_CONTROL_001  ->  0*01*01*01  ->    10101
-    PARTNER_API_COMMISSIONS_PAYOUTS_001  ->  0*01*10*01  ->   101001
+    PARTNERS_UI_DASHBOARD_001       (partner) -> 1 1 01 02 01 -> 11010201
+    PARTNERS_API_..._001            (partner) -> 0 1 01 .. ..  -> 0101.... (7 digits)
+    SHELL_UI_LOAD_TIME_PAGE_001     (admin)   -> 1 2 01 01 01 -> 12010101
+    DASHBOARD_UI_VISIBLE_001        (admin)   -> 1 2 02 01 01 -> 12020101
 
-    UI IDs >= 1_000_000 (7 digits)
-    API IDs <=   999_999 (<=6 digits, leading zero dropped naturally)
-    -> No collision between UI and API.
+    UI IDs are 8 digits (>= 11_000_000); API IDs are <= 7 digits.
+    -> No collision between UI and API, nor across projects.
 
 Legacy-style (BlazeUp HRMS demo tests, preserved for backward-compat):
     test_tc01_*   -> 1001  (UI)
@@ -66,80 +70,101 @@ Usage
 """
 
 import ast
+import importlib.util
 import re
 import sys
 from pathlib import Path
 
-try:
-    import openpyxl  # type: ignore
-    _HAS_OPENPYXL = True
-except ImportError:
-    _HAS_OPENPYXL = False
+import yaml
+
+# openpyxl is optional — only needed to read the Excel test plan. Detect whether
+# it's installed without importing it at module scope (the real import happens
+# inside _sync_domain, where it's actually used).
+_HAS_OPENPYXL = importlib.util.find_spec("openpyxl") is not None
 
 PROJECT_ROOT  = Path(__file__).resolve().parent.parent
 TESTS_DIR     = PROJECT_ROOT / "tests"       # tests/{domain}/api|ui/...
 RUNNER_DIR    = PROJECT_ROOT / "runner"      # runner/{domain}/registry.py output
+CONFIG_DIR    = PROJECT_ROOT / "config"      # config/{domain}/config.yaml input
 
 # ---------------------------------------------------------------------------
-# Excel sheet -> module name mapping
-# Add a new entry here when a new product module gets its own Excel sheet.
-# The sheet name must match exactly (case-sensitive).
+# TC ID numbering — loaded from each project's config/<domain>/config.yaml,
+# NOT hard-coded here, so this shared file stays project-agnostic. Add a new
+# project by dropping a config/<domain>/config.yaml; no edits to this file.
+#
+# Each config.yaml provides:
+#     project_number: <int>             # leading PROJECT digit in every TC ID
+#     modules:
+#       <MODULE>:
+#         number: <int>                 # the module's 2-digit slot
+#         ui:  {FEATURE: <int>, ...}    # section slots for UI tests
+#         api: {FEATURE: <int>, ...}    # section slots for API tests
+#     excel:                            # optional — supplies titles/priority
+#       sheet: "<Sheet Name>"
+#       module: <CODE_MODULE_NAME>      # module these rows map to
+#       excel_prefix: <LEGACY_PREFIX>   # TestcaseId prefix as written in xlsx
+#
+# Assembled into the module-level dicts the rest of this file consumes:
+#     PROJECTS[domain]                       -> project number
+#     MODULES[domain][MODULE]                -> module number
+#     MODULE_SECTIONS[domain][MODULE][TYPE]  -> {FEATURE: number}
+#     EXCEL_SHEETS[sheet] -> {domain, module, excel_prefix}
+#
+# The project digit makes IDs globally unique even when two domains reuse the
+# same module name (e.g. both have a "PARTNERS" module).
 # ---------------------------------------------------------------------------
-EXCEL_SHEETS: dict[str, str] = {
-    "Partner Platform": "PARTNER",
-    # "Health System":  "HEALTH",   # ← uncomment when sheet is added
-}
 
-# ---------------------------------------------------------------------------
-# Module numbers
-# Add new modules here when onboarding a new product area.
-# ---------------------------------------------------------------------------
-MODULES: dict[str, int] = {
-    "PARTNER": 1,
-    # "BILLING": 2,
-    # "HRMS":    3,
-}
+def _load_domain_configs() -> tuple[dict, dict, dict, dict]:
+    """Read every config/<domain>/config.yaml into the numbering dicts."""
+    projects: dict[str, int] = {}
+    modules: dict[str, dict[str, int]] = {}
+    module_sections: dict[str, dict[str, dict[str, dict[str, int]]]] = {}
+    excel_sheets: dict[str, dict[str, str]] = {}
 
-# ---------------------------------------------------------------------------
-# Section / Feature numbers per module
-# Keys are the sanitised part of the TC string ID (between TYPE and SEQ).
-#   PARTNER_UI_MY_PIPELINE_001          -> key = "MY_PIPELINE"
-#   PARTNER_API_AUTH_ACCESS_CONTROL_001 -> key = "AUTH_ACCESS_CONTROL"
-# ---------------------------------------------------------------------------
-MODULE_SECTIONS: dict[str, dict[str, dict[str, int]]] = {
-    "PARTNER": {
-        "UI": {
-            "PARTNER_PORTAL_SHELL":            1,   # 01
-            "DASHBOARD":                       2,   # 02
-            "MY_PIPELINE":                     3,   # 03
-            "MY_CLIENTS":                      4,   # 04
-            "COMMISSIONS":                     5,   # 05
-            "PARTNER_TEAM":                    6,   # 06
-            "RESOURCES":                       7,   # 07
-            "TRAINING":                        8,   # 08
-            "SA_PARTNER_MODULE":               9,   # 09
-            "SECURITY_COMPLIANCE":            10,   # 10
-        },
-        "API": {
-            "DASHBOARD_DATA":                  2,   # 02
-            "DEAL_REGISTRATION":               3,   # 03
-            "DEAL_REGISTRATION_PIPELINE":      4,   # 04
-            "DEAL_APPROVAL_QUEUE":             5,   # 05
-            "DEAL_COLLABORATION":              6,   # 06
-            "PIPELINE_MANAGEMENT":             7,   # 07
-            "TENANT_PROVISIONING_ATTRIBUTION": 8,   # 08
-            "CLIENT_HEALTH_MSP":               9,   # 09
-            "COMMISSIONS_PAYOUTS":            10,   # 10
-            "REFERRAL_ATTRIBUTION":           11,   # 11
-            "TEAM_REFERRAL_LINKS":            12,   # 12
-            "PARTNER_ACCOUNT_MANAGEMENT":     13,   # 13
-            "RESOURCES_SANDBOX":              14,   # 14
-            "CRM_INTEGRATION":               15,   # 15
-            "EVENT_ARCHITECTURE":            16,   # 16
-            "SECURITY_COMPLIANCE":           17,   # 17
-        },
-    },
-}
+    for cfg_path in sorted(CONFIG_DIR.glob("*/config.yaml")):
+        domain = cfg_path.parent.name
+        try:
+            data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError) as exc:
+            print(f"  [WARN] Could not read {cfg_path}: {exc}")
+            continue
+
+        # Project digit (accept legacy key 'module_number' as a fallback).
+        project_num = data.get("project_number", data.get("module_number"))
+        if project_num is None:
+            continue
+        projects[domain] = int(project_num)
+
+        modules[domain] = {}
+        module_sections[domain] = {}
+        for mod_name, mod_cfg in (data.get("modules") or {}).items():
+            mod_cfg = mod_cfg or {}
+            if "number" not in mod_cfg:
+                print(f"  [WARN] {domain}: module '{mod_name}' has no 'number' — skipped")
+                continue
+            modules[domain][mod_name] = int(mod_cfg["number"])
+            sections: dict[str, dict[str, int]] = {}
+            for tc_type in ("ui", "api"):
+                feats = mod_cfg.get(tc_type)
+                if feats:
+                    sections[tc_type.upper()] = {k: int(v) for k, v in feats.items()}
+            module_sections[domain][mod_name] = sections
+
+        # Optional Excel sheet mapping for title/priority lookup.
+        excel = data.get("excel") or {}
+        sheet = excel.get("sheet")
+        sheet_module = excel.get("module")
+        if sheet and sheet_module:
+            excel_sheets[sheet] = {
+                "domain":       domain,
+                "module":       sheet_module,
+                "excel_prefix": excel.get("excel_prefix", sheet_module),
+            }
+
+    return projects, modules, module_sections, excel_sheets
+
+
+PROJECTS, MODULES, MODULE_SECTIONS, EXCEL_SHEETS = _load_domain_configs()
 
 # ---------------------------------------------------------------------------
 # Registry file template
@@ -149,9 +174,10 @@ _TEMPLATE = '''\
 
 TC ID Encoding
 --------------
-New-style  :  {{type}}{{module:02d}}{{section:02d}}{{seq:02d}}
-              type 1=UI / 0=API   module 01=PARTNER   section/feature 01-17
-              UI IDs >= 1_000_000 * API IDs <= 999_999 -> no collision.
+New-style  :  {{type}}{{project}}{{module:02d}}{{section:02d}}{{seq:02d}}
+              type 1=UI / 0=API   project 1=partner 2=admin
+              module/section are per-domain. The project digit keeps IDs unique
+              across projects even when they share a module name.
 
 Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
 
@@ -221,20 +247,25 @@ def list_by_marker(marker: str) -> list[TestCase]:
 # ID computation
 # ---------------------------------------------------------------------------
 
-def tc_id_from_string(tc_string_id: str) -> int:
-    """Convert a TC string ID to its numeric equivalent.
+def tc_id_from_string(tc_string_id: str, domain: str) -> int:
+    """Convert a TC string ID (within a domain) to its numeric equivalent.
 
-    PARTNER_UI_DASHBOARD_001            -> 1010201
-    PARTNER_API_AUTH_ACCESS_CONTROL_001 -> 10101
+    ID format: {type}{project}{module:02d}{section:02d}{seq:02d}
+        type    1 = UI, 0 = API
+        project PROJECTS[domain]  (partner=1, admin=2)
 
-    Returns 0 on failure (unknown module / section, bad seq).
+    PARTNERS_UI_DASHBOARD_001 (blazeup_partner) -> 1 1 01 02 01 -> 11010201
+    PARTNERS_API_..._001       (blazeup_partner) -> 0 1 01 ..    -> 0101.... (7 digits)
+    SHELL_UI_LOAD_TIME_PAGE_001 (blazeup_admin)  -> 1 2 01 01 01 -> 12010101
+
+    Returns 0 on failure (unknown project / module / section, bad seq).
     """
     parts = tc_string_id.strip().split("_")
     # Minimum structure: MODULE_TYPE_SECTION_SEQ -> 4 parts
     if len(parts) < 4:
         return 0
 
-    module_name = parts[0]               # PARTNER
+    module_name = parts[0]               # PARTNERS | SHELL | DASHBOARD | ...
     tc_type     = parts[1]               # UI | API
     seq_str     = parts[-1]              # 001
     section_key = "_".join(parts[2:-1])  # DASHBOARD | AUTH_ACCESS_CONTROL | ...
@@ -246,27 +277,33 @@ def tc_id_from_string(tc_string_id: str) -> int:
     if seq < 1 or seq > 99:
         return 0
 
-    module_num  = MODULES.get(module_name, 0)
-    sections    = MODULE_SECTIONS.get(module_name, {}).get(tc_type, {})
+    project_num = PROJECTS.get(domain, 0)
+    module_num  = MODULES.get(domain, {}).get(module_name, 0)
+    sections    = MODULE_SECTIONS.get(domain, {}).get(module_name, {}).get(tc_type, {})
     section_num = sections.get(section_key, 0)
 
-    if module_num == 0 or section_num == 0:
+    if project_num == 0 or module_num == 0 or section_num == 0:
         return 0
 
     type_digit = 1 if tc_type == "UI" else 0
-    return int(f"{type_digit}{module_num:02d}{section_num:02d}{seq:02d}")
+    return int(f"{type_digit}{project_num}{module_num:02d}{section_num:02d}{seq:02d}")
 
 
 def tc_string_from_id(tc_id: int) -> str:
     """Reverse-decode a numeric TC ID back to a human-readable label (debug only)."""
-    s            = f"{tc_id:07d}"
+    s            = f"{tc_id:08d}"
     type_char    = s[0]
-    module_num   = int(s[1:3])
-    section_num  = int(s[3:5])
-    seq          = int(s[5:7])
+    project_num  = int(s[1])
+    module_num   = int(s[2:4])
+    section_num  = int(s[4:6])
+    seq          = int(s[6:8])
     tc_type      = "UI" if type_char == "1" else "API"
-    module_name  = next((k for k, v in MODULES.items() if v == module_num), f"MOD{module_num:02d}")
-    sections     = MODULE_SECTIONS.get(module_name, {}).get(tc_type, {})
+    domain       = next((k for k, v in PROJECTS.items() if v == project_num), f"PROJ{project_num}")
+    module_name  = next(
+        (k for k, v in MODULES.get(domain, {}).items() if v == module_num),
+        f"MOD{module_num:02d}",
+    )
+    sections     = MODULE_SECTIONS.get(domain, {}).get(module_name, {}).get(tc_type, {})
     section_name = next((k for k, v in sections.items() if v == section_num), f"SEC{section_num:02d}")
     return f"{module_name}_{tc_type}_{section_name}_{seq:02d}"
 
@@ -275,10 +312,11 @@ def tc_string_from_id(tc_id: int) -> str:
 # Helper: function name -> TC string
 # ---------------------------------------------------------------------------
 
-def _func_name_to_tc_string(func_name: str) -> str | None:
-    """Convert a test function name to its TC string ID.
+def _func_name_to_tc_string(func_name: str, domain: str) -> str | None:
+    """Convert a test function name to its TC string ID (within a domain).
 
-    test_partner_ui_partner_portal_shell_001 -> PARTNER_UI_PARTNER_PORTAL_SHELL_001
+    test_partners_ui_dashboard_001  -> PARTNERS_UI_DASHBOARD_001
+    test_shell_ui_page_loads_001     -> SHELL_UI_PAGE_LOADS_001
 
     Returns None if the name doesn't match the expected pattern
     (must start with test_, end with _NNN where NNN is exactly 3 digits).
@@ -290,14 +328,13 @@ def _func_name_to_tc_string(func_name: str) -> str | None:
     # Must end with a 3-digit sequence number
     if len(parts) < 4 or not re.match(r"^\d{3}$", parts[-1]):
         return None
-    # First part must be a registered module key from MODULES (e.g. "partner").
-    # NOTE: this is the MODULE prefix in the function name, not the test folder
-    # domain — test_partner_ui_* lives under tests/blazeup_admin/ or
-    # tests/blazeup_partner/ but the function still starts with "partner".
+    # First part must be a module key registered for THIS domain (e.g. "shell",
+    # "dashboard", "partners"). Module names are namespaced per domain so the
+    # same name can mean different things in blazeup_admin vs blazeup_partner.
     # This also prevents legacy functions like test_tca02_..._401 from matching.
-    if parts[0].upper() not in MODULES:
+    if parts[0].upper() not in MODULES.get(domain, {}):
         return None
-    return body.upper()  # PARTNER_UI_PARTNER_PORTAL_SHELL_001
+    return body.upper()  # PARTNERS_UI_DASHBOARD_001
 
 
 def _extract_markers(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
@@ -362,11 +399,11 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = Non
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
 
-            tc_string = _func_name_to_tc_string(node.name)
+            tc_string = _func_name_to_tc_string(node.name, domain)
             if tc_string is None:
-                continue  # not a Partner Platform TC function
+                continue  # not a module TC function for this domain
 
-            tc_id = tc_id_from_string(tc_string)
+            tc_id = tc_id_from_string(tc_string, domain)
             if tc_id == 0:
                 # Function name matches pattern but section/module not registered
                 print(f"  [WARN] Unknown section in {py_file.name}: {node.name} "
@@ -585,16 +622,27 @@ def _sync_domain(domain: str) -> None:
         import openpyxl  # type: ignore
         C_TC_STRING, C_TITLE, C_PRIORITY = 2, 3, 5
         wb = openpyxl.load_workbook(excel_file, data_only=True)
-        for sheet_name, module_name in EXCEL_SHEETS.items():
+        for sheet_name, cfg in EXCEL_SHEETS.items():
+            # Only load sheets that belong to the domain being synced.
+            if cfg["domain"] != domain:
+                continue
             if sheet_name not in wb.sheetnames:
                 continue
             ws = wb[sheet_name]
+            excel_prefix = cfg["excel_prefix"]   # legacy prefix in the xlsx
+            module_name  = cfg["module"]         # code module name
             before = len(excel_lookup)
             for row in ws.iter_rows(min_row=13, values_only=True):
                 tc_string = row[C_TC_STRING]
-                if not tc_string or not str(tc_string).startswith(f"{module_name}_"):
+                if not tc_string:
                     continue
                 tc_string = str(tc_string).strip()
+                if not tc_string.startswith(f"{excel_prefix}_"):
+                    continue
+                # Re-key legacy Excel prefix -> code module name so the lookup
+                # matches function-derived TC strings (xlsx stays untouched).
+                if excel_prefix != module_name:
+                    tc_string = module_name + tc_string[len(excel_prefix):]
                 title    = str(row[C_TITLE]    or "No Title").strip().replace('"', "'")
                 priority = str(row[C_PRIORITY] or "P2").strip()
                 excel_lookup[tc_string] = {"title": title, "priority": priority}
@@ -686,17 +734,20 @@ def sync(domain: str | None = None) -> None:
 # ---------------------------------------------------------------------------
 
 def print_id_table() -> None:
-    """Print the full section -> numeric-prefix table for reference."""
+    """Print the full domain -> module -> section -> numeric-prefix table."""
     print("TC ID Reference Table")
     print("=" * 65)
-    for mod_name, mod_num in MODULES.items():
-        print(f"\n  Module: {mod_name} ({mod_num:02d})")
-        for tc_type, sections in MODULE_SECTIONS.get(mod_name, {}).items():
-            type_digit = 1 if tc_type == "UI" else 0
-            print(f"    {tc_type}:")
-            for sec_name, sec_num in sections.items():
-                first_id = int(f"{type_digit}{mod_num:02d}{sec_num:02d}01")
-                print(f"      {sec_num:02d}  {sec_name:<42s}  first ID: {first_id}")
+    for domain, modules in MODULES.items():
+        project_num = PROJECTS.get(domain, 0)
+        print(f"\n=== {domain} (project {project_num}) ===")
+        for mod_name, mod_num in modules.items():
+            print(f"\n  Module: {mod_name} ({mod_num:02d})")
+            for tc_type, sections in MODULE_SECTIONS.get(domain, {}).get(mod_name, {}).items():
+                type_digit = 1 if tc_type == "UI" else 0
+                print(f"    {tc_type}:")
+                for sec_name, sec_num in sections.items():
+                    first_id = int(f"{type_digit}{project_num}{mod_num:02d}{sec_num:02d}01")
+                    print(f"      {sec_num:02d}  {sec_name:<42s}  first ID: {first_id}")
 
 
 if __name__ == "__main__":

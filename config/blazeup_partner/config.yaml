@@ -1,10 +1,53 @@
 # Partner domain configuration
 tc_prefix: "PARTNER"
-module_number: 1
+
+# --- TC ID numbering (read by utils/sync_registry.py) -----------------------
+# project_number  : the leading PROJECT digit in every TC ID for this domain.
+# modules.<NAME>  : number  = the module's 2-digit slot,
+#                   ui:/api: = feature->number maps (the section slot).
+#   TC ID = {type}{project_number}{module.number:02d}{section:02d}{seq:02d}
+#   type 1=UI / 0=API.  The project digit keeps IDs unique across projects
+#   even when two domains reuse the same module name (e.g. "PARTNERS").
+project_number: 1
+
+modules:
+  # The whole Partner Platform product (was "PARTNER").
+  PARTNERS:
+    number: 1
+    ui:
+      PARTNER_PORTAL_SHELL: 1
+      DASHBOARD: 2
+      MY_PIPELINE: 3
+      MY_CLIENTS: 4
+      COMMISSIONS: 5
+      PARTNER_TEAM: 6
+      RESOURCES: 7
+      TRAINING: 8
+      SA_PARTNER_MODULE: 9
+      SECURITY_COMPLIANCE: 10
+    api:
+      DASHBOARD_DATA: 2
+      DEAL_REGISTRATION: 3
+      DEAL_REGISTRATION_PIPELINE: 4
+      DEAL_APPROVAL_QUEUE: 5
+      DEAL_COLLABORATION: 6
+      PIPELINE_MANAGEMENT: 7
+      TENANT_PROVISIONING_ATTRIBUTION: 8
+      CLIENT_HEALTH_MSP: 9
+      COMMISSIONS_PAYOUTS: 10
+      REFERRAL_ATTRIBUTION: 11
+      TEAM_REFERRAL_LINKS: 12
+      PARTNER_ACCOUNT_MANAGEMENT: 13
+      RESOURCES_SANDBOX: 14
+      CRM_INTEGRATION: 15
+      EVENT_ARCHITECTURE: 16
+      SECURITY_COMPLIANCE: 17
 
 excel:
   file: Partner_Platform_Test_Plan.xlsx
   sheet: "Partner Platform"
+  module: PARTNERS        # code module name these rows map to (function: test_partners_*)
+  excel_prefix: PARTNER   # legacy TestcaseId prefix written in the xlsx
   col_tc_string: 3
   col_auto_flag: 10
   col_auto_status: 11

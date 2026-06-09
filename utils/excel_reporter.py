@@ -149,10 +149,17 @@ def write_excel_report(
             updated += 1
 
     if updated == 0:
+        # Nothing matched a workbook row — don't leave an unchanged copy behind.
+        # Discard the file we copied and report nothing, even though Excel
+        # reporting was requested (REPORT_EXCEL=True).
+        wb.close()
+        out_path.unlink(missing_ok=True)
         logger.warning(
-            "Excel report: none of the {} tc_string(s) matched any row in the workbook",
+            "Excel report: none of the {} tc_string(s) matched any row in the workbook "
+            "- no result file written",
             len(result_lookup),
         )
+        return None
 
     wb.save(out_path)
     logger.info("Excel report saved: {} ({} TC(s) updated)", out_path.name, updated)

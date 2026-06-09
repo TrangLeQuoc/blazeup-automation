@@ -32,6 +32,7 @@ STEP     | 21 | cyan bold
 START    | 22 | blue bold
 PASSED   | 23 | green bold
 FAILED   | 24 | red bold
+FINISH   | 26 | blue bold
 
 These complement loguru built-ins (INFO=20, SUCCESS=25, WARNING=30, ERROR=40).
 """
@@ -41,6 +42,7 @@ from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any
 
+import pytest
 from loguru import logger
 
 # ---------------------------------------------------------------------------
@@ -52,6 +54,7 @@ _CUSTOM_LEVELS: list[tuple[str, int, str, str]] = [
     ("START",  22, "<blue><bold>",  ">>"),
     ("PASSED", 23, "<green><bold>", "OK"),
     ("FAILED", 24, "<red><bold>",   "!!"),
+    ("FINISH", 26, "<blue><bold>",  "<<"),
 ]
 
 for _level_name, _level_no, _level_color, _level_icon in _CUSTOM_LEVELS:
@@ -79,6 +82,20 @@ def _fmt_params(params: dict[str, Any]) -> str:
         else:
             parts.append(f"{k}={v!r}")
     return "  [" + ", ".join(parts) + "]"
+
+
+def ordinal(n: int) -> str:
+    """Return the English ordinal for a positive int: 1 -> '1st', 2 -> '2nd', ...
+
+    Used to label each page in a looping test ("Check page 1st: Dashboard ...")
+    so the run log reads as an ordered checklist rather than repeated identical
+    lines. Handles the 11th/12th/13th special case.
+    """
+    if 10 <= (n % 100) <= 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
 
 
 # ---------------------------------------------------------------------------
@@ -147,3 +164,52 @@ async def async_step(name: str, **params: Any) -> AsyncGenerator[None, None]:
             name, elapsed_ms, type(exc).__name__, exc,
         )
         raise
+
+
+# ---------------------------------------------------------------------------
+# Multi-item test verdict
+# ---------------------------------------------------------------------------
+
+def finalize_checks(
+    request: Any,
+    failures: list[str],
+    total: int,
+    *,
+    unit: str = "pages",
+) -> None:
+    """Emit a single per-TC verdict and fail the test when any check failed.
+
+    Use at the end of a test that checks many items in one loop (e.g. all 15
+    SA Dashboard pages).  The pattern is::
+
+        failures: list[str] = []
+        for section in PAGES:
+            logger.log("STEP", "Check page [{}]", section)
+            ok = await do_one_check(section)          # never raises — caught here
+            if ok:
+                logger.info("page [{}] PASSED", section)
+            else:
+                logger.error("page [{}] FAILED — <reason>", section)
+                failures.append(section)
+        finalize_checks(request, failures, len(PAGES))
+
+    Why this instead of ``@pytest.mark.parametrize``: one test function then maps
+    to exactly ONE test case (one START/FINISH banner, one verdict) instead of N
+    look-alike runs.  All items are still checked even if an early one fails
+    (soft-collect), and the verdict names exactly which ones failed.
+
+    The verdict string is stored on ``request.node._tc_detail`` so the
+    ``tc_logger`` fixture can append it to the PASSED/FAILED banner shown right
+    before FINISH.
+    """
+    if failures:
+        detail = f"{len(failures)}/{total} {unit} failed: {', '.join(failures)}"
+    else:
+        detail = f"all {total} {unit} passed"
+
+    node = getattr(request, "node", None)
+    if node is not None:
+        node._tc_detail = detail
+
+    if failures:
+        pytest.fail(detail, pytrace=False)

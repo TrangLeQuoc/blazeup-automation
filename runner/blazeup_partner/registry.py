@@ -2,9 +2,10 @@
 
 TC ID Encoding
 --------------
-New-style  :  {type}{module:02d}{section:02d}{seq:02d}
-              type 1=UI / 0=API   module 01=PARTNER   section/feature 01-17
-              UI IDs >= 1_000_000 * API IDs <= 999_999 -> no collision.
+New-style  :  {type}{project}{module:02d}{section:02d}{seq:02d}
+              type 1=UI / 0=API   project 1=partner 2=admin
+              module/section are per-domain. The project digit keeps IDs unique
+              across projects even when they share a module name.
 
 Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
 

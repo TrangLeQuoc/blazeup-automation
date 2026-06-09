@@ -110,23 +110,41 @@ def result_dir() -> Path:
 # TC-logger helpers
 # ---------------------------------------------------------------------------
 
+def _split_node_name(node_name: str) -> tuple[str, str]:
+    """Split a pytest node name into (base_func_name, param_suffix).
+
+    Parametrized tests carry a ``[param]`` suffix, e.g.::
+
+        test_shell_ui_load_time_page_001[dashboard]
+        ->  ("test_shell_ui_load_time_page_001", "[dashboard]")
+
+    The base name is what TC_REGISTRY stores in ``test_func``; the suffix is
+    kept for the log banner so each parametrized run is distinguishable.
+    """
+    base, sep, params = node_name.partition("[")
+    return base, (f"[{params}" if sep else "")
+
+
 def _parse_tc_id(node_name: str) -> str:
     """Return the registry TC ID string for a pytest node name.
 
     Looks up TC_REGISTRY by test_func — single source of truth, handles
     any numbering scheme (sequential demo IDs, structured Partner IDs, …).
+    The pytest ``[param]`` suffix is stripped before matching so every
+    parametrized run resolves to its function's TC ID.
     Falls back to regex extraction for tests not yet registered.
     """
+    base_name, _ = _split_node_name(node_name)
     try:
         from runner.tc_registry import TC_REGISTRY
         for tc_id, tc in TC_REGISTRY.items():
-            if tc.test_func == node_name:
+            if tc.test_func == base_name:
                 return str(tc_id)
     except ImportError:
         pass
 
     # Fallback: parse from function name (unregistered tests)
-    m = re.search(r"test_tc(a?)(\d+)", node_name)
+    m = re.search(r"test_tc(a?)(\d+)", base_name)
     if not m:
         return "???"
     if m.group(1):
@@ -153,12 +171,18 @@ async def tc_logger(
     TC ID to every log record produced during the test via loguru contextualize.
     """
     tc_id = _parse_tc_id(request.node.name)
+    _, param = _split_node_name(request.node.name)  # e.g. "[dashboard]" for parametrized runs
     title = _parse_tc_title(request.node)
     start = time.perf_counter()
 
-    with logger.contextualize(tc_id=f"TC-{tc_id}"):
+    # Label shown in every banner: TC-<id> plus the parametrize case (if any),
+    # so 15 parametrized runs of one TC are distinguishable instead of looking
+    # like 15 identical START lines.
+    label = f"TC-{tc_id}{param}"
+
+    with logger.contextualize(tc_id=label):
         print("", file=sys.stderr, flush=True)
-        logger.log("START", "[TC-{}] {}", tc_id, title)
+        logger.log("START", "[{}] {}", label, title)
         try:
             yield
         finally:
@@ -171,12 +195,21 @@ async def tc_logger(
             )
             skipped = rep_call is not None and rep_call.skipped
 
+            # Optional verdict detail set by the test body via
+            # utils.log_helper.finalize_checks (e.g. "2/15 pages failed: ...").
+            detail = getattr(request.node, "_tc_detail", "")
+            suffix = f" - {detail}" if detail else ""
+
+            # ── Test-case verdict (right before FINISH) ──────────────────────
             if failed:
-                logger.log("FAILED", "[TC-{}] FAILED ({:.2f}s)", tc_id, elapsed)
+                logger.log("FAILED", "[{}] FAILED ({:.2f}s){}", label, elapsed, suffix)
             elif skipped:
-                logger.warning("[TC-{}] SKIPPED ({:.2f}s)", tc_id, elapsed)
+                logger.warning("[{}] SKIPPED ({:.2f}s)", label, elapsed)
             else:
-                logger.log("PASSED", "[TC-{}] PASSED ({:.2f}s)", tc_id, elapsed)
+                logger.log("PASSED", "[{}] PASSED ({:.2f}s){}", label, elapsed, suffix)
+
+            # ── End-of-test marker ───────────────────────────────────────────
+            logger.log("FINISH", "[{}]", label)
 
 
 @pytest.fixture(scope="session")
@@ -307,14 +340,19 @@ async def page(
 # ---------------------------------------------------------------------------
 
 @pytest_asyncio.fixture(scope="session")
-async def auth_state(settings: Settings) -> dict:
+async def auth_state(settings: Settings) -> AsyncGenerator[dict, None]:
     """Log in once and cache the Playwright storage state (cookies + localStorage).
 
     Session-scoped: runs exactly once per test run regardless of how many tests
-    request ``authenticated_page``.  The returned dict is injected into every
+    request ``authenticated_page``.  The yielded dict is injected into every
     new browser context via ``storage_state=``, so each test starts already
     authenticated without repeating the login flow.
+
+    Logs a ``START Login UI`` banner before authenticating and a
+    ``FINISH Logout UI`` banner at session teardown so the run log clearly
+    brackets the single UI login that serves all UI tests.
     """
+    logger.log("START", "Login UI - establishing the shared session for all UI tests")
     async with async_playwright() as p:
         browser_launcher = getattr(p, settings.browser)
         browser = await browser_launcher.launch(headless=settings.headless)
@@ -329,8 +367,9 @@ async def auth_state(settings: Settings) -> dict:
         await context.close()
         await browser.close()
 
-    logger.info("auth_state: session login complete — storage state cached for all UI tests")
-    return state
+    logger.info("Login UI complete - storage state cached (no re-login for the rest of the run)")
+    yield state
+    logger.log("FINISH", "Logout UI - shared UI session closed")
 
 
 @pytest_asyncio.fixture
@@ -371,22 +410,29 @@ async def authenticated_page(
 
 
 @pytest_asyncio.fixture(scope="session")
-async def api_token(settings: Settings) -> str:
+async def api_token(settings: Settings) -> AsyncGenerator[str, None]:
     """JWT token valid for the entire test session.
 
     Session-scoped: one API login per run.  Tokens typically live for hours,
     so there is no need to re-authenticate before every test.
 
+    Logs an INFO line on login and a ``FINISH Disconnect API`` banner at
+    session teardown so API runs are bracketed the same way UI runs are.
+
     Delegates to :func:`utils.login_helpers.login_api`.
     """
+    logger.info("Login API - requesting the shared session token for all API tests")
     email, password = require_credentials(settings.test_email, settings.test_password)
-    return await login_api(
+    token = await login_api(
         str(settings.api_base_url),
         str(settings.base_url),
         email,
         password,
         max_response_time_ms=settings.default_response_time_ms * 5,
     )
+    logger.info("Login API complete - token cached (no re-login for the rest of the run)")
+    yield token
+    logger.log("FINISH", "Disconnect API - shared API session token released")
 
 
 @pytest_asyncio.fixture

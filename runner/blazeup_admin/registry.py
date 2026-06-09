@@ -2,9 +2,10 @@
 
 TC ID Encoding
 --------------
-New-style  :  {type}{module:02d}{section:02d}{seq:02d}
-              type 1=UI / 0=API   module 01=PARTNER   section/feature 01-17
-              UI IDs >= 1_000_000 * API IDs <= 999_999 -> no collision.
+New-style  :  {type}{project}{module:02d}{section:02d}{seq:02d}
+              type 1=UI / 0=API   project 1=partner 2=admin
+              module/section are per-domain. The project digit keeps IDs unique
+              across projects even when they share a module name.
 
 Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
 
@@ -39,7 +40,11 @@ class TestCase:
 
 
 TC_REGISTRY: dict[int, TestCase] = {
-
+    12010101: TestCase(12010101, "SHELL_UI_LOAD_TIME_PAGE_001", "ui", "shell", "every SA Dashboard page loads within budget (navigated via URL).", "tests/blazeup_admin/ui/test_load_time.py", "test_shell_ui_load_time_page_001", ['ui', 'regression'], "P2"),
+    12010102: TestCase(12010102, "SHELL_UI_LOAD_TIME_PAGE_002", "ui", "shell", "every SA Dashboard page loads within budget (navigated via NAV).", "tests/blazeup_admin/ui/test_load_time.py", "test_shell_ui_load_time_page_002", ['ui', 'regression'], "P2"),
+    12010201: TestCase(12010201, "SHELL_UI_PAGE_LOADS_001", "ui", "shell", "every page loads via direct URL (no MFE fetch error).", "tests/blazeup_admin/ui/test_page_loads.py", "test_shell_ui_page_loads_001", ['ui', 'smoke'], "P2"),
+    12010202: TestCase(12010202, "SHELL_UI_PAGE_LOADS_002", "ui", "shell", "every page loads via sidebar NAV click (no MFE fetch error).", "tests/blazeup_admin/ui/test_page_loads.py", "test_shell_ui_page_loads_002", ['ui', 'regression'], "P2"),
+    12020101: TestCase(12020101, "DASHBOARD_UI_VISIBLE_001", "ui", "dashboard", "Dashboard shows KPI cards + System Health panel (navigated via URL).", "tests/blazeup_admin/ui/test_dashboard.py", "test_dashboard_ui_visible_001", ['ui', 'regression'], "P2"),
 }
 
 

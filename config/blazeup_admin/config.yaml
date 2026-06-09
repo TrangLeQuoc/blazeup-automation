@@ -1,10 +1,77 @@
 # SA domain configuration
 tc_prefix: "SA"
-module_number: 2
+
+# --- TC ID numbering (read by utils/sync_registry.py) -----------------------
+# project_number  : the leading PROJECT digit in every TC ID for this domain.
+# modules.<NAME>  : number  = the module's 2-digit slot,
+#                   ui:/api: = feature->number maps (the section slot).
+#   TC ID = {type}{project_number}{module.number:02d}{section:02d}{seq:02d}
+#   type 1=UI / 0=API.  The project digit keeps IDs unique across projects
+#   even when two domains reuse the same module name (e.g. "PARTNERS").
+project_number: 2
+
+modules:
+  # Shell = cross-page / global features (page loads, load time).
+  SHELL:
+    number: 1
+    ui:
+      LOAD_TIME_PAGE: 1
+      PAGE_LOADS: 2
+  # SA Dashboard nav pages — each page is its own module, per the convention
+  # PAGE_UI_FEATURE_NNN (e.g. DASHBOARD_UI_VISIBLE_001). Feature "VISIBLE" = the
+  # page's key widgets render; add more features per page as you build them.
+  DASHBOARD:
+    number: 2
+    ui: {VISIBLE: 1}
+  TENANTS:
+    number: 3
+    ui: {VISIBLE: 1}
+  BILLING:
+    number: 4
+    ui: {VISIBLE: 1}
+  PLANS:
+    number: 5
+    ui: {VISIBLE: 1}
+  PARTNERS:          # SA Dashboard "Partners" nav page
+    number: 6
+    ui: {VISIBLE: 1}
+  MARKETPLACE:
+    number: 7
+    ui: {VISIBLE: 1}
+  AUDIT_LOG:
+    number: 8
+    ui: {VISIBLE: 1}
+  CONNECTORS:
+    number: 9
+    ui: {VISIBLE: 1}
+  PLATFORM_TEMPLATES:
+    number: 10
+    ui: {VISIBLE: 1}
+  MARKETING_LIBRARY:
+    number: 11
+    ui: {VISIBLE: 1}
+  EXPENSE_LIBRARY:
+    number: 12
+    ui: {VISIBLE: 1}
+  HELP_PLATFORM:
+    number: 13
+    ui: {VISIBLE: 1}
+  STATUTORY_REPORTS:
+    number: 14
+    ui: {VISIBLE: 1}
+  COMPLIANCE:
+    number: 15
+    ui: {VISIBLE: 1}
+  GOVERNANCE:
+    number: 16
+    ui: {VISIBLE: 1}
 
 excel:
   file: SA_Test_Plan.xlsx
   sheet: "SA Platform"
+  # module / excel_prefix: set these once the SA test plan sheet exists, e.g.
+  #   module: <CODE_MODULE_NAME>
+  #   excel_prefix: SA
   col_tc_string: 3
   col_auto_flag: 10
   col_auto_status: 11
