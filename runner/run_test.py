@@ -293,7 +293,10 @@ def main() -> int:
 
     if not base_ids:
         print("No TC IDs matched the given filters. Use --list to see available test cases.")
-        return 1
+        # Exit 5 = "nothing collected" (mirrors pytest's convention). CI treats
+        # this as a non-failure so an empty domain/suite stays green instead of
+        # looking like a real test failure.
+        return 5
 
     repeat = max(1, args.repeat)
     mode   = _display_mode(args)
