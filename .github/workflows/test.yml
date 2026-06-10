@@ -241,7 +241,9 @@ jobs:
           DASH_URL="https://${OWNER}.github.io/${REPO_NAME}/${DOMAIN}/"
           SEL="mode=${MODE}"
           [ -n "$EXECUTE" ] && SEL="execute=${EXECUTE}"
-          MSG="<b>BlazeUp CI — ${DOMAIN}</b>%0A${STATUS}  (${SEL})%0A%0A<a href=\"${RUN_URL}\">View run</a>  |  <a href=\"${DASH_URL}\">Dashboard</a>"
+          # Build with REAL newlines; --data-urlencode encodes them to %0A for us.
+          MSG=$(printf '<b>BlazeUp CI — %s</b>\n%s  (%s)\n\n<a href="%s">View run</a>  |  <a href="%s">Dashboard</a>' \
+            "$DOMAIN" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
           curl -s -X POST "${API}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode=HTML \
