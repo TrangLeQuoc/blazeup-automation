@@ -601,12 +601,16 @@ def run_tc_ids(
     serve_allure: bool = False,
     excel_report: bool = False,
     excel_path: "Path | None" = None,
+    ai_triage: bool = False,
 ) -> int:
     """Run the given test case IDs and return the pytest return code.
 
     excel_path:  Test-plan workbook used when ``excel_report`` is True.
                  When None, it is auto-resolved per domain from the
                  BLAZEUP_DOMAIN env var: docs/{domain}/Partner_Platform_Test_Plan.xlsx.
+    ai_triage:   When True and the run had failures, run AI triage on the log and
+                 write ``ai_triage.md`` into the result dir. Provider/model come
+                 from settings (AI_PROVIDER / AI_MODEL in .env or the environment).
     """
 
     base_dir = Path(__file__).resolve().parents[1]
@@ -673,6 +677,19 @@ def run_tc_ids(
         allure_html=allure_html,
         excel_report_path=excel_report_path,
     )
+
+    # Optionally run AI triage when the run had failures. ai_triage itself is a
+    # no-op if it finds no failures in the log, so this is safe to call broadly.
+    # Wrapped so a triage/AI error never changes the test return code.
+    if ai_triage and result.returncode not in (0, 5):
+        print(f"\n{_BLUE}Running AI failure triage…{_RESET}")
+        try:
+            from utils.ai_triage import main as _triage_main
+            _triage_main([str(result_dir)])
+        except SystemExit as exc:        # bad-JSON path raises SystemExit
+            print(f"AI triage could not complete: {exc}")
+        except Exception as exc:         # noqa: BLE001 — never break the run
+            print(f"AI triage failed (non-blocking): {exc}")
 
     if serve_allure:
         rc = serve_allure_report(result_dir / "allure-results", env, base_dir)

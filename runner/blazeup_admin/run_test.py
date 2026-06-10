@@ -37,6 +37,9 @@ DEFAULT_SKIP_IDS: list[str] = []
 # Platform test plan, so Excel reporting is enabled for this domain.
 REPORT_EXCEL: bool = True
 
+# Run AI failure triage automatically when a run has failures (writes ai_triage.md).
+REPORT_AI_TRIAGE: bool = True
+
 # Test-plan workbook this domain reports into.
 EXCEL_FILE = _PROJECT_ROOT / "docs" / "blazeup_admin" / "Partner_Platform_Test_Plan.xlsx"
 
@@ -62,5 +65,6 @@ if __name__ == "__main__":
     _run_module.DEFAULT_EXECUTE_IDS = DEFAULT_EXECUTE_IDS
     _run_module.DEFAULT_SKIP_IDS = DEFAULT_SKIP_IDS
     _run_module.REPORT_EXCEL = REPORT_EXCEL
+    _run_module.REPORT_AI_TRIAGE = REPORT_AI_TRIAGE
     _run_module.EXCEL_FILE = EXCEL_FILE
     sys.exit(_run_module.main())

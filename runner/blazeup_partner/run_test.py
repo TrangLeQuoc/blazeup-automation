@@ -38,6 +38,10 @@ DEFAULT_SKIP_IDS: list[str] = []
 # once this domain has its own docs/blazeup_partner/Partner_Platform_Test_Plan.xlsx.
 REPORT_EXCEL: bool = False
 
+# AI failure triage is domain-agnostic (it only reads the run log), so enable it
+# here too — it auto-generates ai_triage.md once this domain has failing tests.
+REPORT_AI_TRIAGE: bool = True
+
 # Test-plan workbook this domain would report into (auto-created path convention).
 EXCEL_FILE = _PROJECT_ROOT / "docs" / "blazeup_partner" / "Partner_Platform_Test_Plan.xlsx"
 
@@ -63,5 +67,6 @@ if __name__ == "__main__":
     _run_module.DEFAULT_EXECUTE_IDS = DEFAULT_EXECUTE_IDS
     _run_module.DEFAULT_SKIP_IDS = DEFAULT_SKIP_IDS
     _run_module.REPORT_EXCEL = REPORT_EXCEL
+    _run_module.REPORT_AI_TRIAGE = REPORT_AI_TRIAGE
     _run_module.EXCEL_FILE = EXCEL_FILE
     sys.exit(_run_module.main())

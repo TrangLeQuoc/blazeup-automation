@@ -48,6 +48,11 @@ DEFAULT_SKIP_IDS: list[str] = []
 # after every run.  Override from the CLI with --no-excel-report to skip for one run.
 REPORT_EXCEL: bool = True
 
+# Set True to run AI failure triage automatically when a run has failures,
+# writing ai_triage.md into the result dir. Provider/model come from settings
+# (AI_PROVIDER / AI_MODEL). Override from the CLI with --no-ai-triage.
+REPORT_AI_TRIAGE: bool = True
+
 # Test-plan workbook used for --excel-report.
 #   None  -> auto-resolve per domain from BLAZEUP_DOMAIN:
 #            docs/{domain}/Partner_Platform_Test_Plan.xlsx
@@ -267,6 +272,10 @@ def main() -> int:
                      default=REPORT_EXCEL, dest="excel_report",
                      help=f"Export results to a timestamped copy of Partner_Platform_Test_Plan.xlsx "
                           f"(default: {REPORT_EXCEL}). Use --no-excel-report to skip for one run.")
+    out.add_argument("--ai-triage", action=argparse.BooleanOptionalAction,
+                     default=REPORT_AI_TRIAGE, dest="ai_triage",
+                     help=f"Run AI failure triage and write ai_triage.md when the run has failures "
+                          f"(default: {REPORT_AI_TRIAGE}). Use --no-ai-triage to skip for one run.")
     out.add_argument("--debug-log", action="store_true",
                      help="Write DEBUG-level logs to the run log file.")
 
@@ -324,6 +333,7 @@ def main() -> int:
         serve_allure=args.serve,
         excel_report=args.excel_report,
         excel_path=EXCEL_FILE,
+        ai_triage=args.ai_triage,
     )
 
 
