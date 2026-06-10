@@ -234,3 +234,74 @@ jobs:
             exit "${PYTEST_EXIT}"
           fi
           echo "All selected tests passed (or none matched) for ${{ matrix.domain }}."
+
+  # ── Trend dashboard: publish Allure report (with history) to GitHub Pages ──
+  # Runs after `tests` regardless of pass/fail (we WANT failures in the trend).
+  # One matrix entry per domain → its own subfolder + its own history line, so
+  # the dashboards never overwrite each other:
+  #   https://<owner>.github.io/<repo>/blazeup_admin/
+  #   https://<owner>.github.io/<repo>/blazeup_partner/
+  publish-report:
+    needs: [setup, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # push the generated report to the gh-pages branch
+    # Serialize gh-pages pushes so the parallel domains don't race each other.
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      max-parallel: 1          # one domain deploys at a time (no push race)
+      matrix:
+        domain: ${{ fromJSON(needs.setup.outputs.domains) }}
+    steps:
+      - name: Download this domain's artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-artifacts-${{ matrix.domain }}
+          path: dl
+
+      # The runner writes allure-results inside results/run_<timestamp>/.
+      # Lift the newest one to a stable path the report action expects.
+      - name: Locate allure-results
+        id: loc
+        run: |
+          AR=$(ls -dt dl/results/run_*/allure-results 2>/dev/null | head -1)
+          if [ -z "$AR" ] || [ -z "$(ls -A "$AR" 2>/dev/null)" ]; then
+            echo "::warning::No allure-results for ${{ matrix.domain }} — nothing to publish."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            cp -r "$AR" allure-results
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pull the previous report (history lives here) so Allure can draw trends.
+      # First ever run has no gh-pages branch yet → don't fail.
+      - name: Checkout existing gh-pages (for history)
+        if: steps.loc.outputs.found == 'true'
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Build Allure report (with history/trend)
+        if: steps.loc.outputs.found == 'true'
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_history: allure-history
+          subfolder: ${{ matrix.domain }}
+          keep_reports: 30       # how many past runs to keep in the trend
+
+      - name: Deploy to GitHub Pages
+        if: steps.loc.outputs.found == 'true'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          keep_files: true       # keep the other domain's subfolder intact
