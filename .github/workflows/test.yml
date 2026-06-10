@@ -297,11 +297,31 @@ jobs:
           subfolder: ${{ matrix.domain }}
           keep_reports: 30       # how many past runs to keep in the trend
 
-      - name: Deploy to GitHub Pages
+      # Explicit git deploy — handles the FIRST run (create orphan gh-pages) and
+      # later runs (clone existing branch first, so the OTHER domain's subfolder
+      # is preserved). --allow-empty guarantees a ref exists to push.
+      - name: Deploy to gh-pages
         if: steps.loc.outputs.found == 'true'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-history
-          keep_files: true       # keep the other domain's subfolder intact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          REPO="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          rm -rf pages
+          if git ls-remote --exit-code --heads "$REPO" gh-pages >/dev/null 2>&1; then
+            # Branch exists → clone it so we keep the other domain's subfolder.
+            git clone --branch gh-pages --single-branch "$REPO" pages
+          else
+            # First ever deploy → start a fresh orphan branch.
+            mkdir pages
+            git -C pages init -q
+            git -C pages checkout -q --orphan gh-pages
+          fi
+          # Overlay this run's report. Only this domain's subfolder (+ the shared
+          # index.html redirect) is touched; the other domain's folder stays.
+          cp -r allure-history/. pages/
+          git -C pages config user.name  "github-actions[bot]"
+          git -C pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C pages add -A
+          git -C pages commit -m "Allure report: ${{ matrix.domain }} (run ${{ github.run_number }})" --allow-empty
+          git -C pages push "$REPO" HEAD:gh-pages
