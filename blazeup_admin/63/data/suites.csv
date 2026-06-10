@@ -1,0 +1,14 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"SHELL_UI_LOAD_TIME_PAGE_001: every SA Dashboard page loads within budget (navigated via URL).
+
+Navigation method: URL — ShellPage.open_and_measure() does page.goto(route)
+for each section, then measures wall-clock until assert_loaded passes.
+Isolated per-page load time, independent of the sidebar.
+","26301","test_shell_ui_load_time_page_001","tests.blazeup_admin.ui","2026-06-10","failed","2026-06-10","","test_load_time","",""
+"SHELL_UI_LOAD_TIME_PAGE_002: every SA Dashboard page loads within budget (navigated via NAV).
+
+Navigation method: NAV — land on the dashboard shell first, then measure the
+sidebar-click navigation via ShellPage.click_nav_and_measure(). Includes the
+sidebar routing + dynamic module fetch, i.e. real in-app navigation timing
+(vs 001 which measures the isolated URL/page.goto load).
+","25464","test_shell_ui_load_time_page_002","tests.blazeup_admin.ui","2026-06-10","failed","2026-06-10","","test_load_time","",""
