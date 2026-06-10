@@ -718,6 +718,7 @@ def _sync_domain(domain: str) -> None:
     registry_file.write_text(
         _TEMPLATE.format(items="\n".join(items_lines)),
         encoding="utf-8",
+        newline="\n",  # force LF (matches .gitattributes) so the file is stable on Windows
     )
 
     print(f"\n  Total : {len(all_tcs):4d} TCs written to {registry_file.relative_to(PROJECT_ROOT)}")
