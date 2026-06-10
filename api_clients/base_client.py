@@ -62,7 +62,11 @@ class BaseClient:
         json_body = kwargs.get("json") or kwargs.get("data")
         if json_body and isinstance(json_body, dict):
             masked = {
-                k: ("***" if any(s in k.lower() for s in ("password", "token", "secret", "key", "pwd")) else v)
+                k: (
+                    "***"
+                    if any(s in k.lower() for s in ("password", "token", "secret", "key", "pwd"))
+                    else v
+                )
                 for k, v in json_body.items()
             }
             logger.debug("--> {} {}  body={}", method.upper(), endpoint, masked)
@@ -75,14 +79,18 @@ class BaseClient:
             try:
                 response = await self._client.request(method, endpoint, headers=headers, **kwargs)
             except httpx.TransportError:
-                logger.warning("{} {} transport error on attempt {}/3", method.upper(), endpoint, attempt)
+                logger.warning(
+                    "{} {} transport error on attempt {}/3", method.upper(), endpoint, attempt
+                )
                 if attempt == 3:
                     raise
                 await asyncio.sleep(attempt)
                 continue
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             response.extensions["elapsed_ms"] = elapsed_ms
-            logger.info("{} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms)
+            logger.info(
+                "{} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms
+            )
 
             if response.status_code < 500 or attempt == 3:
                 break
@@ -95,7 +103,10 @@ class BaseClient:
         if elapsed_ms >= self.max_response_time_ms:
             logger.warning(
                 "SLOW: {} {} took {}ms (limit {}ms)",
-                method.upper(), endpoint, elapsed_ms, self.max_response_time_ms,
+                method.upper(),
+                endpoint,
+                elapsed_ms,
+                self.max_response_time_ms,
             )
         if expected_status is not None:
             allowed = (expected_status,) if isinstance(expected_status, int) else expected_status

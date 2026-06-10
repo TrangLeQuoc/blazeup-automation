@@ -8,7 +8,7 @@ from loguru import logger
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]) -> Generator[None, None, None]:
+def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]) -> Generator[None]:
     """Expose test-phase reports to async fixtures and log failure details.
 
     Sets ``item.rep_<when>`` (setup / call / teardown) so fixtures can inspect
@@ -23,9 +23,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]) -> 
 
     if report.when == "call" and report.failed and report.longrepr:
         longrepr_text = (
-            report.longreprtext
-            if hasattr(report, "longreprtext")
-            else str(report.longrepr)
+            report.longreprtext if hasattr(report, "longreprtext") else str(report.longrepr)
         )
         logger.debug(
             "Failure traceback for {}:\n{}",

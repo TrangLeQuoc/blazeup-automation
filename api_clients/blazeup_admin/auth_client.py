@@ -13,8 +13,12 @@ class LoginResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     token: str | None = None
-    access_token: str | None = Field(default=None, validation_alias=AliasChoices("accessToken", "access_token"))
-    token_type: str | None = Field(default=None, validation_alias=AliasChoices("tokenType", "token_type"))
+    access_token: str | None = Field(
+        default=None, validation_alias=AliasChoices("accessToken", "access_token")
+    )
+    token_type: str | None = Field(
+        default=None, validation_alias=AliasChoices("tokenType", "token_type")
+    )
 
     @property
     def bearer_token(self) -> str:
@@ -64,9 +68,15 @@ class AuthClient(BaseClient):
     async def me(self, expected_status: int = 200) -> UserInfo:
         """Return the current authenticated user."""
 
-        return await self.get("/sa-auth-api/current-user", expected_status=expected_status, schema=UserInfo)
+        return await self.get(
+            "/sa-auth-api/current-user", expected_status=expected_status, schema=UserInfo
+        )
 
-    async def raw_login(self, payload: dict[str, Any], expected_status: int | tuple[int, ...] | None) -> Any:
+    async def raw_login(
+        self, payload: dict[str, Any], expected_status: int | tuple[int, ...] | None
+    ) -> Any:
         """Submit arbitrary login payloads for negative testing."""
 
-        return await self.post("/sa-auth-api/sign-in/credentials", json=payload, expected_status=expected_status)
+        return await self.post(
+            "/sa-auth-api/sign-in/credentials", json=payload, expected_status=expected_status
+        )

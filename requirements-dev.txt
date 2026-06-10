@@ -1,0 +1,4 @@
+# ── Developer tooling (not needed to run tests) ───────────────────────────────
+# Install with:  pip install -r requirements-dev.txt
+ruff==0.14.4          # linter + formatter (config in pyproject.toml)
+pre-commit==4.4.0     # git hook runner (config in .pre-commit-config.yaml)

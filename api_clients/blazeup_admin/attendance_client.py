@@ -60,7 +60,9 @@ class AttendanceClient(BaseClient):
         """Return the raw attendance status response for negative tests."""
 
         request_params = self._employee_params()
-        request_params.update({key: str(value) for key, value in params.items() if value is not None})
+        request_params.update(
+            {key: str(value) for key, value in params.items() if value is not None}
+        )
         return await self.get(
             "/time-api/attendances/status",
             params=request_params,

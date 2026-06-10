@@ -12,19 +12,13 @@ class LoginSelectors:
         "input[placeholder*='phone' i]"
     )
     PASSWORD_INPUT = (
-        "input[type='password'], "
-        "input[name*='password' i], "
-        "input[placeholder*='password' i]"
+        "input[type='password'], input[name*='password' i], input[placeholder*='password' i]"
     )
     # Use :text-is() (exact match) instead of :has-text() (partial match).
     # The SA Dashboard login page has both "Continue with Google" and "Continue"
     # buttons — :has-text('Continue') would match "Continue with Google" first,
     # triggering OAuth instead of advancing the email/password form.
-    PROCEED_BUTTON = (
-        "button:text-is('Proceed'), "
-        "button:text-is('Continue'), "
-        "button:text-is('Next')"
-    )
+    PROCEED_BUTTON = "button:text-is('Proceed'), button:text-is('Continue'), button:text-is('Next')"
     LOGIN_BUTTON = (
         "button:text-is('Login'), "
         "button:text-is('Log in'), "
@@ -40,4 +34,3 @@ class LoginSelectors:
         ".text-danger, "
         "[class*='error' i]"
     )
-

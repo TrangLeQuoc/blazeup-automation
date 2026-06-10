@@ -6,8 +6,8 @@ from loguru import logger
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import expect
 
-from pages.base_page import BasePage
 from locators.blazeup_admin.login_ui import LoginSelectors
+from pages.base_page import BasePage
 
 
 class LoginPage(BasePage):
@@ -27,11 +27,15 @@ class LoginPage(BasePage):
         """Submit credentials through BlazeUp's two-step login flow."""
 
         logger.info("Logging in with configured user {}", self._mask_email(email))
-        await self.fill(LoginSelectors.IDENTIFIER_INPUT, email, label="Email/Phone Input", timeout=timeout)
+        await self.fill(
+            LoginSelectors.IDENTIFIER_INPUT, email, label="Email/Phone Input", timeout=timeout
+        )
         await self.click(LoginSelectors.PROCEED_BUTTON, label="Proceed Button", timeout=timeout)
 
         try:
-            await self.wait_for_element(LoginSelectors.PASSWORD_INPUT, timeout=5_000, label="Password Input")
+            await self.wait_for_element(
+                LoginSelectors.PASSWORD_INPUT, timeout=5_000, label="Password Input"
+            )
         except PlaywrightTimeoutError:
             logger.info("Password step did not appear; expecting identifier-level validation")
             return

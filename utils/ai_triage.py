@@ -38,6 +38,7 @@ Claude/OpenAI backend later is just another function.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -148,8 +149,9 @@ def _parse_lines(log_text: str) -> list[LogLine]:
         m = _LINE_RE.match(raw)
         if not m:
             continue
-        out.append(LogLine(raw=raw.rstrip(), level=m["level"].upper(),
-                           tc=m["tc"], msg=m["msg"].strip()))
+        out.append(
+            LogLine(raw=raw.rstrip(), level=m["level"].upper(), tc=m["tc"], msg=m["msg"].strip())
+        )
     return out
 
 
@@ -203,13 +205,13 @@ def build_prompt(ti: TriageInput) -> str:
 # Providers — each returns the raw model text. All over httpx (no extra deps).
 # ---------------------------------------------------------------------------
 
-def _call_gemini(prompt: str, model: str, api_key: str, timeout: float = 60.0,
-                 max_retries: int = 2) -> str:
+
+def _call_gemini(
+    prompt: str, model: str, api_key: str, timeout: float = 60.0, max_retries: int = 2
+) -> str:
     # Key goes in the x-goog-api-key HEADER, not the URL query string, so it
     # never leaks into error messages, tracebacks, or proxy/access logs.
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    )
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -221,8 +223,10 @@ def _call_gemini(prompt: str, model: str, api_key: str, timeout: float = 60.0,
             quota_id, msg, retry_delay = _parse_gemini_429(resp)
             if attempt < max_retries:
                 wait = retry_delay if retry_delay is not None else 20 * (attempt + 1)
-                print(f"  Gemini 429 [{quota_id or 'rate limit'}]; retrying in {wait}s "
-                      f"[{attempt + 1}/{max_retries}]...")
+                print(
+                    f"  Gemini 429 [{quota_id or 'rate limit'}]; retrying in {wait}s "
+                    f"[{attempt + 1}/{max_retries}]..."
+                )
                 time.sleep(wait)
                 continue
             raise SystemExit(
@@ -259,10 +263,8 @@ def _parse_gemini_429(resp: httpx.Response) -> tuple[str | None, str | None, int
                 quota_id = v.get("quotaId") or quota_id
             rd = d.get("retryDelay")  # e.g. "17s"
             if isinstance(rd, str) and rd.endswith("s"):
-                try:
+                with contextlib.suppress(ValueError):
                     retry_delay = int(float(rd[:-1])) + 1
-                except ValueError:
-                    pass
     except (json.JSONDecodeError, AttributeError):
         msg = resp.text[:300]
     return quota_id, msg, retry_delay
@@ -287,8 +289,13 @@ def _call_groq(prompt: str, model: str, api_key: str, timeout: float = 60.0) -> 
 def _call_ollama(prompt: str, model: str, base_url: str, timeout: float = 120.0) -> str:
     resp = httpx.post(
         f"{base_url.rstrip('/')}/api/generate",
-        json={"model": model, "prompt": prompt, "stream": False, "format": "json",
-              "options": {"temperature": 0.0}},
+        json={
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json",
+            "options": {"temperature": 0.0},
+        },
         timeout=timeout,
     )
     resp.raise_for_status()
@@ -300,8 +307,10 @@ def call_ai(prompt: str, *, provider: str, model: str, settings) -> str:
     if provider == "gemini":
         key = (settings.gemini_api_key or os.getenv("GEMINI_API_KEY") or "").strip()
         if not key:
-            raise SystemExit("GEMINI_API_KEY is not set. Add it to config/<domain>/.env "
-                             "(get a free key at https://aistudio.google.com/apikey).")
+            raise SystemExit(
+                "GEMINI_API_KEY is not set. Add it to config/<domain>/.env "
+                "(get a free key at https://aistudio.google.com/apikey)."
+            )
         return _call_gemini(prompt, model, key)
     if provider == "groq":
         # .strip() guards against a trailing newline/space in the key (a common
@@ -353,13 +362,14 @@ def render_markdown(result: dict, log_path: Path) -> str:
     for r in rows:
         cat = _CAT_EMOJI.get(r.get("category", "unknown"), r.get("category", "?"))
         lines.append(
-            f"| {r.get('tc_id','--')} | {r.get('item','?')} | {cat} | "
-            f"{r.get('confidence','?')} | {r.get('reason','')} | {r.get('recommendation','')} |"
+            f"| {r.get('tc_id', '--')} | {r.get('item', '?')} | {cat} | "
+            f"{r.get('confidence', '?')} | {r.get('reason', '')} | {r.get('recommendation', '')} |"
         )
     lines += ["", "## Evidence", ""]
     for r in rows:
-        lines.append(f"- **{r.get('tc_id','--')} / {r.get('item','?')}** — "
-                     f"`{r.get('evidence','')}`")
+        lines.append(
+            f"- **{r.get('tc_id', '--')} / {r.get('item', '?')}** — `{r.get('evidence', '')}`"
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -368,16 +378,19 @@ def _print_console(result: dict) -> None:
     print(result.get("summary", "(no summary)"))
     print("-" * 60)
     for r in result.get("failures", []):
-        print(f"  [{_CAT_EMOJI.get(r.get('category'), r.get('category','?'))}] "
-              f"{r.get('tc_id','--')}  {r.get('item','?')}  (conf {r.get('confidence','?')})")
-        print(f"      reason : {r.get('reason','')}")
-        print(f"      action : {r.get('recommendation','')}")
+        print(
+            f"  [{_CAT_EMOJI.get(r.get('category'), r.get('category', '?'))}] "
+            f"{r.get('tc_id', '--')}  {r.get('item', '?')}  (conf {r.get('confidence', '?')})"
+        )
+        print(f"      reason : {r.get('reason', '')}")
+        print(f"      action : {r.get('recommendation', '')}")
     print("-" * 60)
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _resolve_log_path(target: str) -> Path:
     p = Path(target)
@@ -396,8 +409,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("target", help="run directory or path to test.log")
     parser.add_argument("--provider", default=None, help="override AI_PROVIDER")
     parser.add_argument("--model", default=None, help="override AI_MODEL")
-    parser.add_argument("--print-prompt", action="store_true",
-                        help="print the filtered prompt and exit (no API call)")
+    parser.add_argument(
+        "--print-prompt",
+        action="store_true",
+        help="print the filtered prompt and exit (no API call)",
+    )
     args = parser.parse_args(argv)
 
     settings = get_settings()
@@ -417,16 +433,18 @@ def main(argv: list[str] | None = None) -> int:
         print(prompt)
         return 0
 
-    print(f"Triaging {log_path}\n  provider={provider} model={model} "
-          f"(screenshots seen: {len(ti.screenshots)})")
+    print(
+        f"Triaging {log_path}\n  provider={provider} model={model} "
+        f"(screenshots seen: {len(ti.screenshots)})"
+    )
     raw = call_ai(prompt, provider=provider, model=model, settings=settings)
 
     try:
         result = _coerce_json(raw)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         out = log_path.parent / "ai_triage_raw.txt"
         out.write_text(raw, encoding="utf-8")
-        raise SystemExit(f"Model did not return valid JSON. Raw reply saved to {out}")
+        raise SystemExit(f"Model did not return valid JSON. Raw reply saved to {out}") from exc
 
     md = render_markdown(result, log_path)
     out_md = log_path.parent.parent / "ai_triage.md"  # run_dir/ai_triage.md

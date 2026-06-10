@@ -40,20 +40,20 @@ MODULE_TO_SHEET: dict[str, str] = {
 # Column positions (1-based — used with ws.cell(row=r, column=c))
 # ---------------------------------------------------------------------------
 
-COL_TC_STRING    = 3   # C: TestcaseId
-COL_AUTO_FLAG    = 10  # J: Auto  ("YES" / "NO")
-COL_AUTO_STATUS  = 11  # K: Automation Status
+COL_TC_STRING = 3  # C: TestcaseId
+COL_AUTO_FLAG = 10  # J: Auto  ("YES" / "NO")
+COL_AUTO_STATUS = 11  # K: Automation Status
 
-DATA_START_ROW = 13    # first row that contains test-case data
+DATA_START_ROW = 13  # first row that contains test-case data
 
 # ---------------------------------------------------------------------------
 # pytest outcome → Excel automation status
 # ---------------------------------------------------------------------------
 
 _OUTCOME_MAP: dict[str, str] = {
-    "PASSED":  "PASSED",
-    "FAILED":  "FAILED",
-    "ERROR":   "FAILED",
+    "PASSED": "PASSED",
+    "FAILED": "FAILED",
+    "ERROR": "FAILED",
     "SKIPPED": "NOT_STARTED",
     "MISSING": "NOT_STARTED",
     "UNKNOWN": "NOT_STARTED",
@@ -73,6 +73,7 @@ def _outcome_from_summary(s: dict) -> str:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def write_excel_report(
     tc_summaries: list[dict],
@@ -120,8 +121,8 @@ def write_excel_report(
 
     # ── Copy the workbook ──────────────────────────────────────────────────
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_name  = f"{excel_path.stem}_result_{timestamp}.xlsx"
-    out_path  = result_dir / out_name
+    out_name = f"{excel_path.stem}_result_{timestamp}.xlsx"
+    out_path = result_dir / out_name
     shutil.copy2(excel_path, out_path)
 
     # ── Open and update ────────────────────────────────────────────────────
@@ -130,7 +131,9 @@ def write_excel_report(
 
     for module_name, sheet_name in MODULE_TO_SHEET.items():
         if sheet_name not in wb.sheetnames:
-            logger.debug("Sheet '{}' not in workbook — skipping module '{}'", sheet_name, module_name)
+            logger.debug(
+                "Sheet '{}' not in workbook — skipping module '{}'", sheet_name, module_name
+            )
             continue
 
         ws = wb[sheet_name]
@@ -143,7 +146,7 @@ def write_excel_report(
                 continue
 
             outcome = result_lookup[tc_str]
-            ws.cell(row=row_idx, column=COL_AUTO_FLAG).value   = "YES"
+            ws.cell(row=row_idx, column=COL_AUTO_FLAG).value = "YES"
             ws.cell(row=row_idx, column=COL_AUTO_STATUS).value = outcome
             logger.debug("  {} → Automation Status = {}", tc_str, outcome)
             updated += 1

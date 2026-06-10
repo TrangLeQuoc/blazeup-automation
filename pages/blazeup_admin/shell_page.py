@@ -71,8 +71,9 @@ class ShellPage(BasePage):
         """
         meta = self.SECTIONS.get(section)
         if meta is None:
-            raise KeyError(f"Unknown SA Dashboard section '{section}'. "
-                           f"Valid keys: {', '.join(self.SECTIONS)}")
+            raise KeyError(
+                f"Unknown SA Dashboard section '{section}'. Valid keys: {', '.join(self.SECTIONS)}"
+            )
         await self.ensure_sidebar_expanded()
         label = meta["label"]
         logger.log("STEP", "Click sidebar nav [{}]", label)
@@ -85,8 +86,9 @@ class ShellPage(BasePage):
         """Return the READY_MARKER text (page title) for a section."""
         meta = self.SECTIONS.get(section)
         if meta is None:
-            raise KeyError(f"Unknown SA Dashboard section '{section}'. "
-                           f"Valid keys: {', '.join(self.SECTIONS)}")
+            raise KeyError(
+                f"Unknown SA Dashboard section '{section}'. Valid keys: {', '.join(self.SECTIONS)}"
+            )
         return meta["marker"]
 
     def marker_locator(self, section: str):
@@ -149,8 +151,12 @@ class ShellPage(BasePage):
         per-page loop) so the full SPA bootstrap is not charged to the first page.
         """
         marker = self.marker_text(section)
-        logger.log("STEP", "Wait ready [{}] = marker '{}' in <main> (fast-fail on error panel)",
-                   section, marker)
+        logger.log(
+            "STEP",
+            "Wait ready [{}] = marker '{}' in <main> (fast-fail on error panel)",
+            section,
+            marker,
+        )
         marker_loc = self.marker_locator(section)
         error_loc = self.page.locator(ShellLocators.ERROR_PANEL).first
         deadline = time.perf_counter() + timeout / 1000
@@ -211,7 +217,9 @@ class ShellPage(BasePage):
         """
         start = time.perf_counter()
         await self.open(section)
-        await self.wait_ready(section, timeout=timeout)  # fast-fail if broken, else wait until rendered
+        await self.wait_ready(
+            section, timeout=timeout
+        )  # fast-fail if broken, else wait until rendered
         elapsed_ms = (time.perf_counter() - start) * 1000
         logger.info("Load time via URL [{}] = {:.0f} ms", section, elapsed_ms)
         return elapsed_ms
@@ -232,7 +240,9 @@ class ShellPage(BasePage):
         await self.ensure_sidebar_expanded()
         start = time.perf_counter()
         await self.click_nav(section)
-        await self.wait_ready(section, timeout=timeout)  # fast-fail if broken, else wait until rendered
+        await self.wait_ready(
+            section, timeout=timeout
+        )  # fast-fail if broken, else wait until rendered
         elapsed_ms = (time.perf_counter() - start) * 1000
         logger.info("Load time via NAV [{}] = {:.0f} ms", section, elapsed_ms)
         return elapsed_ms

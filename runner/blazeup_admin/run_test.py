@@ -57,11 +57,11 @@ if __name__ == "__main__":
     import runner.tc_registry as _shared_reg
     import runner.test_runner as _test_runner
 
-    _shared_reg.TC_REGISTRY = TC_REGISTRY      # type: ignore[assignment]
-    _test_runner.TC_REGISTRY = TC_REGISTRY     # type: ignore[assignment]
+    _shared_reg.TC_REGISTRY = TC_REGISTRY  # type: ignore[assignment]
+    _test_runner.TC_REGISTRY = TC_REGISTRY  # type: ignore[assignment]
 
     _run_module = importlib.import_module("runner.run_test")
-    _run_module.TC_REGISTRY = TC_REGISTRY      # type: ignore[assignment]
+    _run_module.TC_REGISTRY = TC_REGISTRY  # type: ignore[assignment]
     _run_module.DEFAULT_EXECUTE_IDS = DEFAULT_EXECUTE_IDS
     _run_module.DEFAULT_SKIP_IDS = DEFAULT_SKIP_IDS
     _run_module.REPORT_EXCEL = REPORT_EXCEL

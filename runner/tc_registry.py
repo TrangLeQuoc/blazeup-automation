@@ -12,24 +12,24 @@ This file auto-discovers it — no edits needed here.
 """
 
 import importlib
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
-from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
 class TestCase:
     """Metadata for a single automation test case."""
 
-    tc_id:     int
+    tc_id: int
     tc_string: str
-    type:      Literal["api", "ui"]
-    module:    str
-    title:     str
+    type: Literal["api", "ui"]
+    module: str
+    title: str
     test_path: str
     test_func: str
-    markers:   list[str] = field(default_factory=list)
-    priority:  Literal["P1", "P2", "P3"] = "P2"
+    markers: list[str] = field(default_factory=list)
+    priority: Literal["P1", "P2", "P3"] = "P2"
 
     @property
     def node_id(self) -> str:
@@ -47,7 +47,9 @@ for _domain_dir in sorted(_runner_dir.iterdir()):
             _mod = importlib.import_module(f"runner.{_domain_dir.name}.registry")
             TC_REGISTRY.update(_mod.TC_REGISTRY)
         except Exception as _e:
-            print(f"[tc_registry] Warning: could not load runner/{_domain_dir.name}/registry.py: {_e}")
+            print(
+                f"[tc_registry] Warning: could not load runner/{_domain_dir.name}/registry.py: {_e}"
+            )
 
 
 def get_tc(tc_id: int) -> TestCase:

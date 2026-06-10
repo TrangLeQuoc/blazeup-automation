@@ -60,8 +60,8 @@ async def test_shell_ui_load_time_page_001(authenticated_page, settings, request
     Isolated per-page load time, independent of the sidebar.
     """
     shell = ShellPage(authenticated_page, str(settings.base_url))
-    failures: list[str] = []   # pages that did NOT render — the only fail condition
-    slow: list[str] = []       # pages that rendered but exceeded the soft budget
+    failures: list[str] = []  # pages that did NOT render — the only fail condition
+    slow: list[str] = []  # pages that rendered but exceeded the soft budget
 
     # Warm-up: pay the one-off full SPA bootstrap (BlazeUp splash logo, vendor
     # bundles) ONCE before timing, so that cold-start cost is not charged to the
@@ -80,17 +80,24 @@ async def test_shell_ui_load_time_page_001(authenticated_page, settings, request
             failures.append(f"{section} (load error)")
             continue
         if elapsed_ms < LOAD_BUDGET_MS:
-            logger.info("Page [{}] PASSED - {:.0f} ms (budget {} ms)", section, elapsed_ms, LOAD_BUDGET_MS)
+            logger.info(
+                "Page [{}] PASSED - {:.0f} ms (budget {} ms)", section, elapsed_ms, LOAD_BUDGET_MS
+            )
         else:
             logger.warning(
                 "Page [{}] PASSED but SLOW - {:.0f} ms exceeds soft budget {} ms (not a failure)",
-                section, elapsed_ms, LOAD_BUDGET_MS,
+                section,
+                elapsed_ms,
+                LOAD_BUDGET_MS,
             )
             slow.append(f"{section} ({elapsed_ms:.0f}ms)")
 
     if slow:
-        logger.warning("Slow pages over {} ms soft budget (rendered OK, not failed): {}",
-                        LOAD_BUDGET_MS, ", ".join(slow))
+        logger.warning(
+            "Slow pages over {} ms soft budget (rendered OK, not failed): {}",
+            LOAD_BUDGET_MS,
+            ", ".join(slow),
+        )
     finalize_checks(request, failures, len(PAGES))
 
 
@@ -105,8 +112,8 @@ async def test_shell_ui_load_time_page_002(authenticated_page, settings, request
     (vs 001 which measures the isolated URL/page.goto load).
     """
     shell = ShellPage(authenticated_page, str(settings.base_url))
-    failures: list[str] = []   # pages that did NOT render — the only fail condition
-    slow: list[str] = []       # pages that rendered but exceeded the soft budget
+    failures: list[str] = []  # pages that did NOT render — the only fail condition
+    slow: list[str] = []  # pages that rendered but exceeded the soft budget
 
     # Warm-up: pay the one-off full SPA bootstrap ONCE before timing so that
     # cold-start cost is not charged to the first sidebar navigation measured.
@@ -123,7 +130,7 @@ async def test_shell_ui_load_time_page_002(authenticated_page, settings, request
         # the target itself is 'dashboard'.
         home = "dashboard" if section != "dashboard" else "tenants"
         try:
-            await shell.open(home)            # land on the shell so the sidebar is present
+            await shell.open(home)  # land on the shell so the sidebar is present
             await shell.assert_loaded()
             elapsed_ms = await shell.click_nav_and_measure(section)
         except Exception as exc:  # noqa: BLE001 - soft-collect so all pages are checked
@@ -131,15 +138,22 @@ async def test_shell_ui_load_time_page_002(authenticated_page, settings, request
             failures.append(f"{section} (load error)")
             continue
         if elapsed_ms < LOAD_BUDGET_MS:
-            logger.info("Page [{}] PASSED - {:.0f} ms (budget {} ms)", section, elapsed_ms, LOAD_BUDGET_MS)
+            logger.info(
+                "Page [{}] PASSED - {:.0f} ms (budget {} ms)", section, elapsed_ms, LOAD_BUDGET_MS
+            )
         else:
             logger.warning(
                 "Page [{}] PASSED but SLOW - {:.0f} ms exceeds soft budget {} ms (not a failure)",
-                section, elapsed_ms, LOAD_BUDGET_MS,
+                section,
+                elapsed_ms,
+                LOAD_BUDGET_MS,
             )
             slow.append(f"{section} ({elapsed_ms:.0f}ms)")
 
     if slow:
-        logger.warning("Slow pages over {} ms soft budget (rendered OK, not failed): {}",
-                        LOAD_BUDGET_MS, ", ".join(slow))
+        logger.warning(
+            "Slow pages over {} ms soft budget (rendered OK, not failed): {}",
+            LOAD_BUDGET_MS,
+            ", ".join(slow),
+        )
     finalize_checks(request, failures, len(PAGES))

@@ -50,7 +50,7 @@ class DashboardPage(BasePage):
         label_el = self.page.locator(DashboardLocators.KPI_CARD).filter(has_text=label).first
         card = label_el.locator("xpath=..")
         text = " ".join((await card.inner_text(timeout=10_000)).split())
-        return text[len(label):].strip() if text.startswith(label) else text
+        return text[len(label) :].strip() if text.startswith(label) else text
 
     async def is_system_health_visible(self) -> bool:
         """Return True if the 'System Health' panel is shown."""

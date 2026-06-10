@@ -82,10 +82,10 @@ import yaml
 # inside _sync_domain, where it's actually used).
 _HAS_OPENPYXL = importlib.util.find_spec("openpyxl") is not None
 
-PROJECT_ROOT  = Path(__file__).resolve().parent.parent
-TESTS_DIR     = PROJECT_ROOT / "tests"       # tests/{domain}/api|ui/...
-RUNNER_DIR    = PROJECT_ROOT / "runner"      # runner/{domain}/registry.py output
-CONFIG_DIR    = PROJECT_ROOT / "config"      # config/{domain}/config.yaml input
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+TESTS_DIR = PROJECT_ROOT / "tests"  # tests/{domain}/api|ui/...
+RUNNER_DIR = PROJECT_ROOT / "runner"  # runner/{domain}/registry.py output
+CONFIG_DIR = PROJECT_ROOT / "config"  # config/{domain}/config.yaml input
 
 # ---------------------------------------------------------------------------
 # TC ID numbering — loaded from each project's config/<domain>/config.yaml,
@@ -113,6 +113,7 @@ CONFIG_DIR    = PROJECT_ROOT / "config"      # config/{domain}/config.yaml input
 # The project digit makes IDs globally unique even when two domains reuse the
 # same module name (e.g. both have a "PARTNERS" module).
 # ---------------------------------------------------------------------------
+
 
 def _load_domain_configs() -> tuple[dict, dict, dict, dict]:
     """Read every config/<domain>/config.yaml into the numbering dicts."""
@@ -156,8 +157,8 @@ def _load_domain_configs() -> tuple[dict, dict, dict, dict]:
         sheet_module = excel.get("module")
         if sheet and sheet_module:
             excel_sheets[sheet] = {
-                "domain":       domain,
-                "module":       sheet_module,
+                "domain": domain,
+                "module": sheet_module,
                 "excel_prefix": excel.get("excel_prefix", sheet_module),
             }
 
@@ -247,6 +248,7 @@ def list_by_marker(marker: str) -> list[TestCase]:
 # ID computation
 # ---------------------------------------------------------------------------
 
+
 def tc_id_from_string(tc_string_id: str, domain: str) -> int:
     """Convert a TC string ID (within a domain) to its numeric equivalent.
 
@@ -265,9 +267,9 @@ def tc_id_from_string(tc_string_id: str, domain: str) -> int:
     if len(parts) < 4:
         return 0
 
-    module_name = parts[0]               # PARTNERS | SHELL | DASHBOARD | ...
-    tc_type     = parts[1]               # UI | API
-    seq_str     = parts[-1]              # 001
+    module_name = parts[0]  # PARTNERS | SHELL | DASHBOARD | ...
+    tc_type = parts[1]  # UI | API
+    seq_str = parts[-1]  # 001
     section_key = "_".join(parts[2:-1])  # DASHBOARD | AUTH_ACCESS_CONTROL | ...
 
     try:
@@ -278,8 +280,8 @@ def tc_id_from_string(tc_string_id: str, domain: str) -> int:
         return 0
 
     project_num = PROJECTS.get(domain, 0)
-    module_num  = MODULES.get(domain, {}).get(module_name, 0)
-    sections    = MODULE_SECTIONS.get(domain, {}).get(module_name, {}).get(tc_type, {})
+    module_num = MODULES.get(domain, {}).get(module_name, 0)
+    sections = MODULE_SECTIONS.get(domain, {}).get(module_name, {}).get(tc_type, {})
     section_num = sections.get(section_key, 0)
 
     if project_num == 0 or module_num == 0 or section_num == 0:
@@ -291,26 +293,29 @@ def tc_id_from_string(tc_string_id: str, domain: str) -> int:
 
 def tc_string_from_id(tc_id: int) -> str:
     """Reverse-decode a numeric TC ID back to a human-readable label (debug only)."""
-    s            = f"{tc_id:08d}"
-    type_char    = s[0]
-    project_num  = int(s[1])
-    module_num   = int(s[2:4])
-    section_num  = int(s[4:6])
-    seq          = int(s[6:8])
-    tc_type      = "UI" if type_char == "1" else "API"
-    domain       = next((k for k, v in PROJECTS.items() if v == project_num), f"PROJ{project_num}")
-    module_name  = next(
+    s = f"{tc_id:08d}"
+    type_char = s[0]
+    project_num = int(s[1])
+    module_num = int(s[2:4])
+    section_num = int(s[4:6])
+    seq = int(s[6:8])
+    tc_type = "UI" if type_char == "1" else "API"
+    domain = next((k for k, v in PROJECTS.items() if v == project_num), f"PROJ{project_num}")
+    module_name = next(
         (k for k, v in MODULES.get(domain, {}).items() if v == module_num),
         f"MOD{module_num:02d}",
     )
-    sections     = MODULE_SECTIONS.get(domain, {}).get(module_name, {}).get(tc_type, {})
-    section_name = next((k for k, v in sections.items() if v == section_num), f"SEC{section_num:02d}")
+    sections = MODULE_SECTIONS.get(domain, {}).get(module_name, {}).get(tc_type, {})
+    section_name = next(
+        (k for k, v in sections.items() if v == section_num), f"SEC{section_num:02d}"
+    )
     return f"{module_name}_{tc_type}_{section_name}_{seq:02d}"
 
 
 # ---------------------------------------------------------------------------
 # Helper: function name -> TC string
 # ---------------------------------------------------------------------------
+
 
 def _func_name_to_tc_string(func_name: str, domain: str) -> str | None:
     """Convert a test function name to its TC string ID (within a domain).
@@ -354,6 +359,7 @@ def _extract_markers(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
 # Partner Platform test scanner (new-style naming)
 # ---------------------------------------------------------------------------
 
+
 def _get_test_files(domain: str | None = None) -> list[Path]:
     """Return all test_*.py files.
 
@@ -391,7 +397,7 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = Non
 
         try:
             source = py_file.read_text(encoding="utf-8")
-            tree   = ast.parse(source)
+            tree = ast.parse(source)
         except (OSError, SyntaxError):
             continue
 
@@ -406,43 +412,49 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = Non
             tc_id = tc_id_from_string(tc_string, domain)
             if tc_id == 0:
                 # Function name matches pattern but section/module not registered
-                print(f"  [WARN] Unknown section in {py_file.name}: {node.name} "
-                      f"(TC string: {tc_string})")
+                print(
+                    f"  [WARN] Unknown section in {py_file.name}: {node.name} "
+                    f"(TC string: {tc_string})"
+                )
                 continue
 
             if tc_id in seen_ids:
-                print(f"  [ERROR] Duplicate TC ID {tc_id} ({tc_string}) "
-                      f"in {rel_path} — already registered from another file")
+                print(
+                    f"  [ERROR] Duplicate TC ID {tc_id} ({tc_string}) "
+                    f"in {rel_path} — already registered from another file"
+                )
                 continue
             seen_ids.add(tc_id)
 
-            parts   = tc_string.split("_")
+            parts = tc_string.split("_")
             tc_type = parts[1].lower()  # ui / api
-            module  = parts[0].lower()  # partner
+            module = parts[0].lower()  # partner
 
             # Metadata: Excel first, then docstring, then defaults
-            meta     = excel_lookup.get(tc_string, {})
+            meta = excel_lookup.get(tc_string, {})
             doc_line = (ast.get_docstring(node) or "").split("\n")[0]
             # Strip "TC_STRING: " prefix from docstring if present
             if ": " in doc_line:
                 doc_line = doc_line.split(": ", 1)[-1]
 
-            title    = meta.get("title") or doc_line or "No Title"
+            title = meta.get("title") or doc_line or "No Title"
             priority = meta.get("priority", "P2")
-            markers  = _extract_markers(node)
+            markers = _extract_markers(node)
 
-            results.append({
-                "id":        tc_id,
-                "type":      tc_type,
-                "module":    module,
-                "title":     title.replace('"', "'"),
-                "priority":  priority,
-                "path":      rel_path,
-                "func":      node.name,
-                "markers":   markers,
-                "source":    "scan",
-                "tc_string": tc_string,
-            })
+            results.append(
+                {
+                    "id": tc_id,
+                    "type": tc_type,
+                    "module": module,
+                    "title": title.replace('"', "'"),
+                    "priority": priority,
+                    "path": rel_path,
+                    "func": node.name,
+                    "markers": markers,
+                    "source": "scan",
+                    "tc_string": tc_string,
+                }
+            )
 
     return results
 
@@ -450,6 +462,7 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = Non
 # ---------------------------------------------------------------------------
 # Legacy BlazeUp HRMS scanner (old test_tc* / test_tca* naming)
 # ---------------------------------------------------------------------------
+
 
 def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
     """Scan test files for old-style test_tc* / test_tca* functions.
@@ -469,9 +482,9 @@ def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
 
     for py_file in _all_test_files:
         rel_path = py_file.relative_to(PROJECT_ROOT).as_posix()
-        tc_type  = "api" if "/api/" in rel_path else "ui"
+        tc_type = "api" if "/api/" in rel_path else "ui"
 
-        mod_match   = re.search(r"test_(.*)_(?:api|ui)\.py$|test_(.*)\.py$", py_file.name)
+        mod_match = re.search(r"test_(.*)_(?:api|ui)\.py$|test_(.*)\.py$", py_file.name)
         module_name = (mod_match.group(1) or mod_match.group(2)) if mod_match else "unknown"
 
         try:
@@ -488,22 +501,24 @@ def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
                 continue
 
             docstring = ast.get_docstring(node) or ""
-            title     = docstring.split("\n")[0].split(": ", 1)[-1] if docstring else "No Title"
-            markers   = _extract_markers(node)
-            priority  = "P1" if "smoke" in markers else "P2"
+            title = docstring.split("\n")[0].split(": ", 1)[-1] if docstring else "No Title"
+            markers = _extract_markers(node)
+            priority = "P1" if "smoke" in markers else "P2"
 
-            raw.append({
-                "type":     tc_type,
-                "module":   module_name,
-                "title":    title.replace('"', "'"),
-                "priority": priority,
-                "path":     rel_path,
-                "func":     node.name,
-                "markers":  markers,
-                "source":   "legacy",
-                "tc_string": "demo",
-                "_lineno":  node.lineno,
-            })
+            raw.append(
+                {
+                    "type": tc_type,
+                    "module": module_name,
+                    "title": title.replace('"', "'"),
+                    "priority": priority,
+                    "path": rel_path,
+                    "func": node.name,
+                    "markers": markers,
+                    "source": "legacy",
+                    "tc_string": "demo",
+                    "_lineno": node.lineno,
+                }
+            )
 
     # Sort: api first, then ui; within each group by file path then line number
     raw.sort(key=lambda x: (0 if x["type"] == "api" else 1, x["path"], x["_lineno"]))
@@ -521,6 +536,7 @@ def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Registry diff helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_registry_snapshot(registry_file: Path) -> dict[int, str]:
     """Parse the existing registry into {tc_id: args_string} for diff comparison.
@@ -550,10 +566,10 @@ def _extract_fields(args_str: str) -> dict[str, str]:
     quoted = re.findall(r'"([^"]*)"', args_str)
     return {
         "tc_string": quoted[0] if len(quoted) > 0 else "",
-        "title":     quoted[3] if len(quoted) > 3 else "",
-        "path":      quoted[4] if len(quoted) > 4 else "",
-        "func":      quoted[5] if len(quoted) > 5 else "",
-        "priority":  quoted[6] if len(quoted) > 6 else "",
+        "title": quoted[3] if len(quoted) > 3 else "",
+        "path": quoted[4] if len(quoted) > 4 else "",
+        "func": quoted[5] if len(quoted) > 5 else "",
+        "priority": quoted[6] if len(quoted) > 6 else "",
     }
 
 
@@ -563,7 +579,7 @@ def _print_diff(
     new_tcs: list[dict],
 ) -> None:
     """Print a human-readable diff of registry changes."""
-    added   = sorted(set(new) - set(old))
+    added = sorted(set(new) - set(old))
     removed = sorted(set(old) - set(new))
     changed = sorted(tc_id for tc_id in set(new) & set(old) if new[tc_id] != old[tc_id])
 
@@ -572,30 +588,32 @@ def _print_diff(
         return
 
     tc_by_id = {tc["id"]: tc for tc in new_tcs}
-    print(f"  Changes since last sync  "
-          f"({len(added)} added, {len(removed)} removed, {len(changed)} changed):")
+    print(
+        f"  Changes since last sync  "
+        f"({len(added)} added, {len(removed)} removed, {len(changed)} changed):"
+    )
 
     for tc_id in added:
-        tc    = tc_by_id.get(tc_id, {})
+        tc = tc_by_id.get(tc_id, {})
         title = tc.get("title", "")[:55]
-        print(f"    +  TC {tc_id:<12} ADDED    {tc.get('func', '?')}  \"{title}\"")
+        print(f'    +  TC {tc_id:<12} ADDED    {tc.get("func", "?")}  "{title}"')
 
     for tc_id in removed:
         old_f = _extract_fields(old[tc_id])
         print(f"    -  TC {tc_id:<12} REMOVED  {old_f.get('func', '?')}")
 
     for tc_id in changed:
-        old_f  = _extract_fields(old[tc_id])
-        new_f  = _extract_fields(new[tc_id])
+        old_f = _extract_fields(old[tc_id])
+        new_f = _extract_fields(new[tc_id])
         diffs: list[str] = []
         if old_f["title"] != new_f["title"]:
             diffs.append(f'title: "{old_f["title"][:30]}" -> "{new_f["title"][:30]}"')
         if old_f["priority"] != new_f["priority"]:
-            diffs.append(f'priority: {old_f["priority"]} -> {new_f["priority"]}')
+            diffs.append(f"priority: {old_f['priority']} -> {new_f['priority']}")
         if old_f["path"] != new_f["path"]:
             diffs.append("path changed")
         detail = "  |  ".join(diffs) if diffs else "content updated"
-        tc     = tc_by_id.get(tc_id, {})
+        tc = tc_by_id.get(tc_id, {})
         print(f"    ~  TC {tc_id:<12} CHANGED  {tc.get('func', '?')}  ({detail})")
 
 
@@ -603,23 +621,25 @@ def _print_diff(
 # Main sync
 # ---------------------------------------------------------------------------
 
+
 def _sync_domain(domain: str) -> None:
     """Sync registry for a single domain → runner/{domain}/registry.py."""
 
     registry_file = RUNNER_DIR / domain / "registry.py"
-    excel_file    = PROJECT_ROOT / "docs" / domain / "Partner_Platform_Test_Plan.xlsx"
+    excel_file = PROJECT_ROOT / "docs" / domain / "Partner_Platform_Test_Plan.xlsx"
 
-    print(f"\n{'='*55}")
+    print(f"\n{'=' * 55}")
     print(f"  Domain  : {domain}")
     print(f"  Tests   : {TESTS_DIR / domain}")
     print(f"  Excel   : {excel_file}")
     print(f"  Output  : {registry_file.relative_to(PROJECT_ROOT)}")
-    print(f"{'='*55}")
+    print(f"{'=' * 55}")
 
     # Build Excel lookup for this domain's excel file
     excel_lookup: dict[str, dict] = {}
     if _HAS_OPENPYXL and excel_file.exists():
         import openpyxl  # type: ignore
+
         C_TC_STRING, C_TITLE, C_PRIORITY = 2, 3, 5
         wb = openpyxl.load_workbook(excel_file, data_only=True)
         for sheet_name, cfg in EXCEL_SHEETS.items():
@@ -629,8 +649,8 @@ def _sync_domain(domain: str) -> None:
             if sheet_name not in wb.sheetnames:
                 continue
             ws = wb[sheet_name]
-            excel_prefix = cfg["excel_prefix"]   # legacy prefix in the xlsx
-            module_name  = cfg["module"]         # code module name
+            excel_prefix = cfg["excel_prefix"]  # legacy prefix in the xlsx
+            module_name = cfg["module"]  # code module name
             before = len(excel_lookup)
             for row in ws.iter_rows(min_row=13, values_only=True):
                 tc_string = row[C_TC_STRING]
@@ -642,11 +662,11 @@ def _sync_domain(domain: str) -> None:
                 # Re-key legacy Excel prefix -> code module name so the lookup
                 # matches function-derived TC strings (xlsx stays untouched).
                 if excel_prefix != module_name:
-                    tc_string = module_name + tc_string[len(excel_prefix):]
-                title    = str(row[C_TITLE]    or "No Title").strip().replace('"', "'")
+                    tc_string = module_name + tc_string[len(excel_prefix) :]
+                title = str(row[C_TITLE] or "No Title").strip().replace('"', "'")
                 priority = str(row[C_PRIORITY] or "P2").strip()
                 excel_lookup[tc_string] = {"title": title, "priority": priority}
-            print(f"[Excel] {len(excel_lookup)-before:4d} TCs from sheet '{sheet_name}'")
+            print(f"[Excel] {len(excel_lookup) - before:4d} TCs from sheet '{sheet_name}'")
     else:
         print("[Excel] Skipped (file not found or openpyxl missing)")
 
@@ -682,18 +702,18 @@ def _sync_domain(domain: str) -> None:
     for tc in all_tcs:
         tc_string = tc.get("tc_string", "")
         args_str = (
-            f'{tc["id"]}, '
+            f"{tc['id']}, "
             f'"{tc_string}", '
             f'"{tc["type"]}", '
             f'"{tc["module"]}", '
             f'"{tc["title"]}", '
             f'"{tc["path"]}", '
             f'"{tc["func"]}", '
-            f'{tc["markers"]}, '
+            f"{tc['markers']}, "
             f'"{tc["priority"]}"'
         )
         new_snapshot[tc["id"]] = args_str
-        items_lines.append(f'    {tc["id"]}: TestCase({args_str}),')
+        items_lines.append(f"    {tc['id']}: TestCase({args_str}),")
 
     registry_file.write_text(
         _TEMPLATE.format(items="\n".join(items_lines)),
@@ -718,8 +738,7 @@ def sync(domain: str | None = None) -> None:
     else:
         # Auto-discover all domains in tests/
         domains = sorted(
-            d.name for d in TESTS_DIR.iterdir()
-            if d.is_dir() and not d.name.startswith("_")
+            d.name for d in TESTS_DIR.iterdir() if d.is_dir() and not d.name.startswith("_")
         )
         if not domains:
             print("  No domains found in tests/. Create tests/{domain}/ first.")
@@ -732,6 +751,7 @@ def sync(domain: str | None = None) -> None:
 # ---------------------------------------------------------------------------
 # Reference table printer
 # ---------------------------------------------------------------------------
+
 
 def print_id_table() -> None:
     """Print the full domain -> module -> section -> numeric-prefix table."""

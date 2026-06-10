@@ -46,6 +46,7 @@ def _bold(text: str) -> str:
 # ANSI-aware table formatter
 # ---------------------------------------------------------------------------
 
+
 def _visible_len(s: str) -> int:
     """Return the number of *visible* characters (strips ANSI escape codes)."""
     return len(re.sub(r"\x1b\[[0-9;]*[mK]", "", s))
@@ -122,9 +123,7 @@ def _launch_allure_browser(report_dir: Path) -> bool:
             "stderr": subprocess.DEVNULL,
         }
         if sys.platform == "win32":
-            kw["creationflags"] = (
-                subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-            )
+            kw["creationflags"] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
         else:
             kw["start_new_session"] = True
         subprocess.Popen(
@@ -186,7 +185,7 @@ def _fmt_table(rows: list[list], headers: list[str]) -> str:
     return "\n".join(lines)
 
 
-def make_result_dir(base_dir: Path = Path('.')) -> Path:
+def make_result_dir(base_dir: Path = Path(".")) -> Path:
     """Create results/run_YYYYMMDD_HHMMSS with report artifact subfolders."""
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -319,6 +318,7 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
 # Unified summary helpers
 # ---------------------------------------------------------------------------
 
+
 def _build_tc_summaries_from_rows(summary_rows: list[dict[str, str]]) -> list[dict]:
     """Convert single-run JUnit rows into the unified TC-summary dict format."""
     result: list[dict] = []
@@ -326,19 +326,21 @@ def _build_tc_summaries_from_rows(summary_rows: list[dict[str, str]]) -> list[di
         tc_id = int(row["tc_id"])
         tc = TC_REGISTRY.get(tc_id)
         status = row["status"]
-        result.append({
-            "tc_id":    tc_id,
-            "priority": tc.priority if tc else "--",
-            "type":     tc.type     if tc else "--",
-            "module":   tc.module   if tc else "--",
-            "title":    row["title"],
-            "runs":     1,
-            "passed":   1 if status == "PASSED" else 0,
-            "failed":   1 if status in ("FAILED", "ERROR") else 0,
-            "skipped":  1 if status == "SKIPPED" else 0,
-            "avg_time": float(row["time"] or 0),
-            "last_msg": row["message"],
-        })
+        result.append(
+            {
+                "tc_id": tc_id,
+                "priority": tc.priority if tc else "--",
+                "type": tc.type if tc else "--",
+                "module": tc.module if tc else "--",
+                "title": row["title"],
+                "runs": 1,
+                "passed": 1 if status == "PASSED" else 0,
+                "failed": 1 if status in ("FAILED", "ERROR") else 0,
+                "skipped": 1 if status == "SKIPPED" else 0,
+                "avg_time": float(row["time"] or 0),
+                "last_msg": row["message"],
+            }
+        )
     return result
 
 
@@ -352,44 +354,50 @@ def _build_tc_summaries_from_perf(
         runs = perf_results.get(tc.tc_id, [])
         if not runs:
             continue
-        passed  = sum(1 for r in runs if r["status"] == "PASSED")
-        failed  = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
+        passed = sum(1 for r in runs if r["status"] == "PASSED")
+        failed = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
         skipped = sum(1 for r in runs if r["status"] == "SKIPPED")
-        times   = [float(r["time"]) for r in runs if r.get("time") and r["status"] != "MISSING"]
-        avg_t   = sum(times) / len(times) if times else 0.0
+        times = [float(r["time"]) for r in runs if r.get("time") and r["status"] != "MISSING"]
+        avg_t = sum(times) / len(times) if times else 0.0
         last_msg = next(
             (r["message"] for r in reversed(runs) if r["status"] in ("FAILED", "ERROR")),
             "",
         )
-        result.append({
-            "tc_id":    tc.tc_id,
-            "priority": tc.priority,
-            "type":     tc.type,
-            "module":   tc.module,
-            "title":    tc.title,
-            "runs":     len(runs),
-            "passed":   passed,
-            "failed":   failed,
-            "skipped":  skipped,
-            "avg_time": avg_t,
-            "last_msg": last_msg,
-        })
+        result.append(
+            {
+                "tc_id": tc.tc_id,
+                "priority": tc.priority,
+                "type": tc.type,
+                "module": tc.module,
+                "title": tc.title,
+                "runs": len(runs),
+                "passed": passed,
+                "failed": failed,
+                "skipped": skipped,
+                "avg_time": avg_t,
+                "last_msg": last_msg,
+            }
+        )
     return result
 
 
 def _render_single_run_table(summaries: list[dict]) -> str:
     """Table for a single run: Status | Time | Failure (first line)."""
     _STATUS = {
-        "pass":    f"{_GREEN}PASS   {_RESET}",
-        "fail":    f"{_RED}FAIL   {_RESET}",
-        "skip":    f"{_YELLOW}SKIP   {_RESET}",
+        "pass": f"{_GREEN}PASS   {_RESET}",
+        "fail": f"{_RED}FAIL   {_RESET}",
+        "skip": f"{_YELLOW}SKIP   {_RESET}",
         "missing": f"{_DIM}MISSING{_RESET}",
     }
 
     headers = [
-        _bold("TC"), _bold("P"), _bold("Type"),
+        _bold("TC"),
+        _bold("P"),
+        _bold("Type"),
         _bold("Title"),
-        _bold("Status"), _bold("Time"), _bold("Failure (first line)"),
+        _bold("Status"),
+        _bold("Time"),
+        _bold("Failure (first line)"),
     ]
     rows = []
     for s in summaries:
@@ -409,32 +417,40 @@ def _render_single_run_table(summaries: list[dict]) -> str:
         if len(msg) > 45:
             msg = msg[:42] + "..."
 
-        rows.append([
-            f"{_BLUE}{s['tc_id']}{_RESET}",
-            s["priority"],
-            s["type"],
-            title,
-            _STATUS[key],
-            f"{s['avg_time']:.2f}s",
-            msg,
-        ])
+        rows.append(
+            [
+                f"{_BLUE}{s['tc_id']}{_RESET}",
+                s["priority"],
+                s["type"],
+                title,
+                _STATUS[key],
+                f"{s['avg_time']:.2f}s",
+                msg,
+            ]
+        )
     return _fmt_table(rows, headers)
 
 
 def _render_multi_run_table(summaries: list[dict]) -> str:
     """Table for multi-run: Runs | Pass | Fail | Rate | Avg Time | Stability."""
     headers = [
-        _bold("TC"), _bold("P"), _bold("Type"),
+        _bold("TC"),
+        _bold("P"),
+        _bold("Type"),
         _bold("Title"),
-        _bold("Runs"), _bold("Pass"), _bold("Fail"),
-        _bold("Rate"), _bold("Avg"), _bold("Stability"),
+        _bold("Runs"),
+        _bold("Pass"),
+        _bold("Fail"),
+        _bold("Rate"),
+        _bold("Avg"),
+        _bold("Stability"),
     ]
     rows = []
     for s in summaries:
-        runs   = s["runs"]
+        runs = s["runs"]
         passed = s["passed"]
         failed = s["failed"]
-        rate   = f"{passed / runs * 100:.0f}%" if runs else "--"
+        rate = f"{passed / runs * 100:.0f}%" if runs else "--"
 
         if failed == 0:
             stability = f"{_GREEN}STABLE {_RESET}"
@@ -447,18 +463,20 @@ def _render_multi_run_table(summaries: list[dict]) -> str:
         if len(title) > 42:
             title = title[:39] + "..."
 
-        rows.append([
-            f"{_BLUE}{s['tc_id']}{_RESET}",
-            s["priority"],
-            s["type"],
-            title,
-            str(runs),
-            f"{_GREEN}{passed}{_RESET}",
-            f"{_RED}{failed}{_RESET}" if failed else "0",
-            rate,
-            f"{s['avg_time']:.2f}s" if s["avg_time"] else "--",
-            stability,
-        ])
+        rows.append(
+            [
+                f"{_BLUE}{s['tc_id']}{_RESET}",
+                s["priority"],
+                s["type"],
+                title,
+                str(runs),
+                f"{_GREEN}{passed}{_RESET}",
+                f"{_RED}{failed}{_RESET}" if failed else "0",
+                rate,
+                f"{s['avg_time']:.2f}s" if s["avg_time"] else "--",
+                stability,
+            ]
+        )
     return _fmt_table(rows, headers)
 
 
@@ -489,12 +507,12 @@ def print_run_summary(
     When *allure_html* exists but wasn't launched, shows a clickable path link.
     """
     W = 66  # separator width
-    total_tcs     = len(tc_summaries)
-    total_runs    = sum(s["runs"]    for s in tc_summaries)
-    total_passed  = sum(s["passed"]  for s in tc_summaries)
-    total_failed  = sum(s["failed"]  for s in tc_summaries)
+    total_tcs = len(tc_summaries)
+    total_runs = sum(s["runs"] for s in tc_summaries)
+    total_passed = sum(s["passed"] for s in tc_summaries)
+    total_failed = sum(s["failed"] for s in tc_summaries)
     total_skipped = sum(s["skipped"] for s in tc_summaries)
-    is_multi      = repeat > 1
+    is_multi = repeat > 1
 
     out: list[str] = []  # collects every line before printing
 
@@ -520,8 +538,10 @@ def print_run_summary(
     # ── Footer ────────────────────────────────────────────────────────────────
     out.append("")
     if is_multi:
-        flaky_ids   = [str(s["tc_id"]) for s in tc_summaries if s["passed"] > 0 and s["failed"] > 0]
-        failing_ids = [str(s["tc_id"]) for s in tc_summaries if s["passed"] == 0 and s["failed"] > 0]
+        flaky_ids = [str(s["tc_id"]) for s in tc_summaries if s["passed"] > 0 and s["failed"] > 0]
+        failing_ids = [
+            str(s["tc_id"]) for s in tc_summaries if s["passed"] == 0 and s["failed"] > 0
+        ]
         out.append(
             f"  Total runs  : {total_runs}   "
             f"{_GREEN}Pass: {total_passed}{_RESET}   "
@@ -533,7 +553,7 @@ def print_run_summary(
         if failing_ids:
             out.append(f"  {_RED}Failing: TC {', '.join(failing_ids)}{_RESET}")
     else:
-        fail_ids = [str(s["tc_id"]) for s in tc_summaries if s["failed"]  > 0]
+        fail_ids = [str(s["tc_id"]) for s in tc_summaries if s["failed"] > 0]
         skip_ids = [str(s["tc_id"]) for s in tc_summaries if s["skipped"] > 0]
         out.append(
             f"  Total : {total_tcs}   "
@@ -547,24 +567,26 @@ def print_run_summary(
             out.append(f"  {_YELLOW}Skipped: TC {', '.join(skip_ids)}{_RESET}")
 
     if result_dir is not None:
-        log_path    = result_dir / "logs" / "test.log"
+        log_path = result_dir / "logs" / "test.log"
         report_path = result_dir / "report.html"
-        out.append(f"\n  Logs   : {_terminal_link(str(log_path),    log_path.as_uri())}")
+        out.append(f"\n  Logs   : {_terminal_link(str(log_path), log_path.as_uri())}")
         out.append(f"  Report : {_terminal_link(str(report_path), report_path.as_uri())}")
 
         if allure_html is not None:
             # Report generated — show the open command to copy-paste or click
             report_dir = allure_html.parent
             out.append(f"  Allure : {report_dir}")
-            out.append(f"           {_DIM}run: allure open \"{report_dir}\"{_RESET}")
+            out.append(f'           {_DIM}run: allure open "{report_dir}"{_RESET}')
         else:
             # Allure CLI not available / results empty
             allure_results = result_dir / "allure-results"
             out.append(f"  Allure : {allure_results}")
-            out.append(f"           {_DIM}run: allure serve \"{allure_results}\"{_RESET}")
+            out.append(f'           {_DIM}run: allure serve "{allure_results}"{_RESET}')
 
         if excel_report_path is not None:
-            out.append(f"  Excel  : {_terminal_link(str(excel_report_path), excel_report_path.as_uri())}")
+            out.append(
+                f"  Excel  : {_terminal_link(str(excel_report_path), excel_report_path.as_uri())}"
+            )
 
     out.append(f"{_BOLD}{_BLUE}{'=' * W}{_RESET}")
 
@@ -621,14 +643,15 @@ def run_tc_ids(
 
     result_dir = make_result_dir(base_dir).resolve()
     metadata = {
-        "run_at":   datetime.now().isoformat(),
-        "mode":     mode,
-        "tc_ids":   [tc.tc_id for tc in tcs],
+        "run_at": datetime.now().isoformat(),
+        "mode": mode,
+        "tc_ids": [tc.tc_id for tc in tcs],
         "node_ids": [tc.node_id for tc in tcs],
         "result_dir": str(result_dir),
     }
     (result_dir / "run_meta.json").write_text(
-        json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8",
+        json.dumps(metadata, indent=2, ensure_ascii=False),
+        encoding="utf-8",
     )
 
     env = os.environ.copy()
@@ -645,7 +668,7 @@ def run_tc_ids(
     print("-" * 56)
 
     started = time.time()
-    result  = subprocess.run(pytest_args, env=env, cwd=base_dir)
+    result = subprocess.run(pytest_args, env=env, cwd=base_dir)
     elapsed = time.time() - started
 
     summary_rows = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
@@ -685,10 +708,11 @@ def run_tc_ids(
         print(f"\n{_BLUE}Running AI failure triage…{_RESET}")
         try:
             from utils.ai_triage import main as _triage_main
+
             _triage_main([str(result_dir)])
-        except SystemExit as exc:        # bad-JSON path raises SystemExit
+        except SystemExit as exc:  # bad-JSON path raises SystemExit
             print(f"AI triage could not complete: {exc}")
-        except Exception as exc:         # noqa: BLE001 — never break the run
+        except Exception as exc:  # noqa: BLE001 — never break the run
             print(f"AI triage failed (non-blocking): {exc}")
 
     if serve_allure:
@@ -702,6 +726,7 @@ def run_tc_ids(
 # ---------------------------------------------------------------------------
 # Performance / stability runner
 # ---------------------------------------------------------------------------
+
 
 def _run_single_batch(
     batch_tcs: list[TestCase],
@@ -742,8 +767,6 @@ def _run_single_batch(
 
     rows = parse_junit_xml(result_dir / "logs" / "junit.xml", batch_tcs)
     return result_dir, rows
-
-
 
 
 def run_performance_plan(
@@ -821,8 +844,10 @@ def run_performance_plan(
         print()  # newline after inline statuses
 
         if fail_fast_count and total_failures >= fail_fast_count:
-            print(f"\n  {_YELLOW}Stopping: reached {total_failures} failure(s) "
-                  f"(--fail-fast-count {fail_fast_count}){_RESET}")
+            print(
+                f"\n  {_YELLOW}Stopping: reached {total_failures} failure(s) "
+                f"(--fail-fast-count {fail_fast_count}){_RESET}"
+            )
             break
 
     elapsed = time.time() - wall_start
@@ -837,9 +862,7 @@ def run_performance_plan(
     )
 
     any_failed = any(
-        r["status"] in ("FAILED", "ERROR")
-        for runs in perf_results.values()
-        for r in runs
+        r["status"] in ("FAILED", "ERROR") for runs in perf_results.values() for r in runs
     )
     return 1 if any_failed else 0
 

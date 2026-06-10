@@ -71,9 +71,7 @@ def result_dir() -> Path:
     logger.add(
         sys.stderr,
         format=(
-            "<green>{time:HH:mm:ss}</green> | "
-            "<level>{level: <8}</level> | "
-            "<level>{message}</level>"
+            "<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>"
         ),
         level=log_level,
         enqueue=True,
@@ -110,6 +108,7 @@ def result_dir() -> Path:
 # TC-logger helpers
 # ---------------------------------------------------------------------------
 
+
 def _split_node_name(node_name: str) -> tuple[str, str]:
     """Split a pytest node name into (base_func_name, param_suffix).
 
@@ -137,6 +136,7 @@ def _parse_tc_id(node_name: str) -> str:
     base_name, _ = _split_node_name(node_name)
     try:
         from runner.tc_registry import TC_REGISTRY
+
         for tc_id, tc in TC_REGISTRY.items():
             if tc.test_func == base_name:
                 return str(tc_id)
@@ -166,7 +166,7 @@ def _parse_tc_title(item: pytest.Item) -> str:
 async def tc_logger(
     request: pytest.FixtureRequest,
     result_dir: Path,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     """Autouse fixture: emits TC START/PASSED/FAILED banners and binds the
     TC ID to every log record produced during the test via loguru contextualize.
     """
@@ -230,6 +230,7 @@ def fake() -> Faker:
 # Browser context helper
 # ---------------------------------------------------------------------------
 
+
 async def _create_browser_context(
     playwright_obj: Any,
     settings: Settings,
@@ -286,7 +287,9 @@ async def _save_page_artifacts(
     safe_name = request.node.name.replace("/", "_").replace("\\", "_")
     screenshot_name = f"{safe_name}_{status}_{timestamp}"
     if status == "failed":
-        await attach_screenshot(page_obj, screenshot_name, output_dir=str(result_dir / "screenshots"))
+        await attach_screenshot(
+            page_obj, screenshot_name, output_dir=str(result_dir / "screenshots")
+        )
     else:
         screenshot_path = result_dir / "screenshots" / f"{screenshot_name}.png"
         await page_obj.screenshot(path=str(screenshot_path), full_page=True)
@@ -297,12 +300,13 @@ async def _save_page_artifacts(
 # Unauthenticated browser fixtures  (login-page tests, non-auth scenarios)
 # ---------------------------------------------------------------------------
 
+
 @pytest_asyncio.fixture
 async def browser_context(
     request: pytest.FixtureRequest,
     settings: Settings,
     result_dir: Path,
-) -> AsyncGenerator[BrowserContext, None]:
+) -> AsyncGenerator[BrowserContext]:
     """Unauthenticated browser context.
 
     Use this (via the ``page`` fixture) when the test itself exercises the
@@ -324,11 +328,11 @@ async def page(
     request: pytest.FixtureRequest,
     browser_context: BrowserContext,
     result_dir: Path,
-) -> AsyncGenerator[Page, None]:
+) -> AsyncGenerator[Page]:
     """Unauthenticated page — one fresh page per test."""
 
     page_obj = await browser_context.new_page()
-    setattr(request.node, "_playwright_page", page_obj)
+    request.node._playwright_page = page_obj
     yield page_obj
     if "ui" in request.node.keywords:
         await _save_page_artifacts(page_obj, request, result_dir)
@@ -339,8 +343,9 @@ async def page(
 # Auth — session-scoped  (login once for the entire test run)
 # ---------------------------------------------------------------------------
 
+
 @pytest_asyncio.fixture(scope="session")
-async def auth_state(settings: Settings) -> AsyncGenerator[dict, None]:
+async def auth_state(settings: Settings) -> AsyncGenerator[dict]:
     """Log in once and cache the Playwright storage state (cookies + localStorage).
 
     Session-scoped: runs exactly once per test run regardless of how many tests
@@ -378,7 +383,7 @@ async def authenticated_page(
     settings: Settings,
     auth_state: dict,
     result_dir: Path,
-) -> AsyncGenerator[Page, None]:
+) -> AsyncGenerator[Page]:
     """Pre-authenticated page — fresh isolated context per test, login only once.
 
     Each test gets its own browser context (full isolation — no shared cookies
@@ -398,7 +403,7 @@ async def authenticated_page(
             playwright, settings, result_dir, storage_state=auth_state
         )
         page_obj = await context.new_page()
-        setattr(request.node, "_playwright_page", page_obj)
+        request.node._playwright_page = page_obj
         try:
             yield page_obj
         finally:
@@ -410,7 +415,7 @@ async def authenticated_page(
 
 
 @pytest_asyncio.fixture(scope="session")
-async def api_token(settings: Settings) -> AsyncGenerator[str, None]:
+async def api_token(settings: Settings) -> AsyncGenerator[str]:
     """JWT token valid for the entire test session.
 
     Session-scoped: one API login per run.  Tokens typically live for hours,
@@ -436,7 +441,7 @@ async def api_token(settings: Settings) -> AsyncGenerator[str, None]:
 
 
 @pytest_asyncio.fixture
-async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[AuthClient, None]:
+async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[AuthClient]:
     """Authenticated AuthClient — fresh instance per test, token from session."""
 
     client = AuthClient(
@@ -450,7 +455,7 @@ async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[Auth
 
 
 @pytest_asyncio.fixture
-async def attendance_client(settings: Settings, api_token: str) -> AsyncGenerator[AttendanceClient, None]:
+async def attendance_client(settings: Settings, api_token: str) -> AsyncGenerator[AttendanceClient]:
     """Authenticated AttendanceClient — fresh instance per test, token from session."""
 
     client = AttendanceClient(

@@ -53,19 +53,47 @@ class ShellLocators:
     #   - statutory (/statutory) redirects to /statutory/payroll-rules; the default
     #     tab heading "Payroll Rules" is the rendered title.
     SECTIONS: dict[str, dict[str, str]] = {
-        "dashboard":          {"label": "Dashboard",          "route": "/dashboard",            "marker": "Dashboard"},
-        "tenants":            {"label": "Tenants",            "route": "/tenants",              "marker": "Tenant Management"},
-        "billing":            {"label": "Billing",            "route": "/billing",              "marker": "Billing Management"},
-        "plans":              {"label": "Plans",              "route": "/plans",                "marker": "Plans"},
-        "partners":           {"label": "Partners",           "route": "/partners",             "marker": "Partners"},
-        "marketplace":        {"label": "Marketplace",        "route": "/marketplace-app",      "marker": "Marketplace"},
-        "audit_log":          {"label": "Audit Log",          "route": "/auditLog",             "marker": "Audit Log"},
-        "connectors":         {"label": "Connectors",         "route": "/connectors",           "marker": "Connectors"},
-        "platform_templates": {"label": "Platform Templates", "route": "/platform-templates",   "marker": "Platform Templates"},
-        "marketing_library":  {"label": "Marketing Library",  "route": "/marketing-library",    "marker": "Marketing Library"},
-        "expense_library":    {"label": "Expense Library",    "route": "/expense-library",      "marker": "Expense Library"},
-        "help_platform":      {"label": "Help Platform",      "route": "/help-platform",        "marker": "Help Platform"},
-        "statutory_reports":  {"label": "Statutory Rules",    "route": "/statutory",            "marker": "Payroll Rules"},
-        "compliance":         {"label": "Compliance",         "route": "/compliance",           "marker": "Compliance"},
-        "governance":         {"label": "Governance",         "route": "/governance",           "marker": "Platform Governance"},
+        "dashboard": {"label": "Dashboard", "route": "/dashboard", "marker": "Dashboard"},
+        "tenants": {"label": "Tenants", "route": "/tenants", "marker": "Tenant Management"},
+        "billing": {"label": "Billing", "route": "/billing", "marker": "Billing Management"},
+        "plans": {"label": "Plans", "route": "/plans", "marker": "Plans"},
+        "partners": {"label": "Partners", "route": "/partners", "marker": "Partners"},
+        "marketplace": {
+            "label": "Marketplace",
+            "route": "/marketplace-app",
+            "marker": "Marketplace",
+        },
+        "audit_log": {"label": "Audit Log", "route": "/auditLog", "marker": "Audit Log"},
+        "connectors": {"label": "Connectors", "route": "/connectors", "marker": "Connectors"},
+        "platform_templates": {
+            "label": "Platform Templates",
+            "route": "/platform-templates",
+            "marker": "Platform Templates",
+        },
+        "marketing_library": {
+            "label": "Marketing Library",
+            "route": "/marketing-library",
+            "marker": "Marketing Library",
+        },
+        "expense_library": {
+            "label": "Expense Library",
+            "route": "/expense-library",
+            "marker": "Expense Library",
+        },
+        "help_platform": {
+            "label": "Help Platform",
+            "route": "/help-platform",
+            "marker": "Help Platform",
+        },
+        "statutory_reports": {
+            "label": "Statutory Rules",
+            "route": "/statutory",
+            "marker": "Payroll Rules",
+        },
+        "compliance": {"label": "Compliance", "route": "/compliance", "marker": "Compliance"},
+        "governance": {
+            "label": "Governance",
+            "route": "/governance",
+            "marker": "Platform Governance",
+        },
     }

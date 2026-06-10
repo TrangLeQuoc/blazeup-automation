@@ -54,8 +54,10 @@ async def test_shell_ui_page_loads_001(authenticated_page, settings, request):
         page_name = ShellLocators.SECTIONS[section]["label"]
         logger.info("Check page {}: {} loads (URL)", ordinal(idx), page_name)
         try:
-            await shell.open(section)          # navigate by URL (page.goto)
-            await shell.wait_ready(section)    # READY_MARKER visible in <main>; fast-fail on error panel
+            await shell.open(section)  # navigate by URL (page.goto)
+            await shell.wait_ready(
+                section
+            )  # READY_MARKER visible in <main>; fast-fail on error panel
         except Exception as exc:  # noqa: BLE001 - soft-collect so all pages are checked
             logger.error("Page [{}] FAILED - {}", section, exc)
             failures.append(section)
@@ -92,10 +94,12 @@ async def test_shell_ui_page_loads_002(authenticated_page, settings, request):
         # the target itself is 'dashboard'.
         home = "dashboard" if section != "dashboard" else "tenants"
         try:
-            await shell.open(home)            # land on the shell so the sidebar is present
+            await shell.open(home)  # land on the shell so the sidebar is present
             await shell.wait_ready(home)
-            await shell.click_nav(section)    # navigate by clicking the sidebar item
-            await shell.wait_ready(section)   # READY_MARKER visible in <main>; fast-fail on error panel
+            await shell.click_nav(section)  # navigate by clicking the sidebar item
+            await shell.wait_ready(
+                section
+            )  # READY_MARKER visible in <main>; fast-fail on error panel
         except Exception as exc:  # noqa: BLE001 - soft-collect so all pages are checked
             logger.error("Page [{}] FAILED - {}", section, exc)
             failures.append(section)

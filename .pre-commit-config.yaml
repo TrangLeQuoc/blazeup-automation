@@ -1,0 +1,43 @@
+# Pre-commit hooks — run automatically on `git commit`.
+#
+# Uses LOCAL hooks (language: system) that call the tools already installed in
+# your environment — so pre-commit never has to download anything from GitHub.
+# This works offline / behind a corporate proxy.
+#
+# One-time setup (per machine / clone):
+#   pip install -r requirements-dev.txt   # installs ruff + pre-commit
+#   pre-commit install
+#
+# Run on demand against everything:
+#   pre-commit run --all-files
+#
+# Tip: if a hook modifies files (ruff --fix / formatting / registry sync), the
+# commit aborts so you can review + `git add` the changes, then commit again.
+
+repos:
+  - repo: local
+    hooks:
+      # ── Lint + format (Ruff, from your venv) ──────────────────────────────
+      - id: ruff-check
+        name: ruff (lint --fix)
+        entry: ruff check --fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff (format)
+        entry: ruff format
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      # ── Keep the committed TC registries in sync with the Excel test plan ──
+      # Regenerates runner/*/registry.py; if anything changed, the commit fails
+      # so you can review + add the updated registry (mirrors the CI check).
+      - id: sync-registry
+        name: sync TC registry
+        entry: python utils/sync_registry.py
+        language: system
+        pass_filenames: false
+        files: ^(utils/sync_registry\.py|docs/.*\.xlsx)$

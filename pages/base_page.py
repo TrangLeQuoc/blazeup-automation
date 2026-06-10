@@ -4,7 +4,8 @@ from collections.abc import Awaitable, Callable
 from typing import TypeVar
 
 from loguru import logger
-from playwright.async_api import Locator, Page, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import Locator, Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 T = TypeVar("T")
 
@@ -28,7 +29,9 @@ class BasePage:
                 raise
             logger.warning("Navigation timed out after URL commit; continuing with element waits")
 
-    async def wait_for_element(self, selector: str, timeout: int = 10_000, label: str | None = None) -> Locator:
+    async def wait_for_element(
+        self, selector: str, timeout: int = 10_000, label: str | None = None
+    ) -> Locator:
         """Wait for an element to become visible and return its locator."""
 
         locator = self.page.locator(selector).first
@@ -47,12 +50,18 @@ class BasePage:
         logger.debug("Click selector: {}", selector)
         await self._retry(lambda: locator.click(timeout=timeout))
 
-    async def fill(self, selector: str, value: str, timeout: int = 10_000, label: str | None = None) -> None:
+    async def fill(
+        self, selector: str, value: str, timeout: int = 10_000, label: str | None = None
+    ) -> None:
         """Fill an input-like element."""
 
         locator = await self.wait_for_element(selector, timeout=timeout, label=label)
         desc = label or self._selector_id(selector)
-        masked_value = "***" if "password" in (label or "").lower() or "password" in selector.lower() else value
+        masked_value = (
+            "***"
+            if "password" in (label or "").lower() or "password" in selector.lower()
+            else value
+        )
         logger.log("STEP", "Fill  [{}] = {}", desc, masked_value)
         logger.debug("Fill selector: {} | Value: {}", selector, value)
         await self._retry(lambda: locator.fill(value, timeout=timeout))

@@ -39,7 +39,7 @@ These complement loguru built-ins (INFO=20, SUCCESS=25, WARNING=30, ERROR=40).
 
 import time
 from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, suppress
 from typing import Any
 
 import pytest
@@ -50,23 +50,23 @@ from loguru import logger
 # Built-in levels: TRACE=5, DEBUG=10, INFO=20, SUCCESS=25, WARNING=30, ERROR=40
 # ---------------------------------------------------------------------------
 _CUSTOM_LEVELS: list[tuple[str, int, str, str]] = [
-    ("STEP",   21, "<cyan><bold>",  ">>"),
-    ("START",  22, "<blue><bold>",  ">>"),
+    ("STEP", 21, "<cyan><bold>", ">>"),
+    ("START", 22, "<blue><bold>", ">>"),
     ("PASSED", 23, "<green><bold>", "OK"),
-    ("FAILED", 24, "<red><bold>",   "!!"),
-    ("FINISH", 26, "<blue><bold>",  "<<"),
+    ("FAILED", 24, "<red><bold>", "!!"),
+    ("FINISH", 26, "<blue><bold>", "<<"),
 ]
 
 for _level_name, _level_no, _level_color, _level_icon in _CUSTOM_LEVELS:
-    try:
+    # TypeError = level already registered in this process; ignore on re-import.
+    with suppress(TypeError):
         logger.level(_level_name, no=_level_no, color=_level_color, icon=_level_icon)
-    except TypeError:
-        pass  # level already registered in this process
 
 
 # ---------------------------------------------------------------------------
 # Internal helper
 # ---------------------------------------------------------------------------
+
 
 def _fmt_params(params: dict[str, Any]) -> str:
     """Format keyword params as a readable string, masking sensitive keys.
@@ -91,10 +91,7 @@ def ordinal(n: int) -> str:
     so the run log reads as an ordered checklist rather than repeated identical
     lines. Handles the 11th/12th/13th special case.
     """
-    if 10 <= (n % 100) <= 20:
-        suffix = "th"
-    else:
-        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    suffix = "th" if 10 <= (n % 100) <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix}"
 
 
@@ -102,8 +99,9 @@ def ordinal(n: int) -> str:
 # Public context managers
 # ---------------------------------------------------------------------------
 
+
 @contextmanager
-def step(name: str, **params: Any) -> Generator[None, None, None]:
+def step(name: str, **params: Any) -> Generator[None]:
     """Sync context manager that logs a named test step.
 
     Emits a STEP-level entry on start.  On failure, emits an ERROR with the
@@ -129,13 +127,16 @@ def step(name: str, **params: Any) -> Generator[None, None, None]:
         elapsed_ms = int((time.perf_counter() - start) * 1000)
         logger.error(
             "  FAIL | {} ({}ms) -- {}: {}",
-            name, elapsed_ms, type(exc).__name__, exc,
+            name,
+            elapsed_ms,
+            type(exc).__name__,
+            exc,
         )
         raise
 
 
 @asynccontextmanager
-async def async_step(name: str, **params: Any) -> AsyncGenerator[None, None]:
+async def async_step(name: str, **params: Any) -> AsyncGenerator[None]:
     """Async context manager that logs a named test step.
 
     Emits a STEP-level entry on start.  On failure, emits an ERROR with the
@@ -161,7 +162,10 @@ async def async_step(name: str, **params: Any) -> AsyncGenerator[None, None]:
         elapsed_ms = int((time.perf_counter() - start) * 1000)
         logger.error(
             "  FAIL | {} ({}ms) -- {}: {}",
-            name, elapsed_ms, type(exc).__name__, exc,
+            name,
+            elapsed_ms,
+            type(exc).__name__,
+            exc,
         )
         raise
 
@@ -169,6 +173,7 @@ async def async_step(name: str, **params: Any) -> AsyncGenerator[None, None]:
 # ---------------------------------------------------------------------------
 # Multi-item test verdict
 # ---------------------------------------------------------------------------
+
 
 def finalize_checks(
     request: Any,
