@@ -216,6 +216,47 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # ── Telegram notification: one message per domain, pass or fail ────────
+      # Sends a short summary + links to the run and the dashboard. On failure,
+      # also uploads the AI triage markdown as a document. Skips silently if the
+      # TELEGRAM_* secrets aren't configured. Never fails the job.
+      - name: Notify via Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DOMAIN: ${{ matrix.domain }}
+          MODE: ${{ needs.setup.outputs.mode }}
+          EXECUTE: ${{ needs.setup.outputs.execute }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping Telegram notice."
+            exit 0
+          fi
+          API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
+          if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then STATUS="✅ PASSED"; else STATUS="❌ FAILED"; fi
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          DASH_URL="https://${OWNER}.github.io/${REPO_NAME}/${DOMAIN}/"
+          SEL="mode=${MODE}"
+          [ -n "$EXECUTE" ] && SEL="execute=${EXECUTE}"
+          MSG="<b>BlazeUp CI — ${DOMAIN}</b>%0A${STATUS}  (${SEL})%0A%0A<a href=\"${RUN_URL}\">View run</a>  |  <a href=\"${DASH_URL}\">Dashboard</a>"
+          curl -s -X POST "${API}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode=HTML \
+            -d disable_web_page_preview=true \
+            --data-urlencode "text=${MSG}" >/dev/null \
+            || echo "::warning::Telegram sendMessage failed (non-blocking)."
+          # On failure, attach the AI triage report if it exists.
+          if [ "${PYTEST_EXIT:-0}" -ne 0 ] && [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
+            curl -s -X POST "${API}/sendDocument" \
+              -F chat_id="${TELEGRAM_CHAT_ID}" \
+              -F caption="AI triage — ${DOMAIN}" \
+              -F document=@"$RUN_DIR/ai_triage.md" >/dev/null \
+              || echo "::warning::Telegram sendDocument failed (non-blocking)."
+          fi
+
       - name: Upload reports & logs
         if: always()
         uses: actions/upload-artifact@v4
