@@ -205,13 +205,20 @@ jobs:
 
       # ── Telegram notification: one message per domain, pass or fail ────────
       # Sends a short summary + links to the run and the dashboard. On failure,
-      # also uploads the AI triage markdown as a document. Skips silently if the
-      # TELEGRAM_* secrets aren't configured. Never fails the job.
+      # also uploads the AI triage markdown as a document. Never fails the job.
+      #
+      # Per-team routing: each domain can have its OWN channel/chat via
+      # TELEGRAM_CHAT_ID_<DOMAIN> (e.g. TELEGRAM_CHAT_ID_BLAZEUP_ADMIN). If a
+      # domain has no dedicated secret, it falls back to the shared
+      # TELEGRAM_CHAT_ID. The same bot can post to every channel as long as it's
+      # an admin (with Post rights) in each. Skips silently if nothing is set.
       - name: Notify via Telegram
         if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_BLAZEUP_ADMIN: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_ADMIN }}
+          TELEGRAM_CHAT_ID_BLAZEUP_PARTNER: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_PARTNER }}
           DOMAIN: ${{ matrix.domain }}
           MODE: ${{ needs.setup.outputs.mode }}
           EXECUTE: ${{ needs.setup.outputs.execute }}
@@ -219,8 +226,14 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           RUN_NUM: ${{ github.run_number }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "::warning::TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping Telegram notice."
+          # Resolve this domain's chat id (per-domain secret > shared fallback).
+          case "${{ matrix.domain }}" in
+            blazeup_admin)   CHAT_ID="${TELEGRAM_CHAT_ID_BLAZEUP_ADMIN:-$TELEGRAM_CHAT_ID}" ;;
+            blazeup_partner) CHAT_ID="${TELEGRAM_CHAT_ID_BLAZEUP_PARTNER:-$TELEGRAM_CHAT_ID}" ;;
+            *)               CHAT_ID="$TELEGRAM_CHAT_ID" ;;
+          esac
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
+            echo "::warning::No Telegram bot token / chat id for ${{ matrix.domain }} — skipping notice."
             exit 0
           fi
           API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
@@ -233,7 +246,7 @@ jobs:
           MSG=$(printf '%s <b>Job run #%s</b>\n\n<b>BlazeUp CI</b> — <code>%s</code>\nResult: <b>%s</b>\nSelection: <code>%s</code>\n\n🔗 <a href="%s">View run</a>   📊 <a href="%s">Dashboard</a>' \
             "$ICON" "$RUN_NUM" "$DOMAIN" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
           curl -s -X POST "${API}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d chat_id="${CHAT_ID}" \
             -d parse_mode=HTML \
             -d disable_web_page_preview=true \
             --data-urlencode "text=${MSG}" >/dev/null \
@@ -247,17 +260,14 @@ jobs:
           else
             TRIAGE=$(ls -t results/run_*/ai_triage.md 2>/dev/null | head -1)
           fi
-          echo "Notify debug: PYTEST_EXIT='${PYTEST_EXIT:-}' RUN_DIR='${RUN_DIR:-}' TRIAGE='${TRIAGE:-}'"
           if [ "${PYTEST_EXIT:-0}" -ne 0 ] && [ -n "$TRIAGE" ] && [ -f "$TRIAGE" ]; then
             HTTP=$(curl -s -o /tmp/tg_doc.json -w '%{http_code}' -X POST "${API}/sendDocument" \
-              -F chat_id="${TELEGRAM_CHAT_ID}" \
+              -F chat_id="${CHAT_ID}" \
               -F caption="🔍 AI triage — ${DOMAIN} (run #${RUN_NUM})" \
               -F document=@"$TRIAGE")
             if [ "$HTTP" != "200" ]; then
               echo "::warning::Telegram sendDocument HTTP $HTTP — $(cat /tmp/tg_doc.json 2>/dev/null)"
             fi
-          else
-            echo "::warning::No triage file to send (exit=${PYTEST_EXIT:-} triage='${TRIAGE:-}')."
           fi
 
       - name: Upload reports & logs
