@@ -1,0 +1,6 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"SHELL_UI_PAGE_LOADS_001: every page loads via direct URL (no MFE fetch error).
+
+Navigation method: URL — ShellPage.open() does page.goto(route) for each
+section, then asserts no module-fetch error panel.
+","24737","test_shell_ui_page_loads_001","tests.blazeup_admin.ui","2026-06-10","failed","2026-06-10","","test_page_loads","",""
