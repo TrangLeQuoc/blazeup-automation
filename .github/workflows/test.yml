@@ -48,6 +48,10 @@ on:
         description: "Export Excel report (only effective for domains where it's supported, e.g. blazeup_admin)"
         type: boolean
         default: true
+      ai_triage:
+        description: "Run AI failure triage (writes ai_triage.md when tests fail)"
+        type: boolean
+        default: true
 
 # Opt the JavaScript-based actions (checkout / setup-python / cache /
 # upload-artifact) into the Node.js 24 runtime now, silencing the
@@ -64,16 +68,17 @@ jobs:
       mode: ${{ steps.cfg.outputs.mode }}
       execute: ${{ steps.cfg.outputs.execute }}
       excel: ${{ steps.cfg.outputs.excel }}
+      ai_triage: ${{ steps.cfg.outputs.ai_triage }}
     steps:
       - name: Resolve domain matrix + params
         id: cfg
         run: |
           EVENT="${{ github.event_name }}"
           if [ "$EVENT" = "schedule" ]; then
-            # Nightly: full regression across every domain, no TC filter, Excel on.
-            DOMAIN=all;  MODE=regression;  EXECUTE="";  EXCEL=true
+            # Nightly: full regression across every domain, no TC filter, Excel + triage on.
+            DOMAIN=all;  MODE=regression;  EXECUTE="";  EXCEL=true;  AITRIAGE=true
           else
-            DOMAIN="${{ inputs.domain }}";  MODE="${{ inputs.mode }}";  EXECUTE="${{ inputs.execute }}";  EXCEL="${{ inputs.excel }}"
+            DOMAIN="${{ inputs.domain }}";  MODE="${{ inputs.mode }}";  EXECUTE="${{ inputs.execute }}";  EXCEL="${{ inputs.excel }}";  AITRIAGE="${{ inputs.ai_triage }}"
           fi
 
           # domain=all fans out into one matrix entry per domain.
@@ -82,11 +87,12 @@ jobs:
             *)   DOMAINS="[\"$DOMAIN\"]" ;;
           esac
 
-          echo "domains=$DOMAINS" >> "$GITHUB_OUTPUT"
-          echo "mode=$MODE"       >> "$GITHUB_OUTPUT"
-          echo "execute=$EXECUTE" >> "$GITHUB_OUTPUT"
-          echo "excel=$EXCEL"     >> "$GITHUB_OUTPUT"
-          echo "::notice::domains=$DOMAINS mode='$MODE' execute='$EXECUTE' excel='$EXCEL'"
+          echo "domains=$DOMAINS"     >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE"           >> "$GITHUB_OUTPUT"
+          echo "execute=$EXECUTE"     >> "$GITHUB_OUTPUT"
+          echo "excel=$EXCEL"         >> "$GITHUB_OUTPUT"
+          echo "ai_triage=$AITRIAGE"  >> "$GITHUB_OUTPUT"
+          echo "::notice::domains=$DOMAINS mode='$MODE' execute='$EXECUTE' excel='$EXCEL' ai_triage='$AITRIAGE'"
 
   tests:
     needs: setup
@@ -150,30 +156,33 @@ jobs:
 
       # ── Run via the per-domain runner — same entry point you use locally ───
       # `--execute` (when given) wins over `--mode` inside the runner, exactly
-      # like the CLI. Excel export follows each domain's REPORT_EXCEL default
-      # (admin=True, partner=False); the workbook is written into the run dir
-      # and ships inside the uploaded `results` artifact.
+      # like the CLI. Excel + AI triage follow each domain's REPORT_* defaults;
+      # the checkboxes can force either off. The runner now generates ai_triage.md
+      # itself on failure (provider/model from AI_PROVIDER/AI_MODEL below).
       - name: Run tests
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # AI triage on CI has no .env, so point it at Groq via the environment.
+          AI_PROVIDER: groq
+          AI_MODEL: llama-3.1-8b-instant
           HEADLESS: "true"
           BLAZEUP_DOMAIN: ${{ matrix.domain }}
           MODE: ${{ needs.setup.outputs.mode }}
           EXECUTE: ${{ needs.setup.outputs.execute }}
           EXCEL: ${{ needs.setup.outputs.excel }}
+          AITRIAGE: ${{ needs.setup.outputs.ai_triage }}
         run: |
           set +e
-          # Excel checkbox: unchecked (false) → force-skip with --no-excel-report.
-          # checked (true) → pass nothing, so each domain's REPORT_EXCEL default
-          # applies (admin=on, partner=off).
+          # Checkboxes: unchecked (false) → force-skip with the --no-* flag.
+          # checked (true) → pass nothing, so each domain's REPORT_* default applies.
           EXCEL_FLAG=""
-          if [ "$EXCEL" = "false" ]; then
-            EXCEL_FLAG="--no-excel-report"
-          fi
+          [ "$EXCEL" = "false" ] && EXCEL_FLAG="--no-excel-report"
+          AI_FLAG=""
+          [ "$AITRIAGE" = "false" ] && AI_FLAG="--no-ai-triage"
           if [ -n "$EXECUTE" ]; then
-            python -m runner.${{ matrix.domain }}.run_test --mode "$MODE" --execute $EXECUTE $EXCEL_FLAG
+            python -m runner.${{ matrix.domain }}.run_test --mode "$MODE" --execute $EXECUTE $EXCEL_FLAG $AI_FLAG
           else
-            python -m runner.${{ matrix.domain }}.run_test --mode "$MODE" $EXCEL_FLAG
+            python -m runner.${{ matrix.domain }}.run_test --mode "$MODE" $EXCEL_FLAG $AI_FLAG
           fi
           ec=$?
           set -e
@@ -184,31 +193,19 @@ jobs:
             ec=0
           fi
           # The runner writes to results/run_<timestamp>/. Capture the newest dir
-          # so AI triage + artifact upload point at the right run.
+          # so the triage summary + artifact upload point at the right run.
           RUN_DIR=$(ls -dt results/run_* 2>/dev/null | head -1)
           echo "RUN_DIR=$RUN_DIR"   >> "$GITHUB_ENV"
-          # Remember the result but DON'T fail here, so artifact upload (and
-          # AI triage) still run on failure.
+          # Remember the result but DON'T fail here, so artifact upload + notify
+          # still run on failure.
           echo "PYTEST_EXIT=$ec"    >> "$GITHUB_ENV"
 
-      # ── AI failure triage: only when something actually failed ─────────────
-      # Reads $RUN_DIR/logs/test.log, classifies WHY each test failed, and
-      # writes $RUN_DIR/ai_triage.md (bundled into the artifact below) plus a
-      # copy on the run's Summary page. Non-blocking: never fails the job.
-      # --provider/--model are explicit because CI has no per-domain .env.
-      - name: AI failure triage
-        if: ${{ env.PYTEST_EXIT != '0' && env.PYTEST_EXIT != '' }}
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      # ── Surface the triage report (generated by the runner) on the Summary ──
+      # The runner already wrote $RUN_DIR/ai_triage.md on failure; just publish it.
+      - name: Publish AI triage to job summary
+        if: always()
         run: |
-          if [ -z "$RUN_DIR" ]; then
-            echo "::warning::No run dir found — skipping AI triage."
-            exit 0
-          fi
-          python -m utils.ai_triage "$RUN_DIR" \
-            --provider groq --model llama-3.1-8b-instant \
-            || echo "::warning::AI triage step failed (non-blocking)."
-          if [ -f "$RUN_DIR/ai_triage.md" ]; then
+          if [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
             {
               echo "## AI Failure Triage — ${{ matrix.domain }}"
               echo ""
@@ -230,20 +227,21 @@ jobs:
           EXECUTE: ${{ needs.setup.outputs.execute }}
           REPO_NAME: ${{ github.event.repository.name }}
           OWNER: ${{ github.repository_owner }}
+          RUN_NUM: ${{ github.run_number }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
             echo "::warning::TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping Telegram notice."
             exit 0
           fi
           API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
-          if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then STATUS="✅ PASSED"; else STATUS="❌ FAILED"; fi
+          if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then ICON="✅"; STATUS="PASSED"; else ICON="❌"; STATUS="FAILED"; fi
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           DASH_URL="https://${OWNER}.github.io/${REPO_NAME}/${DOMAIN}/"
           SEL="mode=${MODE}"
           [ -n "$EXECUTE" ] && SEL="execute=${EXECUTE}"
           # Build with REAL newlines; --data-urlencode encodes them to %0A for us.
-          MSG=$(printf '<b>BlazeUp CI — %s</b>\n%s  (%s)\n\n<a href="%s">View run</a>  |  <a href="%s">Dashboard</a>' \
-            "$DOMAIN" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
+          MSG=$(printf '%s <b>Job run #%s</b>\n\n<b>BlazeUp CI</b> — <code>%s</code>\nResult: <b>%s</b>\nSelection: <code>%s</code>\n\n🔗 <a href="%s">View run</a>   📊 <a href="%s">Dashboard</a>' \
+            "$ICON" "$RUN_NUM" "$DOMAIN" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
           curl -s -X POST "${API}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode=HTML \
