@@ -17,7 +17,7 @@ Usage in a test::
 
 from loguru import logger
 
-from locators.blazeup_partner.partner_portal_ui import PartnerPortalSelectors
+from locators.blazeup_partner.partner_portal_locators import PartnerPortalLocators
 from pages.base_page import BasePage
 
 
@@ -32,12 +32,12 @@ class PartnerPortalPage(BasePage):
 
     async def get_dashboard_title(self) -> str:
         """Return the dashboard heading text."""
-        return await self.get_text(PartnerPortalSelectors.DASHBOARD_TITLE)
+        return await self.get_text(PartnerPortalLocators.DASHBOARD_TITLE)
 
     async def get_total_deals_kpi(self) -> str:
         """Return the 'Total Deals' KPI value as text."""
-        return await self.get_text(PartnerPortalSelectors.KPI_TOTAL_DEALS)
+        return await self.get_text(PartnerPortalLocators.KPI_TOTAL_DEALS)
 
     async def open_user_menu(self) -> None:
         """Open the top-right user menu in the portal shell."""
-        await self.click(PartnerPortalSelectors.USER_MENU, label="Partner user menu")
+        await self.click(PartnerPortalLocators.USER_MENU, label="Partner user menu")

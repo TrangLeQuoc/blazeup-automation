@@ -52,14 +52,14 @@ PAGES = list(ShellLocators.SECTIONS.keys())
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_shell_ui_load_time_page_001(authenticated_page, settings, request):
+async def test_shell_ui_load_time_page_001(make_page, request):
     """SHELL_UI_LOAD_TIME_PAGE_001: every SA Dashboard page loads within budget (navigated via URL).
 
     Navigation method: URL — ShellPage.open_and_measure() does page.goto(route)
     for each section, then measures wall-clock until assert_loaded passes.
     Isolated per-page load time, independent of the sidebar.
     """
-    shell = ShellPage(authenticated_page, str(settings.base_url))
+    shell = make_page(ShellPage)
     failures: list[str] = []  # pages that did NOT render — the only fail condition
     slow: list[str] = []  # pages that rendered but exceeded the soft budget
 
@@ -103,7 +103,7 @@ async def test_shell_ui_load_time_page_001(authenticated_page, settings, request
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_shell_ui_load_time_page_002(authenticated_page, settings, request):
+async def test_shell_ui_load_time_page_002(make_page, request):
     """SHELL_UI_LOAD_TIME_PAGE_002: every SA Dashboard page loads within budget (navigated via NAV).
 
     Navigation method: NAV — land on the dashboard shell first, then measure the
@@ -111,7 +111,7 @@ async def test_shell_ui_load_time_page_002(authenticated_page, settings, request
     sidebar routing + dynamic module fetch, i.e. real in-app navigation timing
     (vs 001 which measures the isolated URL/page.goto load).
     """
-    shell = ShellPage(authenticated_page, str(settings.base_url))
+    shell = make_page(ShellPage)
     failures: list[str] = []  # pages that did NOT render — the only fail condition
     slow: list[str] = []  # pages that rendered but exceeded the soft budget
 

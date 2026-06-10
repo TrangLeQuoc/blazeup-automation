@@ -1,14 +1,14 @@
-"""Selectors for the Partner Portal UI.  (SCAFFOLD — fill in the TODO values)
+"""Locators for the Partner Portal UI.  (SCAFFOLD — fill in the TODO values)
 
-This file is the SINGLE source of truth for Partner Portal selectors.  Page
+This file is the SINGLE source of truth for Partner Portal locators.  Page
 objects in ``pages/blazeup_partner/`` import from here; tests never hard-code a
 selector.  When the real UI is available, replace each ``TODO:`` string with the
 actual selector (prefer stable hooks like ``[data-testid=...]`` over CSS classes).
 """
 
 
-class PartnerPortalSelectors:
-    """Partner Portal shell + dashboard selectors."""
+class PartnerPortalLocators:
+    """Partner Portal shell + dashboard locators."""
 
     # ── Shell / navigation ───────────────────────────────────────────────────
     # TODO: real selector, e.g. "[data-testid='partner-sidebar']"

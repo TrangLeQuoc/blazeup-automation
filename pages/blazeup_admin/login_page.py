@@ -6,7 +6,7 @@ from loguru import logger
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import expect
 
-from locators.blazeup_admin.login_ui import LoginSelectors
+from locators.blazeup_admin.login_locators import LoginLocators
 from pages.base_page import BasePage
 
 
@@ -28,25 +28,25 @@ class LoginPage(BasePage):
 
         logger.info("Logging in with configured user {}", self._mask_email(email))
         await self.fill(
-            LoginSelectors.IDENTIFIER_INPUT, email, label="Email/Phone Input", timeout=timeout
+            LoginLocators.IDENTIFIER_INPUT, email, label="Email/Phone Input", timeout=timeout
         )
-        await self.click(LoginSelectors.PROCEED_BUTTON, label="Proceed Button", timeout=timeout)
+        await self.click(LoginLocators.PROCEED_BUTTON, label="Proceed Button", timeout=timeout)
 
         try:
             await self.wait_for_element(
-                LoginSelectors.PASSWORD_INPUT, timeout=5_000, label="Password Input"
+                LoginLocators.PASSWORD_INPUT, timeout=5_000, label="Password Input"
             )
         except PlaywrightTimeoutError:
             logger.info("Password step did not appear; expecting identifier-level validation")
             return
 
-        await self.fill(LoginSelectors.PASSWORD_INPUT, password, label="Password Input")
-        await self.click(LoginSelectors.LOGIN_BUTTON, label="Login Button")
+        await self.fill(LoginLocators.PASSWORD_INPUT, password, label="Password Input")
+        await self.click(LoginLocators.LOGIN_BUTTON, label="Login Button")
 
     async def expect_error(self, timeout: int = 10_000) -> str:
         """Assert that an authentication error is visible and return it."""
 
-        css_locator = self.page.locator(LoginSelectors.ERROR_CONTAINERS).first
+        css_locator = self.page.locator(LoginLocators.ERROR_CONTAINERS).first
         text_locator = self.page.get_by_text(self._ERROR_REGEX).first
         combined_locator = css_locator.or_(text_locator).first
 

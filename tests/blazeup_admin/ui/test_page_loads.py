@@ -35,13 +35,13 @@ PAGES = list(ShellLocators.SECTIONS.keys())
 
 @pytest.mark.ui
 @pytest.mark.smoke
-async def test_shell_ui_page_loads_001(authenticated_page, settings, request):
+async def test_shell_ui_page_loads_001(make_page, request):
     """SHELL_UI_PAGE_LOADS_001: every page loads via direct URL (no MFE fetch error).
 
     Navigation method: URL — ShellPage.open() does page.goto(route) for each
     section, then asserts no module-fetch error panel.
     """
-    shell = ShellPage(authenticated_page, str(settings.base_url))
+    shell = make_page(ShellPage)
     failures: list[str] = []
 
     # Warm-up: pay the one-off full SPA bootstrap (splash logo, vendor bundles)
@@ -69,14 +69,14 @@ async def test_shell_ui_page_loads_001(authenticated_page, settings, request):
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_shell_ui_page_loads_002(authenticated_page, settings, request):
+async def test_shell_ui_page_loads_002(make_page, request):
     """SHELL_UI_PAGE_LOADS_002: every page loads via sidebar NAV click (no MFE fetch error).
 
     Navigation method: NAV — land on the dashboard shell first, then click the
     sidebar item for each section (ShellPage.click_nav), then assert no
     module-fetch error panel. Proves the sidebar links route correctly.
     """
-    shell = ShellPage(authenticated_page, str(settings.base_url))
+    shell = make_page(ShellPage)
     failures: list[str] = []
 
     # Warm-up: pay the one-off full SPA bootstrap ONCE so the first sidebar

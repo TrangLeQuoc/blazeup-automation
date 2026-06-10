@@ -21,7 +21,7 @@ SECTION = "dashboard"
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_dashboard_ui_visible_001(authenticated_page, settings):
+async def test_dashboard_ui_visible_001(make_page):
     """DASHBOARD_UI_VISIBLE_001: Dashboard shows KPI cards + System Health panel (navigated via URL).
 
     Navigation method: URL — ShellPage.open() does page.goto(route) for the
@@ -32,12 +32,11 @@ async def test_dashboard_ui_visible_001(authenticated_page, settings):
     check logs a STEP (what is being checked) and an INFO PASSED/FAILED with the
     observed value, so the run log shows the verification clearly.
     """
-    base_url = str(settings.base_url)
-    shell = ShellPage(authenticated_page, base_url)
+    shell = make_page(ShellPage)
     await shell.open(SECTION)
     await shell.wait_ready(SECTION)  # wait past the splash until rendered; fast-fail if broken
 
-    dash = DashboardPage(authenticated_page, base_url)
+    dash = make_page(DashboardPage)
 
     logger.log("STEP", "Check element [KPI cards] visible (expect >= 1)")
     kpi_count = await dash.kpi_card_count()

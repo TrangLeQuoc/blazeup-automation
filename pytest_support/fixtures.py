@@ -414,6 +414,26 @@ async def authenticated_page(
             await browser.close()
 
 
+@pytest.fixture
+def make_page(authenticated_page: Page, settings: Settings):
+    """Factory for building authenticated page objects without boilerplate.
+
+    Replaces the repeated ``XPage(authenticated_page, str(settings.base_url))``::
+
+        async def test_x(make_page):
+            shell = make_page(ShellPage)
+            dash  = make_page(DashboardPage)
+
+    For UNAUTHENTICATED flows (e.g. the login page), construct directly with the
+    ``page`` fixture instead: ``LoginPage(page, str(settings.base_url))``.
+    """
+
+    def _make(page_cls):
+        return page_cls(authenticated_page, str(settings.base_url))
+
+    return _make
+
+
 @pytest_asyncio.fixture(scope="session")
 async def api_token(settings: Settings) -> AsyncGenerator[str]:
     """JWT token valid for the entire test session.

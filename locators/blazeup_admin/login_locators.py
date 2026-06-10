@@ -1,8 +1,8 @@
-"""Selectors for the login page."""
+"""Locators for the login page."""
 
 
-class LoginSelectors:
-    """Login page selectors."""
+class LoginLocators:
+    """Login page locators."""
 
     IDENTIFIER_INPUT = (
         "input[type='email'], "
