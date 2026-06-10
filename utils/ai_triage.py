@@ -298,13 +298,15 @@ def _call_ollama(prompt: str, model: str, base_url: str, timeout: float = 120.0)
 def call_ai(prompt: str, *, provider: str, model: str, settings) -> str:
     """Dispatch to the configured provider. Raises a clear error if key missing."""
     if provider == "gemini":
-        key = settings.gemini_api_key or os.getenv("GEMINI_API_KEY")
+        key = (settings.gemini_api_key or os.getenv("GEMINI_API_KEY") or "").strip()
         if not key:
             raise SystemExit("GEMINI_API_KEY is not set. Add it to config/<domain>/.env "
                              "(get a free key at https://aistudio.google.com/apikey).")
         return _call_gemini(prompt, model, key)
     if provider == "groq":
-        key = settings.groq_api_key or os.getenv("GROQ_API_KEY")
+        # .strip() guards against a trailing newline/space in the key (a common
+        # cause of httpx "Illegal header value" when the key comes from a secret).
+        key = (settings.groq_api_key or os.getenv("GROQ_API_KEY") or "").strip()
         if not key:
             raise SystemExit("GROQ_API_KEY is not set. Add it to config/<domain>/.env.")
         return _call_groq(prompt, model, key)
