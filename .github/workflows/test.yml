@@ -248,13 +248,26 @@ jobs:
             -d disable_web_page_preview=true \
             --data-urlencode "text=${MSG}" >/dev/null \
             || echo "::warning::Telegram sendMessage failed (non-blocking)."
-          # On failure, attach the AI triage report if it exists.
-          if [ "${PYTEST_EXIT:-0}" -ne 0 ] && [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
-            curl -s -X POST "${API}/sendDocument" \
+          # On failure, attach the AI triage report. Locate it robustly: prefer
+          # $RUN_DIR, but fall back to scanning results/ in case RUN_DIR is unset
+          # or points elsewhere.
+          TRIAGE=""
+          if [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
+            TRIAGE="$RUN_DIR/ai_triage.md"
+          else
+            TRIAGE=$(ls -t results/run_*/ai_triage.md 2>/dev/null | head -1)
+          fi
+          echo "Notify debug: PYTEST_EXIT='${PYTEST_EXIT:-}' RUN_DIR='${RUN_DIR:-}' TRIAGE='${TRIAGE:-}'"
+          if [ "${PYTEST_EXIT:-0}" -ne 0 ] && [ -n "$TRIAGE" ] && [ -f "$TRIAGE" ]; then
+            HTTP=$(curl -s -o /tmp/tg_doc.json -w '%{http_code}' -X POST "${API}/sendDocument" \
               -F chat_id="${TELEGRAM_CHAT_ID}" \
-              -F caption="AI triage — ${DOMAIN}" \
-              -F document=@"$RUN_DIR/ai_triage.md" >/dev/null \
-              || echo "::warning::Telegram sendDocument failed (non-blocking)."
+              -F caption="🔍 AI triage — ${DOMAIN} (run #${RUN_NUM})" \
+              -F document=@"$TRIAGE")
+            if [ "$HTTP" != "200" ]; then
+              echo "::warning::Telegram sendDocument HTTP $HTTP — $(cat /tmp/tg_doc.json 2>/dev/null)"
+            fi
+          else
+            echo "::warning::No triage file to send (exit=${PYTEST_EXIT:-} triage='${TRIAGE:-}')."
           fi
 
       - name: Upload reports & logs
