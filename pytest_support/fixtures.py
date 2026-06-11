@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import time
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -498,3 +498,49 @@ def test_user(fake: Faker) -> dict[str, str]:
         "email": fake.unique.email(),
         "department": fake.job(),
     }
+
+
+# ---------------------------------------------------------------------------
+# Cleanup — track resources a test creates and remove them on teardown
+# ---------------------------------------------------------------------------
+
+
+class _CleanupRegistry:
+    """Collects async teardown callbacks registered during a test."""
+
+    def __init__(self) -> None:
+        self.cleanups: list[Callable[[], Awaitable[Any]]] = []
+
+    def add(self, cleanup: Callable[[], Awaitable[Any]]) -> None:
+        """Register an async cleanup callback, e.g. ``lambda: client.delete(...)``."""
+        self.cleanups.append(cleanup)
+
+    def __len__(self) -> int:
+        return len(self.cleanups)
+
+
+@pytest_asyncio.fixture
+async def created_resources() -> AsyncGenerator[_CleanupRegistry]:
+    """Track resources a test creates and delete them on teardown (LIFO order).
+
+    Register a cleanup for ANYTHING you create so it is removed even when the
+    test fails::
+
+        async def test_create_tenant(auth_client, created_resources):
+            from utils.data_factory import make_tenant
+            resp = await auth_client.post("/tenants", json=make_tenant())
+            tenant_id = resp.json()["data"]["id"]
+            created_resources.add(lambda: auth_client.delete(f"/tenants/{tenant_id}"))
+            # ... assertions ...
+        # teardown auto-deletes the tenant, pass OR fail.
+
+    Cleanups run in reverse creation order; a failing cleanup is logged but never
+    blocks the others or fails the test.
+    """
+    registry = _CleanupRegistry()
+    yield registry
+    for cleanup in reversed(registry.cleanups):
+        try:
+            await cleanup()
+        except Exception as exc:  # noqa: BLE001 — cleanup must never break teardown
+            logger.warning("Resource cleanup failed (non-blocking): {}", exc)

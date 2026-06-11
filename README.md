@@ -4,7 +4,7 @@ Multi-domain pytest + Playwright async automation framework for **BlazeUp Admin 
 
 Covers both **HTTP API** (httpx + Pydantic) and **Browser UI** (Playwright async + Page Object Model) automation.
 
-> **Full workflow, naming conventions, and troubleshooting** → **[USER_GUIDE.md](USER_GUIDE.md)**
+> **Full workflow, naming conventions, and troubleshooting** → **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)**
 
 ---
 
@@ -53,8 +53,8 @@ EOF
 cat > config/blazeup_partner/.env <<EOF
 BASE_URL=https://partner.stgsa.blazeup.ai
 API_BASE_URL=https://api.stg.blazeup.ai
-PARTNER_EMAIL=your-email@example.com
-PARTNER_PASSWORD=your-password
+TEST_EMAIL=your-email@example.com
+TEST_PASSWORD=your-password
 HEADLESS=true
 BROWSER=chromium
 SLOW_MO=0
@@ -62,19 +62,24 @@ DEFAULT_RESPONSE_TIME_MS=2000
 EOF
 ```
 
+> **Note:** every domain uses the **same env keys** (`TEST_EMAIL` / `TEST_PASSWORD`).
+> The login fixtures read `settings.test_email` / `settings.test_password`, so a new
+> domain needs no fixture changes — just its own `config/<domain>/.env`.
+
 **Never commit `.env` files** — they are listed in `.gitignore`.
 
 ### 4. Run Tests
 
 ```bash
-# Run BlazeUp Admin tests (currently empty, waiting for test plan)
-python -m runner.blazeup_admin.run_test
+# Run BlazeUp Admin tests (smoke suite)
+python -m runner.blazeup_admin.run_test --mode smoke
 
-# Run BlazeUp Partner tests (currently empty, waiting for test plan)
+# Run specific TC IDs / ranges
+python -m runner.blazeup_admin.run_test --execute 12010101 12010102
+python -m runner.blazeup_admin.run_test --execute 1-10
+
+# Run BlazeUp Partner tests (test plan in progress)
 python -m runner.blazeup_partner.run_test
-
-# Run specific test file
-python -m pytest tests/blazeup_partner/ui/partner_portal_shell/test_*.py -s
 
 # List all registered TCs (shared runner)
 python -m runner.run_test --list
@@ -100,6 +105,10 @@ blazeup_automation/
 │   └── blazeup_partner/.env              #   Partner domain credentials & UI base URL
 │
 ├── docs/
+│   ├── USER_GUIDE.md                     #   Full workflow & naming conventions
+│   ├── add-domain.md                     #   How to onboard a new test domain
+│   ├── page-objects.md                   #   Page object / locator / fixture conventions
+│   ├── test-data.md                      #   Faker factories + cleanup conventions
 │   └── blazeup_admin/                    #   Reference docs, test plans, requirements
 │       ├── Partner_Platform_Test_Plan.xlsx
 │       ├── partner_requirement.xlsx
@@ -110,9 +119,12 @@ blazeup_automation/
 │   └── test_data.yaml                    #   Static test data (invalid users, etc.)
 │
 ├── locators/                             #   UI element selectors (by page/domain)
-│   ├── blazeup_admin/
-│   │   └── login_ui.py                   #   Login page selectors
+│   ├── blazeup_admin/                    #   *Locators classes in *_locators.py
+│   │   ├── login_locators.py             #   LoginLocators
+│   │   ├── shell_locators.py             #   ShellLocators
+│   │   └── dashboard_locators.py         #   DashboardLocators
 │   └── blazeup_partner/
+│       └── partner_portal_locators.py    #   PartnerPortalLocators
 │
 ├── pages/                                #   Page Object Model
 │   ├── base_page.py                      #   Shared: goto, fill, click, wait_for_element
@@ -123,9 +135,10 @@ blazeup_automation/
 ├── pytest_support/
 │   ├── fixtures.py                       #   All pytest fixtures
 │   │                                      #   - auth_state (session-scoped: login once)
-│   │                                      #   - authenticated_page (UI tests)
+│   │                                      #   - authenticated_page / make_page (UI tests)
 │   │                                      #   - api_token (session-scoped)
 │   │                                      #   - auth_client, attendance_client
+│   │                                      #   - created_resources (auto-cleanup)
 │   └── hooks.py                          #   pytest_runtest_makereport hook
 │
 ├── runner/                               #   Test execution & reporting
@@ -151,17 +164,22 @@ blazeup_automation/
 │   ├── login_helpers.py                  #   Reusable: login_ui(), login_api()
 │   ├── sync_registry.py                  #   Regenerates runner/*/registry.py from tests
 │   ├── excel_reporter.py                 #   Exports results to Excel
+│   ├── ai_triage.py                      #   AI failure triage → ai_triage.md
+│   ├── data_factory.py                   #   Faker factories (make_user/tenant/partner/deal)
 │   ├── helpers.py                        #   load_yaml, require_credentials
 │   ├── log_helper.py                     #   Custom log levels: STEP, START, PASSED, FAILED
 │   └── screenshot_on_fail.py             #   Allure screenshot attachment
 │
+├── .github/workflows/test.yml            #   CI: manual run + AI triage + dashboard + Telegram
 ├── conftest.py                           #   Pytest discovery entrypoint (imports fixtures)
 ├── pytest.ini                            #   Markers, asyncio mode, HTML/Allure paths
-├── requirements.txt                      #   Python dependencies
+├── pyproject.toml                        #   Ruff lint + format config
+├── .pre-commit-config.yaml               #   Local pre-commit hooks (ruff + registry sync)
+├── requirements.txt                      #   Python dependencies (to run tests)
+├── requirements-dev.txt                  #   Dev tooling (ruff, pre-commit)
 ├── .gitignore                            #   Git ignore rules
 ├── .gitattributes                        #   Line ending & binary file rules
 ├── README.md                             #   ← you are here
-├── USER_GUIDE.md                         #   Full workflow & naming conventions
 └── .env.example                          #   Template (copy to config/{domain}/.env)
 ```
 
@@ -180,13 +198,13 @@ This framework supports multiple test domains. Each domain has:
 - **Base URL**: `https://stgsa.blazeup.ai`
 - **API Base**: `https://api.stg.blazeup.ai`
 - **Credentials**: `TEST_EMAIL`, `TEST_PASSWORD` from `config/blazeup_admin/.env`
-- **Tests**: Currently being planned
+- **Tests**: 5 UI TCs (shell page-loads + load-time + dashboard)
 - **CLI**: `python -m runner.blazeup_admin.run_test`
 
 ### BlazeUp Partner
 - **Base URL**: `https://partner.stgsa.blazeup.ai`
 - **API Base**: `https://api.stg.blazeup.ai`
-- **Credentials**: `PARTNER_EMAIL`, `PARTNER_PASSWORD` from `config/blazeup_partner/.env`
+- **Credentials**: `TEST_EMAIL`, `TEST_PASSWORD` from `config/blazeup_partner/.env`
 - **Tests**: Currently being planned
 - **CLI**: `python -m runner.blazeup_partner.run_test`
 
@@ -325,10 +343,15 @@ grep "TC-" results/run_*/logs/test.log
 | `api_token` | session | API test, already have JWT token |
 | `auth_client` | function | Authenticated API client (AuthClient) |
 | `attendance_client` | function | Authenticated API client (AttendanceClient) |
+| `make_page` | function | Factory: build an authenticated page object — `make_page(ShellPage)` |
+| `created_resources` | function | Track created resources → auto-delete on teardown (CRUD tests) |
 | `auth_state` | session | Pre-cached Playwright storage state (internal) |
 | `test_data` | session | Static test data from `fixtures/test_data.yaml` |
 | `fake` | session | Faker instance for dynamic data generation |
 | `test_user` | function | Generated user data dict |
+
+> Data factories live in `utils/data_factory.py` (`make_user`, `make_tenant`, …).
+> See **[docs/test-data.md](docs/test-data.md)** and **[docs/page-objects.md](docs/page-objects.md)**.
 
 ---
 
@@ -364,14 +387,65 @@ DEFAULT_RESPONSE_TIME_MS=30000   # 30 seconds
 
 ## CI / CD
 
-GitHub Actions workflows are in `.github/workflows/`:
+A single workflow — `.github/workflows/test.yml` — runs **on manual dispatch only**
+(no push/schedule trigger). Start it from **Actions → BlazeUp Automation Tests →
+Run workflow** (works from the GitHub Mobile app), choosing:
 
-| Workflow | Trigger | TCs |
-|----------|---------|-----|
-| `smoke.yml` | push, manual | `@pytest.mark.smoke` |
-| `regression.yml` | nightly | `priority=P1` |
+| Input | Options | Notes |
+|-------|---------|-------|
+| `domain` | `blazeup_admin` / `blazeup_partner` / `all` | `all` fans out into parallel per-domain jobs |
+| `mode` | `smoke` / `regression` / `normal` | Ignored when `execute` is set |
+| `execute` | e.g. `12010101 12010102` or `1-10` | Specific TC IDs / ranges |
+| `excel` | checkbox | Export Excel report |
+| `ai_triage` | checkbox | Run AI failure triage |
 
-Requires secrets: `BASE_URL`, `API_BASE_URL`, `TEST_EMAIL`, `TEST_PASSWORD`, `PARTNER_EMAIL`, `PARTNER_PASSWORD`.
+Each run, per domain: runs via `python -m runner.<domain>.run_test`, then on failure
+**AI-triages** the log (`ai_triage.md`), publishes an **Allure trend dashboard** to
+GitHub Pages, and sends a **Telegram** summary (+ triage file).
+
+**Dashboard:** `https://<owner>.github.io/<repo>/<domain>/` (e.g. `.../blazeup_admin/`).
+
+### Required GitHub secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `ADMIN_BASE_URL` / `ADMIN_API_BASE_URL` / `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` | blazeup_admin URLs + login |
+| `PARTNER_BASE_URL` / `PARTNER_API_BASE_URL` / `PARTNER_TEST_EMAIL` / `PARTNER_TEST_PASSWORD` | blazeup_partner URLs + login |
+| `GROQ_API_KEY` | AI triage (Groq provider) |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram notifications (shared fallback) |
+| `TELEGRAM_CHAT_ID_BLAZEUP_<DOMAIN>` | *(optional)* per-team channel routing |
+
+Adding a new domain? See **[docs/add-domain.md](docs/add-domain.md)**.
+
+---
+
+## Code Quality (lint + format + pre-commit)
+
+Ruff (lint + formatter) and pre-commit hooks keep the codebase consistent.
+
+```bash
+pip install -r requirements-dev.txt   # ruff + pre-commit
+pre-commit install                     # enable git hooks (one-time per clone)
+
+ruff check . --fix                     # lint + autofix
+ruff format .                          # format
+pre-commit run --all-files             # run all hooks manually
+```
+
+On every `git commit`, hooks auto-run `ruff` (lint + format) and re-sync the TC
+registry. If a hook modifies files, the commit pauses so you can review + re-`git add`.
+Config lives in `pyproject.toml` and `.pre-commit-config.yaml`.
+
+---
+
+## Documentation
+
+| Doc | Topic |
+|-----|-------|
+| **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** | Full workflow, runner flags, registry, reports |
+| **[docs/add-domain.md](docs/add-domain.md)** | Onboard a new test domain |
+| **[docs/page-objects.md](docs/page-objects.md)** | Page object / locator / fixture conventions |
+| **[docs/test-data.md](docs/test-data.md)** | Faker factories + auto-cleanup |
 
 ---
 

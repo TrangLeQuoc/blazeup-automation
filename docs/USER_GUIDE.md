@@ -18,6 +18,8 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
 10. [Fixtures Reference](#10-fixtures-reference)
 11. [Project Layers in Detail](#11-project-layers-in-detail)
 12. [CI / CD Pipeline](#12-ci--cd-pipeline)
+    - [12b. Code Quality (lint + pre-commit)](#12b-code-quality-lint--format--pre-commit)
+    - [12c. Test Data Management (Faker + cleanup)](#12c-test-data-management-faker--cleanup)
 13. [Troubleshooting](#13-troubleshooting)
 
 ---
@@ -149,13 +151,17 @@ DEFAULT_RESPONSE_TIME_MS=2000
 ```env
 BASE_URL=https://partner.stgsa.blazeup.ai
 API_BASE_URL=https://api.stg.blazeup.ai
-PARTNER_EMAIL=ceo@mailinator.com
-PARTNER_PASSWORD=12345678@Tc
+TEST_EMAIL=ceo@mailinator.com
+TEST_PASSWORD=12345678@Tc
 HEADLESS=true
 BROWSER=chromium
 SLOW_MO=0
 DEFAULT_RESPONSE_TIME_MS=2000
 ```
+
+> **All domains use the SAME env keys** (`TEST_EMAIL` / `TEST_PASSWORD`). Login
+> fixtures read `settings.test_email` / `settings.test_password`, so adding a
+> domain needs no fixture/test changes — only its own `config/<domain>/.env`.
 
 ### Settings reference
 
@@ -163,10 +169,8 @@ DEFAULT_RESPONSE_TIME_MS=2000
 |----------|---------|---------|
 | `BASE_URL` | `https://stgsa.blazeup.ai` | UI root; used as browser base_url & Origin header |
 | `API_BASE_URL` | `https://api.stg.blazeup.ai` | API root (no trailing slash, no service path) |
-| `TEST_EMAIL` | `ceo@mailinator.com` | Admin domain login (BlazeUp Admin) |
-| `TEST_PASSWORD` | `12345678@Tc` | Admin domain password |
-| `PARTNER_EMAIL` | `ceo@mailinator.com` | Partner domain login (BlazeUp Partner) |
-| `PARTNER_PASSWORD` | `12345678@Tc` | Partner domain password |
+| `TEST_EMAIL` | `ceo@mailinator.com` | Login email — **same key for every domain** |
+| `TEST_PASSWORD` | `12345678@Tc` | Login password — **same key for every domain** |
 | `HEADLESS` | `true` / `false` | false = visible browser (good for debugging) |
 | `BROWSER` | `chromium` | chromium / firefox / webkit |
 | `SLOW_MO` | `0` | ms delay between Playwright actions (0 = full speed) |
@@ -681,7 +685,9 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 | `test_user` | `dict` | Generated user dict (`first_name`, `last_name`, `email`, `department`) |
 | `auth_client` | `AuthClient` | Authenticated API client (token from session `api_token`); auto-closed |
 | `attendance_client` | `AttendanceClient` | Authenticated attendance client (token from session `api_token`); auto-closed |
-| `authenticated_page` | `Page` | **NEW**: Fresh isolated page context per test, pre-authenticated via `auth_state` storage injection (no per-test login) |
+| `authenticated_page` | `Page` | Fresh isolated page context per test, pre-authenticated via `auth_state` storage injection (no per-test login) |
+| `make_page` | factory | Build an authenticated page object without boilerplate: `make_page(ShellPage)` |
+| `created_resources` | registry | Track resources a test creates → auto-delete on teardown (LIFO), pass or fail |
 | `tc_logger` *(autouse)* | — | Emits START / PASSED / FAILED banners; binds TC ID to logs |
 
 ### Usage examples
@@ -700,10 +706,18 @@ async def test_tc02_login_fails_with_wrong_password(page, settings, test_data):
     error = await login.expect_error()
     assert "invalid" in error.lower()
 
-# UI test — use authenticated_page (already logged in)
-async def test_partner_ui_dashboard_001(authenticated_page, settings):
-    dashboard = DashboardPage(authenticated_page, str(settings.base_url))
+# UI test — use make_page (already logged in, no boilerplate)
+async def test_partner_ui_dashboard_001(make_page):
+    dashboard = make_page(DashboardPage)
     await dashboard.expect_kpi_widget()
+
+# CRUD test — auto-cleanup created resources (pass OR fail)
+async def test_create_tenant_001(auth_client, created_resources):
+    from utils.data_factory import make_tenant
+    resp = await auth_client.post("/tenants", json=make_tenant(), expected_status=201)
+    tenant_id = resp.json()["data"]["id"]
+    created_resources.add(lambda: auth_client.delete(f"/tenants/{tenant_id}"))
+    assert tenant_id
 ```
 
 ---
@@ -739,18 +753,19 @@ async def test_partner_ui_dashboard_001(authenticated_page, settings):
 - Masks passwords in `fill()` log output.
 - Provides readable error messages with selector labels.
 
-### 11.3 Locators (`locator/`)
+### 11.3 Locators (`locators/<domain>/`)
 
-Pure selector constants — no logic. One file per page:
+Pure selector constants — no logic. One file per page. **Naming convention:**
+file `<x>_locators.py`, class `<X>Locators` (see [page-objects.md](page-objects.md)).
 
 ```python
-# locator/login_ui.py
-class LoginSelectors:
+# locators/blazeup_admin/login_locators.py
+class LoginLocators:
     IDENTIFIER_INPUT = "input[type='email'], input[type='text']"
     PASSWORD_INPUT   = "input[type='password']"
-    PROCEED_BUTTON   = "button:has-text('Proceed'), button:has-text('Next')"
-    LOGIN_BUTTON     = "button[type='submit']:has-text('Login')"
-    ERROR_CONTAINERS = ".error-message, [role='alert'], .ant-form-item-explain-error"
+    PROCEED_BUTTON   = "button:text-is('Proceed'), button:text-is('Next')"
+    LOGIN_BUTTON     = "button:text-is('Login'), button:text-is('Sign in')"
+    ERROR_CONTAINERS = ".error-message, [role='alert'], [class*='error' i]"
 ```
 
 When a UI changes (selector breaks), update only the locator file — no test changes needed.
@@ -784,33 +799,94 @@ Log format in `test.log` file:
 
 ## 12. CI / CD Pipeline
 
-File: `.github/workflows/test.yml`
+File: `.github/workflows/test.yml`. **Manual dispatch only** — no push or schedule
+trigger. Runs are started by hand (Actions → *BlazeUp Automation Tests* → *Run
+workflow*), which also works from the GitHub Mobile app.
 
-### Jobs
+### Parameters (Jenkins-style "Build with Parameters")
 
-| Job | Trigger | Command | Artifacts |
-|-----|---------|---------|-----------|
-| `smoke` | push to `main`/`develop`, manual dispatch | `pytest -m smoke` | `smoke-reports` |
-| `regression` | nightly cron 02:00 UTC | `pytest -m regression` | `regression-reports` |
+| Input | Options | Notes |
+|-------|---------|-------|
+| `domain` | `blazeup_admin` / `blazeup_partner` / `all` | `all` fans out to parallel per-domain jobs |
+| `mode` | `smoke` / `regression` / `normal` | Ignored when `execute` is filled in |
+| `execute` | e.g. `12010101 12010102`, `1-10` | Specific TC IDs / ranges (wins over `mode`) |
+| `excel` | checkbox | Export Excel report (per-domain `REPORT_EXCEL`) |
+| `ai_triage` | checkbox | Run AI failure triage (per-domain `REPORT_AI_TRIAGE`) |
+
+### Pipeline per run
+
+```
+setup (resolve params) → tests[matrix: domain] → publish-report[matrix: domain]
+```
+Each `tests` job: maps domain secrets → runs `python -m runner.<domain>.run_test`
+→ on failure auto-generates `ai_triage.md` → uploads artifacts → sends a **Telegram**
+summary (+ triage file). `publish-report` deploys an **Allure trend dashboard** to
+GitHub Pages: `https://<owner>.github.io/<repo>/<domain>/`.
 
 ### Required GitHub secrets
 
-| Secret | Value |
-|--------|-------|
-| `BASE_URL` | `https://terralogic.blazeup.ai` |
-| `API_BASE_URL` | `https://api.prod.blazeup.ai` |
-| `TEST_EMAIL` | test account email |
-| `TEST_PASSWORD` | test account password |
+| Secret | Purpose |
+|--------|---------|
+| `ADMIN_BASE_URL`, `ADMIN_API_BASE_URL`, `ADMIN_TEST_EMAIL`, `ADMIN_TEST_PASSWORD` | blazeup_admin |
+| `PARTNER_BASE_URL`, `PARTNER_API_BASE_URL`, `PARTNER_TEST_EMAIL`, `PARTNER_TEST_PASSWORD` | blazeup_partner |
+| `GROQ_API_KEY` | AI triage (Groq) |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Telegram notifications (shared fallback) |
+| `TELEGRAM_CHAT_ID_BLAZEUP_<DOMAIN>` | *(optional)* per-team channel routing |
+
+> Workflow permissions must allow **Read and write** (Settings → Actions → General)
+> for the dashboard deploy. Adding a domain → **[add-domain.md](add-domain.md)**.
 
 ### Registry validation step
 
-CI runs `python utils/sync_registry.py` before tests and checks that `tc_registry.py` is unchanged. If any test file was added/removed without re-running the sync, the build fails with:
+CI runs `python utils/sync_registry.py` and checks `runner/*/registry.py` is unchanged.
+If a test file was added/removed without re-syncing, the build fails:
 
 ```
-::error::tc_registry.py is out of sync. Run 'python utils/sync_registry.py' and commit.
+::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit.
 ```
 
-**Fix:** run `python utils/sync_registry.py` locally and commit the updated `tc_registry.py`.
+**Fix:** run `python utils/sync_registry.py` locally and commit the updated registry.
+(The pre-commit hook does this for you automatically.)
+
+---
+
+## 12b. Code Quality (lint + format + pre-commit)
+
+Ruff (lint + formatter) + pre-commit hooks keep the codebase consistent. Config in
+`pyproject.toml` and `.pre-commit-config.yaml` (local hooks — work offline).
+
+```powershell
+pip install -r requirements-dev.txt   # ruff + pre-commit
+pre-commit install                     # one-time per clone
+
+ruff check . --fix                     # lint + autofix
+ruff format .                          # format
+pre-commit run --all-files             # run all hooks manually
+```
+
+On `git commit`, hooks auto-run ruff (lint + format) and re-sync the TC registry.
+If a hook modifies files, the commit pauses → review + re-`git add` → commit again.
+
+> Line endings are normalized to **LF** repo-wide (`.gitattributes` + ruff
+> `line-ending = "lf"`); generated `registry.py` files are excluded from ruff via
+> `force-exclude` so the formatter and `sync_registry` don't fight.
+
+---
+
+## 12c. Test Data Management (Faker + cleanup)
+
+For CRUD tests, generate unique data and auto-clean it. See
+**[test-data.md](test-data.md)**.
+
+```python
+from utils.data_factory import make_tenant   # unique, QA-AUTO tagged payloads
+
+async def test_create_tenant_001(auth_client, created_resources):
+    resp = await auth_client.post("/tenants", json=make_tenant(), expected_status=201)
+    tenant_id = resp.json()["data"]["id"]
+    created_resources.add(lambda: auth_client.delete(f"/tenants/{tenant_id}"))
+    assert tenant_id   # tenant auto-deleted on teardown, pass or fail
+```
 
 ---
 
