@@ -1,0 +1,650 @@
+{
+  "DELETE /sa-partners-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-partners-api/v1/partner/portal/bank-accounts/{accountId}": {
+    "body_required": false,
+    "params": [
+      "accountId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-partners-api/v1/sa/partner-users/{userId}/certifications/{certificationType}": {
+    "body_required": true,
+    "params": [
+      "certificationType",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-partners-api/v1/sa/partners/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-partners-api/v1/sa/territories/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/auth/me": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/auth/users": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "partnerId",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/bank-accounts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/certifications": {
+    "body_required": false,
+    "params": [
+      "certificationType",
+      "expiringWithinDays",
+      "limit",
+      "page",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/commissions": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/commissions/summary": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/dashboard": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/deals": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/deals/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/profile": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/rates": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/team/certifications": {
+    "body_required": false,
+    "params": [
+      "certificationType",
+      "expiringWithinDays",
+      "limit",
+      "page",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/territories": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/audit-logs": {
+    "body_required": false,
+    "params": [
+      "actorType",
+      "category",
+      "correlationId",
+      "dateFrom",
+      "dateTo",
+      "limit",
+      "page",
+      "retentionClass",
+      "saUserId",
+      "search",
+      "severity",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/audit-logs/export": {
+    "body_required": false,
+    "params": [
+      "actorType",
+      "category",
+      "dateFrom",
+      "dateTo",
+      "format",
+      "retentionClass",
+      "severity",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/audit-logs/stats": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/audit-logs/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/certifications": {
+    "body_required": false,
+    "params": [
+      "certificationType",
+      "expiringWithinDays",
+      "limit",
+      "page",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/commissions": {
+    "body_required": false,
+    "params": [
+      "dealId",
+      "limit",
+      "page",
+      "partnerId",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/commissions/summary": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/commissions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/deals": {
+    "body_required": false,
+    "params": [
+      "conflictStatus",
+      "dealType",
+      "limit",
+      "page",
+      "partnerId",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/deals/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/partner-users": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "partnerId",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/partners": {
+    "body_required": false,
+    "params": [
+      "country",
+      "limit",
+      "page",
+      "regions",
+      "search",
+      "sort",
+      "status",
+      "tier",
+      "type"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/partners/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/partners/{partnerId}/certifications": {
+    "body_required": false,
+    "params": [
+      "certificationType",
+      "expiringWithinDays",
+      "limit",
+      "page",
+      "partnerId",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/rate-table": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/territories": {
+    "body_required": false,
+    "params": [
+      "country",
+      "exclusivityType",
+      "limit",
+      "page",
+      "partnerId",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/sa/territories/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-partners-api/v1/partner/portal/bank-accounts/{accountId}/primary": {
+    "body_required": false,
+    "params": [
+      "accountId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-partners-api/v1/sa/partners/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/change-password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "204"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/invite": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/login": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/logout": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "204"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/refresh": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/users/{userId}/reset-password": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/portal/bank-accounts": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/portal/commissions/{id}/dispute": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/portal/deals": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/commissions/{id}/approve": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/commissions/{id}/clawback": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/commissions/{id}/dispute": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/commissions/{id}/mark-paid": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals/{id}/approve": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals/{id}/extend-protection": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals/{id}/lose": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals/{id}/reject": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals/{id}/resolve-conflict": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/deals/{id}/win": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partner-users": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partner-users/{userId}/certifications": {
+    "body_required": true,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partner-users/{userId}/reset-password": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partners": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partners/{id}/approve": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partners/{id}/deactivate": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partners/{id}/upgrade-tier": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/rate-table": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/territories": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  }
+}

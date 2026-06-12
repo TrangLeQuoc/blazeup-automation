@@ -274,7 +274,7 @@
 ---
 
 ## Ghi chú cho QA Automation
-- **Route** đã liệt kê sẵn ở mỗi mục → dùng làm cơ sở viết test UI (page object theo `docs/page-objects.md`).
+- **Route** đã liệt kê sẵn ở mỗi mục → dùng làm cơ sở viết test UI (page object theo `docs/guides/page-objects.md`).
 - Nhiều mục có **ràng buộc bảo mật/phân quyền** (chỉ thấy data của mình, MSP consent, chặn truy cập payroll...) → ưu tiên test các nhánh phân quyền.
 - Các sự kiện **Kafka** (`deal.registered`, `deal.won`, `commission.waiver_decided`, `certification.earned`) → có thể kiểm ở tầng API/integration.
 - Mục có **PIC *(chưa giao)*** = chưa phân công người làm; nên xác nhận với PM trước khi lên kế hoạch test.

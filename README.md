@@ -4,7 +4,7 @@ Multi-domain pytest + Playwright async automation framework for **BlazeUp Admin 
 
 Covers both **HTTP API** (httpx + Pydantic) and **Browser UI** (Playwright async + Page Object Model) automation.
 
-> **Full workflow, naming conventions, and troubleshooting** → **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)**
+> **Full workflow, naming conventions, and troubleshooting** → **[docs/guides/USER_GUIDE.md](docs/guides/USER_GUIDE.md)**
 
 ---
 
@@ -95,9 +95,9 @@ blazeup_automation/
 ├── api_clients/                          # HTTP API clients (httpx + Pydantic)
 │   ├── base_client.py                    #   Base: retry, timing, schema validation
 │   ├── blazeup_admin/
-│   │   ├── auth_client.py                #   Login, logout, /current-user
-│   │   └── attendance_client.py          #   Attendance endpoints
-│   └── blazeup_partner/                  #   (Currently empty, ready for Partner API)
+│   │   └── auth_client.py                #   Login + current-user (sa-auth-api)
+│   └── blazeup_partner/
+│       └── deal_registration_client.py   #   Deal registration (SCAFFOLD)
 │
 ├── config/                               # Domain-specific settings
 │   ├── settings.py                       #   Typed config from .env (Pydantic)
@@ -105,15 +105,17 @@ blazeup_automation/
 │   └── blazeup_partner/.env              #   Partner domain credentials & UI base URL
 │
 ├── docs/
-│   ├── USER_GUIDE.md                     #   Full workflow & naming conventions
-│   ├── add-domain.md                     #   How to onboard a new test domain
-│   ├── page-objects.md                   #   Page object / locator / fixture conventions
-│   ├── test-data.md                      #   Faker factories + cleanup conventions
-│   └── blazeup_admin/                    #   Reference docs, test plans, requirements
+│   ├── guides/                           #   Framework guides
+│   │   ├── USER_GUIDE.md                 #     Full workflow & naming conventions
+│   │   ├── add-domain.md                 #     Onboard a new test domain
+│   │   ├── page-objects.md               #     Page object / locator / fixture conventions
+│   │   └── test-data.md                  #     Faker factories + cleanup conventions
+│   ├── api-snapshots/<domain>/           #   Swagger baselines + CHANGELOG (drift detector)
+│   └── blazeup_admin/                    #   Partner module reference (tested under blazeup_admin)
 │       ├── Partner_Platform_Test_Plan.xlsx
+│       ├── partner_product_backlog.vi.md
 │       ├── partner_requirement.xlsx
-│       ├── partner-platform-prd-v1.8.md
-│       └── partner-platform-prd-v1.8.vi.md
+│       └── partner-platform-prd-v1.8(.vi).md
 │
 ├── fixtures/
 │   └── test_data.yaml                    #   Static test data (invalid users, etc.)
@@ -137,7 +139,7 @@ blazeup_automation/
 │   │                                      #   - auth_state (session-scoped: login once)
 │   │                                      #   - authenticated_page / make_page (UI tests)
 │   │                                      #   - api_token (session-scoped)
-│   │                                      #   - auth_client, attendance_client
+│   │                                      #   - auth_client (API)
 │   │                                      #   - created_resources (auto-cleanup)
 │   └── hooks.py                          #   pytest_runtest_makereport hook
 │
@@ -145,12 +147,16 @@ blazeup_automation/
 │   ├── run_test.py                       #   CLI entrypoint (modes, filters, repeat)
 │   ├── test_runner.py                    #   Subprocess runner, summary, Excel export
 │   ├── tc_registry.py                    #   AUTO-GENERATED: merged registry
-│   ├── blazeup_admin/
-│   │   ├── run_test.py                   #   Admin-only CLI (sets BLAZEUP_DOMAIN=blazeup_admin)
-│   │   └── registry.py                   #   Auto-generated, domain-specific TCs
-│   └── blazeup_partner/
-│       ├── run_test.py                   #   Partner-only CLI (sets BLAZEUP_DOMAIN=blazeup_partner)
-│       └── registry.py                   #   Auto-generated, domain-specific TCs
+│   ├── blazeup_admin/                    #   Per-domain entry points
+│   │   ├── run_test.py                   #     Run tests (sets BLAZEUP_DOMAIN)
+│   │   ├── registry.py                   #     Auto-generated TC registry
+│   │   ├── health.py                     #     API service health-check
+│   │   └── swagger_check.py              #     Swagger drift detector
+│   └── blazeup_partner/                  #   (same per-domain entry points)
+│       ├── run_test.py
+│       ├── registry.py
+│       ├── health.py
+│       └── swagger_check.py
 │
 ├── tests/                                #   Test cases (domain/layer structure)
 │   ├── blazeup_admin/
@@ -351,7 +357,7 @@ grep "TC-" results/run_*/logs/test.log
 | `test_user` | function | Generated user data dict |
 
 > Data factories live in `utils/data_factory.py` (`make_user`, `make_tenant`, …).
-> See **[docs/test-data.md](docs/test-data.md)** and **[docs/page-objects.md](docs/page-objects.md)**.
+> See **[docs/guides/test-data.md](docs/guides/test-data.md)** and **[docs/guides/page-objects.md](docs/guides/page-objects.md)**.
 
 ---
 
@@ -415,7 +421,7 @@ GitHub Pages, and sends a **Telegram** summary (+ triage file).
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram notifications (shared fallback) |
 | `TELEGRAM_CHAT_ID_BLAZEUP_<DOMAIN>` | *(optional)* per-team channel routing |
 
-Adding a new domain? See **[docs/add-domain.md](docs/add-domain.md)**.
+Adding a new domain? See **[docs/guides/add-domain.md](docs/guides/add-domain.md)**.
 
 ---
 
@@ -442,10 +448,10 @@ Config lives in `pyproject.toml` and `.pre-commit-config.yaml`.
 
 | Doc | Topic |
 |-----|-------|
-| **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** | Full workflow, runner flags, registry, reports |
-| **[docs/add-domain.md](docs/add-domain.md)** | Onboard a new test domain |
-| **[docs/page-objects.md](docs/page-objects.md)** | Page object / locator / fixture conventions |
-| **[docs/test-data.md](docs/test-data.md)** | Faker factories + auto-cleanup |
+| **[docs/guides/USER_GUIDE.md](docs/guides/USER_GUIDE.md)** | Full workflow, runner flags, registry, reports |
+| **[docs/guides/add-domain.md](docs/guides/add-domain.md)** | Onboard a new test domain |
+| **[docs/guides/page-objects.md](docs/guides/page-objects.md)** | Page object / locator / fixture conventions |
+| **[docs/guides/test-data.md](docs/guides/test-data.md)** | Faker factories + auto-cleanup |
 
 ---
 

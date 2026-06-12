@@ -32,10 +32,15 @@ _SERVICE_RE = re.compile(r"/([a-z0-9]+(?:-[a-z0-9]+)*-api)/")
 # Minimal ANSI colors (consistent with runner/test_runner.py).
 _GREEN = "\033[92m"
 _RED = "\033[91m"
+_YELLOW = "\033[93m"
 _CYAN = "\033[96m"
 _DIM = "\033[2m"
 _BOLD = "\033[1m"
 _RESET = "\033[0m"
+
+# Transient statuses worth one retry (gateway/service still warming up or flapping).
+_RETRY_STATUSES = {502, 503, 504}
+_RETRY_DELAY_S = 0.5
 
 # OPTIONAL richer descriptions. Any service NOT listed here gets a readable label
 # auto-derived from its name (see _default_label), so this map never needs to grow
@@ -94,28 +99,54 @@ def discover_services(domain: str) -> set[str]:
     return services
 
 
-async def _probe(client: httpx.AsyncClient, service: str, health_path: str) -> dict:
-    """Probe one service's health endpoint."""
+def _classify(status: int | None) -> str:
+    """Map an HTTP status to a health state.
+
+    up      = 2xx/3xx (service alive)
+    missing = 404 (no /health route — service may be up but exposes no probe)
+    down    = 5xx / other / no response (service dead or unreachable)
+    """
+    if status is None:
+        return "down"
+    if 200 <= status < 400:
+        return "up"
+    if status == 404:
+        return "missing"
+    return "down"
+
+
+async def _probe(
+    client: httpx.AsyncClient, service: str, health_path: str, retries: int = 1
+) -> dict:
+    """Probe one service's /health, retrying once on a transient error/status."""
     url = f"/{service}{health_path}"
-    started = time.perf_counter()
-    try:
-        resp = await client.get(url)
-        elapsed_ms = int((time.perf_counter() - started) * 1000)
-        return {
-            "service": service,
-            "status": resp.status_code,
-            "ms": elapsed_ms,
-            "up": 200 <= resp.status_code < 400,
-            "error": None,
-        }
-    except (httpx.HTTPError, OSError) as exc:
-        return {
-            "service": service,
-            "status": None,
-            "ms": None,
-            "up": False,
-            "error": type(exc).__name__,
-        }
+    for attempt in range(retries + 1):
+        started = time.perf_counter()
+        try:
+            resp = await client.get(url)
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
+            if resp.status_code in _RETRY_STATUSES and attempt < retries:
+                await asyncio.sleep(_RETRY_DELAY_S)
+                continue
+            return {
+                "service": service,
+                "status": resp.status_code,
+                "ms": elapsed_ms,
+                "state": _classify(resp.status_code),
+                "error": None,
+            }
+        except (httpx.HTTPError, OSError) as exc:
+            if attempt < retries:
+                await asyncio.sleep(_RETRY_DELAY_S)
+                continue
+            return {
+                "service": service,
+                "status": None,
+                "ms": None,
+                "state": "down",
+                "error": type(exc).__name__,
+            }
+    return {"service": service, "status": None, "ms": None, "state": "down", "error": "unknown"}
 
 
 async def _run(
@@ -163,33 +194,43 @@ def check_services(
         print("-" * 78)
         return 0
 
-    print(f"  {'STATE':<6} {'SERVICE':<20} {'RESPONSE':<16} WHAT IT IS")
+    print(f"  {'STATE':<13} {'SERVICE':<20} {'RESPONSE':<16} WHAT IT IS")
     results = asyncio.run(_run(host, services, health_path, timeout))
 
-    up_count = 0
+    # state → (color, fixed-width label)
+    fmt = {
+        "up": (_GREEN, "✅ UP"),
+        "missing": (_YELLOW, "⚠ NO /health"),
+        "down": (_RED, "❌ DOWN"),
+    }
+    counts = {"up": 0, "missing": 0, "down": 0}
     for r in sorted(results, key=lambda x: x["service"]):
         desc = labels.get(r["service"]) or _default_label(r["service"])
-        if r["up"]:
-            up_count += 1
-            state = f"{_GREEN}✅ UP{_RESET} "
-            response = f"{r['status']}, {r['ms']}ms"
-        else:
-            state = f"{_RED}❌ DOWN{_RESET}"
-            response = r["error"] if r["status"] is None else f"{r['status']}, {r['ms']}ms"
-        print(f"  {state:<6} {r['service']:<20} {response:<16} {_DIM}{desc}{_RESET}")
+        state = r["state"]
+        counts[state] += 1
+        color, label_text = fmt[state]
+        badge = f"{color}{label_text:<12}{_RESET}"
+        response = r["error"] if r["status"] is None else f"{r['status']}, {r['ms']}ms"
+        print(f"  {badge} {r['service']:<20} {response:<16} {_DIM}{desc}{_RESET}")
 
     print("-" * 78)
-    down = len(results) - up_count
-    if down == 0:
+    up, missing, down = counts["up"], counts["missing"], counts["down"]
+    total = len(results)
+    if down:
+        names = ", ".join(r["service"] for r in results if r["state"] == "down")
+        print(f"  {_RED}⚠  {up}/{total} UP — DOWN: {names}{_RESET}")
+        print(f"  {_DIM}→ Tests calling the down service(s) will fail until they recover.{_RESET}")
+    elif missing:
+        names = ", ".join(r["service"] for r in results if r["state"] == "missing")
+        print(f"  {_YELLOW}✓ {up}/{total} reachable, but no /health route on: {names}{_RESET}")
         print(
-            f"  {_GREEN}✅ {up_count}/{len(results)} services UP{_RESET} "
-            f"— backend reachable; API tests for {domain} can run."
+            f"  {_DIM}→ 404 = service likely up but exposes no /health (can't confirm here).{_RESET}"
         )
     else:
-        down_names = ", ".join(r["service"] for r in results if not r["up"])
-        print(f"  {_RED}⚠  {up_count}/{len(results)} UP — DOWN: {down_names}{_RESET}")
         print(
-            f"  {_DIM}→ Tests calling the down service(s) will fail/skip until they recover.{_RESET}"
+            f"  {_GREEN}✅ {up}/{total} services UP{_RESET} "
+            f"— backend reachable; API tests for {domain} can run."
         )
     print()
-    return 0 if down == 0 else 1
+    # Exit 1 only on a genuine DOWN; a missing /health route is a warning, not a failure.
+    return 1 if down else 0

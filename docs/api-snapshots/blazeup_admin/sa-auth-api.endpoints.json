@@ -1,0 +1,1817 @@
+{
+  "DELETE /sa-auth-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/components": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/dev/abac/aliases/{alias}/unassign-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "alias",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/dev/abac/aliases/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/dev/abac/attribute-definitions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/dev/abac/grants/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/dev/abac/policies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/dev/abac/policies/{policyId}/unassign-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "policyId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/internal/permissions/deprecated-platform": {
+    "body_required": false,
+    "params": [
+      "name"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/internal/users/endpoints": {
+    "body_required": false,
+    "params": [
+      "prefix",
+      "url"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/internal/users/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/sessions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/sessions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/tenants/user-admin/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/two-factors/user/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/user-groups/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/.well-known/jwks.json": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/admin/auth-audit": {
+    "body_required": false,
+    "params": [
+      "event",
+      "limit",
+      "offset"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/auth/impersonate/sessions": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "offset"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/auth/impersonate/{sessionId}/replay": {
+    "body_required": false,
+    "params": [
+      "sessionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/components": {
+    "body_required": false,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/components/group": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/current-user": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/aliases": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/aliases/{alias}": {
+    "body_required": false,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/aliases/{alias}/policies": {
+    "body_required": false,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/aliases/{alias}/users": {
+    "body_required": false,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/attribute-definitions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/attribute-definitions/usage": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/departments": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/fe-modules": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/flow-bundle": {
+    "body_required": false,
+    "params": [
+      "includeUserManages",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/grants": {
+    "body_required": false,
+    "params": [
+      "tenant",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/grants/alias-counts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/grants/counts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/locations": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/my-modules": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/my-modules-keys": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/my-permissions": {
+    "body_required": false,
+    "params": [
+      "modules[]"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/my-permissions-keys": {
+    "body_required": false,
+    "params": [
+      "module",
+      "modules[]",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/platforms": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/policies": {
+    "body_required": false,
+    "params": [
+      "feModuleId",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/policies/by-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "assignedOnly",
+      "includeAllStatuses",
+      "platform",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/sign-in-platforms": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/snapshot": {
+    "body_required": false,
+    "params": [
+      "includeUserManages",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/sync-rbac/debug": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/user-aliases/{userId}": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/dev/abac/users": {
+    "body_required": false,
+    "params": [
+      "search",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/google-tokens/calendar": {
+    "body_required": false,
+    "params": [
+      "date"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/google-tokens/verify": {
+    "body_required": false,
+    "params": [
+      "code"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/google-tokens/verify-lollypop": {
+    "body_required": false,
+    "params": [
+      "code"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/permissions/modules": {
+    "body_required": false,
+    "params": [
+      "name",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/permissions/template": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/user-groups/check": {
+    "body_required": false,
+    "params": [
+      "country",
+      "ids",
+      "locations",
+      "names",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/user-groups/users": {
+    "body_required": false,
+    "params": [
+      "country",
+      "ids",
+      "locations",
+      "names",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users": {
+    "body_required": false,
+    "params": [
+      "ids",
+      "status",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/active-admin-tenant": {
+    "body_required": false,
+    "params": [
+      "email",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/check": {
+    "body_required": false,
+    "params": [
+      "email",
+      "prefix",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/condition": {
+    "body_required": false,
+    "params": [
+      "customer",
+      "email",
+      "id",
+      "status",
+      "tenant",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/{id}/abac": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/{id}/endpoints": {
+    "body_required": false,
+    "params": [
+      "id",
+      "prefix",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/internal/users/{id}/groups": {
+    "body_required": false,
+    "params": [
+      "country",
+      "id",
+      "locations"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/m/current-user": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/m/help-desk/current-user": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/m/my-permissions": {
+    "body_required": false,
+    "params": [
+      "modules[]",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/modules": {
+    "body_required": false,
+    "params": [
+      "platform",
+      "userGroup",
+      "userGroups"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/modules/be": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/modules/fe": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/modules/secondary": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "modules",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/my-auth-activity": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "offset"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/my-modules": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/my-permissions": {
+    "body_required": false,
+    "params": [
+      "modules[]",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/my-sessions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/permissions/group": {
+    "body_required": false,
+    "params": [
+      "endpoints",
+      "ids",
+      "module",
+      "platform",
+      "userGroup",
+      "userGroups"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/permissions/internal/template": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/platforms": {
+    "body_required": false,
+    "params": [
+      "userGroup",
+      "userGroups"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/platforms/group": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/send-emails/contact-us": {
+    "body_required": false,
+    "params": [
+      "email",
+      "name",
+      "phoneNumber"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/tenants/check-domain": {
+    "body_required": false,
+    "params": [
+      "domain"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/tenants/user-admin": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/two-factors/my": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/user-groups": {
+    "body_required": false,
+    "params": [
+      "company",
+      "countries",
+      "country",
+      "level",
+      "limit",
+      "locations",
+      "page",
+      "platforms",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/user-groups/filter": {
+    "body_required": false,
+    "params": [
+      "company",
+      "countries",
+      "country",
+      "level",
+      "limit",
+      "locations",
+      "page",
+      "platforms",
+      "search",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/user-groups/generate-id": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/user-groups/group": {
+    "body_required": false,
+    "params": [
+      "company",
+      "countries",
+      "country",
+      "level",
+      "locations",
+      "platforms",
+      "search",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/user-groups/internal/check": {
+    "body_required": false,
+    "params": [
+      "country",
+      "ids",
+      "locations",
+      "names",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/user-groups/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users": {
+    "body_required": false,
+    "params": [
+      "countries",
+      "endDate",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "startDate",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users-backend/{id}/endpoints": {
+    "body_required": false,
+    "params": [
+      "id",
+      "prefix",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users-backend/{id}/groups": {
+    "body_required": false,
+    "params": [
+      "country",
+      "id",
+      "locations"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/check-user": {
+    "body_required": false,
+    "params": [
+      "email",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/elevate-organization": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/get-user-for-customer": {
+    "body_required": false,
+    "params": [
+      "customer",
+      "search",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/get-user-sa": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "search",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/my-permission": {
+    "body_required": false,
+    "params": [
+      "modules",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/permissions": {
+    "body_required": false,
+    "params": [
+      "employeeCode",
+      "employeeId",
+      "id",
+      "modules",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/users/{id}/user-groups": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/widgets/my-widgets": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/dev/abac/aliases/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/dev/abac/attribute-definitions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/dev/abac/policies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/internal/permissions/restored-platform": {
+    "body_required": false,
+    "params": [
+      "name"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/internal/users/employee/{employeeId}/user-groups": {
+    "body_required": true,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/internal/users/endpoints": {
+    "body_required": true,
+    "params": [
+      "prefix",
+      "url"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/internal/users/update-for-customer": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/internal/users/{id}/customer": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/m/my-password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/m/password": {
+    "body_required": true,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/my-password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/user-groups/{id}/clone": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/user-groups/{id}/permissions": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/user-groups/{id}/status": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/users/two-factor": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/users/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/users/{id}/password": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/users/{id}/set-up": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/users/{id}/status": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/widgets/my-widgets": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-auth-api/abac/sync": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/admin/unlock-account/{userId}": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/auth/impersonate": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/auth/impersonate/{sessionId}/terminate": {
+    "body_required": false,
+    "params": [
+      "sessionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/automation-credential": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/aliases": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/aliases/{alias}/assign-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "alias",
+      "userId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/analyze": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/attribute-definitions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/check-access": {
+    "body_required": true,
+    "params": [
+      "Authorization",
+      "authorization"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/grants": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/policies": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/policies/{policyId}/assign-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "alias",
+      "policyId",
+      "userId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/stubs": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/sync-rbac": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/sync-user": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/sync-user-abac": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/dev/abac/test-token": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/fe_modules": {
+    "body_required": true,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/forgot-password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/google-tokens/sync": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/google-tokens/url": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/permissions/deprecated": {
+    "body_required": false,
+    "params": [
+      "action",
+      "module",
+      "page",
+      "platform",
+      "sub"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/permissions/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/permissions/restore": {
+    "body_required": false,
+    "params": [
+      "action",
+      "module",
+      "page",
+      "platform",
+      "sub"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/user-groups/import": {
+    "body_required": true,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/candidate/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/convert": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/create-admin": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/customer": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/employee/{employeeId}/reset-password": {
+    "body_required": true,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/onboarding": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/internal/users/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/logout": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/m/forgot-password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/m/help-desk/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/m/refresh-access-token": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/m/resend": {
+    "body_required": true,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/m/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/m/verify-code": {
+    "body_required": true,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/otp/request": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/otp/verify": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/permissions/internal/deprecated": {
+    "body_required": false,
+    "params": [
+      "action",
+      "module",
+      "page",
+      "platform",
+      "sub"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/permissions/internal/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/permissions/internal/restore": {
+    "body_required": false,
+    "params": [
+      "action",
+      "module",
+      "page",
+      "platform",
+      "sub"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/refresh-access-token": {
+    "body_required": true,
+    "params": [
+      "x-platform"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/resend": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/sign-in/credentials": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/sign-in/firebase": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/sign-in/refresh-cookie-token": {
+    "body_required": false,
+    "params": [
+      "x-platform"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/sign-in/select-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/sign-in/verify-otp": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/active-user-security-register-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/check-security-register-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/copy-properties": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/create-admin-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/register-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/register-tenant-admin": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/resend-security-register": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/sign-up-admin-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/sync-tenant": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/tenants/user-admin": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/two-factors/otp": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/two-factors/public/otp": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/user-groups/internal/import": {
+    "body_required": true,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/user-groups/sync": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "skip",
+      "tenant"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/user-groups/verify": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/users": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/users-backend/sign-in": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/users/manual": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/users/sync-phone-detail": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/users/two-factor": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/verify-code": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "PUT /sa-auth-api/internal/permissions/component": {
+    "body_required": true,
+    "params": [
+      "action",
+      "name",
+      "page",
+      "sub"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /sa-auth-api/internal/permissions/merge": {
+    "body_required": true,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /sa-auth-api/internal/users/trigger": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /sa-auth-api/themes": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /sa-auth-api/themes/tables": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /sa-auth-api/user-groups/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /sa-auth-api/users-backend/trigger": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  }
+}
