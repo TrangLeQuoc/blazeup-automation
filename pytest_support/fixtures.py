@@ -16,7 +16,6 @@ from faker import Faker
 from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
-from api_clients.blazeup_admin.attendance_client import AttendanceClient
 from api_clients.blazeup_admin.auth_client import AuthClient
 from config.settings import Settings, get_settings
 from utils.helpers import load_yaml, require_credentials
@@ -465,20 +464,6 @@ async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[Auth
     """Authenticated AuthClient — fresh instance per test, token from session."""
 
     client = AuthClient(
-        str(settings.api_base_url),
-        token=api_token,
-        max_response_time_ms=settings.default_response_time_ms,
-        app_origin=str(settings.base_url),
-    )
-    yield client
-    await client.close()
-
-
-@pytest_asyncio.fixture
-async def attendance_client(settings: Settings, api_token: str) -> AsyncGenerator[AttendanceClient]:
-    """Authenticated AttendanceClient — fresh instance per test, token from session."""
-
-    client = AttendanceClient(
         str(settings.api_base_url),
         token=api_token,
         max_response_time_ms=settings.default_response_time_ms,

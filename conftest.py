@@ -6,7 +6,6 @@ the implementation stays organized under `pytest_support/`.
 
 from pytest_support.fixtures import (
     api_token,
-    attendance_client,
     auth_client,
     auth_state,
     authenticated_page,
@@ -25,7 +24,6 @@ from pytest_support.hooks import pytest_runtest_makereport
 
 __all__ = [
     "api_token",
-    "attendance_client",
     "auth_client",
     "auth_state",
     "authenticated_page",
