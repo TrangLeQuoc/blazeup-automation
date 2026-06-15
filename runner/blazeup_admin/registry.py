@@ -40,6 +40,7 @@ class TestCase:
 
 
 TC_REGISTRY: dict[int, TestCase] = {
+    2060101: TestCase(2060101, "PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001", "api", "partner", "GET internal partners list - SA filters are applied.", "tests/blazeup_admin/api/test_sa_partners.py", "test_partner_api_partner_account_management_001", ['api', 'regression'], "P2"),
     12010101: TestCase(12010101, "SHELL_UI_LOAD_TIME_PAGE_001", "ui", "shell", "every SA Dashboard page loads within budget (navigated via URL).", "tests/blazeup_admin/ui/test_load_time.py", "test_shell_ui_load_time_page_001", ['ui', 'regression'], "P2"),
     12010102: TestCase(12010102, "SHELL_UI_LOAD_TIME_PAGE_002", "ui", "shell", "every SA Dashboard page loads within budget (navigated via NAV).", "tests/blazeup_admin/ui/test_load_time.py", "test_shell_ui_load_time_page_002", ['ui', 'regression'], "P2"),
     12010201: TestCase(12010201, "SHELL_UI_PAGE_LOADS_001", "ui", "shell", "every page loads via direct URL (no MFE fetch error).", "tests/blazeup_admin/ui/test_page_loads.py", "test_shell_ui_page_loads_001", ['ui', 'smoke'], "P2"),

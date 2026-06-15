@@ -17,6 +17,7 @@ from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from api_clients.blazeup_admin.auth_client import AuthClient
+from api_clients.blazeup_admin.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
 from utils.helpers import load_yaml, require_credentials
 from utils.login_helpers import login_api, login_ui
@@ -207,8 +208,8 @@ async def tc_logger(
             else:
                 logger.log("PASSED", "[{}] PASSED ({:.2f}s){}", label, elapsed, suffix)
 
-            # ── End-of-test marker ───────────────────────────────────────────
-            logger.log("FINISH", "[{}]", label)
+            # ── End-of-test marker (include the title so the line isn't bare) ─
+            logger.log("FINISH", "[{}] {} — done", label, title)
 
 
 @pytest.fixture(scope="session")
@@ -464,6 +465,22 @@ async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[Auth
     """Authenticated AuthClient — fresh instance per test, token from session."""
 
     client = AuthClient(
+        str(settings.api_base_url),
+        token=api_token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
+    yield client
+    await client.close()
+
+
+@pytest_asyncio.fixture
+async def sa_partners_client(
+    settings: Settings, api_token: str
+) -> AsyncGenerator[SaPartnersClient]:
+    """Authenticated SA Partners API client (sa-partners-api), token from session."""
+
+    client = SaPartnersClient(
         str(settings.api_base_url),
         token=api_token,
         max_response_time_ms=settings.default_response_time_ms,

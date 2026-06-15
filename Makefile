@@ -10,6 +10,9 @@
 #   make regression                      # P1 regression suite
 #   make sync                            # regenerate the TC registry
 #   make report                          # open the latest Allure results
+#   make health                          # are the backend API services alive?
+#   make swagger                         # show Swagger drift vs the saved baseline
+#   make swagger-save                    # save Swagger baseline + update CHANGELOG
 
 DOMAIN ?= blazeup_admin
 RUN = python -m runner.$(DOMAIN).run_test
@@ -39,6 +42,20 @@ sync:
 
 report:
 	allure serve $$(ls -dt results/run_* | head -1)/allure-results
+
+# ── Backend monitoring (per-domain) ─────────────────────────────────────────
+# Health-check: ping each service's /health (is the backend alive?).
+health:
+	python -m runner.$(DOMAIN).health
+
+# Swagger drift: compare each service's live OpenAPI spec to the saved baseline
+# (shows ADDED / REMOVED / CHANGED endpoints). Read-only.
+swagger:
+	python -m runner.$(DOMAIN).swagger_check
+
+# Save the current Swagger as the new baseline + append the per-domain CHANGELOG.
+swagger-save:
+	python -m runner.$(DOMAIN).swagger_check --save
 
 %:
 	@:

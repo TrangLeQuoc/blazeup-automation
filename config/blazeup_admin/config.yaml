@@ -23,48 +23,50 @@ modules:
   DASHBOARD:
     number: 2
     ui: {VISIBLE: 1}
+  # Pages below only reserve their module `number` (ID slot + inventory).
+  # No test yet → no section declared. Add a `ui:`/`api:` section the moment you
+  # write a test for that page, e.g.  TENANTS:\n    number: 3\n    ui: {VISIBLE: 1}
   TENANTS:
     number: 3
-    ui: {VISIBLE: 1}
   BILLING:
     number: 4
-    ui: {VISIBLE: 1}
   PLANS:
     number: 5
-    ui: {VISIBLE: 1}
-  PARTNERS:          # SA Dashboard "Partners" nav page
-    number: 6
-    ui: {VISIBLE: 1}
+  # PARTNER — SA-side partner management. This IS the SA Dashboard "Partners" area:
+  # the management UI (SA Partner Module screens) + the sa-partners-api backend.
+  # Matches the Partner Platform test plan prefix PARTNER_*. Partner-PORTAL features
+  # (My Pipeline, partner dashboard, ...) belong to the blazeup_partner domain.
+  PARTNER:
+    number: 6        # reuses the old "PARTNERS" nav-page slot (same concept, merged)
+    # ui: {...}      # add SA Partner Module UI sections when written
+    api:
+      # API grouped by backend FEATURE/resource (not by page):
+      PARTNER_ACCOUNT_MANAGEMENT: 1
+      # DEAL_REGISTRATION_PIPELINE: 2
+      # COMMISSIONS_PAYOUTS: 3
+      # TERRITORIES: 4
+      # CERTIFICATIONS: 5
+      # AUDIT_LOG: 6
   MARKETPLACE:
     number: 7
-    ui: {VISIBLE: 1}
   AUDIT_LOG:
     number: 8
-    ui: {VISIBLE: 1}
   CONNECTORS:
     number: 9
-    ui: {VISIBLE: 1}
   PLATFORM_TEMPLATES:
     number: 10
-    ui: {VISIBLE: 1}
   MARKETING_LIBRARY:
     number: 11
-    ui: {VISIBLE: 1}
   EXPENSE_LIBRARY:
     number: 12
-    ui: {VISIBLE: 1}
   HELP_PLATFORM:
     number: 13
-    ui: {VISIBLE: 1}
   STATUTORY_REPORTS:
     number: 14
-    ui: {VISIBLE: 1}
   COMPLIANCE:
     number: 15
-    ui: {VISIBLE: 1}
   GOVERNANCE:
     number: 16
-    ui: {VISIBLE: 1}
 
 excel:
   file: SA_Test_Plan.xlsx

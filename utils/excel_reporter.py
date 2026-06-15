@@ -120,7 +120,14 @@ def write_excel_report(
         return None
 
     # ── Copy the workbook ──────────────────────────────────────────────────
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Reuse the run dir's timestamp (run_YYYYMMDD_HHMMSS) so the Excel filename
+    # matches the folder. Fall back to now() if the dir name isn't a run_* folder.
+    run_name = result_dir.name
+    timestamp = (
+        run_name[len("run_") :]
+        if run_name.startswith("run_")
+        else datetime.now().strftime("%Y%m%d_%H%M%S")
+    )
     out_name = f"{excel_path.stem}_result_{timestamp}.xlsx"
     out_path = result_dir / out_name
     shutil.copy2(excel_path, out_path)
