@@ -1,0 +1,340 @@
+{
+  "DELETE /helpplatform-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /helpplatform-api/platform/broadcasts/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /helpplatform-api/platform/entries/{helpId}": {
+    "body_required": false,
+    "params": [
+      "helpId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /helpplatform-api/platform/entries/{helpId}/translations/{locale}": {
+    "body_required": false,
+    "params": [
+      "helpId",
+      "locale"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/audit-trail/{collectionName}": {
+    "body_required": false,
+    "params": [
+      "collectionName",
+      "filterField",
+      "filterValue",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/broadcasts/unread": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/entries": {
+    "body_required": false,
+    "params": [
+      "kind",
+      "limit",
+      "locale",
+      "module",
+      "page",
+      "search",
+      "source",
+      "tier"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/entries/_facets": {
+    "body_required": false,
+    "params": [
+      "kind"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/entries/{helpId}": {
+    "body_required": false,
+    "params": [
+      "helpId",
+      "locale"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/internal/debug/cache/ping": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/internal/debug/collections": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/internal/debug/overview": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/audit-log": {
+    "body_required": false,
+    "params": [
+      "action",
+      "from",
+      "limit",
+      "page",
+      "resourceId",
+      "resourceType",
+      "to"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/broadcasts": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/broadcasts/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/entries": {
+    "body_required": false,
+    "params": [
+      "kind",
+      "lifecycle",
+      "limit",
+      "module",
+      "page",
+      "search",
+      "source",
+      "tier"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/entries/_facets/lifecycle": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/entries/{helpId}": {
+    "body_required": false,
+    "params": [
+      "helpId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/entries/{helpId}/translations": {
+    "body_required": false,
+    "params": [
+      "helpId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /helpplatform-api/platform/entries/{helpId}/translations/{locale}": {
+    "body_required": false,
+    "params": [
+      "helpId",
+      "locale"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /helpplatform-api/platform/broadcasts/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /helpplatform-api/platform/entries/{helpId}": {
+    "body_required": true,
+    "params": [
+      "helpId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /helpplatform-api/broadcasts/preferences": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/broadcasts/{id}/ack": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/broadcasts/{id}/dismiss": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/internal/platform-help/manifest": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/broadcasts": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/broadcasts/audience-estimate": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/broadcasts/{id}/duplicate": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/broadcasts/{id}/publish": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/broadcasts/{id}/retract": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/entries": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/platform/entries/{helpId}/lifecycle": {
+    "body_required": true,
+    "params": [
+      "helpId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /helpplatform-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "PUT /helpplatform-api/platform/entries/{helpId}/translations/{locale}": {
+    "body_required": true,
+    "params": [
+      "helpId",
+      "locale"
+    ],
+    "responses": [
+      "200"
+    ]
+  }
+}

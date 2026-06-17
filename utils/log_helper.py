@@ -45,6 +45,18 @@ from typing import Any
 import pytest
 from loguru import logger
 
+try:
+    import allure
+
+    _allure_step = allure.step
+except ImportError:  # allure-pytest not installed — degrade to a no-op context
+
+    def _allure_step(_name: str):  # type: ignore[misc]
+        from contextlib import nullcontext
+
+        return nullcontext()
+
+
 # ---------------------------------------------------------------------------
 # Register custom log levels once at import time.
 # Built-in levels: TRACE=5, DEBUG=10, INFO=20, SUCCESS=25, WARNING=30, ERROR=40
@@ -121,18 +133,19 @@ def step(name: str, **params: Any) -> Generator[None]:
     param_str = _fmt_params(params)
     start = time.perf_counter()
     logger.log("STEP", "{}{}", name, param_str)
-    try:
-        yield
-    except Exception as exc:
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        logger.error(
-            "  FAIL | {} ({}ms) -- {}: {}",
-            name,
-            elapsed_ms,
-            type(exc).__name__,
-            exc,
-        )
-        raise
+    with _allure_step(name):
+        try:
+            yield
+        except Exception as exc:
+            elapsed_ms = int((time.perf_counter() - start) * 1000)
+            logger.error(
+                "  FAIL | {} ({}ms) -- {}: {}",
+                name,
+                elapsed_ms,
+                type(exc).__name__,
+                exc,
+            )
+            raise
 
 
 @asynccontextmanager
@@ -156,18 +169,19 @@ async def async_step(name: str, **params: Any) -> AsyncGenerator[None]:
     param_str = _fmt_params(params)
     start = time.perf_counter()
     logger.log("STEP", "{}{}", name, param_str)
-    try:
-        yield
-    except Exception as exc:
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        logger.error(
-            "  FAIL | {} ({}ms) -- {}: {}",
-            name,
-            elapsed_ms,
-            type(exc).__name__,
-            exc,
-        )
-        raise
+    with _allure_step(name):
+        try:
+            yield
+        except Exception as exc:
+            elapsed_ms = int((time.perf_counter() - start) * 1000)
+            logger.error(
+                "  FAIL | {} ({}ms) -- {}: {}",
+                name,
+                elapsed_ms,
+                type(exc).__name__,
+                exc,
+            )
+            raise
 
 
 # ---------------------------------------------------------------------------

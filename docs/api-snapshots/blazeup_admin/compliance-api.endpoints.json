@@ -1,0 +1,767 @@
+{
+  "DELETE /cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /frameworks/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /frameworks/{id}/categories/{catId}": {
+    "body_required": false,
+    "params": [
+      "catId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /instances/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /internal/platform-compliance/frameworks/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /internal/platform-compliance/frameworks/{id}/categories/{catId}": {
+    "body_required": false,
+    "params": [
+      "catId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /internal/platform-compliance/jurisdictions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /internal/platform-compliance/obligations/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /jurisdictions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /obligations/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /alerts": {
+    "body_required": false,
+    "params": [
+      "groupBy",
+      "ids",
+      "instanceId",
+      "limit",
+      "obligationId",
+      "page",
+      "responseFields",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /audit-report": {
+    "body_required": false,
+    "params": [
+      "dueDateFrom",
+      "dueDateTo",
+      "periodYear"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /audit-report/download": {
+    "body_required": false,
+    "params": [
+      "dueDateFrom",
+      "dueDateTo",
+      "periodYear"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /audit-trail/scope/{scope}": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "scope",
+      "subTypes"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /audit-trail/{collectionName}": {
+    "body_required": false,
+    "params": [
+      "collectionName",
+      "filterField",
+      "filterValue",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /audit-trail/{entityType}/{entityId}": {
+    "body_required": false,
+    "params": [
+      "entityId",
+      "entityType",
+      "limit",
+      "page"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /dashboard/summary": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /frameworks": {
+    "body_required": false,
+    "params": [
+      "adoptedFrom",
+      "effectiveDateFrom",
+      "effectiveDateTo",
+      "excludeScope",
+      "groupBy",
+      "ids",
+      "issuingBody",
+      "lastExternalUpdateFrom",
+      "lastExternalUpdateTo",
+      "limit",
+      "ownerId",
+      "page",
+      "responseFields",
+      "scope",
+      "search",
+      "sort",
+      "status",
+      "type",
+      "version"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /frameworks/{id}/categories": {
+    "body_required": false,
+    "params": [
+      "id",
+      "ids",
+      "limit",
+      "page",
+      "responseFields",
+      "sort"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /instances": {
+    "body_required": false,
+    "params": [
+      "categoryCode",
+      "dueDateFrom",
+      "dueDateTo",
+      "groupBy",
+      "ids",
+      "includeAlerts",
+      "includeDocuments",
+      "jurisdictionId",
+      "limit",
+      "obligationId",
+      "ownerId",
+      "page",
+      "periodMonth",
+      "periodYear",
+      "responseFields",
+      "riskTier",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /internal/platform-compliance/frameworks": {
+    "body_required": false,
+    "params": [
+      "adoptedFrom",
+      "effectiveDateFrom",
+      "effectiveDateTo",
+      "excludeScope",
+      "groupBy",
+      "ids",
+      "issuingBody",
+      "lastExternalUpdateFrom",
+      "lastExternalUpdateTo",
+      "limit",
+      "ownerId",
+      "page",
+      "responseFields",
+      "scope",
+      "search",
+      "sort",
+      "status",
+      "type",
+      "version"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /internal/platform-compliance/frameworks/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /internal/platform-compliance/jurisdictions": {
+    "body_required": false,
+    "params": [
+      "countryCode",
+      "countryName",
+      "groupBy",
+      "ids",
+      "isActive",
+      "limit",
+      "page",
+      "responseFields",
+      "sort",
+      "tier"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /internal/platform-compliance/obligations": {
+    "body_required": false,
+    "params": [
+      "adoptedFrom",
+      "categoryCode",
+      "countryCode",
+      "dataCollection",
+      "esgPillar",
+      "frameworkCategoryId",
+      "frameworkCategoryName",
+      "frameworkId",
+      "frequency",
+      "groupBy",
+      "ids",
+      "jurisdictionId",
+      "limit",
+      "materiality",
+      "ownerId",
+      "page",
+      "regulationCode",
+      "responseFields",
+      "riskTier",
+      "scope",
+      "search",
+      "sort",
+      "source",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /jurisdictions": {
+    "body_required": false,
+    "params": [
+      "countryCode",
+      "countryName",
+      "groupBy",
+      "ids",
+      "isActive",
+      "limit",
+      "page",
+      "responseFields",
+      "sort",
+      "tier"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /obligations": {
+    "body_required": false,
+    "params": [
+      "adoptedFrom",
+      "categoryCode",
+      "countryCode",
+      "dataCollection",
+      "esgPillar",
+      "frameworkCategoryId",
+      "frameworkCategoryName",
+      "frameworkId",
+      "frequency",
+      "groupBy",
+      "ids",
+      "jurisdictionId",
+      "limit",
+      "materiality",
+      "ownerId",
+      "page",
+      "regulationCode",
+      "responseFields",
+      "riskTier",
+      "scope",
+      "search",
+      "sort",
+      "source",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/compliance/adoptions": {
+    "body_required": false,
+    "params": [
+      "decision",
+      "platformFrameworkIds"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/compliance/catalog/frameworks": {
+    "body_required": false,
+    "params": [
+      "issuingBody",
+      "search",
+      "type"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/compliance/catalog/frameworks/{platformFrameworkId}": {
+    "body_required": false,
+    "params": [
+      "platformFrameworkId"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /v1/compliance/catalog/frameworks/{platformFrameworkId}/obligations": {
+    "body_required": false,
+    "params": [
+      "platformFrameworkId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /frameworks/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "PATCH /frameworks/{id}/categories/{catId}": {
+    "body_required": true,
+    "params": [
+      "catId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "PATCH /instances/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "PATCH /internal/platform-compliance/frameworks/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "PATCH /internal/platform-compliance/frameworks/{id}/categories/{catId}": {
+    "body_required": true,
+    "params": [
+      "catId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "PATCH /internal/platform-compliance/jurisdictions/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "PATCH /internal/platform-compliance/obligations/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "PATCH /jurisdictions/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "PATCH /obligations/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "POST /audit-report/share": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /frameworks": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /frameworks/{id}/categories": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201",
+      "400",
+      "404"
+    ]
+  },
+  "POST /frameworks/{id}/detach": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201",
+      "400",
+      "404"
+    ]
+  },
+  "POST /instances/bulk-update": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "201",
+      "400"
+    ]
+  },
+  "POST /instances/{id}/documents": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201",
+      "400",
+      "404"
+    ]
+  },
+  "POST /internal/platform-compliance/frameworks": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /internal/platform-compliance/frameworks/{id}/categories": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201",
+      "400",
+      "404"
+    ]
+  },
+  "POST /internal/platform-compliance/frameworks/{id}/publish": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201",
+      "404"
+    ]
+  },
+  "POST /internal/platform-compliance/frameworks/{id}/retract": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201",
+      "404"
+    ]
+  },
+  "POST /internal/platform-compliance/jurisdictions": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /internal/platform-compliance/obligations": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /internal/trigger/fire-alerts": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "400"
+    ]
+  },
+  "POST /internal/trigger/generate-instances": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "400"
+    ]
+  },
+  "POST /internal/trigger/mark-overdue": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "400"
+    ]
+  },
+  "POST /internal/trigger/recompute-days": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "400"
+    ]
+  },
+  "POST /jurisdictions": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /obligations": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /obligations/bulk-update": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "201",
+      "400"
+    ]
+  },
+  "POST /obligations/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /v1/compliance/adopt": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "201",
+      "400"
+    ]
+  },
+  "POST /v1/compliance/adoptions/{id}/adopt": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /v1/compliance/adoptions/{id}/stay": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /v1/compliance/catalog/clone": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "201",
+      "404"
+    ]
+  }
+}

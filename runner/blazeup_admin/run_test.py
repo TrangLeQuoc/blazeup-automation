@@ -35,7 +35,7 @@ DEFAULT_SKIP_IDS: list[str] = []
 
 # Export results to Excel after every run.  blazeup_admin owns the Partner
 # Platform test plan, so Excel reporting is enabled for this domain.
-REPORT_EXCEL: bool = True
+REPORT_EXCEL: bool = False
 
 # Run AI failure triage automatically when a run has failures (writes ai_triage.md).
 REPORT_AI_TRIAGE: bool = True

@@ -81,22 +81,30 @@ def _describe_change(old: dict, new: dict) -> list[str]:
 
 
 async def _fetch_spec(host: str, service: str, timeout: float = 20.0) -> tuple[dict | None, str]:
-    """Fetch a service's OpenAPI JSON. Returns ``(spec, "")`` or ``(None, reason)``."""
+    """Fetch a service's OpenAPI JSON. Returns ``(spec, "")`` or ``(None, reason)``.
+
+    Retries the whole path-scan once when nothing responds, so a service that
+    momentarily flaps (e.g. a transient 404/5xx while restarting) is not skipped
+    as "missing spec" — same robustness as the health-check.
+    """
     async with httpx.AsyncClient(base_url=host, timeout=timeout) as client:
         last = "no spec path responded"
-        for suffix in _SPEC_PATHS:
-            try:
-                resp = await client.get(f"/{service}{suffix}")
-            except (httpx.HTTPError, OSError) as exc:
-                last = type(exc).__name__
-                continue
-            if resp.status_code == 200:
+        for attempt in range(1, 3):  # 2 attempts: a transient flap shouldn't skip a real service
+            for suffix in _SPEC_PATHS:
                 try:
-                    return resp.json(), ""
-                except ValueError:
-                    last = "200 but not JSON"
+                    resp = await client.get(f"/{service}{suffix}")
+                except (httpx.HTTPError, OSError) as exc:
+                    last = type(exc).__name__
                     continue
-            last = f"HTTP {resp.status_code}"
+                if resp.status_code == 200:
+                    try:
+                        return resp.json(), ""
+                    except ValueError:
+                        last = "200 but not JSON"
+                        continue
+                last = f"HTTP {resp.status_code}"
+            if attempt == 1:
+                await asyncio.sleep(0.5)  # brief backoff before the retry
         return None, last
 
 

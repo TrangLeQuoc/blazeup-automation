@@ -1,10 +1,23 @@
 """SA Partners API — partner directory (API layer, service: sa-partners-api).
 
 Maps to the Partner Platform test plan: PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_*.
+
+Each ``async with async_step(...)`` is a reportable step: it emits a STEP line to
+the console/log AND becomes a pass/fail node in the Allure report (so the run
+reads as a step tree). The request payload + response body are logged by
+``BaseClient`` inside the step that issues the call.
 """
+
+import asyncio
 
 import pytest
 from loguru import logger
+
+from utils.data_factory import make_partner, make_partner_user, unique_email
+from utils.log_helper import async_step
+
+# A syntactically valid Mongo ObjectId that does not exist — for "not found" tests.
+_GHOST_ID = "000000000000000000000000"
 
 
 @pytest.mark.api
@@ -18,54 +31,701 @@ async def test_partner_api_partner_account_management_001(sa_partners_client):
     HTTP 200 is asserted inside the client (expected_status); here we validate
     the response body contract.
     """
+    # ── Setup: pagination window under test ──────────────────────────────────
     limit = 5
+    logger.info("SETUP: request first page with limit={}", limit)
 
-    # ── Act: call the partner-list API ───────────────────────────────────────
-    logger.log("STEP", "Call API: GET /v1/sa/partners (page=1, limit={})", limit)
-    resp = await sa_partners_client.list_partners(page=1, limit=limit)
+    async with async_step(f"[1/4] Call API: GET /v1/sa/partners (page=1, limit={limit})"):
+        resp = await sa_partners_client.list_partners(page=1, limit=limit)
 
-    # ── Assert: each check is logged so the run reads as a checklist ─────────
-    logger.log("STEP", "Verify the partner-list API contract")
+    async with async_step("[2/4] Verify the partner-list API contract"):
+        assert resp.status_code == 200, f"Expected body statusCode 200, got {resp.status_code}"
+        logger.info("CHECK status = 200 → OK (request authorized + succeeded)")
 
-    assert resp.status_code == 200, f"Expected body statusCode 200, got {resp.status_code}"
-    logger.info("CHECK status = 200 → OK (request authorized + succeeded)")
-
-    assert isinstance(resp.data, list), "`data` must be a list"
-    assert resp.total is not None and resp.total >= 0, "`total` must be a non-negative integer"
-    assert resp.message, "`message` should be present"
-    logger.info("CHECK envelope → OK (data=list, total={}, message='{}')", resp.total, resp.message)
-
-    assert len(resp.data) <= limit, (
-        f"page size {len(resp.data)} must not exceed requested limit {limit}"
-    )
-    logger.info("CHECK pagination → OK (returned {} ≤ limit {})", len(resp.data), limit)
-
-    # ── Step 4: data integrity + SA filtering (data-dependent) ───────────────
-    logger.log("STEP", "Verify data integrity + SA filtering")
-    if not resp.data:
-        logger.warning(
-            "CHECK filters/data — SKIPPED: staging has 0 partners (data-dependent). "
-            "Seed partners to assert filtering actually restricts results."
-        )
-    else:
-        for p in resp.data:
-            assert isinstance(p, dict) and p, "each partner must be a non-empty object"
-        ids = [p.get("id") or p.get("_id") for p in resp.data]
-        if all(ids):
-            assert len(ids) == len(set(ids)), "partner ids must be unique (no duplicate rows)"
-        logger.info("CHECK data integrity → OK ({} well-formed partner object(s))", len(resp.data))
-
-    # ── Step 5: isolation / security — no cross-partner leakage ──────────────
-    logger.log("STEP", "Verify SA isolation / no cross-partner leakage")
-    if not resp.data:
-        logger.warning(
-            "CHECK isolation — SKIPPED: no partner data to verify cross-partner leakage."
-        )
-    else:
+        assert isinstance(resp.data, list), "`data` must be a list"
+        assert resp.total is not None and resp.total >= 0, "`total` must be a non-negative integer"
+        assert resp.message, "`message` should be present"
         logger.info(
-            "CHECK isolation → OK (SA-scoped directory returned {} partner(s); "
-            "deep cross-partner audit applies once multi-partner data exists)",
-            resp.total,
+            "CHECK envelope → OK (data=list, total={}, message='{}')", resp.total, resp.message
         )
+
+        assert len(resp.data) <= limit, (
+            f"page size {len(resp.data)} must not exceed requested limit {limit}"
+        )
+        logger.info("CHECK pagination → OK (returned {} ≤ limit {})", len(resp.data), limit)
+
+    async with async_step("[3/4] Verify data integrity + SA filtering"):
+        if not resp.data:
+            logger.warning(
+                "CHECK filters/data — SKIPPED: staging has 0 partners (data-dependent). "
+                "Seed partners to assert filtering actually restricts results."
+            )
+        else:
+            for p in resp.data:
+                assert isinstance(p, dict) and p, "each partner must be a non-empty object"
+            ids = [p.get("id") or p.get("_id") for p in resp.data]
+            if all(ids):
+                assert len(ids) == len(set(ids)), "partner ids must be unique (no duplicate rows)"
+            logger.info(
+                "CHECK data integrity → OK ({} well-formed partner object(s))", len(resp.data)
+            )
+
+    async with async_step("[4/4] Verify SA isolation / no cross-partner leakage"):
+        if not resp.data:
+            logger.warning(
+                "CHECK isolation — SKIPPED: no partner data to verify cross-partner leakage."
+            )
+        else:
+            logger.info(
+                "CHECK isolation → OK (SA-scoped directory returned {} partner(s); "
+                "deep cross-partner audit applies once multi-partner data exists)",
+                resp.total,
+            )
 
     logger.info("RESULT: {} partner(s) in directory", resp.total)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_002(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_002: POST create internal partner - a pending account is created.
+
+    CRUD (create) contract check on ``POST /sa-partners-api/v1/sa/partners``:
+    creating a partner with the required fields (name/email/type) returns HTTP
+    201, persists the record with a server-assigned id + ``code``, and the new
+    account starts in ``status = "pending"`` (awaiting SA activation). The
+    created partner is registered for cleanup (DELETE) so the test is repeatable
+    and leaves no residue on staging — pass OR fail.
+    """
+    # ── Setup: build a unique, identifiable partner payload ───────────────────
+    # Log the fields the test actually asserts on (name/email/type), so the run
+    # shows exactly what was sent and later verified — not a trimmed summary.
+    payload = make_partner(type="channel")
+    logger.info(
+        "SETUP: partner payload → name='{}', email='{}', type='{}'",
+        payload["name"],
+        payload["email"],
+        payload["type"],
+    )
+
+    async with async_step(f"[1/5] Call API: POST /v1/sa/partners (create '{payload['name']}')"):
+        resp = await sa_partners_client.create_partner(payload)
+        partner_id = resp.partner_id
+        # Register cleanup FIRST (before assertions) so a later failed assert
+        # still triggers the DELETE and we don't leak a partner on staging.
+        if partner_id:
+            created_resources.add(lambda: sa_partners_client.delete_partner(partner_id))
+
+    async with async_step("[2/5] Verify the create-partner contract (accepted + persisted)"):
+        assert resp.status_code == 200, f"Expected body statusCode 200, got {resp.status_code}"
+        assert resp.message, "`message` should confirm the creation"
+        logger.info("CHECK create accepted → OK (HTTP 201, message='{}')", resp.message)
+
+        assert partner_id, "created partner must have a server-assigned id (_id)"
+        assert resp.data.get("code"), (
+            "created partner must have a generated `code` (e.g. PAR-xxxxxx)"
+        )
+        logger.info("CHECK persisted → OK (id={}, code={})", partner_id, resp.data.get("code"))
+
+    async with async_step("[3/5] Verify the created record matches the request"):
+        assert resp.data.get("name") == payload["name"], "stored name must match the request"
+        assert resp.data.get("email") == payload["email"], "stored email must match the request"
+        assert resp.data.get("type") == payload["type"], "stored type must match the request"
+        logger.info("CHECK echo → OK (name/email/type stored as sent)")
+
+    async with async_step("[4/5] Verify the new partner starts in 'pending' status"):
+        assert resp.data.get("status") == "pending", (
+            f"new partner must start pending, got status={resp.data.get('status')!r}"
+        )
+        logger.info("CHECK lifecycle → OK (status='pending' — awaits SA activation)")
+
+    async with async_step("[5/5] Verify the partner is retrievable via GET /v1/sa/partners/{id}"):
+        fetched = await sa_partners_client.get_partner(partner_id)
+        assert fetched.partner_id == partner_id, "GET by id must return the same partner"
+        assert fetched.data.get("status") == "pending", "fetched partner must also be pending"
+        logger.info("CHECK retrievable → OK (GET by id returns the pending partner)")
+
+    logger.info("RESULT: created pending partner {} (id={})", resp.data.get("code"), partner_id)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_003(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_003: POST partner approve - activation + approval event are created.
+
+    State-transition contract check on ``POST /sa-partners-api/v1/sa/partners/{id}/approve``:
+    approving a *pending* partner returns HTTP 201, flips ``status`` from
+    ``pending`` → ``active``, and records the approval event metadata
+    (``approvedAt`` + ``approvedBy``). The transition is confirmed to persist via
+    a follow-up GET. A pending partner is created first as the precondition and
+    registered for cleanup (DELETE) so the test is self-contained and repeatable.
+
+    Note: the downstream activation-*user* provisioning is emitted as an event to
+    another service (not returned by this endpoint), so it is out of scope here;
+    this TC asserts the approval contract observable on sa-partners-api.
+    """
+    async with async_step("Setup: create a PENDING partner (approval precondition)"):
+        payload = make_partner(type="channel")
+        created = await sa_partners_client.create_partner(payload)
+        partner_id = created.partner_id
+        if partner_id:
+            created_resources.add(lambda: sa_partners_client.delete_partner(partner_id))
+        assert partner_id, "precondition: partner must be created"
+        assert created.data.get("status") == "pending", "precondition: partner must start pending"
+        logger.info("CHECK precondition → OK (partner {} is pending)", created.data.get("code"))
+
+    async with async_step(f"[1/4] Call API: POST /v1/sa/partners/{partner_id}/approve"):
+        resp = await sa_partners_client.approve_partner(partner_id)
+
+    async with async_step("[2/4] Verify the approve call is accepted"):
+        assert resp.status_code == 200, f"Expected body statusCode 200, got {resp.status_code}"
+        assert resp.message, "`message` should confirm the approval"
+        assert resp.partner_id == partner_id, "approve must act on the same partner"
+        logger.info("CHECK approve accepted → OK (HTTP 201, message='{}')", resp.message)
+
+    async with async_step("[3/4] Verify status flipped to 'active' and approval event recorded"):
+        assert resp.data.get("status") == "active", (
+            f"approved partner must be active, got status={resp.data.get('status')!r}"
+        )
+        assert resp.data.get("approvedAt"), "approval event must stamp `approvedAt`"
+        assert resp.data.get("approvedBy"), "approval event must record `approvedBy`"
+        logger.info(
+            "CHECK transition → OK (status='active', approvedBy='{}', approvedAt set)",
+            resp.data.get("approvedBy"),
+        )
+
+    async with async_step("[4/4] Verify the active status persisted via GET /v1/sa/partners/{id}"):
+        fetched = await sa_partners_client.get_partner(partner_id)
+        assert fetched.data.get("status") == "active", (
+            "fetched partner must be active after approval"
+        )
+        logger.info("CHECK persisted → OK (GET by id returns status='active')")
+
+    logger.info("RESULT: partner {} approved (pending → active)", resp.data.get("code"))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_004(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_004: partner application decline - mandatory reason is audit logged.
+
+    Security check on declining a partner. The plan calls this "PATCH decline";
+    the BE currently exposes no dedicated decline endpoint, so the closest real
+    action — POST ``/sa-partners-api/v1/sa/partners/{id}/deactivate`` (the only
+    partner action that carries a ``reason``) — is exercised here.
+
+    This test encodes the TC's *intent* (decline succeeds, the reason is audit
+    logged, and the reason is MANDATORY). Any step that fails is a real signal of
+    a BE gap to confirm with the backend team — notably: at the time of writing
+    the API accepts a decline with no reason (mandatory-reason not enforced), so
+    step [3/3] is expected to fail until the BE adds that rule.
+    """
+    async with async_step("Setup: create a PENDING partner to decline"):
+        created = await sa_partners_client.create_partner(make_partner())
+        pid = created.partner_id
+        code = created.data.get("code")
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        reason = f"QA-AUTO decline reason for {code}"  # unique → findable in audit log
+        logger.info("SETUP: pending partner {} created; decline reason='{}'", code, reason)
+
+    async with async_step("[1/3] Decline the partner WITH a reason"):
+        resp = await sa_partners_client.deactivate_partner(pid, reason=reason)
+        status = resp.json().get("data", {}).get("status")
+        assert status not in ("pending", "active"), (
+            f"declined partner must leave pending/active, got status={status!r}"
+        )
+        logger.info(
+            "CHECK decline accepted → OK (HTTP {}, status now '{}')", resp.status_code, status
+        )
+
+    async with async_step("[2/3] Verify the decline reason is recorded in the audit log"):
+        found = None
+        for attempt in range(1, 4):  # audit write may be eventually consistent
+            logs = await sa_partners_client.list_audit_logs(limit=50)
+            found = next((e for e in logs.data if reason in str(e)), None)
+            if found:
+                break
+            logger.info("audit log not visible yet (attempt {}/3), retrying…", attempt)
+            await asyncio.sleep(1)
+        assert found, (
+            "decline reason not found in SA audit logs — confirm with BE whether the "
+            "reason is persisted to the audit trail"
+        )
+        logger.info("CHECK audit → OK (reason logged; action='{}')", found.get("action"))
+
+    async with async_step("[3/3] Enforce mandatory reason (no / blank reason must be rejected)"):
+        # "Mandatory + non-empty" = cover all three invalid shapes, not just absent.
+        invalid_reasons = [("absent", None), ("empty string", ""), ("whitespace", "   ")]
+        gaps: list[str] = []
+        for label, bad in invalid_reasons:
+            victim = await sa_partners_client.create_partner(make_partner())
+            if victim.partner_id:
+                created_resources.add(
+                    lambda pid=victim.partner_id: sa_partners_client.delete_partner(pid)
+                )
+            r = await sa_partners_client.deactivate_partner(
+                victim.partner_id, reason=bad, expected_status=None
+            )
+            if r.status_code in (400, 422):
+                logger.info("CHECK reason '{}' → OK (rejected {})", label, r.status_code)
+            else:
+                gaps.append(f"{label}: got {r.status_code}")
+                logger.error(
+                    "CHECK reason '{}' → FAIL (got {}, expected 400/422)", label, r.status_code
+                )
+        assert not gaps, (
+            "decline accepted with no/blank reason (reason not enforced): "
+            + "; ".join(gaps)
+            + " — confirm with BE whether reason should be mandatory + non-empty"
+        )
+
+    logger.info("RESULT: partner {} declined; mandatory-reason + audit-log checks complete", code)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_005(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_005: tier changed event - published so portal/analytics can refresh.
+
+    Changing a partner's tier via POST /v1/sa/partners/{id}/upgrade-tier must
+    update the stored ``tier`` AND emit a ``partner.tier.changed`` event recording
+    the before/after tiers — the signal downstream consumers (partner portal, SA
+    analytics) subscribe to in order to refresh. This test asserts the
+    API-observable evidence: the tier transition + the audit-logged event. The
+    actual portal/analytics refresh is a downstream Kafka consumer concern and is
+    out of scope here.
+    """
+
+    async def _find_tier_event(unique_reason: str) -> "dict | None":
+        """Poll the audit log for a tier-changed event carrying ``unique_reason``."""
+        for attempt in range(1, 4):  # audit write may be eventually consistent
+            logs = await sa_partners_client.list_audit_logs(limit=50)
+            hit = next(
+                (
+                    e
+                    for e in logs.data
+                    if "tier" in str(e.get("action", "")).lower() and unique_reason in str(e)
+                ),
+                None,
+            )
+            if hit:
+                return hit
+            logger.info("tier event not visible yet (attempt {}/3), retrying…", attempt)
+            await asyncio.sleep(1)
+        return None
+
+    async with async_step("Setup: create a partner (tier defaults to 'registered')"):
+        created = await sa_partners_client.create_partner(make_partner())
+        pid = created.partner_id
+        code = created.data.get("code")
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert created.data.get("tier") == "registered", (
+            "new partner should start at tier 'registered'"
+        )
+        logger.info("SETUP: partner {} at tier 'registered'", code)
+
+    # Walk every valid tier (upgrades): registered → select → advanced → premier.
+    async with async_step("[1/4] Upgrade through all tiers: registered→select→advanced→premier"):
+        for tier in ("select", "advanced", "premier"):
+            resp = await sa_partners_client.change_tier(
+                pid, tier=tier, reason=f"QA-AUTO up {tier} {code}"
+            )
+            assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+            assert resp.data.get("tier") == tier, (
+                f"tier must change to {tier!r}, got {resp.data.get('tier')!r}"
+            )
+            logger.info("CHECK upgrade → OK (now '{}')", tier)
+
+    async with async_step("[2/4] Verify upgrade event recorded with before/after + reason"):
+        ev = await _find_tier_event(f"QA-AUTO up premier {code}")
+        assert ev, "no tier-changed event found for advanced→premier"
+        before, after = (ev.get("before") or {}).get("tier"), (ev.get("after") or {}).get("tier")
+        assert (before, after) == ("advanced", "premier"), (
+            f"event must record advanced→premier, got {before!r}→{after!r}"
+        )
+        assert (ev.get("after") or {}).get("reason"), "event must record the change reason"
+        logger.info("CHECK upgrade event → OK ({} → {}, reason logged)", before, after)
+
+    # Downgrade must ALSO emit an event (TC endpoint = "upgrade OR downgrade").
+    async with async_step("[3/4] Downgrade premier → select emits an event"):
+        down_reason = f"QA-AUTO down select {code}"
+        resp = await sa_partners_client.change_tier(pid, tier="select", reason=down_reason)
+        assert resp.status_code == 200 and resp.data.get("tier") == "select", (
+            f"downgrade must set tier 'select', got {resp.data.get('tier')!r}"
+        )
+        ev = await _find_tier_event(down_reason)
+        assert ev, "no tier-changed event found for the downgrade"
+        before, after = (ev.get("before") or {}).get("tier"), (ev.get("after") or {}).get("tier")
+        assert (before, after) == ("premier", "select"), (
+            f"downgrade event must record premier→select, got {before!r}→{after!r}"
+        )
+        logger.info("CHECK downgrade event → OK (premier → select)")
+
+    async with async_step("[4/4] Verify the final tier persisted via GET /v1/sa/partners/{id}"):
+        fetched = await sa_partners_client.get_partner(pid)
+        assert fetched.data.get("tier") == "select", "fetched partner must have tier 'select'"
+        logger.info("CHECK persisted → OK (GET returns tier='select')")
+
+    logger.info(
+        "RESULT: partner {} tier upgrades (select/advanced/premier) + downgrade emit events", code
+    )
+
+
+def _invalid_create_cases() -> list[tuple[str, dict, str]]:
+    """Build the invalid-payload cases for create-partner validation.
+
+    Each tuple is (human label, payload, expected-field keyword in the 400 error).
+    Emails are generated fresh so the only thing wrong is the field under test.
+    """
+    return [
+        ("missing name", {"email": unique_email(), "type": "channel"}, "name"),
+        ("missing email", {"name": "QA-AUTO NoEmail", "type": "channel"}, "email"),
+        ("missing type", {"name": "QA-AUTO NoType", "email": unique_email()}, "type"),
+        (
+            "malformed email",
+            {"name": "QA-AUTO BadEmail", "email": "not-an-email", "type": "channel"},
+            "email",
+        ),
+        ("empty name", {"name": "", "email": unique_email(), "type": "channel"}, "name"),
+        (
+            "invalid type enum",
+            {"name": "QA-AUTO BadType", "email": unique_email(), "type": "foobar"},
+            "type",
+        ),
+    ]
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_012(sa_partners_client):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_012: create with invalid/missing fields - 400 + field errors.
+
+    Negative counterpart of _002 (create).
+
+    Negative contract check on ``POST /sa-partners-api/v1/sa/partners``: every
+    invalid or incomplete payload (missing name/email/type, malformed email,
+    empty name, out-of-enum type) must be rejected with HTTP 400, return a
+    field-level error message naming the offending field, and create NO record.
+    All cases run every time (failures are collected, not short-circuited) so one
+    broken rule never hides the others. No cleanup needed — nothing is persisted.
+    """
+    cases = _invalid_create_cases()
+    logger.info("SETUP: {} invalid create payload(s) to reject with HTTP 400", len(cases))
+
+    failures: list[str] = []
+    for idx, (label, payload, field) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid create: {label}"):
+            resp = await sa_partners_client.raw_create_partner(payload)
+
+            if resp.status_code != 400:
+                failures.append(f"{label}: expected 400, got {resp.status_code}")
+                logger.error("CHECK {} → FAIL (status {}, expected 400)", label, resp.status_code)
+                continue
+
+            body = resp.json()
+            message = str(body.get("message") or body.get("error") or "")
+            has_field = field.lower() in message.lower()
+            no_record = not body.get("data")
+
+            if has_field and no_record:
+                logger.info("CHECK {} → OK (400, error mentions '{}', no record)", label, field)
+            else:
+                detail = []
+                if not has_field:
+                    detail.append(f"error msg missing field '{field}': {message!r}")
+                if not no_record:
+                    detail.append("a record was created (data is not empty)")
+                failures.append(f"{label}: " + "; ".join(detail))
+                logger.error("CHECK {} → FAIL ({})", label, "; ".join(detail))
+
+    assert not failures, "Validation gaps found:\n  - " + "\n  - ".join(failures)
+    logger.info("RESULT: all {} invalid payload(s) correctly rejected with 400", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_011(sa_partners_client):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011: list with invalid pagination - graceful 4xx, never 5xx.
+
+    Negative counterpart of _001 (GET list). Invalid pagination params must be
+    handled gracefully: the server must NEVER return 5xx on bad input. Ideally
+    they are rejected with 400. Findings at the time of writing: ``page=0`` and
+    ``page=-1`` return HTTP 500 (server crash) — a real BE bug this test surfaces;
+    negative/oversized/non-numeric ``limit`` are silently defaulted (weak
+    validation, logged as observations).
+    """
+    robustness = [("page=0", {"page": 0, "limit": 5}), ("page=-1", {"page": -1, "limit": 5})]
+    observations = [
+        ("limit=-5", {"page": 1, "limit": -5}),
+        ("limit=999999", {"page": 1, "limit": 999999}),
+        ("page=abc", {"page": "abc", "limit": 5}),
+    ]
+
+    async with async_step("[1/2] Server must not 5xx on invalid pagination (page=0 / page=-1)"):
+        gaps: list[str] = []
+        for label, params in robustness:
+            r = await sa_partners_client.raw_list_partners(**params)
+            if r.status_code < 500:
+                logger.info("CHECK {} → OK (handled gracefully, {})", label, r.status_code)
+            else:
+                gaps.append(f"{label}: got {r.status_code}")
+                logger.error("CHECK {} → FAIL (server error {}, must be 4xx)", label, r.status_code)
+        assert not gaps, (
+            "server returned 5xx on invalid pagination: "
+            + "; ".join(gaps)
+            + " — bad input must not crash the endpoint (confirm with BE)"
+        )
+
+    async with async_step("[2/2] Observe validation of negative/oversized/non-numeric limit"):
+        for label, params in observations:
+            r = await sa_partners_client.raw_list_partners(**params)
+            n = len(r.json().get("data", [])) if r.status_code == 200 else "-"
+            logger.info(
+                "CHECK {} → status {} (data={}) — note: lenient default, no 400",
+                label,
+                r.status_code,
+                n,
+            )
+
+    logger.info("RESULT: pagination robustness checked (page=0/-1 must not 5xx)")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_013(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with a clear error.
+
+    Negative counterpart of _003 (approve). Approving a non-existent id, a
+    malformed id, or a partner that is not pending must be rejected (4xx) with a
+    descriptive message — never silently succeed.
+    """
+    async with async_step("Setup: create + approve a partner so it is already 'active'"):
+        active = await sa_partners_client.create_partner(make_partner())
+        if active.partner_id:
+            created_resources.add(lambda: sa_partners_client.delete_partner(active.partner_id))
+        await sa_partners_client.approve_partner(active.partner_id)
+        logger.info("SETUP: partner {} is now active", active.data.get("code"))
+
+    illegal = [
+        ("non-existent id", _GHOST_ID, "not found"),
+        ("malformed id", "not-an-id", "invalid id"),
+        ("already-active partner", active.partner_id, "cannot be approved"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, pid, hint) in enumerate(illegal, start=1):
+        async with async_step(f"[{idx}/{len(illegal)}] Reject approve: {label}"):
+            r = await sa_partners_client.raw_approve_partner(pid)
+            msg = str(r.json().get("message") or "")
+            ok_status = 400 <= r.status_code < 500
+            ok_msg = hint.lower() in msg.lower()
+            if ok_status and ok_msg:
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+
+    assert not gaps, "approve negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: all {} illegal approve attempts rejected", len(illegal))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_014(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
+
+    Negative counterpart of _004 (deactivate). A non-existent or malformed id must
+    be rejected (4xx) with a clear message. Deactivating an already-suspended
+    partner is observed (currently a no-op 201 — idempotent) and logged, not failed.
+    """
+    illegal = [
+        ("non-existent id", _GHOST_ID, "not found"),
+        ("malformed id", "not-an-id", "invalid id"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, pid, hint) in enumerate(illegal, start=1):
+        async with async_step(f"[{idx}/3] Reject deactivate: {label}"):
+            r = await sa_partners_client.deactivate_partner(pid, reason="x", expected_status=None)
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+
+    async with async_step(
+        "[3/3] Deactivating an already-suspended partner (idempotency observation)"
+    ):
+        p = await sa_partners_client.create_partner(make_partner())
+        if p.partner_id:
+            created_resources.add(lambda: sa_partners_client.delete_partner(p.partner_id))
+        await sa_partners_client.deactivate_partner(p.partner_id, reason="first")
+        r = await sa_partners_client.deactivate_partner(
+            p.partner_id, reason="again", expected_status=None
+        )
+        status = r.json().get("data", {}).get("status")
+        assert r.status_code < 500, f"repeat deactivate must not 5xx, got {r.status_code}"
+        logger.info(
+            "CHECK repeat deactivate → status {} (partner status='{}') — idempotent no-op observed",
+            r.status_code,
+            status,
+        )
+
+    assert not gaps, "deactivate negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: invalid-id deactivate rejected; repeat deactivate is idempotent")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_015(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with a clear error.
+
+    Negative counterpart of _005 (tier change). The upgrade-tier endpoint must
+    reject invalid input with 4xx + a descriptive message and emit no event:
+    out-of-enum tier, missing tier (required), a non-existent id, and a malformed
+    id. BE validates tier well, so all cases are expected to pass.
+    """
+    async with async_step("Setup: create a partner to target with valid id"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        logger.info("SETUP: partner {} ready (tier 'registered')", partner.data.get("code"))
+
+    # (label, partner_id, tier-to-send, expected message hint)
+    cases = [
+        ("invalid tier enum 'silver'", pid, "silver", "tier must be one of"),
+        ("empty tier ''", pid, "", "tier must be one of"),
+        ("missing tier (no tier field)", pid, None, "tier must be one of"),
+        ("same tier (already at 'registered')", pid, "registered", "already at tier"),
+        ("non-existent id", _GHOST_ID, "select", "not found"),
+        ("malformed id", "not-an-id", "select", "invalid id"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, target, tier, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject change-tier: {label}"):
+            r = await sa_partners_client.raw_change_tier(target, tier=tier)
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+
+    assert not gaps, "change-tier negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: all {} invalid tier-change attempts rejected", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_010(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_010: certification earned - granted, listed, and event published.
+
+    Granting a certification to a partner user (POST /v1/sa/partner-users/{userId}/
+    certifications) must create an active certification (with earnedAt/expiresAt),
+    surface it in the partner's certification list, AND emit a
+    ``partner.certification.granted`` event — the "certification earned" signal
+    that triggers downstream tier-qualification re-evaluation. The re-evaluation
+    itself is a downstream consumer/job and is out of scope here.
+    """
+    cert_type = "sales_certified"
+
+    async with async_step("Setup: create a partner + invite a portal user"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
+        user_id = invited.data.get("userId")
+        assert user_id, "precondition: partner user must be invited (userId present)"
+        logger.info("SETUP: partner {} + user {} ready", partner.data.get("code"), user_id)
+
+    async with async_step("[1/3] Grant certification (certification earned)"):
+        resp = await sa_partners_client.grant_certification(
+            user_id, certification_type=cert_type, score=95
+        )
+        assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+        assert resp.data.get("certificationType") == cert_type, "stored cert type must match"
+        assert resp.data.get("status") == "active", "granted cert must be 'active'"
+        assert resp.data.get("earnedAt") and resp.data.get("expiresAt"), (
+            "cert must record earnedAt + expiresAt"
+        )
+        logger.info("CHECK granted → OK (type={}, status=active, earned+expires set)", cert_type)
+
+    async with async_step("[2/3] Verify the cert appears in the partner's certification list"):
+        certs = await sa_partners_client.list_partner_certifications(pid)
+        match = next((c for c in certs.data if c.get("certificationType") == cert_type), None)
+        assert match, f"granted cert '{cert_type}' must appear in the partner cert list"
+        assert match.get("userId") == user_id, "listed cert must belong to the invited user"
+        logger.info("CHECK listed → OK ({} cert(s) for partner)", len(certs.data))
+
+    async with async_step("[3/3] Verify a 'partner.certification.granted' event is recorded"):
+        found = None
+        for attempt in range(1, 4):
+            logs = await sa_partners_client.list_audit_logs(limit=50)
+            found = next(
+                (
+                    e
+                    for e in logs.data
+                    if "certification" in str(e.get("action", "")).lower() and user_id in str(e)
+                ),
+                None,
+            )
+            if found:
+                break
+            logger.info("cert event not visible yet (attempt {}/3), retrying…", attempt)
+            await asyncio.sleep(1)
+        assert found, "no 'partner.certification.granted' event found in audit log"
+        after = found.get("after") or {}
+        assert after.get("certificationType") == cert_type, "event must record the cert type"
+        logger.info("CHECK event → OK (action='{}', type recorded)", found.get("action"))
+
+    logger.info(
+        "RESULT: certification '{}' earned, listed, and event published (tier re-eval is downstream)",
+        cert_type,
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_020(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with a clear error.
+
+    Negative counterpart of _010. Granting a certification must reject invalid
+    input with 4xx + a descriptive message: an out-of-enum certificationType, a
+    missing certificationType, a non-existent userId, and a malformed userId.
+    """
+    async with async_step("Setup: create a partner + invite a portal user (valid userId)"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
+        user_id = invited.data.get("userId")
+        assert user_id, "precondition: partner user must be invited"
+        logger.info("SETUP: user {} ready", user_id)
+
+    # (label, target userId, certificationType to send, expected message hint)
+    cases = [
+        ("invalid cert type 'ninja'", user_id, "ninja", "certificationtype must be one of"),
+        ("missing cert type", user_id, None, "certificationtype must be one of"),
+        ("non-existent userId", _GHOST_ID, "sales_certified", "not found"),
+        ("malformed userId", "not-an-id", "sales_certified", "invalid id"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, target, ctype, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject grant-cert: {label}"):
+            r = await sa_partners_client.raw_grant_certification(target, certification_type=ctype)
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+
+    assert not gaps, "grant-cert negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: all {} invalid grant-cert attempts rejected", len(cases))

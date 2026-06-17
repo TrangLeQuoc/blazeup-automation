@@ -1344,7 +1344,9 @@
   },
   "POST /sa-auth-api/internal/permissions/import": {
     "body_required": true,
-    "params": [],
+    "params": [
+      "prune"
+    ],
     "responses": [
       "201"
     ]

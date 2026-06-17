@@ -1,0 +1,658 @@
+{
+  "DELETE /sa-tenants-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-tenants-api/currencies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-tenants-api/infra/dns": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-tenants-api/tenant-groups/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-tenants-api/tenants": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-tenants-api/tenants/{tenantId}/companies/{companyId}": {
+    "body_required": false,
+    "params": [
+      "companyId",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-tenants-api/tenants/{tenantId}/documents/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/billing/dashboard": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/billing/invoices": {
+    "body_required": false,
+    "params": [
+      "billingEndDate",
+      "billingStartDate",
+      "dueEndDate",
+      "dueStartDate",
+      "legalEntityId",
+      "limit",
+      "page",
+      "priceFrom",
+      "priceTo",
+      "search",
+      "sort",
+      "status",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/billing/invoices/export": {
+    "body_required": false,
+    "params": [
+      "billingEndDate",
+      "billingStartDate",
+      "dueEndDate",
+      "dueStartDate",
+      "legalEntityId",
+      "limit",
+      "page",
+      "priceFrom",
+      "priceTo",
+      "search",
+      "sort",
+      "status",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/billing/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/countries": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/currencies": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort",
+      "type"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/industries": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/industries/exists/{name}": {
+    "body_required": false,
+    "params": [
+      "name"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/infra/buckets": {
+    "body_required": false,
+    "params": [
+      "prefix",
+      "prefix"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/infra/buckets/all": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/infra/buckets/check": {
+    "body_required": false,
+    "params": [
+      "bucket"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/infra/dns": {
+    "body_required": false,
+    "params": [
+      "nameFilter",
+      "recordType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/infra/gcs/objects": {
+    "body_required": false,
+    "params": [
+      "bucket",
+      "bucket",
+      "prefix",
+      "prefix"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/sa/audit-logs": {
+    "body_required": false,
+    "params": [
+      "actorType",
+      "category",
+      "correlationId",
+      "dateFrom",
+      "dateTo",
+      "limit",
+      "page",
+      "retentionClass",
+      "saUserId",
+      "search",
+      "severity",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/sa/audit-logs/export": {
+    "body_required": false,
+    "params": [
+      "actorType",
+      "category",
+      "dateFrom",
+      "dateTo",
+      "format",
+      "severity",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/sa/audit-logs/stats": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/sa/audit-logs/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/sa/cross-entity-authority": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenant-groups": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenant-groups/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants": {
+    "body_required": false,
+    "params": [
+      "createdFrom",
+      "createdTo",
+      "endDate",
+      "lastActivityFrom",
+      "lastActivityTo",
+      "limit",
+      "locations",
+      "page",
+      "partner",
+      "plans",
+      "search",
+      "sort",
+      "startDate",
+      "status",
+      "tenantClass"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/internal": {
+    "body_required": false,
+    "params": [
+      "createdFrom",
+      "createdTo",
+      "endDate",
+      "lastActivityFrom",
+      "lastActivityTo",
+      "limit",
+      "locations",
+      "page",
+      "partner",
+      "plans",
+      "search",
+      "sort",
+      "startDate",
+      "status",
+      "tenantClass"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/stats": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{id}/invoices": {
+    "body_required": false,
+    "params": [
+      "billingEndDate",
+      "billingStartDate",
+      "dueEndDate",
+      "dueStartDate",
+      "id",
+      "legalEntityId",
+      "limit",
+      "page",
+      "priceFrom",
+      "priceTo",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{id}/provisioning-status": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/companies": {
+    "body_required": false,
+    "params": [
+      "entityStatus",
+      "limit",
+      "ownershipType",
+      "page",
+      "search",
+      "sort",
+      "status",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/companies/{companyId}": {
+    "body_required": false,
+    "params": [
+      "companyId",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/cross-entity-authority": {
+    "body_required": false,
+    "params": [
+      "grantedTo",
+      "limit",
+      "page",
+      "sort",
+      "status",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/documents": {
+    "body_required": false,
+    "params": [
+      "contractTypes",
+      "expiredAfter",
+      "expiredBefore",
+      "fileTypes",
+      "groupBy",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "status",
+      "tenantId",
+      "uploadedBy",
+      "uploadedFrom",
+      "uploadedTo"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/documents/stats": {
+    "body_required": false,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/documents/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{tenantId}/documents/{id}/download": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/currencies/multiple": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/currencies/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/industries/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/tenant-groups/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/tenants/status/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/tenants/{tenantId}/companies/{companyId}": {
+    "body_required": true,
+    "params": [
+      "companyId",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/tenants/{tenantId}/cross-entity-authority/{id}/revoke": {
+    "body_required": false,
+    "params": [
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/tenants/{tenantId}/documents/{id}": {
+    "body_required": true,
+    "params": [
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-tenants-api/billing/invoices": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/industries": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/infra/buckets": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/infra/buckets/init": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/infra/dns": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenant-groups": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants/{id}/provision": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants/{id}/retry": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants/{tenantId}/companies": {
+    "body_required": true,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants/{tenantId}/cross-entity-authority": {
+    "body_required": true,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants/{tenantId}/documents": {
+    "body_required": true,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  }
+}

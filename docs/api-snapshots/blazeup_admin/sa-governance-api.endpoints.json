@@ -1,0 +1,373 @@
+{
+  "DELETE /sa-governance-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-governance-api/internal/sa/dpa/{dpaId}": {
+    "body_required": false,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/data-residency/regions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/dpa/current": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/dpa/my-acknowledgements": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/data-residency/regions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/dpa": {
+    "body_required": false,
+    "params": [
+      "jurisdiction",
+      "limit",
+      "page",
+      "sort",
+      "status",
+      "version"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/dpa/{dpaId}": {
+    "body_required": false,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/dpa/{dpaId}/rollout-status": {
+    "body_required": false,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/governance-config": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/kill-switches": {
+    "body_required": false,
+    "params": [
+      "currentState",
+      "riskLevel",
+      "scopeLevel"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/kill-switches/per-tenant/{tenantId}": {
+    "body_required": false,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/kill-switches/{switchId}": {
+    "body_required": false,
+    "params": [
+      "switchId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/kill-switches/{switchId}/history": {
+    "body_required": false,
+    "params": [
+      "switchId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/right-to-erasure": {
+    "body_required": false,
+    "params": [
+      "status",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/right-to-erasure/{rteId}": {
+    "body_required": false,
+    "params": [
+      "rteId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/right-to-erasure/{rteId}/confirmation": {
+    "body_required": false,
+    "params": [
+      "rteId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/sub-processors": {
+    "body_required": false,
+    "params": [
+      "connectorId",
+      "governanceStatus",
+      "isPublic",
+      "limit",
+      "page",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/internal/sa/sub-processors/{docId}": {
+    "body_required": false,
+    "params": [
+      "docId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/public/sub-processors": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-governance-api/right-to-erasure/status": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-governance-api/internal/sa/data-residency/regions/{regionId}": {
+    "body_required": true,
+    "params": [
+      "regionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-governance-api/internal/sa/dpa/{dpaId}": {
+    "body_required": true,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-governance-api/internal/sa/sub-processors/{docId}": {
+    "body_required": true,
+    "params": [
+      "docId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-governance-api/dpa/sign": {
+    "body_required": true,
+    "params": [
+      "user-agent"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/dpa": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/dpa/{dpaId}/approve": {
+    "body_required": true,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/dpa/{dpaId}/publish": {
+    "body_required": true,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/dpa/{dpaId}/start-rollout": {
+    "body_required": true,
+    "params": [
+      "dpaId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/kill-switches/per-tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/kill-switches/{switchId}/toggle": {
+    "body_required": true,
+    "params": [
+      "switchId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/right-to-erasure/{rteId}/approve": {
+    "body_required": true,
+    "params": [
+      "rteId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/right-to-erasure/{rteId}/execute": {
+    "body_required": false,
+    "params": [
+      "rteId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/right-to-erasure/{rteId}/reject": {
+    "body_required": true,
+    "params": [
+      "rteId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/sub-processors": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/sub-processors/{docId}/governance-review": {
+    "body_required": true,
+    "params": [
+      "docId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/internal/sa/sub-processors/{docId}/publish": {
+    "body_required": false,
+    "params": [
+      "docId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/right-to-erasure/request": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/right-to-erasure/{rteId}/cancel": {
+    "body_required": false,
+    "params": [
+      "rteId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-governance-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "PUT /sa-governance-api/internal/sa/governance-config": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  }
+}

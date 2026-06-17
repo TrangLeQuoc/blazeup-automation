@@ -18,8 +18,8 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 # Services whose Swagger to track even if no API client references them yet.
-EXTRA_SERVICES: list[str] = ["sa-partners-api"]
-
+# Single source of truth: runner/blazeup_admin/services.py (shared with health.py).
+from runner.blazeup_admin.services import SERVICES as EXTRA_SERVICES  # noqa: E402
 
 if __name__ == "__main__":
     from config.settings import get_settings

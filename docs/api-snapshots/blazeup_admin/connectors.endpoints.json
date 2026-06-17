@@ -1,0 +1,2725 @@
+{
+  "DELETE /connectors/accounting/{provider}/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "syncToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/connections/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /connectors/credentials/oauth/{provider}": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/crm/{connectionId}/contacts/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /connectors/identity/calendar/{connectionId}/events/{eventId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "eventId",
+      "userId"
+    ],
+    "responses": [
+      "200",
+      "401",
+      "404"
+    ]
+  },
+  "DELETE /connectors/identity/helpdesk/{connectionId}/tickets/{ticketRef}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "ticketRef"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/mail-monitor/{connectionId}/{monitorId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "monitorId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/mail/{connectionId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "messageId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/meetings/{connectionId}/{meetingId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId",
+      "messageId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/messages/{messageId}/reactions/{reactionType}": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId",
+      "messageId",
+      "reactionType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/groups/{groupId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "groupId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/groups/{groupId}/members/{userId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "groupId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/{teamId}": {
+    "body_required": false,
+    "params": [
+      "archive",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/members/{membershipId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "membershipId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/messages/{messageId}/reactions/{reactionType}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "reactionType",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/members/{membershipId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "membershipId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/webhooks/subscriptions/{subscriptionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "subscriptionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/{connectionId}/drives/webhooks/{subscriptionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "subscriptionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/permissions/{permissionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId",
+      "permissionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/{connectionId}/planner/tasks/{taskId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/{connectionId}/users/{msUserId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "msUserId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/ms_graph/{connectionId}/users/{msUserId}/hard": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "msUserId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/multi-tenant/connections/{connectionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/{connectionId}/users/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/{connectionId}/users/{id}/db": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/identity/{connectionId}/users/{id}/fully": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors/sync-configs/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/accounting/{provider}/customers": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "limit",
+      "modifiedAfter",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/accounting/{provider}/customers/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/accounting/{provider}/invoices": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "limit",
+      "modifiedAfter",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/accounting/{provider}/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/accounting/{provider}/projects": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "limit",
+      "modifiedAfter",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/accounting/{provider}/projects/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/connections": {
+    "body_required": false,
+    "params": [
+      "category",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/connections/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/credentials/oauth/{provider}/callback": {
+    "body_required": false,
+    "params": [
+      "code",
+      "error",
+      "error_description",
+      "provider",
+      "realmId",
+      "scope",
+      "state"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/credentials/oauth/{provider}/status": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/credentials/oauth/{provider}/token": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/crm/{connectionId}/contacts": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "cursor",
+      "modifiedAfter",
+      "pageSize",
+      "source"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/crm/{connectionId}/contacts/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/devops/{connectionId}/contributor-stats": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "repoFullName"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/devops/{connectionId}/pull-requests": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "pageSize",
+      "repoFullName",
+      "state"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/devops/{connectionId}/pull-requests/{number}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "number",
+      "repoFullName"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ai/{connectionId}/analyses": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "limit",
+      "priority",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ai/{connectionId}/analyses/stats": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ai/{connectionId}/analyses/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/calendar/{connectionId}/events": {
+    "body_required": false,
+    "params": [
+      "calendarId",
+      "connectionId",
+      "cursor",
+      "modifiedAfter",
+      "pageSize",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "401",
+      "404"
+    ]
+  },
+  "GET /connectors/identity/calendar/{connectionId}/events/{eventId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "eventId",
+      "userId"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "401",
+      "404"
+    ]
+  },
+  "GET /connectors/identity/helpdesk/{connectionId}/tickets": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "customerEmail",
+      "limit",
+      "needsHuman",
+      "priority",
+      "skip",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/helpdesk/{connectionId}/tickets/customer/{customerEmail}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "customerEmail",
+      "limit"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/helpdesk/{connectionId}/tickets/stats": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/helpdesk/{connectionId}/tickets/{ticketRef}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "includeMessages",
+      "ticketRef"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/mail-monitor/{connectionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/mail-stream/monitors": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/mail-stream/status": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/mail/{connectionId}/conversations": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "limit",
+      "participant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/mail/{connectionId}/messages": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "cursor",
+      "folder",
+      "modifiedAfter",
+      "pageSize",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/mail/{connectionId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "messageId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/meetings/{connectionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "filter",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/meetings/{connectionId}/{meetingId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/oauth/callback": {
+    "body_required": false,
+    "params": [
+      "code",
+      "realmId",
+      "state"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/oauth/done": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "error",
+      "reused",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/oauth/status": {
+    "body_required": false,
+    "params": [
+      "tenantId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "source"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/chats": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/members": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/messages": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId",
+      "limit"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/groups/{groupId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "groupId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/groups/{groupId}/members": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "groupId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/joined": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/messages": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "limit",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/search/messages": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "limit",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/status/{teamId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/{teamId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/members": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/members": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/webhooks/notify": {
+    "body_required": false,
+    "params": [
+      "validationToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/webhooks/subscriptions/{connectionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/webhooks": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId",
+      "pageSize"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/download": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/permissions": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/thumbnails": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/versions": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/search": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "q"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/meetings/{meetingId}/recordings": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/meetings/{meetingId}/transcript/ai": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/meetings/{meetingId}/transcripts": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/meetings/{meetingId}/transcripts/{transcriptId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId",
+      "transcriptId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/onedrive/me": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/onedrive/recent": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/onedrive/shared-with-me": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/onedrive/users/{userId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/groups/{groupId}/plans": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "groupId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/plans/{planId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/plans/{planId}/buckets": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/plans/{planId}/tasks": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/tasks/me": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/tasks/{taskId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/planner/tasks/{taskId}/details": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/reports/active-users": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "period"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/reports/mail": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "period"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/reports/onedrive": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "period"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/reports/sharepoint": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "period"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/reports/teams": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "period"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/search": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "from",
+      "q",
+      "size",
+      "types"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/search/files": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "q"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/search/messages": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "q"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/search/people": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "q"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/sharepoint/files/cached": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "siteId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/sites": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/sites/root": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/sites/{siteId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "siteId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/sites/{siteId}/drives": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "siteId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/ms_graph/{connectionId}/users/{msUserId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "msUserId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/multi-tenant/auth/callback": {
+    "body_required": false,
+    "params": [
+      "code",
+      "state"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/multi-tenant/connections": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "skip",
+      "status",
+      "userType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/multi-tenant/connections/{connectionId}": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/multi-tenant/invite/pending": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/multi-tenant/invite/{connectionId}/status": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/multi-tenant/stats": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/teams/{connectionId}/chats": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/teams/{connectionId}/chats/{chatId}/messages": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId",
+      "pageSize"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/teams/{connectionId}/messages": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "modifiedAfter",
+      "pageSize",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/teams/{connectionId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/{connectionId}/audit-logs/{userId}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/{connectionId}/licenses": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/{connectionId}/offboarding-jobs": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/{connectionId}/users": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "cursor",
+      "modifiedAfter",
+      "pageSize",
+      "source"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/identity/{connectionId}/users/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/internal/connector-catalogue": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/internal/connector-catalogue/{provider}": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/sa/connectors/catalog": {
+    "body_required": false,
+    "params": [
+      "catalogCategory",
+      "licenseModel",
+      "search",
+      "status"
+    ],
+    "responses": [
+      "200",
+      "403"
+    ]
+  },
+  "GET /connectors/sa/connectors/catalog-debug": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/sa/connectors/catalog/templates": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/sa/connectors/catalog/{provider}": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/sa/connectors/catalog/{provider}/audit": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/sync-configs": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "object",
+      "paused"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/sync-configs/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/sync-configs/{id}/runs": {
+    "body_required": false,
+    "params": [
+      "id",
+      "limit"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/v1/connectors/installs": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/v1/connectors/installs/{installId}": {
+    "body_required": false,
+    "params": [
+      "installId"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors/v1/connectors/marketplace": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors/v1/connectors/marketplace/{provider}": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "PATCH /connectors/accounting/{provider}/customers/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "syncToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/accounting/{provider}/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "syncToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/connections/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "PATCH /connectors/crm/{connectionId}/contacts/bulk": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/crm/{connectionId}/contacts/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ai/{connectionId}/analyses/{id}/dismiss": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ai/{connectionId}/analyses/{id}/human": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/calendar/{connectionId}/events/{eventId}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "eventId"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "401",
+      "404"
+    ]
+  },
+  "PATCH /connectors/identity/helpdesk/{connectionId}/tickets/{ticketRef}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "ticketRef"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/helpdesk/{connectionId}/tickets/{ticketRef}/resolve": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "ticketRef"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/mail-monitor/{connectionId}/{monitorId}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "monitorId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/meetings/{connectionId}/{meetingId}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "meetingId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId",
+      "messageId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/teams/{connectionId}/{teamId}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}": {
+    "body_required": true,
+    "params": [
+      "channelId",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/messages/{messageId}": {
+    "body_required": true,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/members/{membershipId}/role": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "membershipId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/move": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/rename": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/ms_graph/{connectionId}/planner/tasks/{taskId}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/identity/{connectionId}/users/{id}": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors/sa/connectors/catalog/{provider}": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "404",
+      "409"
+    ]
+  },
+  "PATCH /connectors/sync-configs/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "POST /connectors/accounting/{provider}/customers": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/accounting/{provider}/invoices": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/connections": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "409"
+    ]
+  },
+  "POST /connectors/credentials/oauth/start": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/credentials/oauth/{provider}/refresh": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/credentials/service-account": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/crm/{connectionId}/contacts": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/crm/{connectionId}/contacts/bulk": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/ai/{connectionId}/analyses/{id}/retry": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ai/{connectionId}/analyze": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/calendar/{connectionId}/events": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201",
+      "400",
+      "401",
+      "403"
+    ]
+  },
+  "POST /connectors/identity/helpdesk/{connectionId}/tickets": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/mail-monitor/{connectionId}": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/mail-monitor/{connectionId}/parse-subaddress": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail-monitor/{connectionId}/{monitorId}/poll": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "monitorId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail-monitor/{connectionId}/{monitorId}/reply-to-stamp": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "monitorId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail-stream/poll": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail-stream/renew": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail/{connectionId}/drafts": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/mail/{connectionId}/drafts/{messageId}/send": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "messageId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail/{connectionId}/messages": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail/{connectionId}/messages/{messageId}/forward": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "messageId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/mail/{connectionId}/messages/{messageId}/reply": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "messageId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/meetings/{connectionId}": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/meetings/{connectionId}/{meetingId}/cancel": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "meetingId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/oauth/disconnect": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/oauth/initiate": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/channel": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/chats": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/members": {
+    "body_required": true,
+    "params": [
+      "chatId",
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/messages": {
+    "body_required": true,
+    "params": [
+      "chatId",
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/chats/{chatId}/messages/{messageId}/reactions": {
+    "body_required": true,
+    "params": [
+      "chatId",
+      "connectionId",
+      "messageId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/groups": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/groups/{groupId}/members": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "groupId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/members": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/messages": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/status/{teamId}/resolve": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/team": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/members": {
+    "body_required": true,
+    "params": [
+      "channelId",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/messages/{messageId}/reactions": {
+    "body_required": true,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/channels/{channelId}/messages/{messageId}/replies": {
+    "body_required": true,
+    "params": [
+      "channelId",
+      "connectionId",
+      "messageId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/teams/{connectionId}/{teamId}/invite-guest": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/webhooks/notify": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "202"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/webhooks/subscriptions": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/webhooks/subscriptions/{subscriptionId}/renew": {
+    "body_required": false,
+    "params": [
+      "subscriptionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/adaptive-cards/approval": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/adaptive-cards/chat/{chatId}": {
+    "body_required": true,
+    "params": [
+      "chatId",
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/adaptive-cards/notification": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/adaptive-cards/teams/{teamId}/channels/{channelId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "connectionId",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/copy": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "202"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/permissions": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/preview": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/share": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/files/{itemId}/versions/{versionId}/restore": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "driveId",
+      "itemId",
+      "versionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/folders": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/sync": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/upload": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId",
+      "parentItemId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/upload-session": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/drives/{driveId}/webhooks": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "driveId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/planner/plans": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/planner/plans/{planId}/buckets": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/planner/tasks": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/planner/tasks/bulk": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/users": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/ms_graph/{connectionId}/users/invite": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/multi-tenant/auth/initiate": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/multi-tenant/invite": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/teams/{connectionId}/channel": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/teams/{connectionId}/chats/{chatId}/messages": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/teams/{connectionId}/members": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/teams/{connectionId}/messages": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/teams/{connectionId}/team": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201",
+      "409"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users/{userId}/assign-license": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users/{userId}/disable": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users/{userId}/enable": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users/{userId}/reset-password": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users/{userId}/revoke-sessions": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/identity/{connectionId}/users/{userId}/tap": {
+    "body_required": true,
+    "params": [
+      "connectionId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/internal/credentials/oauth/install-config": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/internal/credentials/oauth/test/start": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/internal/credentials/upsert": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/internal/test-invoke": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/sa/connectors/catalog": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "409"
+    ]
+  },
+  "POST /connectors/sa/connectors/catalog/{provider}/transitions": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "201",
+      "404",
+      "409"
+    ]
+  },
+  "POST /connectors/sync-configs": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "409"
+    ]
+  },
+  "POST /connectors/sync-configs/{id}/pause": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/sync-configs/{id}/resume": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/sync-configs/{id}/trigger": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors/v1/connectors/installs": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "404",
+      "409"
+    ]
+  },
+  "POST /connectors/v1/connectors/installs/{installId}/actions": {
+    "body_required": true,
+    "params": [
+      "installId"
+    ],
+    "responses": [
+      "200",
+      "201",
+      "404",
+      "409"
+    ]
+  }
+}

@@ -9,6 +9,7 @@
 #   make smoke DOMAIN=blazeup_partner    # smoke-marked TCs for a domain
 #   make regression                      # P1 regression suite
 #   make sync                            # regenerate the TC registry
+#   make validate-plan                   # lint the Excel test plan vs the column contract
 #   make report                          # open the latest Allure results
 #   make health                          # are the backend API services alive?
 #   make swagger                         # show Swagger drift vs the saved baseline
@@ -39,6 +40,10 @@ list:
 # Regenerate runner/{domain}/registry.py from tests/{domain}/ (all domains).
 sync:
 	python utils/sync_registry.py
+
+# Lint the Excel test plan against the column contract (read-only; exit 1 on errors).
+validate-plan:
+	python utils/validate_test_plan.py --domain $(DOMAIN)
 
 report:
 	allure serve $$(ls -dt results/run_* | head -1)/allure-results

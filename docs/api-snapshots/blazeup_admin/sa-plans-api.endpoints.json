@@ -1,0 +1,143 @@
+{
+  "DELETE /sa-plans-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-plans-api/v1/billing-plans/{planId}": {
+    "body_required": false,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/v1/billing-plans": {
+    "body_required": false,
+    "params": [
+      "billingCycle",
+      "currency",
+      "cursor",
+      "edition",
+      "limit",
+      "search",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/v1/billing-plans/{planId}": {
+    "body_required": false,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/v1/billing-plans/{planId}/bump-status": {
+    "body_required": false,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/v1/billing-plans/{planId}/versions": {
+    "body_required": false,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/v1/internal/entitlements/{tenantId}": {
+    "body_required": false,
+    "params": [
+      "force",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-plans-api/v1/billing-plans/{planId}": {
+    "body_required": true,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-plans-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-plans-api/v1/billing-plans": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-plans-api/v1/billing-plans/{planId}/archive": {
+    "body_required": false,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-plans-api/v1/billing-plans/{planId}/bump-version": {
+    "body_required": false,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-plans-api/v1/billing-plans/{planId}/publish": {
+    "body_required": true,
+    "params": [
+      "planId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-plans-api/v1/internal/subscription-events": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  }
+}

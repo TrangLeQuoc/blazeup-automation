@@ -20,7 +20,19 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 # Services to monitor even if no API client exists for them yet (e.g. a service
 # whose tests are blocked/pending). Auto-discovered services are added on top.
-EXTRA_SERVICES: list[str] = ["sa-partners-api"]
+EXTRA_SERVICES: list[str] = [
+    "admin-api",
+    "compliance-api",
+    "connectors",
+    "helpplatform-api",
+    "sa-auth-api",
+    "sa-governance-api",
+    "sa-partners-api",
+    "sa-plans-api",
+    "sa-tenants-api",
+    "setting-api",
+    "workflow-api",
+]
 
 
 if __name__ == "__main__":

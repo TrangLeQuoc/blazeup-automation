@@ -69,13 +69,36 @@ def make_tenant(**overrides: Any) -> dict[str, Any]:
 
 
 def make_partner(**overrides: Any) -> dict[str, Any]:
-    """Build a partner creation payload."""
+    """Build a partner-creation payload matching ``CreatePartnerDto`` (sa-partners-api).
+
+    Required by the API: ``name``, ``email``, ``type`` (one of
+    channel / referral / msp / system_integrator). The rest are optional but
+    populated so the created record is realistic. Pass overrides to vary fields,
+    e.g. ``make_partner(type="referral")``.
+    """
     data: dict[str, Any] = {
-        "company_name": tag(_fake.company()),
-        "contact_name": _fake.name(),
-        "contact_email": unique_email(),
+        "name": tag(_fake.company()),
+        "email": unique_email(),
+        "type": "channel",
         "phone": f"+1{_fake.msisdn()[:10]}",
         "website": _fake.url(),
+    }
+    data.update(overrides)
+    return data
+
+
+def make_partner_user(partner_id: str, **overrides: Any) -> dict[str, Any]:
+    """Build a partner-portal user invite payload matching ``InvitePartnerUserDto``.
+
+    Required by the API: ``partnerId``, ``email``, ``firstName``, ``lastName``.
+    ``role`` ∈ admin / sales / finance / viewer (defaults to admin).
+    """
+    data: dict[str, Any] = {
+        "partnerId": partner_id,
+        "email": unique_email(),
+        "firstName": _fake.first_name(),
+        "lastName": _fake.last_name(),
+        "role": "admin",
     }
     data.update(overrides)
     return data

@@ -1,7 +1,9 @@
 """Base HTTP client with retries, timing assertions, and schema validation."""
 
 import asyncio
+import json as _json
 import time
+from contextlib import suppress
 from typing import Any, TypeVar
 
 import httpx
@@ -9,6 +11,93 @@ from loguru import logger
 from pydantic import BaseModel
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
+
+# Substrings whose values are masked anywhere in a logged body (request OR
+# response) so secrets never reach the console/log file.
+_SENSITIVE_KEYS = (
+    "password",
+    "token",
+    "secret",
+    "key",
+    "pwd",
+    "authorization",
+    "credential",
+)
+
+# Max characters of a payload/response printed inline. Long list responses are
+# truncated (with a "+N chars" marker) so the log stays readable.
+_BODY_PREVIEW_LIMIT = 1000
+
+
+def _mask(obj: Any) -> Any:
+    """Recursively replace values of sensitive-looking keys with ``***``."""
+    if isinstance(obj, dict):
+        return {
+            k: ("***" if any(s in str(k).lower() for s in _SENSITIVE_KEYS) else _mask(v))
+            for k, v in obj.items()
+        }
+    if isinstance(obj, list):
+        return [_mask(v) for v in obj]
+    return obj
+
+
+def _preview(obj: Any, limit: int = _BODY_PREVIEW_LIMIT) -> str:
+    """Mask, JSON-serialize and truncate an object for one-line logging."""
+    try:
+        text = _json.dumps(_mask(obj), ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        text = str(obj)
+    if len(text) > limit:
+        return f"{text[:limit]}… (+{len(text) - limit} chars)"
+    return text
+
+
+def _response_preview(response: httpx.Response, limit: int = _BODY_PREVIEW_LIMIT) -> str:
+    """Best-effort readable preview of a response body (JSON masked, else text)."""
+    if "json" in response.headers.get("content-type", "").lower():
+        try:
+            return _preview(response.json(), limit)
+        except ValueError:
+            pass
+    text = response.text or "<empty>"
+    return f"{text[:limit]}… (+{len(text) - limit} chars)" if len(text) > limit else text
+
+
+try:
+    import allure
+
+    _ALLURE_JSON = allure.attachment_type.JSON
+    _ALLURE_TEXT = allure.attachment_type.TEXT
+except ImportError:  # allure-pytest not installed — attachments become no-ops
+    allure = None  # type: ignore[assignment]
+
+
+def _attach(name: str, obj: Any) -> None:
+    """Attach a masked, pretty-printed object to the current Allure step.
+
+    No-op when allure isn't installed or when no test/step context is active,
+    so it is always safe to call from the client.
+    """
+    if allure is None:
+        return
+    try:
+        body = _json.dumps(_mask(obj), ensure_ascii=False, indent=2, default=str)
+        allure.attach(body, name=name, attachment_type=_ALLURE_JSON)
+    except Exception:  # noqa: BLE001 — reporting must never break the request
+        with suppress(Exception):
+            allure.attach(str(obj), name=name, attachment_type=_ALLURE_TEXT)
+
+
+def _attach_response(name: str, response: httpx.Response) -> None:
+    """Attach a response body to the current Allure step (JSON when possible)."""
+    if allure is None:
+        return
+    if "json" in response.headers.get("content-type", "").lower():
+        with suppress(ValueError):
+            _attach(name, response.json())
+            return
+    with suppress(Exception):
+        allure.attach(response.text or "<empty>", name=name, attachment_type=_ALLURE_TEXT)
 
 
 class BaseClient:
@@ -58,20 +147,26 @@ class BaseClient:
         if self.token:
             headers.setdefault("Authorization", f"Bearer {self.token}")
 
-        # Log the outgoing request at DEBUG level (body masked for sensitive keys)
-        json_body = kwargs.get("json") or kwargs.get("data")
-        if json_body and isinstance(json_body, dict):
-            masked = {
-                k: (
-                    "***"
-                    if any(s in k.lower() for s in ("password", "token", "secret", "key", "pwd"))
-                    else v
-                )
-                for k, v in json_body.items()
-            }
-            logger.debug("--> {} {}  body={}", method.upper(), endpoint, masked)
-        else:
-            logger.debug("--> {} {}", method.upper(), endpoint)
+        # Log the outgoing request (payload + query params), masked & truncated,
+        # so every API call is self-explanatory in the run log.
+        req_parts: list[str] = []
+        body = kwargs.get("json", kwargs.get("data"))
+        if body is not None:
+            req_parts.append(f"payload={_preview(body)}")
+        if kwargs.get("params"):
+            req_parts.append(f"params={_preview(kwargs['params'])}")
+        suffix = f"  {' '.join(req_parts)}" if req_parts else ""
+        logger.info("→ {} {}{}", method.upper(), endpoint, suffix)
+
+        # Attach the request to the current Allure step (full, masked) so it is
+        # viewable inside the report, not only in the console log.
+        if body is not None or kwargs.get("params"):
+            req_doc = {"method": method.upper(), "endpoint": endpoint}
+            if body is not None:
+                req_doc["payload"] = body
+            if kwargs.get("params"):
+                req_doc["params"] = kwargs["params"]
+            _attach(f"→ {method.upper()} {endpoint} (request)", req_doc)
 
         response: httpx.Response | None = None
         for attempt in range(1, 4):
@@ -89,7 +184,7 @@ class BaseClient:
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             response.extensions["elapsed_ms"] = elapsed_ms
             logger.info(
-                "{} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms
+                "← {} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms
             )
 
             if response.status_code < 500 or attempt == 3:
@@ -98,6 +193,12 @@ class BaseClient:
 
         if response is None:
             raise RuntimeError("HTTP request did not produce a response")
+
+        # Echo the response body (masked + truncated) so the result is visible.
+        logger.info("  resp={}", _response_preview(response))
+        _attach_response(
+            f"← {method.upper()} {endpoint} | {response.status_code} (response)", response
+        )
 
         elapsed_ms = response.extensions["elapsed_ms"]
         if elapsed_ms >= self.max_response_time_ms:

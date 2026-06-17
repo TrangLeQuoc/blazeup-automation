@@ -1,0 +1,672 @@
+{
+  "DELETE /workflow-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /workflow-api/custom-field-defs/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /workflow-api/custom-fields/{fieldId}": {
+    "body_required": false,
+    "params": [
+      "fieldId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /workflow-api/sa/platform-templates/workflow/manifests/{manifestId}": {
+    "body_required": false,
+    "params": [
+      "manifestId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /workflow-api/sa/platform-templates/workflow/{templateId}": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /workflow-api/templates/{templateId}": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/audit-logs": {
+    "body_required": false,
+    "params": [
+      "action",
+      "collectionName",
+      "cursor",
+      "limit",
+      "page",
+      "resourceId",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/audit-logs/{resourceId}": {
+    "body_required": false,
+    "params": [
+      "action",
+      "collectionName",
+      "cursor",
+      "limit",
+      "page",
+      "resourceId",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/audit-trail/{collectionName}": {
+    "body_required": false,
+    "params": [
+      "collectionName",
+      "filterField",
+      "filterValue",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/custom-field-defs": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort",
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/custom-fields": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/inbox": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/inbox/count": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/instances": {
+    "body_required": false,
+    "params": [
+      "assignedTo",
+      "initiatorId",
+      "limit",
+      "page",
+      "sort",
+      "status",
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/instances/{instanceId}": {
+    "body_required": false,
+    "params": [
+      "instanceId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow": {
+    "body_required": false,
+    "params": [
+      "createdBy",
+      "isGlobal",
+      "limit",
+      "moduleKey",
+      "page",
+      "search",
+      "sort",
+      "status",
+      "templateScope",
+      "triggerEventKey",
+      "triggerType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/global": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/manifests": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/manifests/{manifestId}": {
+    "body_required": false,
+    "params": [
+      "manifestId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/stats": {
+    "body_required": false,
+    "params": [
+      "slaDays"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/{templateId}": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/{templateId}/versions": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/scope-rules": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/templates": {
+    "body_required": false,
+    "params": [
+      "createdBy",
+      "isGlobal",
+      "limit",
+      "moduleKey",
+      "page",
+      "search",
+      "sort",
+      "status",
+      "templateScope",
+      "triggerEventKey",
+      "triggerType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/templates/global": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/templates/module/{templateKey}": {
+    "body_required": false,
+    "params": [
+      "moduleKey",
+      "templateKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/templates/{templateId}": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/templates/{templateId}/versions": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/triggers": {
+    "body_required": false,
+    "params": [
+      "domain",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/triggers/{eventKey}": {
+    "body_required": false,
+    "params": [
+      "eventKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/variable-schemas": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/version-adoptions": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/workflow-sync-offers": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /workflow-api/custom-field-defs/{id}/promote": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /workflow-api/custom-fields/{fieldId}": {
+    "body_required": false,
+    "params": [
+      "fieldId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /workflow-api/admin/variable-schemas/register": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/audit-logs": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/custom-field-defs": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/custom-fields": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/instances": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/instances/{instanceId}/cancel": {
+    "body_required": true,
+    "params": [
+      "instanceId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/instances/{instanceId}/resume": {
+    "body_required": true,
+    "params": [
+      "instanceId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/instances/{instanceId}/steps/{stepId}/signal": {
+    "body_required": true,
+    "params": [
+      "instanceId",
+      "stepId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/instances/{instanceId}/steps/{stepId}/submit": {
+    "body_required": true,
+    "params": [
+      "instanceId",
+      "stepId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/manifests": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/manifests/{manifestId}/publish": {
+    "body_required": false,
+    "params": [
+      "manifestId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/manifests/{manifestId}/unpublish": {
+    "body_required": false,
+    "params": [
+      "manifestId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/approvals/{levelOrder}/decide": {
+    "body_required": true,
+    "params": [
+      "levelOrder",
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/clone": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/publish": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/publish-global": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/request-approval": {
+    "body_required": true,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/scope-rules/resolve": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/template-import/parse-docx": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/templates": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/templates/{templateId}/adopt": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/templates/{templateId}/clone": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/templates/{templateId}/publish": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/templates/{templateId}/refresh-form-specs": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/version-adoptions/{id}/adopt": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/version-adoptions/{id}/stay": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/workflow-sync-offers/{offerId}/accept": {
+    "body_required": true,
+    "params": [
+      "offerId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /workflow-api/workflow-sync-offers/{offerId}/dismiss": {
+    "body_required": false,
+    "params": [
+      "offerId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /workflow-api/sa/platform-templates/workflow/manifests/{manifestId}": {
+    "body_required": true,
+    "params": [
+      "manifestId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /workflow-api/sa/platform-templates/workflow/{templateId}": {
+    "body_required": true,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /workflow-api/scope-rules/{triggerEventKey}": {
+    "body_required": true,
+    "params": [
+      "triggerEventKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PUT /workflow-api/templates/{templateId}": {
+    "body_required": true,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  }
+}

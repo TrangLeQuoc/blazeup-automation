@@ -1,0 +1,1785 @@
+{
+  "DELETE /admin-api/approval-flows-v3/module-bindings/{module}": {
+    "body_required": false,
+    "params": [
+      "module"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/approval-flows-v3/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/billing/payment-methods/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/campus-mapping/{campusId}": {
+    "body_required": false,
+    "params": [
+      "campusId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/custom-fields/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/integrations/api-keys/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/integrations/webhooks/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/legal-entities/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200",
+      "400",
+      "404"
+    ]
+  },
+  "DELETE /admin-api/organisation/departments/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/organisation/divisions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/organisation/employee-types/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/organisation/grades/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/organisation/job-titles/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/security/ip-allowlist/bypasses/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/security/ip-allowlist/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /admin-api/tenant-branding/custom-domain": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/admin-changelog": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/admin-changelog/unread-count": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/approval-admin-v3/active": {
+    "body_required": false,
+    "params": [
+      "includeOverdue",
+      "page",
+      "pageSize",
+      "sortBy",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/approval-flows-v3": {
+    "body_required": false,
+    "params": [
+      "id",
+      "isGlobalDefault",
+      "limit",
+      "module",
+      "name",
+      "page",
+      "scope",
+      "templateStatus"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/approval-flows-v3/module-bindings": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/approval-settings-v3": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/audit-log": {
+    "body_required": false,
+    "params": [
+      "action",
+      "actorId",
+      "bdrRule",
+      "dateFrom",
+      "dateTo",
+      "limit",
+      "module",
+      "page",
+      "search",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/audit-log/export": {
+    "body_required": false,
+    "params": [
+      "action",
+      "actorId",
+      "bdrRule",
+      "dateFrom",
+      "dateTo",
+      "module",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/audit-trail/{collectionName}": {
+    "body_required": false,
+    "params": [
+      "collectionName",
+      "filterField",
+      "filterValue",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/billing/invoices": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/billing/invoices/{invoiceId}/download": {
+    "body_required": false,
+    "params": [
+      "invoiceId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/billing/payment-methods": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/billing/plan": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/billing/usage": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/changelog-briefing": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/integration-alerts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/premium/access-anomalies": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/premium/billing-advice": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/premium/org-health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/premium/security-posture": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/security-alerts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/blazey/setup-guidance": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/campus-mapping": {
+    "body_required": false,
+    "params": [
+      "groupBy",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/company-profile": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/company-profile/list": {
+    "body_required": false,
+    "params": [
+      "entityType",
+      "industryType",
+      "isActive",
+      "limit",
+      "page",
+      "parentId",
+      "search",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/custom-fields/{moduleId}/{recordType}": {
+    "body_required": false,
+    "params": [
+      "moduleId",
+      "recordType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/active-employees": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/active-sessions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/billing-status": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/changelog-unread": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/integration-health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/pending-approvals": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/recent-activity": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/security-alerts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/setup-completeness": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/dashboard/storage-usage": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/default-data/countries": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/default-data/currencies": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/default-data/industries": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/employee-admin/directory": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/employee-admin/directory/export": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/fiscal-calendar": {
+    "body_required": false,
+    "params": [
+      "groupBy"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/fiscal-calendar/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/integrations/api-keys": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/integrations/catalogue": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/integrations/webhooks": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/integrations/webhooks/{id}/deliveries": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/integrations/{integrationId}/sync-history": {
+    "body_required": false,
+    "params": [
+      "integrationId",
+      "limit"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/legal-entities": {
+    "body_required": false,
+    "params": [
+      "campusId",
+      "country",
+      "groupBy",
+      "isDefault",
+      "limit",
+      "page",
+      "parentEntityId",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/legal-entities/tree": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/legal-entities/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/module-settings": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/module-settings/{moduleId}": {
+    "body_required": false,
+    "params": [
+      "moduleId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/notification-settings": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/notification-settings/impact-preview": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/departments": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/departments/grouped": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/departments/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/divisions": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/divisions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/employee-types": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/employee-types/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/grades": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/grades/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/health-report": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/job-titles": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/organisation/job-titles/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/activity/login-history": {
+    "body_required": false,
+    "params": [
+      "country",
+      "dateFrom",
+      "dateTo",
+      "email",
+      "ip",
+      "limit",
+      "outcome",
+      "page",
+      "sort",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/activity/sessions": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/bdr/incidents": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "ruleType",
+      "sort",
+      "status",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/bdr/rules": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/ip-allowlist": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/ip-allowlist/bypasses": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/ip-allowlist/evaluate": {
+    "body_required": false,
+    "params": [
+      "ip",
+      "isAdmin",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/login-methods": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/mfa": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/policy": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/retention": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/sso": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/sso/sp-metadata": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/security/sso/templates": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/storage-config": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant-branding/custom-domain": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant-branding/email-templates": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant-branding/email-templates/preview": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant-branding/localisation": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant-branding/visual/preview": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant-config/finance-config": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/tenant/finance-config": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/workflow-automation/overview": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/approval-flows-v3/module-bindings/{module}": {
+    "body_required": true,
+    "params": [
+      "module"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/approval-flows-v3/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/approval-settings-v3": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/billing/autopay": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/billing/invoice-config": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/billing/payment-methods/{id}/set-default": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/company-profile": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/custom-fields/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/custom-fields/{id}/rename-label": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/custom-fields/{id}/toggle-visibility": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/custom-fields/{moduleId}/{recordType}/reorder": {
+    "body_required": true,
+    "params": [
+      "moduleId",
+      "recordType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/employee-admin/{employeeId}/user-groups": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/fiscal-calendar": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/fiscal-calendar/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/integrations/webhooks/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/integrations/{integrationId}/config": {
+    "body_required": true,
+    "params": [
+      "integrationId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/legal-entities/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/module-settings/{moduleId}": {
+    "body_required": true,
+    "params": [
+      "moduleId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/notification-settings/audience-defaults": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/notification-settings/channels": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/notification-settings/channels/{channel}/credentials": {
+    "body_required": true,
+    "params": [
+      "channel"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/notification-settings/frequency-caps": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/notification-settings/quiet-hours": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/organisation/departments/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/organisation/divisions/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/organisation/employee-types/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/organisation/grades/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/organisation/job-titles/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/bdr/rules/{ruleType}": {
+    "body_required": true,
+    "params": [
+      "ruleType"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/ip-allowlist/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/login-methods": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/mfa": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/policy": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/retention/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/security/sso/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/storage-config": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/tenant-branding/email-templates": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/tenant-branding/localisation": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/tenant-branding/visual": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/tenant-config/finance-config": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /admin-api/tenant/finance-config": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "POST /admin-api/admin-changelog/mark-all-read": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/admin-changelog/{entryId}/mark-read": {
+    "body_required": false,
+    "params": [
+      "entryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/approval-admin-v3/{id}/cancel": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approval-admin-v3/{id}/force-decision": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approval-admin-v3/{id}/reassign": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approval-admin-v3/{requestId}/steps/{stepId}/sla/pause": {
+    "body_required": true,
+    "params": [
+      "requestId",
+      "stepId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approval-admin-v3/{requestId}/steps/{stepId}/sla/resume": {
+    "body_required": false,
+    "params": [
+      "requestId",
+      "stepId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approval-flows-v3": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approval-flows-v3/{id}/publish": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/billing/checkout": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/billing/payment-methods": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/billing/plan/downgrade": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/billing/plan/upgrade": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/billing/seats/adjust": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/blazey/agent/query": {
+    "body_required": false,
+    "params": [
+      "confirm"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/blazey/notification-check": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/blazey/validate-config": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/campus-mapping": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/company-profile": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/custom-fields": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/bulk/assign-user-group": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/bulk/reactivate": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/bulk/reset-password": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/bulk/suspend": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/{employeeId}/reactivate": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/{employeeId}/resend-invite": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/{employeeId}/reset-mfa": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/{employeeId}/reset-password": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/{employeeId}/revoke-sessions": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/employee-admin/{employeeId}/suspend": {
+    "body_required": false,
+    "params": [
+      "employeeId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/integrations/api-keys": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/integrations/webhooks": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/integrations/webhooks/{id}/deliveries/{deliveryId}/replay": {
+    "body_required": false,
+    "params": [
+      "deliveryId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/integrations/{integrationId}/connect": {
+    "body_required": true,
+    "params": [
+      "integrationId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/integrations/{integrationId}/disconnect": {
+    "body_required": true,
+    "params": [
+      "integrationId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/integrations/{integrationId}/reconnect": {
+    "body_required": false,
+    "params": [
+      "integrationId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/integrations/{integrationId}/test": {
+    "body_required": false,
+    "params": [
+      "integrationId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/legal-entities": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /admin-api/notification-settings/channels/{channel}/test": {
+    "body_required": false,
+    "params": [
+      "channel"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/organisation/departments": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/organisation/departments/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/organisation/divisions": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/organisation/employee-types": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/organisation/grades": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/organisation/grades/{id}/map-job-titles": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/organisation/job-titles": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/security/activity/sessions/revoke-all": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/security/activity/sessions/{sessionId}/revoke": {
+    "body_required": false,
+    "params": [
+      "sessionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/security/bdr/incidents/{id}/dismiss": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/security/bdr/incidents/{id}/resolve": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/security/ip-allowlist": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/security/ip-allowlist/bypasses": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/security/sso": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/security/sso/{id}/activate": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/security/sso/{id}/deactivate": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/security/sso/{id}/test": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/storage-config/activate": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/storage-config/verify": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/tenant-branding/custom-domain": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /admin-api/tenant-branding/custom-domain/verify-dns": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  }
+}

@@ -1,0 +1,961 @@
+{
+  "DELETE /setting-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/campus/building/{id}": {
+    "body_required": false,
+    "params": [
+      "buildingId",
+      "company",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/campus/floor/{id}": {
+    "body_required": false,
+    "params": [
+      "buildingId",
+      "company",
+      "floorId",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/campus/seat/{id}": {
+    "body_required": false,
+    "params": [
+      "buildingId",
+      "company",
+      "floorId",
+      "id",
+      "seatId",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/campus/{id}": {
+    "body_required": false,
+    "params": [
+      "company",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/companies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/currencies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/departments/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/employment-types/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/grades/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/holidays": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/timeoff-types/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /setting-api/titles/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/attendance-configs": {
+    "body_required": false,
+    "params": [
+      "countries"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/audit-trail/{collectionName}": {
+    "body_required": false,
+    "params": [
+      "collectionName",
+      "filterField",
+      "filterValue",
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/billings": {
+    "body_required": false,
+    "params": [
+      "dueDateFrom",
+      "dueDateTo",
+      "generationDateFrom",
+      "generationDateTo",
+      "limit",
+      "page",
+      "pricingFrom",
+      "pricingTo",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/billings/payment/ipn": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/billings/payment/refund": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/billings/payment/return": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/campus": {
+    "body_required": false,
+    "params": [
+      "company",
+      "isDropdown",
+      "isSimple",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "status",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/campus/building/{id}": {
+    "body_required": false,
+    "params": [
+      "buildingId",
+      "company",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/campus/group-country": {
+    "body_required": false,
+    "params": [
+      "campuses",
+      "company",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/campus/internal/{id}": {
+    "body_required": false,
+    "params": [
+      "company",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/campus/{id}": {
+    "body_required": false,
+    "params": [
+      "company",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "search",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies/tree": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies/{id}/children": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies/{id}/provisioning/profile": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies/{id}/provisioning/status": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/companies/{id}/subtree": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/currencies": {
+    "body_required": false,
+    "params": [
+      "countries",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "type"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/currencies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/customizes/get-by-tenant": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/departments": {
+    "body_required": false,
+    "params": [
+      "company",
+      "departmentHeads",
+      "financePOCs",
+      "hrPOCs",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "status",
+      "type"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/departments/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/emoji": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/employment-types": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "search",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/employment-types/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/ethnicities": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "search",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/grades": {
+    "body_required": false,
+    "params": [
+      "company",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/holidays": {
+    "body_required": false,
+    "params": [
+      "fromDate",
+      "limit",
+      "location",
+      "page",
+      "sort",
+      "status",
+      "toDate",
+      "year"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/holidays/internal": {
+    "body_required": false,
+    "params": [
+      "company",
+      "fromDate",
+      "locations",
+      "tenant",
+      "toDate"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/internal/platform-companies": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "tenantId"
+    ],
+    "responses": [
+      "200",
+      "403"
+    ]
+  },
+  "GET /setting-api/internal/platform-companies/{tenantId}/tree": {
+    "body_required": false,
+    "params": [
+      "tenantId"
+    ],
+    "responses": [
+      "200",
+      "403"
+    ]
+  },
+  "GET /setting-api/internal/platform-companies/{tenantId}/{companyId}": {
+    "body_required": false,
+    "params": [
+      "companyId",
+      "tenantId"
+    ],
+    "responses": [
+      "200",
+      "403",
+      "404"
+    ]
+  },
+  "GET /setting-api/timeoff-types": {
+    "body_required": false,
+    "params": [
+      "country",
+      "limit",
+      "location",
+      "locations",
+      "page",
+      "sort",
+      "status",
+      "type"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/timeoff-types/generate": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/timeoff-types/group-by-name": {
+    "body_required": false,
+    "params": [
+      "locations"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/timeoff-types/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/timesheet-configs/{location}": {
+    "body_required": false,
+    "params": [
+      "location"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/titles": {
+    "body_required": false,
+    "params": [
+      "company",
+      "departments",
+      "grades",
+      "limit",
+      "page",
+      "search",
+      "sort",
+      "timeSheetRequired"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/titles/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/campus/{id}": {
+    "body_required": true,
+    "params": [
+      "company",
+      "id",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/companies/image/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/companies/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/companies/{id}/modules": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/currencies/multiple": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/currencies/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/departments/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/employment-types/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/grades/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/holidays/{groupId}/{location}": {
+    "body_required": true,
+    "params": [
+      "groupId",
+      "location"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/internal/platform-companies/{tenantId}/{companyId}": {
+    "body_required": true,
+    "params": [
+      "companyId",
+      "tenantId"
+    ],
+    "responses": [
+      "200",
+      "403",
+      "404"
+    ]
+  },
+  "PATCH /setting-api/timeoff-types/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/timeoff-types/{id}/status": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /setting-api/titles/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /setting-api/attendance-configs/{location}": {
+    "body_required": true,
+    "params": [
+      "location"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/billings": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/billings/payment/create-url/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/billings/payment/query-dr/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/campus": {
+    "body_required": true,
+    "params": [
+      "company",
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/campus/internal/migrate-data": {
+    "body_required": false,
+    "params": [
+      "company",
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/campus/multiple": {
+    "body_required": true,
+    "params": [
+      "company",
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/campus/sync-building-for-campus": {
+    "body_required": false,
+    "params": [
+      "company",
+      "tenantId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/campus/sync-phone-detail": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/companies": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/companies/sync-phone-detail": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/companies/{id}/provisioning/repair": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/customizes": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/departments": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/departments/default": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/departments/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/employment-types": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/ethnicities": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/grades": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/grades/default": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/grades/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/holidays": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/holidays/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/timeoff-types": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/timeoff-types/clone": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/timeoff-types/sync-leave-id": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/timesheet-configs/{location}": {
+    "body_required": true,
+    "params": [
+      "location"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/titles": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/titles/default": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/titles/import": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/titles/sync-timesheet-required": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  }
+}

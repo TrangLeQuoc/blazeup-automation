@@ -109,7 +109,8 @@ blazeup_automation/
 │   │   ├── USER_GUIDE.md                 #     Full workflow & naming conventions
 │   │   ├── add-domain.md                 #     Onboard a new test domain
 │   │   ├── page-objects.md               #     Page object / locator / fixture conventions
-│   │   └── test-data.md                  #     Faker factories + cleanup conventions
+│   │   ├── test-data.md                  #     Faker factories + cleanup conventions
+│   │   └── test-organization.md          #     Test taxonomy: layers, naming, markers, e2e
 │   ├── api-snapshots/<domain>/           #   Swagger baselines + CHANGELOG (drift detector)
 │   └── blazeup_admin/                    #   Partner module reference (tested under blazeup_admin)
 │       ├── Partner_Platform_Test_Plan.xlsx
@@ -452,6 +453,7 @@ Config lives in `pyproject.toml` and `.pre-commit-config.yaml`.
 | **[docs/guides/add-domain.md](docs/guides/add-domain.md)** | Onboard a new test domain |
 | **[docs/guides/page-objects.md](docs/guides/page-objects.md)** | Page object / locator / fixture conventions |
 | **[docs/guides/test-data.md](docs/guides/test-data.md)** | Faker factories + auto-cleanup |
+| **[docs/guides/test-organization.md](docs/guides/test-organization.md)** | Test taxonomy: layers, naming, TC IDs, markers, atomic vs e2e |
 
 ---
 
