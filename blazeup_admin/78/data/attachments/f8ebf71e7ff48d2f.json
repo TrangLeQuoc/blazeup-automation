@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Bruce-Hernandez",
+    "email": "qa.auto+greenelaura@mailinator.com",
+    "type": "channel",
+    "phone": "+10761311182",
+    "website": "https://simmons-nguyen.com/"
+  }
+}

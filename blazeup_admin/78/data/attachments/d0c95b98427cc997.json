@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Thompson-Grant",
+    "email": "qa.auto+johnsondaniel@mailinator.com",
+    "type": "channel",
+    "phone": "+11146062746",
+    "website": "https://www.rodriguez.com/"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "statusCode": 500,
+  "message": "BSON field 'skip' value must be >= 0, actual value '-10'",
+  "error": "MongoServerError",
+  "timestamp": "2026-06-17T06:52:05.823Z",
+  "path": "/sa-partners-api/v1/sa/partners"
+}

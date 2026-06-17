@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Le-Pennington",
+    "email": "qa.auto+kjones@mailinator.com",
+    "type": "channel",
+    "phone": "+14843821492",
+    "website": "http://www.wagner.net/"
+  }
+}

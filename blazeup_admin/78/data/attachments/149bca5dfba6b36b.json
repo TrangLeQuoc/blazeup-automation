@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Gray, Anderson and Mathews",
+    "code": "PAR-577748",
+    "email": "qa.auto+jeffrey07@mailinator.com",
+    "phone": "+13573939523",
+    "website": "http://rodriguez-russell.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a3244174600c019e1dd2803",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:52:07.469Z",
+    "updatedAt": "2026-06-17T06:52:07.469Z"
+  },
+  "message": "Partner created successfully"
+}

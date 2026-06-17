@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Snow Ltd",
+    "code": "PAR-398093",
+    "email": "qa.auto+martinmegan@mailinator.com",
+    "phone": "+19130226443",
+    "website": "https://gordon.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a32440d4600c019e1dd27b2",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:57.947Z",
+    "updatedAt": "2026-06-17T06:51:57.947Z"
+  },
+  "message": "Partner created successfully"
+}

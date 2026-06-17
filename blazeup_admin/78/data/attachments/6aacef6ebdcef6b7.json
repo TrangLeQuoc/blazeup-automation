@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jones-Jacobs",
+    "code": "PAR-145684",
+    "email": "qa.auto+mckaychristopher@mailinator.com",
+    "phone": "+17874195747",
+    "website": "http://butler.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a32440b4600c019e1dd2735",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:55.318Z",
+    "updatedAt": "2026-06-17T06:51:55.318Z"
+  },
+  "message": "Partner created successfully"
+}

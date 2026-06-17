@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a32440c4600c019e1dd2754",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Holmes, Lewis and Lawson",
+    "code": "PAR-743975",
+    "email": "qa.auto+qsmith@mailinator.com",
+    "phone": "+18767887444",
+    "website": "https://www.noble.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "suspended",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:56.132Z",
+    "updatedAt": "2026-06-17T06:51:56.228Z"
+  },
+  "message": "Partner deactivated successfully"
+}

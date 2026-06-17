@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Castaneda, Hickman and Galloway",
+    "code": "PAR-107145",
+    "email": "qa.auto+mary49@mailinator.com",
+    "phone": "+16553478653",
+    "website": "https://higgins.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a3244164600c019e1dd27d9",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:52:06.359Z",
+    "updatedAt": "2026-06-17T06:52:06.359Z"
+  },
+  "message": "Partner created successfully"
+}

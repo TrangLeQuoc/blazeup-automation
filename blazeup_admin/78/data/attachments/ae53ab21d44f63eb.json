@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Castaneda, Hickman and Galloway",
+    "email": "qa.auto+mary49@mailinator.com",
+    "type": "channel",
+    "phone": "+16553478653",
+    "website": "https://higgins.info/"
+  }
+}

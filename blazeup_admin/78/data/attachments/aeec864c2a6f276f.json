@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/not-an-id/certifications",
+  "payload": {
+    "certificationType": "sales_certified"
+  }
+}

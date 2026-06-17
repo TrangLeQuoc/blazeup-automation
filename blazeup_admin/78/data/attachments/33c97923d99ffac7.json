@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-auth-api/sign-in/credentials",
+  "payload": {
+    "email": "ceo@mailinator.com",
+    "password": "***"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Shelton and Sons",
+    "email": "qa.auto+briansmith@mailinator.com",
+    "type": "channel",
+    "phone": "+19233648302",
+    "website": "https://weaver-mathews.com/"
+  }
+}

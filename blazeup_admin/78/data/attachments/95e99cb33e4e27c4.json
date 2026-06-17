@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Gray, Anderson and Mathews",
+    "email": "qa.auto+jeffrey07@mailinator.com",
+    "type": "channel",
+    "phone": "+13573939523",
+    "website": "http://rodriguez-russell.com/"
+  }
+}

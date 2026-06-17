@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Snow Ltd",
+    "email": "qa.auto+martinmegan@mailinator.com",
+    "type": "channel",
+    "phone": "+19130226443",
+    "website": "https://gordon.com/"
+  }
+}

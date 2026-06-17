@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Thompson-Grant",
+    "code": "PAR-320903",
+    "email": "qa.auto+johnsondaniel@mailinator.com",
+    "phone": "+11146062746",
+    "website": "https://www.rodriguez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a32440a4600c019e1dd2728",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:54.964Z",
+    "updatedAt": "2026-06-17T06:51:54.964Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Le-Pennington",
+    "code": "PAR-547767",
+    "email": "qa.auto+kjones@mailinator.com",
+    "phone": "+14843821492",
+    "website": "http://www.wagner.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a3244164600c019e1dd27ec",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:52:06.981Z",
+    "updatedAt": "2026-06-17T06:52:06.981Z"
+  },
+  "message": "Partner created successfully"
+}

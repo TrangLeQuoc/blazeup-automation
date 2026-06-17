@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Smith, Anderson and Sanchez",
+    "email": "qa.auto+jane80@mailinator.com",
+    "type": "channel",
+    "phone": "+11790368863",
+    "website": "http://www.lloyd.com/"
+  }
+}

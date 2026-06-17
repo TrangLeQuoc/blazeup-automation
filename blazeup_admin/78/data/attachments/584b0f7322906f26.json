@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a32440d4600c019e1dd27b2",
+    "email": "qa.auto+kimberlycochran@mailinator.com",
+    "firstName": "Lawrence",
+    "lastName": "Watson",
+    "role": "admin"
+  }
+}

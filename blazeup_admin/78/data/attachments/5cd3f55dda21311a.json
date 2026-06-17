@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Williams-Buckley",
+    "email": "qa.auto+woodrobert@mailinator.com",
+    "type": "channel",
+    "phone": "+10284413397",
+    "website": "https://fisher.com/"
+  }
+}

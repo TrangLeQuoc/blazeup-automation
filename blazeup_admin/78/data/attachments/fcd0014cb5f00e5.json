@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a32440d4600c019e1dd278d",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Smith, Anderson and Sanchez",
+    "code": "PAR-171318",
+    "email": "qa.auto+jane80@mailinator.com",
+    "phone": "+11790368863",
+    "website": "http://www.lloyd.com/",
+    "tier": "select",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:57.136Z",
+    "updatedAt": "2026-06-17T06:51:57.223Z"
+  },
+  "message": "Partner tier updated successfully"
+}

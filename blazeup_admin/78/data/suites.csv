@@ -1,0 +1,108 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_010: certification earned - granted, listed, and event published.
+
+Granting a certification to a partner user (POST /v1/sa/partner-users/{userId}/
+certifications) must create an active certification (with earnedAt/expiresAt),
+surface it in the partner's certification list, AND emit a
+``partner.certification.granted`` event — the ""certification earned"" signal
+that triggers downstream tier-qualification re-evaluation. The re-evaluation
+itself is a downstream consumer/job and is out of scope here.
+","985","test_partner_api_partner_account_management_010","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with a clear error.
+
+Negative counterpart of _010. Granting a certification must reject invalid
+input with 4xx + a descriptive message: an out-of-enum certificationType, a
+missing certificationType, a non-existent userId, and a malformed userId.
+","1205","test_partner_api_partner_account_management_020","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_005: tier changed event - published so portal/analytics can refresh.
+
+Changing a partner's tier via POST /v1/sa/partners/{id}/upgrade-tier must
+update the stored ``tier`` AND emit a ``partner.tier.changed`` event recording
+the before/after tiers — the signal downstream consumers (partner portal, SA
+analytics) subscribe to in order to refresh. This test asserts the
+API-observable evidence: the tier transition + the audit-logged event. The
+actual portal/analytics refresh is a downstream Kafka consumer concern and is
+out of scope here.
+","678","test_partner_api_partner_account_management_005","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
+
+Negative counterpart of _004 (deactivate). A non-existent or malformed id must
+be rejected (4xx) with a clear message. Deactivating an already-suspended
+partner is observed (currently a no-op 201 — idempotent) and logged, not failed.
+","473","test_partner_api_partner_account_management_014","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_003: POST partner approve - activation + approval event are created.
+
+State-transition contract check on ``POST /sa-partners-api/v1/sa/partners/{id}/approve``:
+approving a *pending* partner returns HTTP 201, flips ``status`` from
+``pending`` → ``active``, and records the approval event metadata
+(``approvedAt`` + ``approvedBy``). The transition is confirmed to persist via
+a follow-up GET. A pending partner is created first as the precondition and
+registered for cleanup (DELETE) so the test is self-contained and repeatable.
+
+Note: the downstream activation-*user* provisioning is emitted as an event to
+another service (not returned by this endpoint), so it is out of scope here;
+this TC asserts the approval contract observable on sa-partners-api.
+","272","test_partner_api_partner_account_management_003","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with a clear error.
+
+Negative counterpart of _005 (tier change). The upgrade-tier endpoint must
+reject invalid input with 4xx + a descriptive message and emit no event:
+out-of-enum tier, missing tier (required), a non-existent id, and a malformed
+id. BE validates tier well, so all cases are expected to pass.
+","471","test_partner_api_partner_account_management_015","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with a clear error.
+
+Negative counterpart of _003 (approve). Approving a non-existent id, a
+malformed id, or a partner that is not pending must be rejected (4xx) with a
+descriptive message — never silently succeed.
+","358","test_partner_api_partner_account_management_013","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_004: partner application decline - mandatory reason is audit logged.
+
+Security check on declining a partner. The plan calls this ""PATCH decline"";
+the BE currently exposes no dedicated decline endpoint, so the closest real
+action — POST ``/sa-partners-api/v1/sa/partners/{id}/deactivate`` (the only
+partner action that carries a ``reason``) — is exercised here.
+
+This test encodes the TC's *intent* (decline succeeds, the reason is audit
+logged, and the reason is MANDATORY). Any step that fails is a real signal of
+a BE gap to confirm with the backend team — notably: at the time of writing
+the API accepts a decline with no reason (mandatory-reason not enforced), so
+step [3/3] is expected to fail until the BE adds that rule.
+","819","test_partner_api_partner_account_management_004","tests.blazeup_admin.api","2026-06-17","failed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_002: POST create internal partner - a pending account is created.
+
+CRUD (create) contract check on ``POST /sa-partners-api/v1/sa/partners``:
+creating a partner with the required fields (name/email/type) returns HTTP
+201, persists the record with a server-assigned id + ``code``, and the new
+account starts in ``status = ""pending""`` (awaiting SA activation). The
+created partner is registered for cleanup (DELETE) so the test is repeatable
+and leaves no residue on staging — pass OR fail.
+","267","test_partner_api_partner_account_management_002","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001: GET internal partners list - SA filters are applied.
+
+Read-only contract check on ``GET /sa-partners-api/v1/sa/partners``:
+returns 200 with the expected envelope (statusCode/data/total/message) and
+honours pagination (returned page size never exceeds the requested limit).
+HTTP 200 is asserted inside the client (expected_status); here we validate
+the response body contract.
+","159","test_partner_api_partner_account_management_001","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_012: create with invalid/missing fields - 400 + field errors.
+
+Negative counterpart of _002 (create).
+
+Negative contract check on ``POST /sa-partners-api/v1/sa/partners``: every
+invalid or incomplete payload (missing name/email/type, malformed email,
+empty name, out-of-enum type) must be rejected with HTTP 400, return a
+field-level error message naming the offending field, and create NO record.
+All cases run every time (failures are collected, not short-circuited) so one
+broken rule never hides the others. No cleanup needed — nothing is persisted.
+","391","test_partner_api_partner_account_management_012","tests.blazeup_admin.api","2026-06-17","passed","2026-06-17","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011: list with invalid pagination - graceful 4xx, never 5xx.
+
+Negative counterpart of _001 (GET list). Invalid pagination params must be
+handled gracefully: the server must NEVER return 5xx on bad input. Ideally
+they are rejected with 400. Findings at the time of writing: ``page=0`` and
+``page=-1`` return HTTP 500 (server crash) — a real BE bug this test surfaces;
+negative/oversized/non-numeric ``limit`` are silently defaulted (weak
+validation, logged as observations).
+","6918","test_partner_api_partner_account_management_011","tests.blazeup_admin.api","2026-06-17","failed","2026-06-17","","test_sa_partners","",""

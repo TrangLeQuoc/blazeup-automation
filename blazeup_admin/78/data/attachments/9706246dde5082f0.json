@@ -1,0 +1,26 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a32440c4600c019e1dd276a",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Gomez, Brown and Phillips",
+    "code": "PAR-058597",
+    "email": "qa.auto+jamesandrade@mailinator.com",
+    "phone": "+15119188661",
+    "website": "http://www.huffman.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "suspended",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:56.483Z",
+    "updatedAt": "2026-06-17T06:51:56.561Z",
+    "internalNotes": "   "
+  },
+  "message": "Partner deactivated successfully"
+}

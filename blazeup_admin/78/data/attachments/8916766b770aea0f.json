@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Shelton and Sons",
+    "code": "PAR-711298",
+    "email": "qa.auto+briansmith@mailinator.com",
+    "phone": "+19233648302",
+    "website": "https://weaver-mathews.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a3244184600c019e1dd2810",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:52:08.064Z",
+    "updatedAt": "2026-06-17T06:52:08.064Z"
+  },
+  "message": "Partner created successfully"
+}

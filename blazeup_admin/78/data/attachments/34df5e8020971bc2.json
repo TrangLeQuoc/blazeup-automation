@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Gomez, Brown and Phillips",
+    "email": "qa.auto+jamesandrade@mailinator.com",
+    "type": "channel",
+    "phone": "+15119188661",
+    "website": "http://www.huffman.org/"
+  }
+}

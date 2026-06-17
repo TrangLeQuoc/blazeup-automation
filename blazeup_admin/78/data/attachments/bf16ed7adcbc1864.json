@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Williams-Buckley",
+    "code": "PAR-686459",
+    "email": "qa.auto+woodrobert@mailinator.com",
+    "phone": "+10284413397",
+    "website": "https://fisher.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a32440b4600c019e1dd2747",
+    "payoutAccounts": [],
+    "createdAt": "2026-06-17T06:51:55.854Z",
+    "updatedAt": "2026-06-17T06:51:55.854Z"
+  },
+  "message": "Partner created successfully"
+}

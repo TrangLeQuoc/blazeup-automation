@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Holmes, Lewis and Lawson",
+    "email": "qa.auto+qsmith@mailinator.com",
+    "type": "channel",
+    "phone": "+18767887444",
+    "website": "https://www.noble.info/"
+  }
+}
