@@ -206,6 +206,24 @@
       "200"
     ]
   },
+  "GET /workflow-api/sa/platform-templates/workflow/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/health/templates": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "page",
+      "sort"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /workflow-api/sa/platform-templates/workflow/manifests": {
     "body_required": false,
     "params": [],
@@ -232,6 +250,15 @@
     ]
   },
   "GET /workflow-api/sa/platform-templates/workflow/{templateId}": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/sa/platform-templates/workflow/{templateId}/adoption-stats": {
     "body_required": false,
     "params": [
       "templateId"
@@ -506,6 +533,15 @@
       "201"
     ]
   },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/mark-mandatory": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
   "POST /workflow-api/sa/platform-templates/workflow/{templateId}/publish": {
     "body_required": false,
     "params": [
@@ -526,6 +562,15 @@
   },
   "POST /workflow-api/sa/platform-templates/workflow/{templateId}/request-approval": {
     "body_required": true,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/sa/platform-templates/workflow/{templateId}/retract": {
+    "body_required": false,
     "params": [
       "templateId"
     ],
@@ -564,6 +609,15 @@
     ]
   },
   "POST /workflow-api/templates/{templateId}/clone": {
+    "body_required": false,
+    "params": [
+      "templateId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /workflow-api/templates/{templateId}/dismiss-new": {
     "body_required": false,
     "params": [
       "templateId"

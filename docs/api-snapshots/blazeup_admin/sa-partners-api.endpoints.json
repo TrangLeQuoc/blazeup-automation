@@ -319,6 +319,8 @@
     "params": [
       "country",
       "limit",
+      "limit",
+      "page",
       "page",
       "regions",
       "search",
@@ -436,6 +438,34 @@
     "params": [],
     "responses": [
       "204"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/mfa/email-otp/send": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/mfa/totp/enroll": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "204"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/mfa/totp/setup": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/mfa/verify": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
     ]
   },
   "POST /sa-partners-api/v1/partner/auth/refresh": {
@@ -591,6 +621,15 @@
     ]
   },
   "POST /sa-partners-api/v1/sa/partner-users/{userId}/reset-password": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/sa/partner-users/{userId}/unlock": {
     "body_required": false,
     "params": [
       "userId"

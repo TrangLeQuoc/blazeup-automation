@@ -17,6 +17,7 @@ from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from api_clients.blazeup_admin.auth_client import AuthClient
+from api_clients.blazeup_admin.sa_deals_client import SaDealsClient
 from api_clients.blazeup_admin.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
 from utils.helpers import load_yaml, require_credentials
@@ -481,6 +482,20 @@ async def sa_partners_client(
     """Authenticated SA Partners API client (sa-partners-api), token from session."""
 
     client = SaPartnersClient(
+        str(settings.api_base_url),
+        token=api_token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
+    yield client
+    await client.close()
+
+
+@pytest_asyncio.fixture
+async def sa_deals_client(settings: Settings, api_token: str) -> AsyncGenerator[SaDealsClient]:
+    """Authenticated SA Deals API client (sa-partners-api /v1/sa/deals), token from session."""
+
+    client = SaDealsClient(
         str(settings.api_base_url),
         token=api_token,
         max_response_time_ms=settings.default_response_time_ms,

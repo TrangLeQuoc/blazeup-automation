@@ -42,7 +42,7 @@ modules:
     api:
       # API grouped by backend FEATURE/resource (not by page):
       PARTNER_ACCOUNT_MANAGEMENT: 1
-      # DEAL_REGISTRATION_PIPELINE: 2
+      DEAL_REGISTRATION_PIPELINE: 2
       # COMMISSIONS_PAYOUTS: 3
       # TERRITORIES: 4
       # CERTIFICATIONS: 5

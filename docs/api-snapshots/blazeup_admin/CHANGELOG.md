@@ -1,5 +1,22 @@
 # API Change Log — blazeup_admin
 
+## 2026-06-19 10:24 · workflow-api
+- 🟢 ADDED   GET /workflow-api/sa/platform-templates/workflow/health
+- 🟢 ADDED   GET /workflow-api/sa/platform-templates/workflow/health/templates
+- 🟢 ADDED   GET /workflow-api/sa/platform-templates/workflow/{templateId}/adoption-stats
+- 🟢 ADDED   POST /workflow-api/sa/platform-templates/workflow/{templateId}/mark-mandatory
+- 🟢 ADDED   POST /workflow-api/sa/platform-templates/workflow/{templateId}/retract
+- 🟢 ADDED   POST /workflow-api/templates/{templateId}/dismiss-new
+
+## 2026-06-18 15:31 · sa-partners-api
+- 🟢 ADDED   POST /sa-partners-api/v1/partner/auth/mfa/email-otp/send
+- 🟢 ADDED   POST /sa-partners-api/v1/partner/auth/mfa/totp/enroll
+- 🟢 ADDED   POST /sa-partners-api/v1/partner/auth/mfa/totp/setup
+- 🟢 ADDED   POST /sa-partners-api/v1/partner/auth/mfa/verify
+- 🟢 ADDED   POST /sa-partners-api/v1/sa/partner-users/{userId}/unlock
+- 🟡 CHANGED GET /sa-partners-api/v1/sa/partners
+    · (spec changed)
+
 ## 2026-06-17 11:21 · workflow-api
 - baseline (71 endpoints)
 

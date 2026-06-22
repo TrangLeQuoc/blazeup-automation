@@ -141,6 +141,52 @@ Negative là **TC riêng** (dòng riêng trong test plan), không trộn vào po
 cạnh feature tương ứng. Cột **Test Type** ghi rõ `Functional` / `Negative` /
 `Security`.
 
+### Quy tắc bắt buộc khi viết TC
+
+1. **Positive → kèm Negative.** Làm xong 1 TC positive thì làm luôn negative tương
+   ứng (nếu nghiệp vụ có) — không để trống một phía.
+2. **Phủ FULL param.** Mỗi TC tự rà hết:
+   - *Positive:* gửi **mọi** field (required + optional) và **assert echoed** từng cái
+     (bắt silent-mutation) + lifecycle/side-effects.
+   - *Negative:* **mọi** required ở dạng missing, + invalid enum, + sai format
+     (email/date), + boundary (âm/0/cực lớn), + FK không tồn tại.
+   - Giá trị enum lấy từ **OpenAPI spec**; đừng đoán.
+3. **Param là khóa ngoại (FK) → chứng minh "không tồn tại" TRONG test.** Nếu một
+   param trỏ tới data của service khác (`planId`→sa-plans, `partnerId`→partners,
+   `userId`→partner-users…), khi tạo data ghost cho negative phải **GET-by-id ở
+   service nguồn và assert nó vắng mặt (4xx) NGAY trong test**, rồi mới dùng. Tuyệt
+   đối không hard-code id rồi giả định. Nếu service nguồn báo "tồn tại" → fixture
+   sai → fail rõ ("fixture invalid") thay vì cho kết quả sai lệch.
+   - *Ngoại lệ:* nếu chính endpoint đang test đã trả "not found" cho ghost id
+     (self-proving trong assert) thì không cần GET riêng (vd ghost `partnerId` khi
+     register deal). Chỉ cần GET nguồn khi endpoint **không** tự báo (vd `planId`
+     bị nhận 201 → phải chứng minh absence từ sa-plans).
+4. **BE thiếu validation → fail thật + báo BE.** Không viết test xanh giả; để step
+   đó FAIL kèm message "confirm with BE", và ghi gap vào Note của TC.
+5. **Auth/Permission luôn có 3 TC cơ bản** (cho endpoint có bảo vệ):
+   - Không có token → **401**
+   - Sai role/permission → **403**
+   - Token của entity khác cố truy cập tài nguyên không thuộc về mình → **403 hoặc 404**
+   - *(Auth thường gom ở feature Auth & Access Control, không nhét vào từng TC chức năng — nhưng phải tồn tại.)*
+6. **Mỗi TC tự chứa (self-contained):**
+   - Setup fixture/data **trong chính TC** — không dùng data do TC khác tạo.
+   - **Cleanup** sau khi chạy (`created_resources`), pass hay fail đều sạch.
+   - Ghi rõ **precondition state** (vd "deal phải đang FLAGGED", "partner phải pending").
+7. **Assert schema, không chỉ assert value:**
+   - Kiểm **type** của field trả về (list/dict/int/str…), không chỉ giá trị.
+   - Kiểm **sensitive field không bị lộ** trong response (password, token, secret…).
+   - Kiểm **field bắt buộc luôn present** (id, status, code…).
+8. **Duplicate/Idempotency cho mọi POST tạo resource:**
+   - Gọi 2 lần payload giống nhau → **ghi rõ behavior mong đợi**: 409 (reject trùng)
+     hay idempotent (no-op/trả lại cái cũ)? Assert đúng cái đó, đừng để mơ hồ.
+9. **Cập nhật tài liệu test case sau khi làm xong.** Mỗi khi viết xong (hoặc sửa) 1 TC,
+   phải cập nhật **cả 2 file** với nội dung TC tương ứng (description + steps có
+   → Expected + overall + note; nếu là gap thì ghi rõ "confirm BE"):
+   - `docs/blazeup_admin/PARTNER_TEST_CASES.md` (EN)
+   - `docs/blazeup_admin/PARTNER_TEST_CASES_vi.md` (VI)
+   - NOT_STARTED chỉ để tên; BLOCKED ghi lý do; PASSED/FAILED ghi đầy đủ. Giữ 2 file
+     đồng bộ với code + test plan Excel.
+
 ---
 
 ## 7. Giải phẫu một test tốt

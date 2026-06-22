@@ -22,13 +22,42 @@ Usage in a test
                                 settings.test_email, settings.test_password)
 """
 
+import os
 import re
 
 from playwright.async_api import Page
 from playwright.async_api import expect as pw_expect
 
+from api_clients.auth_base import BaseAuthClient
 from api_clients.blazeup_admin.auth_client import AuthClient
+from api_clients.blazeup_partner.auth_client import PartnerAuthClient
+from pages.base_page import BasePage
 from pages.blazeup_admin.login_page import LoginPage
+from pages.blazeup_partner.login_page import PartnerLoginPage
+
+# Each domain owns its auth client (endpoints differ per domain). The shared login
+# mechanics live in BaseAuthClient. Pick the client by BLAZEUP_DOMAIN.
+AUTH_CLIENTS: dict[str, type[BaseAuthClient]] = {
+    "blazeup_admin": AuthClient,
+    "blazeup_partner": PartnerAuthClient,
+}
+
+# Each domain owns its login page object (different login flow + selectors).
+# Admin = two-step (email → proceed → password); partner = single-step.
+LOGIN_PAGES: dict[str, type[BasePage]] = {
+    "blazeup_admin": LoginPage,
+    "blazeup_partner": PartnerLoginPage,
+}
+
+
+def _auth_client_for_domain() -> type[BaseAuthClient]:
+    """Resolve the domain's auth client class from BLAZEUP_DOMAIN (defaults to admin)."""
+    return AUTH_CLIENTS.get(os.getenv("BLAZEUP_DOMAIN", "blazeup_admin"), AuthClient)
+
+
+def _login_page_for_domain() -> type[BasePage]:
+    """Resolve the domain's login page class from BLAZEUP_DOMAIN (defaults to admin)."""
+    return LOGIN_PAGES.get(os.getenv("BLAZEUP_DOMAIN", "blazeup_admin"), LoginPage)
 
 
 async def login_ui(
@@ -38,10 +67,11 @@ async def login_ui(
     password: str,
     timeout: int = 30_000,
 ) -> Page:
-    """Log in through the BlazeUp UI login page.
+    """Log in through the BlazeUp UI login page (domain-aware).
 
-    Opens ``/login``, submits *email* and *password* via the two-step flow,
-    then waits until the browser navigates away from the login page.
+    Opens ``/login`` with the domain's login page object (admin = two-step,
+    partner = single-step), submits *email*/*password*, then waits until the
+    browser navigates away from the login page.
 
     Args:
         page:     A Playwright ``Page`` (may be blank or on any URL).
@@ -56,7 +86,7 @@ async def login_ui(
     Raises:
         AssertionError: If the browser is still on ``/login`` after *timeout*.
     """
-    login_page = LoginPage(page, base_url)
+    login_page = _login_page_for_domain()(page, base_url)
     await login_page.open()
     await login_page.login(email, password)
     await pw_expect(page).not_to_have_url(re.compile(r".*/login.*"), timeout=timeout)
@@ -69,6 +99,7 @@ async def login_api(
     email: str,
     password: str,
     max_response_time_ms: int = 30_000,
+    auth_cls: "type[BaseAuthClient] | None" = None,
 ) -> str:
     """Log in via the BlazeUp REST API and return a bearer token.
 
@@ -91,7 +122,7 @@ async def login_api(
         ValueError: If the API response contains no token field.
         AssertionError: If the response time exceeds *max_response_time_ms*.
     """
-    client = AuthClient(
+    client = (auth_cls or _auth_client_for_domain())(
         api_base_url,
         max_response_time_ms=max_response_time_ms,
         app_origin=app_origin,

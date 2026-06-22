@@ -36,6 +36,17 @@ def tag(text: str) -> str:
     return f"{QA_AUTO_PREFIX} {text}"
 
 
+def valid_phone() -> str:
+    """Return a libphonenumber-valid E.164 phone number.
+
+    The BE validates phone numbers strictly. A random ``"+1"+msisdn`` often yields
+    an invalid area code → flaky 400 ("phone must be a valid phone number"). Phone
+    is not a uniqueness key, so a known-good constant is the safe, deterministic
+    choice across all factories.
+    """
+    return "+14155552671"
+
+
 def unique_email(domain: str = "mailinator.com") -> str:
     """Return a unique, tagged email address safe for parallel runs."""
     # local-part includes a unique token; '+' tagging keeps it one real inbox.
@@ -48,7 +59,7 @@ def make_user(**overrides: Any) -> dict[str, Any]:
         "first_name": _fake.first_name(),
         "last_name": _fake.last_name(),
         "email": unique_email(),
-        "phone": f"+1{_fake.msisdn()[:10]}",
+        "phone": valid_phone(),
         "department": _fake.job(),
         "title": _fake.job(),
     }
@@ -80,7 +91,7 @@ def make_partner(**overrides: Any) -> dict[str, Any]:
         "name": tag(_fake.company()),
         "email": unique_email(),
         "type": "channel",
-        "phone": f"+1{_fake.msisdn()[:10]}",
+        "phone": valid_phone(),
         "website": _fake.url(),
     }
     data.update(overrides)
@@ -104,14 +115,24 @@ def make_partner_user(partner_id: str, **overrides: Any) -> dict[str, Any]:
     return data
 
 
-def make_deal(**overrides: Any) -> dict[str, Any]:
-    """Build a deal-registration payload."""
+def make_deal(partner_id: str, plan_id: str, **overrides: Any) -> dict[str, Any]:
+    """Build a deal-registration payload matching ``CreateDealDto`` (sa-partners-api).
+
+    Required by the API: ``partnerId``, ``dealType`` (referral / reseller / co_sell),
+    ``prospectName``, ``prospectCountry``, ``estimatedAcvCents``, ``expectedCloseDate``,
+    plus ``planId`` (a published billing plan; or pass an inline ``billingPlan``).
+    """
     data: dict[str, Any] = {
-        "deal_name": tag(f"{_fake.company()} Opportunity"),
-        "customer_name": _fake.company(),
-        "customer_email": unique_email(),
-        "amount": _fake.random_int(min=1_000, max=500_000),
-        "notes": _fake.sentence(),
+        "partnerId": partner_id,
+        "planId": plan_id,
+        "dealType": "referral",
+        "prospectName": tag(f"{_fake.company()} Opportunity"),
+        "prospectEmail": unique_email(),
+        "prospectPhone": valid_phone(),
+        "prospectCountry": "US",
+        "estimatedAcvCents": _fake.random_int(min=1_000_00, max=5_000_000_00),
+        "expectedCloseDate": "2026-12-31",
+        "notes": tag(_fake.sentence()),
     }
     data.update(overrides)
     return data
