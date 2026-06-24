@@ -345,7 +345,7 @@ async def page(
 # ---------------------------------------------------------------------------
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def auth_state(settings: Settings) -> AsyncGenerator[dict]:
     """Log in once and cache the Playwright storage state (cookies + localStorage).
 
@@ -435,7 +435,7 @@ def make_page(authenticated_page: Page, settings: Settings):
     return _make
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def api_token(settings: Settings) -> AsyncGenerator[str]:
     """JWT token valid for the entire test session.
 

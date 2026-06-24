@@ -28,6 +28,14 @@ _SENSITIVE_KEYS = (
 # truncated (with a "+N chars" marker) so the log stays readable.
 _BODY_PREVIEW_LIMIT = 1000
 
+# HTTP methods that are safe to retry: a retry can never create a duplicate
+# resource. POST/PATCH are deliberately excluded — retrying them after a 5xx
+# (or a post-send transport error, where the server may already have committed)
+# can double-create data. In this suite that surfaces as false deal conflicts
+# (a second identical deal flags itself against the first). Non-idempotent calls
+# therefore run exactly once and fail fast.
+_IDEMPOTENT_METHODS = frozenset({"GET", "HEAD", "PUT", "DELETE", "OPTIONS"})
+
 
 def _mask(obj: Any) -> Any:
     """Recursively replace values of sensitive-looking keys with ``***``."""
@@ -133,7 +141,16 @@ class BaseClient:
         schema: type[SchemaT] | None = None,
         **kwargs: Any,
     ) -> httpx.Response | SchemaT:
-        """Send a request, retry 5xx responses, validate timing and optional schema."""
+        """Send a request, assert response time + optional status/schema.
+
+        5xx responses (and transport errors) are retried up to 3 times — but only
+        for idempotent methods (see ``_IDEMPOTENT_METHODS``). POST/PATCH run once
+        and fail fast, so a retry can never double-create a resource.
+
+        Raises ``AssertionError`` when the round-trip exceeds
+        ``max_response_time_ms`` (the response-time SLA), or when the status is
+        not in ``expected_status``.
+        """
 
         # Strip leading "/" so the endpoint is always relative to base_url.
         # httpx treats a leading "/" as an absolute path (RFC 3986), which
@@ -168,16 +185,24 @@ class BaseClient:
                 req_doc["params"] = kwargs["params"]
             _attach(f"→ {method.upper()} {endpoint} (request)", req_doc)
 
+        # Idempotent methods retry on 5xx/transport errors; POST/PATCH run once
+        # so a retry can never double-create a resource.
+        max_attempts = 3 if method.upper() in _IDEMPOTENT_METHODS else 1
+
         response: httpx.Response | None = None
-        for attempt in range(1, 4):
+        for attempt in range(1, max_attempts + 1):
             started = time.perf_counter()
             try:
                 response = await self._client.request(method, endpoint, headers=headers, **kwargs)
             except httpx.TransportError:
                 logger.warning(
-                    "{} {} transport error on attempt {}/3", method.upper(), endpoint, attempt
+                    "{} {} transport error on attempt {}/{}",
+                    method.upper(),
+                    endpoint,
+                    attempt,
+                    max_attempts,
                 )
-                if attempt == 3:
+                if attempt == max_attempts:
                     raise
                 await asyncio.sleep(attempt)
                 continue
@@ -187,7 +212,7 @@ class BaseClient:
                 "← {} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms
             )
 
-            if response.status_code < 500 or attempt == 3:
+            if response.status_code < 500 or attempt == max_attempts:
                 break
             await asyncio.sleep(attempt)
 
@@ -201,7 +226,10 @@ class BaseClient:
         )
 
         elapsed_ms = response.extensions["elapsed_ms"]
-        if elapsed_ms >= self.max_response_time_ms:
+        too_slow = elapsed_ms >= self.max_response_time_ms
+        if too_slow:
+            # Greppable marker for the log timeline / AI triage; the assertion
+            # below is what actually fails the call.
             logger.warning(
                 "SLOW: {} {} took {}ms (limit {}ms)",
                 method.upper(),
@@ -214,6 +242,14 @@ class BaseClient:
             assert response.status_code in allowed, (
                 f"Expected status {allowed}, got {response.status_code}: {response.text}"
             )
+        # Response-time SLA: a functionally-correct response that exceeds the
+        # per-client limit still fails the call. Checked after the status
+        # assertion so a wrong status surfaces first; setup-only calls (e.g.
+        # login) raise the limit instead of disabling the check.
+        assert not too_slow, (
+            f"response time {elapsed_ms}ms exceeded limit {self.max_response_time_ms}ms "
+            f"for {method.upper()} {endpoint}"
+        )
         if schema is not None:
             payload = response.json()
             if isinstance(payload, dict) and "data" in payload:

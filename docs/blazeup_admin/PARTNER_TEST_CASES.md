@@ -284,6 +284,18 @@
 **Expected (overall):** Every invalid register payload rejected; planId should be validated.
 **Note:** FAILED (by design) — gap: a non-existent planId is accepted (201). sa-plans returns 400 for it, but the deals endpoint does not validate planId cross-service. Confirm with BE.
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
+**Test Description:** Idempotency/duplicate: the SAME partner registering the SAME prospect twice is rejected (no second deal).
+**Test Steps:**
+1. One partner + a published plan + a unique prospect identity; the partner registers the deal once.
+   → Expected: HTTP 201, conflictStatus 'none'.
+2. The SAME partner re-registers the SAME prospect (name+email).
+   → Expected: HTTP 400, message '...already exists...'.
+3. Inspect the rejected response body.
+   → Expected: no second deal id (no deal was created).
+**Expected (overall):** Same-partner duplicate is a hard 400 reject; distinct from _004 (a different partner → 201 + flagged).
+**Note:** PASSED — verified 2026-06-22.
+
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_028
 **Test Description:** Negative of approve: illegal targets rejected.
 **Test Steps:**
@@ -529,6 +541,30 @@
    → Expected: each 4xx with a clear message.
 **Expected (overall):** All invalid grant-cert attempts rejected.
 **Note:** —
+
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021
+**Test Description:** Idempotency/duplicate: creating a partner with the same email twice is rejected (no second account).
+**Test Steps:**
+1. Create a partner with a unique email.
+   → Expected: HTTP 201, account created.
+2. Re-create with the SAME email.
+   → Expected: HTTP 400, message '...already exists'.
+3. Inspect the rejected response body.
+   → Expected: no second account created.
+**Expected (overall):** Same-email duplicate is a hard 400 reject; no duplicate partner account.
+**Note:** PASSED — verified 2026-06-23.
+
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022
+**Test Description:** Idempotency/duplicate: re-granting the same certification type to the same user must not create a duplicate (renew or 409).
+**Test Steps:**
+1. Create a partner + invite a user.
+   → Expected: user created.
+2. Grant 'sales_certified' (first time).
+   → Expected: cert active.
+3. Re-grant the SAME type, then list the partner's certifications.
+   → Expected: exactly 1 'sales_certified' cert (idempotent renew) OR a 409 on re-grant.
+**Expected (overall):** Re-grant must not duplicate an active cert of the same type.
+**Note:** FAILED (by design) — gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject. Confirm with BE.
 
 ### API · PARTNER_USERS
 

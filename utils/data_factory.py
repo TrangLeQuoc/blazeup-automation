@@ -115,6 +115,30 @@ def make_partner_user(partner_id: str, **overrides: Any) -> dict[str, Any]:
     return data
 
 
+def make_prospect(**overrides: Any) -> dict[str, Any]:
+    """Build a UNIQUE prospect identity (``prospectName`` + ``prospectEmail``).
+
+    Deal-conflict detection keys on the prospect identity, so the name MUST be
+    unique per test. A plain ``fake.company()`` is NOT unique — two conflict tests
+    running in parallel (``-n auto``) can generate the same name and contaminate
+    each other (a deal in test A flags against a deal in test B). ``fake.unique``
+    guarantees no repeat within the process.
+
+    Reuse the SAME returned dict for both partners in a conflict test to create
+    the intended same-prospect collision::
+
+        prospect = make_prospect()
+        await client.register_deal(make_deal(p1, plan, **prospect))
+        await client.register_deal(make_deal(p2, plan, **prospect))  # flagged
+    """
+    data: dict[str, Any] = {
+        "prospectName": tag(f"{_fake.unique.company()} Prospect"),
+        "prospectEmail": unique_email(),
+    }
+    data.update(overrides)
+    return data
+
+
 def make_deal(partner_id: str, plan_id: str, **overrides: Any) -> dict[str, Any]:
     """Build a deal-registration payload matching ``CreateDealDto`` (sa-partners-api).
 

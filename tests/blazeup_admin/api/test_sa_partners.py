@@ -215,10 +215,10 @@ async def test_partner_api_partner_account_management_004(sa_partners_client, cr
     partner action that carries a ``reason``) — is exercised here.
 
     This test encodes the TC's *intent* (decline succeeds, the reason is audit
-    logged, and the reason is MANDATORY). Any step that fails is a real signal of
-    a BE gap to confirm with the backend team — notably: at the time of writing
-    the API accepts a decline with no reason (mandatory-reason not enforced), so
-    step [3/3] is expected to fail until the BE adds that rule.
+    logged, and the reason is MANDATORY). The BE now enforces a mandatory,
+    non-empty reason — declining with an absent, empty, or whitespace-only reason
+    is rejected with 400 (verified 2026-06-22; previously accepted with 201). Any
+    step that fails now is a real BE regression.
     """
     async with async_step("Setup: create a PENDING partner to decline"):
         created = await sa_partners_client.create_partner(make_partner())
@@ -451,11 +451,12 @@ async def test_partner_api_partner_account_management_011(sa_partners_client):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011: list with invalid pagination - graceful 4xx, never 5xx.
 
     Negative counterpart of _001 (GET list). Invalid pagination params must be
-    handled gracefully: the server must NEVER return 5xx on bad input. Ideally
-    they are rejected with 400. Findings at the time of writing: ``page=0`` and
-    ``page=-1`` return HTTP 500 (server crash) — a real BE bug this test surfaces;
-    negative/oversized/non-numeric ``limit`` are silently defaulted (weak
-    validation, logged as observations).
+    handled gracefully: the server must NEVER return 5xx on bad input. The BE now
+    rejects them with 400 (verified 2026-06-22): ``page=0`` / ``page=-1`` →
+    "page must not be less than 1" (previously HTTP 500 crash), and negative /
+    oversized / non-numeric ``limit`` are likewise rejected with 400 (previously
+    silently defaulted). Step [1/2] hard-asserts no-5xx; step [2/2] observes the
+    limit validation without asserting an exact code.
     """
     robustness = [("page=0", {"page": 0, "limit": 5}), ("page=-1", {"page": -1, "limit": 5})]
     observations = [
@@ -484,7 +485,7 @@ async def test_partner_api_partner_account_management_011(sa_partners_client):
             r = await sa_partners_client.raw_list_partners(**params)
             n = len(r.json().get("data", [])) if r.status_code == 200 else "-"
             logger.info(
-                "CHECK {} → status {} (data={}) — note: lenient default, no 400",
+                "CHECK {} → status {} (data={})",
                 label,
                 r.status_code,
                 n,
@@ -729,3 +730,99 @@ async def test_partner_api_partner_account_management_020(sa_partners_client, cr
 
     assert not gaps, "grant-cert negative-case gaps:\n  - " + "\n  - ".join(gaps)
     logger.info("RESULT: all {} invalid grant-cert attempts rejected", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_021(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021: duplicate partner (same email) - rejected, no second account.
+
+    Idempotency / duplicate counterpart of _002 (create). Creating a second partner
+    with the SAME email is rejected with HTTP 400 ("...already exists"), and no
+    second account is created. Verified 2026-06-22.
+    """
+    async with async_step("Setup: create a partner with a unique email"):
+        payload = make_partner()
+        first = await sa_partners_client.create_partner(payload)
+        pid = first.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: first partner must be created"
+        logger.info(
+            "SETUP: partner {} created with email '{}'", first.data.get("code"), payload["email"]
+        )
+
+    async with async_step("[1/2] Re-create with the SAME email → 400 duplicate"):
+        r = await sa_partners_client.raw_create_partner(payload, expected_status=None)
+        assert r.status_code == 400, (
+            f"duplicate email must be rejected with 400, got {r.status_code}"
+        )
+        msg = str(r.json().get("message") or "")
+        assert "already exists" in msg.lower(), (
+            f"rejection should explain the email already exists, got message={msg!r}"
+        )
+        logger.info("CHECK duplicate → OK (400, msg~'already exists')")
+
+    async with async_step("[2/2] No second account was created"):
+        data = r.json().get("data") or {}
+        new_id = data.get("_id") or data.get("id")
+        assert not new_id or new_id == pid, "a rejected duplicate must NOT create a second partner"
+        logger.info("CHECK no-op → OK (no second partner created)")
+
+    logger.info("RESULT: duplicate partner (same email) rejected (400, no second account)")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@pytest.mark.be_gap  # re-grant creates a duplicate active cert (count=2) — confirm with BE
+async def test_partner_api_partner_account_management_022(sa_partners_client, created_resources):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022: re-grant same certification - must not duplicate (idempotent or 409).
+
+    Idempotency / duplicate counterpart of _010 (certification earned). Granting the
+    SAME certificationType to the SAME user a second time must NOT create a second
+    active cert of that type — it should be idempotent (renew the existing record)
+    or rejected (409).
+
+    GAP this test surfaces (verified 2026-06-22): the API returns 201 and creates a
+    SECOND cert record (the user ends up with two active 'sales_certified' certs).
+    Step [3/3] asserts a single cert of that type and therefore FAILS until the BE
+    de-dupes — confirm with BE whether re-grant should renew or reject.
+    """
+    async with async_step("Setup: partner + invited user"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        host = await sa_partners_client.invite_partner_user(make_partner_user(pid))
+        uid = host.data.get("userId")
+        assert uid, "precondition: partner user must be invited"
+        logger.info("SETUP: partner {} + user {}", partner.data.get("code"), uid)
+
+    cert_type = "sales_certified"
+    async with async_step("[1/3] Grant the certification (first time)"):
+        g1 = await sa_partners_client.grant_certification(
+            uid, certification_type=cert_type, score=90
+        )
+        assert g1.data.get("status") == "active", "first grant must be active"
+        logger.info("CHECK grant#1 → OK (active, id={})", g1.data.get("_id"))
+
+    async with async_step("[2/3] Re-grant the SAME certification type"):
+        g2 = await sa_partners_client.raw_grant_certification(
+            uid, certification_type=cert_type, score=95, expected_status=None
+        )
+        assert g2.status_code in (200, 201, 409), (
+            f"re-grant must be a defined outcome (renew 2xx or reject 409), got {g2.status_code}"
+        )
+        logger.info("CHECK re-grant → status {}", g2.status_code)
+
+    async with async_step("[3/3] The user must NOT end up with a duplicate active cert"):
+        lst = await sa_partners_client.list_partner_certifications(pid)
+        same = [c for c in lst.data if c.get("certificationType") == cert_type]
+        assert len(same) == 1, (
+            f"re-granting must not duplicate: expected 1 '{cert_type}' cert, got {len(same)} "
+            "— BE creates a second cert on re-grant; confirm with BE (renew vs reject)"
+        )
+        logger.info("CHECK no-duplicate → OK (exactly 1 '{}' cert)", cert_type)
+
+    logger.info("RESULT: re-grant certification idempotency checked")

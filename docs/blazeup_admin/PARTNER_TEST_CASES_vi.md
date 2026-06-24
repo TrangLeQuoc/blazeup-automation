@@ -284,6 +284,18 @@
 **Expected (tổng):** Mọi payload register sai bị từ chối; planId phải được validate.
 **Ghi chú:** FAILED (có chủ đích) — gap: planId không tồn tại vẫn 201. sa-plans trả 400 cho nó nhưng endpoint deals không validate cross-service. Confirm BE.
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
+**Mô tả test:** Idempotency/trùng: CÙNG partner đăng ký CÙNG prospect lần 2 bị từ chối (không tạo deal thứ 2).
+**Các bước:**
+1. Một partner + một plan đã publish + một prospect identity unique; partner đăng ký deal lần đầu.
+   → Expected: HTTP 201, conflictStatus 'none'.
+2. CÙNG partner đăng ký LẠI CÙNG prospect (name+email).
+   → Expected: HTTP 400, message '...already exists...'.
+3. Kiểm tra body của response bị từ chối.
+   → Expected: không có deal id thứ 2 (không deal nào được tạo).
+**Expected (tổng):** Trùng cùng-partner là hard 400 reject; khác với _004 (partner KHÁC → 201 + flagged).
+**Ghi chú:** PASSED — verified 2026-06-22.
+
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_028
 **Mô tả test:** Negative của approve: target không hợp lệ bị từ chối.
 **Các bước:**
@@ -529,6 +541,30 @@
    → Expected: mỗi cái 4xx + message rõ.
 **Expected (tổng):** Mọi grant-cert sai bị từ chối.
 **Ghi chú:** —
+
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021
+**Mô tả test:** Idempotency/trùng: tạo partner cùng email lần 2 bị từ chối (không tạo account thứ 2).
+**Các bước:**
+1. Tạo partner với email unique.
+   → Expected: HTTP 201, account được tạo.
+2. Tạo lại với CÙNG email.
+   → Expected: HTTP 400, message '...already exists'.
+3. Kiểm tra body response bị từ chối.
+   → Expected: không tạo account thứ 2.
+**Expected (tổng):** Trùng email là hard 400 reject; không có partner account trùng.
+**Ghi chú:** PASSED — verified 2026-06-23.
+
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022
+**Mô tả test:** Idempotency/trùng: cấp lại cùng loại certification cho cùng user không được tạo bản trùng (renew hoặc 409).
+**Các bước:**
+1. Tạo partner + invite user.
+   → Expected: user được tạo.
+2. Grant 'sales_certified' (lần đầu).
+   → Expected: cert active.
+3. Grant LẠI cùng type, rồi list certifications của partner.
+   → Expected: đúng 1 cert 'sales_certified' (idempotent renew) HOẶC 409 khi re-grant.
+**Expected (tổng):** Re-grant không được tạo cert trùng cùng loại đang active.
+**Ghi chú:** FAILED (có chủ đích) — gap: re-grant trả 201 và tạo cert active THỨ HAI (list có 2). BE nên renew hoặc reject. Confirm BE.
 
 ### API · PARTNER_USERS
 

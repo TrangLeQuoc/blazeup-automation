@@ -13,7 +13,7 @@ import asyncio
 import pytest
 from loguru import logger
 
-from utils.data_factory import make_deal, make_partner, unique_email
+from utils.data_factory import make_deal, make_partner, make_prospect
 from utils.log_helper import async_step
 
 # A syntactically valid Mongo ObjectId that does not exist — for "not found" tests.
@@ -270,10 +270,7 @@ async def test_partner_api_deal_registration_pipeline_004(
                 )
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        prospect = {
-            "prospectName": make_partner()["name"] + " Prospect",  # unique shared name
-            "prospectEmail": unique_email(),
-        }
+        prospect = make_prospect()  # unique identity, shared by both partners
         logger.info(
             "SETUP: partners {} / {} + shared prospect '{}'",
             p1.data.get("code"),
@@ -309,6 +306,64 @@ async def test_partner_api_deal_registration_pipeline_004(
 
 @pytest.mark.api
 @pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_022(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_022: duplicate deal by the SAME partner - rejected, no second deal.
+
+    Idempotency / duplicate counterpart of _001 (register). When the SAME partner
+    registers the SAME prospect (name + email) a second time, the API does NOT
+    create a second deal — it rejects with HTTP 400 ("...already exists..."), a hard
+    duplicate. This is distinct from _004 (a DIFFERENT partner registering the same
+    prospect → 201 + conflictStatus 'flagged'). Verified 2026-06-22: 400, no deal id
+    returned, no conflict path.
+    """
+    async with async_step("Setup: one partner + a published plan + a unique prospect identity"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        prospect = make_prospect()  # unique identity, reused for both register calls
+        logger.info(
+            "SETUP: partner {} + prospect '{}'",
+            partner.data.get("code"),
+            prospect["prospectName"],
+        )
+
+    async with async_step("[1/3] First registration by the partner succeeds (registered)"):
+        first = await sa_deals_client.register_deal(make_deal(pid, plan_id, **prospect))
+        assert first.deal_id, "precondition: first deal must be created"
+        assert first.data.get("conflictStatus") == "none", "first deal must have no conflict"
+        logger.info("CHECK first → OK (id={}, conflictStatus='none')", first.deal_id)
+
+    async with async_step("[2/3] SAME partner re-registers the SAME prospect → 400 duplicate"):
+        r = await sa_deals_client.raw_register_deal(
+            make_deal(pid, plan_id, **prospect), expected_status=None
+        )
+        assert r.status_code == 400, (
+            f"duplicate by the same partner must be rejected with 400, got {r.status_code}"
+        )
+        msg = str(r.json().get("message") or "")
+        assert "already exists" in msg.lower(), (
+            f"rejection should explain an active deal already exists, got message={msg!r}"
+        )
+        logger.info("CHECK duplicate → OK (400, msg~'already exists')")
+
+    async with async_step("[3/3] No second deal was created (hard reject, not the flagged path)"):
+        data = r.json().get("data") or {}
+        assert not (data.get("_id") or data.get("id")), (
+            "a rejected duplicate must NOT create a second deal"
+        )
+        logger.info("CHECK no-op → OK (no second deal id; differs from _004 cross-partner flag)")
+
+    logger.info("RESULT: same-partner duplicate deal rejected (400, no second deal created)")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@pytest.mark.be_gap  # step [3/3]: rate/rateTableVersion not exposed yet — confirm with BE
 async def test_partner_api_deal_registration_pipeline_008(
     sa_partners_client, sa_deals_client, created_resources
 ):
@@ -391,10 +446,7 @@ async def test_partner_api_deal_registration_pipeline_009(
                 )
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        prospect = {
-            "prospectName": make_partner()["name"] + " Prospect",
-            "prospectEmail": unique_email(),
-        }
+        prospect = make_prospect()  # unique identity, shared by both partners
         await sa_deals_client.register_deal(make_deal(p1.partner_id, plan_id, **prospect))
         flagged = await sa_deals_client.register_deal(make_deal(p2.partner_id, plan_id, **prospect))
         assert flagged.data.get("conflictStatus") == "flagged", (
@@ -532,10 +584,7 @@ async def test_partner_api_deal_registration_pipeline_013(
                 )
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        prospect = {
-            "prospectName": make_partner()["name"] + " Prospect",
-            "prospectEmail": unique_email(),
-        }
+        prospect = make_prospect()  # unique identity, shared by both partners
         deal_a = await sa_deals_client.register_deal(make_deal(p1.partner_id, plan_id, **prospect))
         deal_b = await sa_deals_client.register_deal(make_deal(p2.partner_id, plan_id, **prospect))
         assert deal_b.data.get("conflictStatus") == "flagged", (
@@ -581,6 +630,7 @@ async def test_partner_api_deal_registration_pipeline_013(
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost planId currently accepted (201) — confirm with BE
 async def test_partner_api_deal_registration_pipeline_021(
     sa_partners_client, sa_deals_client, created_resources
 ):

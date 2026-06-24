@@ -55,7 +55,12 @@ class SaDealsClient(BaseClient):
         if not plans:
             raise RuntimeError("no billing plans available to register a deal")
         published = next((p for p in plans if p.get("status") == "published"), plans[0])
-        return published.get("planId") or published.get("_id")
+        plan_id = published.get("planId") or published.get("_id")
+        if not plan_id:
+            raise RuntimeError(
+                f"billing plan has no planId/_id to register a deal with: {published!r}"
+            )
+        return plan_id
 
     async def raw_get_billing_plan(
         self,

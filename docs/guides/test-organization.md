@@ -119,6 +119,12 @@ mục riêng theo loại.
 | `@pytest.mark.api` | Test tầng HTTP | Mọi test trong `api/` |
 | `@pytest.mark.ui` | Test trình duyệt | Mọi test trong `ui/` |
 | `@pytest.mark.slow` | Chậm / E2E nhiều bước | E2E, job định kỳ |
+| `@pytest.mark.be_gap` | Gap BE đã biết, **cố ý đỏ** cho tới khi BE sửa (theo §6 rule 4) | TC mà bước kiểm chính fail vì BE thiếu logic |
+
+> **Tách tín hiệu pass/fail:** TC gắn `be_gap` vẫn FAIL để báo gap (rule 4), nhưng
+> **merge gate chạy `-m "not be_gap"`** để 100% xanh = không regression. Một job
+> riêng chạy `-m be_gap` để theo dõi gap BE (được phép đỏ). Nhờ vậy "đỏ đã biết"
+> không che "đỏ mới".
 
 ```bash
 python -m runner.<domain>.run_test --mode smoke        # chỉ smoke
@@ -179,6 +185,11 @@ cạnh feature tương ứng. Cột **Test Type** ghi rõ `Functional` / `Negati
 8. **Duplicate/Idempotency cho mọi POST tạo resource:**
    - Gọi 2 lần payload giống nhau → **ghi rõ behavior mong đợi**: 409 (reject trùng)
      hay idempotent (no-op/trả lại cái cũ)? Assert đúng cái đó, đừng để mơ hồ.
+   - **Là TC RIÊNG** (dòng riêng trong test plan, Test Type = `Negative`), đặt cạnh
+     feature create — KHÔNG nhét thành step cuối của TC positive (gộp 2 mục đích →
+     positive đỏ vì lý do duplicate, đọc log nhầm là "tạo hỏng"). Ngoại lệ DUY NHẤT:
+     nếu gửi-lại là một bước thật trong kịch bản `e2e/` (vd user bấm gửi 2 lần do
+     mạng) thì là `async_step`, không phải atomic.
 9. **Cập nhật tài liệu test case sau khi làm xong.** Mỗi khi viết xong (hoặc sửa) 1 TC,
    phải cập nhật **cả 2 file** với nội dung TC tương ứng (description + steps có
    → Expected + overall + note; nếu là gap thì ghi rõ "confirm BE"):
