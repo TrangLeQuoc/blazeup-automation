@@ -28,14 +28,14 @@ from runner.blazeup_admin.registry import TC_REGISTRY  # noqa: E402
 
 # TC IDs to run when no --execute / --mode flag is passed.
 # (empty until BlazeUp Admin test cases are added to the registry)
-DEFAULT_EXECUTE_IDS: list[str] = []
+DEFAULT_EXECUTE_IDS: list[str] = ["2060101-2061211"]
 
 # TC IDs to always skip
 DEFAULT_SKIP_IDS: list[str] = []
 
 # Export results to Excel after every run.  blazeup_admin owns the Partner
 # Platform test plan, so Excel reporting is enabled for this domain.
-REPORT_EXCEL: bool = False
+REPORT_EXCEL: bool = True
 
 # Run AI failure triage automatically when a run has failures (writes ai_triage.md).
 REPORT_AI_TRIAGE: bool = True

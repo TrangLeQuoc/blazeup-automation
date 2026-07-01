@@ -2,7 +2,6 @@
 pytest==9.0.3
 pytest-asyncio==1.3.0           # async def test support (asyncio_mode=auto)
 pytest-playwright-asyncio==0.7.2 # Playwright fixtures for pytest-asyncio
-pytest-html==4.2.0              # Self-contained HTML report per run
 pytest-xdist==3.8.0             # Parallel execution (-n auto)
 
 # ── Browser automation ────────────────────────────────────────────────────────

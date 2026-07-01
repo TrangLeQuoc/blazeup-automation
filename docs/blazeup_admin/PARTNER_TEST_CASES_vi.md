@@ -432,6 +432,20 @@
 **Expected (tổng):** Mọi extend-protection sai bị từ chối. BE validate body trước khi lookup deal nên các case field tự chứng minh trên ghost id (không cần deal thật).
 **Ghi chú:** PASSED — verified 2026-06-25. Phát hiện constraint: addedDays ∈ 1..180; reasoning bắt buộc + non-empty.
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
+**Mô tả test:** Idempotency của _016 (extend-protection): gọi lại lần 2 là ADDITIVE (cộng dồn), không phải no-op hay cap.
+**Các bước:**
+1. Register deal (lưu protectionExpiresAt = exp0).
+   → Expected: deal registered có protection window.
+2. Extend +30 ngày.
+   → Expected: exp1 == exp0 + 30d.
+3. Extend +30 ngày lần nữa.
+   → Expected: 200; exp2 == exp1 + 30d (cộng dồn từ expiry hiện tại); deal vẫn 'registered'.
+4. GET /v1/sa/deals/{id}.
+   → Expected: window lưu == exp0 + 60d.
+**Expected (tổng):** extend-protection là mutating action có tham số — repeat cộng dồn theo thiết kế (không phải idempotent no-op, không cap). Mỗi lần gọi còn được ghi vào protectionExtensions[].
+**Ghi chú:** PASSED — verified 2026-07-01. Probe theo rule 8 (mutating action ≠ POST-create): hành vi additive (exp0 +30 → +30 = +60). BE stamp từng lần vào protectionExtensions[] (extendedBy/at, previous/newExpiresAt, addedDays, trigger, reasoning).
+
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001

@@ -36,12 +36,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    base_url: AnyHttpUrl = Field(default="https://stgsa.blazeup.ai")
-    api_base_url: AnyHttpUrl = Field(default="https://api.stg.blazeup.ai")
+    # Required — set per-domain in config/<domain>/.env (see .env.example).
+    # No default on purpose: a missing .env should fail fast, not silently
+    # point every test at a hard-coded environment.
+    base_url: AnyHttpUrl = Field(..., description="UI app root, e.g. https://stgsa.blazeup.ai")
+    api_base_url: AnyHttpUrl = Field(..., description="API root, e.g. https://api.stg.blazeup.ai")
     test_email: str | None = Field(default=None)
     test_password: str | None = Field(default=None)
-    partner_email: str | None = Field(default=None)
-    partner_password: str | None = Field(default=None)
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)

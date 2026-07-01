@@ -54,6 +54,7 @@ _OUTCOME_MAP: dict[str, str] = {
     "PASSED": "PASSED",
     "FAILED": "FAILED",
     "ERROR": "FAILED",
+    "BLOCKED": "BLOCKED",
     "SKIPPED": "NOT_STARTED",
     "MISSING": "NOT_STARTED",
     "UNKNOWN": "NOT_STARTED",
@@ -64,6 +65,8 @@ def _outcome_from_summary(s: dict) -> str:
     """Convert a tc_summary dict into an Excel automation status string."""
     if s["failed"] > 0:
         return "FAILED"
+    if s.get("blocked", 0) > 0:
+        return "BLOCKED"
     if s["passed"] > 0:
         return "PASSED"
     # skipped / missing

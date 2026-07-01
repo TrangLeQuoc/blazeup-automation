@@ -45,7 +45,7 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
 ┌────────────────────────────▼────────────────────────────────────────┐
 │                          pytest                                    │
 │ conftest.py → fixtures.py (auth_state session-scoped: login once) │
-│ tests/{domain}/api/**  tests/{domain}/ui/**                       │
+│ tests/{domain}/{api|ui}/{module}/**                               │
 └────────┬──────────────────────────────────────┬────────────────────┘
          │                                      │
 ┌────────▼────────────────┐        ┌───────────▼─────────────────┐
@@ -71,8 +71,16 @@ The shared runner merges all domain registries at runtime.
 
 | Layer | Tech | Location |
 |-------|------|----------|
-| API | `httpx` + `Pydantic` models | `api_clients/` + `tests/{domain}/api/` |
-| UI | `Playwright` async + Page Object Model | `pages/` + `tests/{domain}/ui/` |
+| API | `httpx` + `Pydantic` models | `api_clients/{domain}/{module}/` + `tests/{domain}/api/{module}/` |
+| UI | `Playwright` async + Page Object Model | `pages/{domain}/` + `tests/{domain}/ui/{module}/` |
+
+> **Module layer:** tests and API clients are grouped by module under the domain
+> (e.g. `tests/blazeup_admin/api/partner/`, `api_clients/blazeup_admin/partner/`).
+> TC IDs come from the test **function name**, not the path — moving a test between
+> folders never changes its ID (`sync_registry` scans recursively). Only shared
+> infra stays at the domain root: `api_clients/{domain}/auth_client.py`,
+> `api_clients/base_client.py`. Add a new module = new subfolder under each of
+> `api_clients/{domain}/`, `tests/{domain}/api/` (and `ui/`).
 
 **Key design decisions:**
 - All tests are `async def` — powered by `pytest-asyncio` in `auto` mode.
@@ -270,7 +278,7 @@ python -m pytest -m smoke -s
 python -m pytest tests/ -x -s
 ```
 
-> **Note:** Direct pytest writes artifacts to `reports/pytest-report.html` and `allure-results/` (root-level), not to a timestamped `results/run_*/` folder.
+> **Note:** Direct pytest writes Allure data to `allure-results/` (root-level, overwritten each run), not to a timestamped `results/run_*/` folder. View with `allure serve allure-results`.
 
 ### 4.3 Defaults you can change in `run_test.py`
 
@@ -612,7 +620,6 @@ Every `python -m runner.run_test` run creates:
 ```text
 results/run_YYYYMMDD_HHMMSS/
 ├── run_meta.json              # TC IDs, node IDs, mode, timestamp
-├── report.html                # Self-contained pytest-html report
 ├── logs/
 │   ├── test.log               # Full loguru log (all levels, TC-annotated)
 │   └── junit.xml              # JUnit XML (parsed by the runner)
@@ -626,10 +633,7 @@ results/run_YYYYMMDD_HHMMSS/
 
 ### 9.2 Viewing reports
 
-**pytest-html** (quickest):
-Open `results/run_.../report.html` directly in a browser.
-
-**Allure** (richest — steps, screenshots, timeline):
+**Allure** (steps, screenshots, timeline — the primary report):
 ```powershell
 # The runner prints this command after every run:
 allure open "results/run_YYYYMMDD_HHMMSS/allure-report"
@@ -655,8 +659,7 @@ python -m playwright show-trace "results/run_YYYYMMDD_HHMMSS/traces/test_tc01_lo
 When running `python -m pytest ...` directly (not through the runner):
 
 ```text
-reports/pytest-report.html    # from pytest.ini addopts
-allure-results/               # root-level (overwritten each run)
+allure-results/               # root-level (overwritten each run) — view with `allure serve allure-results`
 ```
 
 ---
@@ -671,7 +674,6 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 |---------|------|-------------|
 | `settings` | `Settings` | Pydantic config loaded from `config/{domain}/.env` |
 | `result_dir` | `Path` | Timestamped run folder; configures loguru sinks |
-| `test_data` | `dict` | Parsed `fixtures/test_data.yaml` |
 | `fake` | `Faker` | Faker instance for generating test data |
 | `auth_state` | `dict` | **NEW**: Playwright storage state (cookies + localStorage) cached from one login; injected into every `authenticated_page` context |
 | `api_token` | `str` | **Session-scoped**: One JWT per session; reused across all API tests. Avoids repeated login. |
@@ -699,7 +701,7 @@ async def test_tca04_get_me_returns_user_info(auth_client):
     assert response.email is not None
 
 # UI test — use page (unauthenticated)
-async def test_tc02_login_fails_with_wrong_password(page, settings, test_data):
+async def test_tc02_login_fails_with_wrong_password(page, settings):
     login = LoginPage(page, str(settings.base_url))
     await login.open()
     await login.login("bad@example.com", "wrong")

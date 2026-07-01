@@ -13,7 +13,7 @@ How it works
 2. For each function, compute the numeric TC ID from the function name alone.
 3. Look up title & priority from docs/{domain}/Partner_Platform_Test_Plan.xlsx (optional).
    Falls back to function docstring / "P2" default if Excel is unavailable.
-4. Also pick up legacy test_tc* / test_tca* functions (BlazeUp HRMS demo tests).
+4. Also pick up legacy test_tc* / test_tca* functions (legacy demo tests).
 5. Write runner/{domain}/registry.py.
 
 Only IMPLEMENTED test cases (i.e. functions that already exist in a test file)
@@ -58,7 +58,7 @@ New-style:
     UI IDs are 8 digits (>= 11_000_000); API IDs are <= 7 digits.
     -> No collision between UI and API, nor across projects.
 
-Legacy-style (BlazeUp HRMS demo tests, preserved for backward-compat):
+Legacy-style (legacy demo tests, preserved for backward-compat):
     test_tc01_*   -> 1001  (UI)
     test_tca01_*  ->    1  (API)
 
@@ -180,12 +180,12 @@ New-style  :  {{type}}{{project}}{{module:02d}}{{section:02d}}{{seq:02d}}
               module/section are per-domain. The project digit keeps IDs unique
               across projects even when they share a module name.
 
-Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
+Legacy     :  1001-1999 = UI demo   1-99 = API demo   (legacy demo suite)
 
 Traceability
 ------------
 tc_string  links each registry entry back to the TestcaseId column in
-Partner_Platform_Test_Plan.xlsx.  Empty string for legacy (HRMS) tests.
+Partner_Platform_Test_Plan.xlsx.  Empty string for legacy demo tests.
 """
 
 from dataclasses import dataclass, field
@@ -460,14 +460,14 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = Non
 
 
 # ---------------------------------------------------------------------------
-# Legacy BlazeUp HRMS scanner (old test_tc* / test_tca* naming)
+# Legacy demo scanner (old test_tc* / test_tca* naming)
 # ---------------------------------------------------------------------------
 
 
 def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
     """Scan test files for old-style test_tc* / test_tca* functions.
 
-    These are BlazeUp HRMS demo tests.
+    These are legacy demo tests.
 
     IDs are assigned sequentially (1, 2, 3, …) sorted by:
         1. type  — api before ui

@@ -432,6 +432,20 @@
 **Expected (overall):** Every invalid extend-protection attempt rejected. BE validates the body before the deal lookup, so field cases are self-proving on a ghost id (no real deal needed).
 **Note:** PASSED — verified 2026-06-25. Spec constraint discovered: addedDays ∈ 1..180; reasoning required + non-empty.
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
+**Test Description:** Idempotency of _016 (extend-protection): a repeat extension is ADDITIVE, not a no-op or a cap.
+**Test Steps:**
+1. Register a deal (capture protectionExpiresAt = exp0).
+   → Expected: registered deal has a protection window.
+2. Extend +30 days.
+   → Expected: exp1 == exp0 + 30d.
+3. Extend +30 days again.
+   → Expected: 200; exp2 == exp1 + 30d (stacks from the current expiry); deal stays 'registered'.
+4. GET /v1/sa/deals/{id}.
+   → Expected: persisted window == exp0 + 60d.
+**Expected (overall):** extend-protection is a parameterized mutating action — repeats are additive by design (not idempotent no-op, not capped). Each call is also recorded in protectionExtensions[].
+**Note:** PASSED — verified 2026-07-01. Probed per rule 8 (mutating action ≠ POST-create): behaviour is additive (exp0 +30 → +30 = +60). BE stamps each extension in protectionExtensions[] (extendedBy/at, previous/newExpiresAt, addedDays, trigger, reasoning).
+
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001

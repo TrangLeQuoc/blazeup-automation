@@ -1,4 +1,4 @@
-"""Login page object for the HRMS application."""
+"""Login page object for the BlazeUp admin application."""
 
 import re
 

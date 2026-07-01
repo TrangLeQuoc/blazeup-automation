@@ -95,7 +95,10 @@ blazeup_automation/
 ├── api_clients/                          # HTTP API clients (httpx + Pydantic)
 │   ├── base_client.py                    #   Base: retry, timing, schema validation
 │   ├── blazeup_admin/
-│   │   └── auth_client.py                #   Login + current-user (sa-auth-api)
+│   │   ├── auth_client.py                #   Login + current-user (sa-auth-api, shared)
+│   │   └── partner/                      #   Partner-module clients
+│   │       ├── sa_partners_client.py     #     Partners, users, certs, territories, audit
+│   │       └── sa_deals_client.py        #     Deal register / approve / pipeline
 │   └── blazeup_partner/
 │       └── deal_registration_client.py   #   Deal registration (SCAFFOLD)
 │
@@ -117,9 +120,6 @@ blazeup_automation/
 │       ├── partner_product_backlog.vi.md
 │       ├── partner_requirement.xlsx
 │       └── partner-platform-prd-v1.8(.vi).md
-│
-├── fixtures/
-│   └── test_data.yaml                    #   Static test data (invalid users, etc.)
 │
 ├── locators/                             #   UI element selectors (by page/domain)
 │   ├── blazeup_admin/                    #   *Locators classes in *_locators.py
@@ -159,13 +159,17 @@ blazeup_automation/
 │       ├── health.py
 │       └── swagger_check.py
 │
-├── tests/                                #   Test cases (domain/layer structure)
+├── tests/                                #   Test cases (domain / layer / module)
 │   ├── blazeup_admin/
-│   │   ├── api/                          #   (Waiting for test plan)
-│   │   └── ui/                           #   (Waiting for test plan)
-│   └── blazeup_partner/
-│       ├── api/                          #   (Waiting for test plan)
-│       └── ui/                           #   (Waiting for test plan)
+│   │   ├── api/
+│   │   │   └── partner/                  #   Partner module — one file per feature
+│   │   │       └── test_sa_*.py          #     deals, partners, territories, certs, ...
+│   │   └── ui/
+│   │       ├── dashboard/                #   Dashboard module
+│   │       └── shell/                    #   Shell module (page loads, load time)
+│   └── blazeup_partner/                  #   (same domain / layer / module pattern)
+│       ├── api/
+│       └── ui/
 │
 ├── utils/                                #   Shared utilities
 │   ├── login_helpers.py                  #   Reusable: login_ui(), login_api()
@@ -173,7 +177,7 @@ blazeup_automation/
 │   ├── excel_reporter.py                 #   Exports results to Excel
 │   ├── ai_triage.py                      #   AI failure triage → ai_triage.md
 │   ├── data_factory.py                   #   Faker factories (make_user/tenant/partner/deal)
-│   ├── helpers.py                        #   load_yaml, require_credentials
+│   ├── helpers.py                        #   require_credentials
 │   ├── log_helper.py                     #   Custom log levels: STEP, START, PASSED, FAILED
 │   └── screenshot_on_fail.py             #   Allure screenshot attachment
 │
@@ -293,7 +297,6 @@ Each test run creates a timestamped folder:
 
 ```
 results/run_YYYYMMDD_HHMMSS/
-├── report.html                          # pytest-html report
 ├── run_meta.json                        # TC IDs, timestamps, node IDs
 ├── logs/test.log                        # Full loguru log (grep-friendly)
 ├── screenshots/                         # Final + failure screenshots
@@ -307,9 +310,6 @@ results/run_YYYYMMDD_HHMMSS/
 ```bash
 # Allure report
 allure serve results/run_*/allure-results
-
-# HTML pytest report
-open results/run_*/report.html
 
 # Logs (grep-friendly format)
 grep "TC-" results/run_*/logs/test.log
@@ -353,7 +353,6 @@ grep "TC-" results/run_*/logs/test.log
 | `make_page` | function | Factory: build an authenticated page object — `make_page(ShellPage)` |
 | `created_resources` | function | Track created resources → auto-delete on teardown (CRUD tests) |
 | `auth_state` | session | Pre-cached Playwright storage state (internal) |
-| `test_data` | session | Static test data from `fixtures/test_data.yaml` |
 | `fake` | session | Faker instance for dynamic data generation |
 | `test_user` | function | Generated user data dict |
 

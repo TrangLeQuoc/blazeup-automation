@@ -21,7 +21,6 @@ build/
 
 # -- Test run artifacts
 results/
-reports/
 allure-results/
 allure-report/
 allure_report_test/

@@ -19,7 +19,6 @@ from pytest_support.fixtures import (
     sa_partners_client,
     settings,
     tc_logger,
-    test_data,
     test_user,
 )
 from pytest_support.hooks import pytest_runtest_makereport
@@ -40,6 +39,5 @@ __all__ = [
     "sa_partners_client",
     "settings",
     "tc_logger",
-    "test_data",
     "test_user",
 ]

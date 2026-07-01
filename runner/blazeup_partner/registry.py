@@ -7,12 +7,12 @@ New-style  :  {type}{project}{module:02d}{section:02d}{seq:02d}
               module/section are per-domain. The project digit keeps IDs unique
               across projects even when they share a module name.
 
-Legacy     :  1001-1999 = UI demo   1-99 = API demo   (BlazeUp HRMS test suite)
+Legacy     :  1001-1999 = UI demo   1-99 = API demo   (legacy demo suite)
 
 Traceability
 ------------
 tc_string  links each registry entry back to the TestcaseId column in
-Partner_Platform_Test_Plan.xlsx.  Empty string for legacy (HRMS) tests.
+Partner_Platform_Test_Plan.xlsx.  Empty string for legacy demo tests.
 """
 
 from dataclasses import dataclass, field

@@ -43,7 +43,7 @@ modules:
       # API grouped by backend FEATURE/resource (not by page):
       PARTNER_ACCOUNT_MANAGEMENT: 1
       DEAL_REGISTRATION_PIPELINE: 2
-      # COMMISSIONS_PAYOUTS: 3
+      COMMISSIONS_PAYOUTS: 3   # _002 (ledger list) + _006 (rate-table) buildable; the rest BLOCKED
       TERRITORIES: 4
       CERTIFICATIONS_SA: 5
       AUDIT_LOG: 6
@@ -55,7 +55,9 @@ modules:
       PIPELINE_MANAGEMENT: 12
   MARKETPLACE:
     number: 7
-  AUDIT_LOG:
+  # SA-Dashboard "Audit Log" nav PAGE — distinct from PARTNER.api.AUDIT_LOG (=6),
+  # which holds the sa-partners-api audit-log API TCs. Reserved slot, no test yet.
+  SA_AUDIT_PAGE:
     number: 8
   CONNECTORS:
     number: 9
@@ -74,13 +76,13 @@ modules:
   GOVERNANCE:
     number: 16
 
-excel:
-  file: SA_Test_Plan.xlsx
-  sheet: "SA Platform"
-  # module / excel_prefix: set these once the SA test plan sheet exists, e.g.
-  #   module: <CODE_MODULE_NAME>
-  #   excel_prefix: SA
-  col_tc_string: 3
-  col_auto_flag: 10
-  col_auto_status: 11
-  data_start_row: 13
+# Excel lookup (optional) — supplies TC title/priority during sync.
+# The file path is HARD-CODED in sync_registry.py to
+#   docs/<domain>/Partner_Platform_Test_Plan.xlsx  (NOT read from here).
+# The title/priority lookup only activates when BOTH `sheet` and `module` are set
+# (see sync_registry.py); today titles come from each test's docstring, so this
+# block is inert. To enable Excel-driven titles later, uncomment + adjust:
+# excel:
+#   sheet: "Partner Platform"
+#   module: PARTNER
+#   excel_prefix: PARTNER_API   # TC-id prefix as written in the sheet

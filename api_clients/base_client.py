@@ -109,7 +109,7 @@ def _attach_response(name: str, response: httpx.Response) -> None:
 
 
 class BaseClient:
-    """Reusable async API client for BlazeUp HRMS endpoints."""
+    """Reusable async API client for BlazeUp endpoints."""
 
     def __init__(
         self,

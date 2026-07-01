@@ -921,6 +921,71 @@ async def test_partner_api_deal_registration_pipeline_030(sa_deals_client):
 
 @pytest.mark.api
 @pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_033(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_033: extend-protection repeat is ADDITIVE (idempotency probe).
+
+    Idempotency counterpart of _016. extend-protection is a parameterized mutating
+    action (+N days), NOT a resource create — a repeat may legitimately be additive
+    OR capped. This probes the real behaviour: calling extend twice (+N, then +N)
+    stacks the window from the then-current expiry (additive by design), it is not a
+    silent no-op and does not error. If BE ever caps stacking, this test surfaces it.
+    """
+    from datetime import datetime, timedelta
+
+    def _parse(ts: object) -> datetime:
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+
+    added_days = 30
+    async with async_step("Setup: partner + plan + a registered deal (has a protection window)"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
+        deal_id = deal.deal_id
+        exp0 = deal.data.get("protectionExpiresAt")
+        assert exp0, "precondition: registered deal must have a protection window"
+        logger.info("SETUP: deal {} protectionExpiresAt={}", deal_id, exp0)
+
+    async with async_step("[1/3] First extend (+30 days)"):
+        r1 = await sa_deals_client.extend_protection(
+            deal_id, added_days=added_days, reasoning="QA-AUTO extend #1"
+        )
+        exp1 = r1.data.get("protectionExpiresAt")
+        assert _parse(exp1) == _parse(exp0) + timedelta(days=added_days), (
+            f"first extend must add {added_days}d: {exp0} → {exp1}"
+        )
+        logger.info("CHECK extend#1 → OK ({} → {})", exp0, exp1)
+
+    async with async_step("[2/3] Second extend (+30 days) — repeat behaviour"):
+        r2 = await sa_deals_client.extend_protection(
+            deal_id, added_days=added_days, reasoning="QA-AUTO extend #2"
+        )
+        assert r2.status_code == 200, f"second extend must succeed, got {r2.status_code}"
+        exp2 = r2.data.get("protectionExpiresAt")
+        assert _parse(exp2) == _parse(exp1) + timedelta(days=added_days), (
+            "repeat extend must be ADDITIVE (stack from the current expiry): "
+            f"{exp1} +{added_days}d expected, got {exp2}"
+        )
+        assert r2.data.get("status") == "registered", "deal must stay 'registered'"
+        logger.info("CHECK extend#2 → OK additive ({} → {})", exp1, exp2)
+
+    async with async_step("[3/3] Total window == exp0 + 2*N persists (GET by id)"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert _parse(fetched.data.get("protectionExpiresAt")) == _parse(exp0) + timedelta(
+            days=2 * added_days
+        ), "persisted window must equal original + 2×addedDays (additive)"
+        logger.info("CHECK persisted → OK (total +{} days)", 2 * added_days)
+
+    logger.info("RESULT: extend-protection repeat is additive (not idempotent no-op, not capped)")
+
+
+@pytest.mark.api
+@pytest.mark.regression
 async def test_partner_api_deal_registration_pipeline_020(
     sa_partners_client, sa_deals_client, created_resources
 ):

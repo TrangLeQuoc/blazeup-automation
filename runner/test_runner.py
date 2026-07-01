@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Core BlazeUp HRMS test execution helper."""
+"""Core BlazeUp test execution helper."""
 
 import json
 import os
@@ -221,8 +221,6 @@ def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = F
         "-s",
         "--tb=short",
         *node_ids,
-        f"--html={result_dir / 'report.html'}",
-        "--self-contained-html",
         f"--alluredir={result_dir / 'allure-results'}",
         # Suppress noisy third-party loggers from pytest's internal capture
         # (these would appear in the '--- Captured log call ---' section on failure)
@@ -251,6 +249,42 @@ def resolve_tcs(tc_ids: list[int]) -> list[TestCase]:
         except KeyError:
             logger.warning("TC ID {} not found in registry. Try running sync_registry.py.", tc_id)
     return selected
+
+
+# A test whose failure/skip message matches one of these is an ENVIRONMENT /
+# precondition problem (shared login down, service 5xx, connection error) — it is
+# reported as BLOCKED, not FAILED, so a down staging env never looks like a defect.
+_BLOCKED_SIGNATURES = (
+    "blocked:",  # explicit precondition skip from a fixture (shared login down)
+    # Gateway/infra 5xx = service unavailable → env block. NOTE: 500 is deliberately
+    # NOT here — a bare 500 is usually an APP BUG (service up, crashed on the request),
+    # which must stay FAILED. Shared-login failures already carry the "blocked:" tag.
+    "got 502",
+    "got 503",
+    "got 504",
+    "bad gateway",
+    "service unavailable",
+    "gateway timeout",
+    # Network unreachable / timeout → env block.
+    "connecterror",
+    "connecttimeout",
+    "readtimeout",
+    "connection refused",
+    "max retries",
+    "getaddrinfo",
+)
+
+
+def _is_blocked(message: str) -> bool:
+    """True when a failure/skip message indicates an env/precondition block."""
+    low = (message or "").lower()
+    return any(sig in low for sig in _BLOCKED_SIGNATURES)
+
+
+# Exit code for a run that had no real failures but was BLOCKED by the environment
+# (login down, service 5xx). Distinct + non-zero so CI never reads a broken env as
+# a clean pass, and distinct from pytest's own 1 (failures) / 5 (nothing collected).
+_EXIT_BLOCKED = 3
 
 
 def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str]]:
@@ -301,6 +335,10 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
             else:
                 status = "PASSED"
 
+        # Precondition/env failures (login down, 5xx, connection) → BLOCKED, not FAILED.
+        if status in ("FAILED", "ERROR", "SKIPPED") and _is_blocked(message):
+            status = "BLOCKED"
+
         rows.append(
             {
                 "tc_id": str(tc.tc_id),
@@ -336,6 +374,7 @@ def _build_tc_summaries_from_rows(summary_rows: list[dict[str, str]]) -> list[di
                 "runs": 1,
                 "passed": 1 if status == "PASSED" else 0,
                 "failed": 1 if status in ("FAILED", "ERROR") else 0,
+                "blocked": 1 if status == "BLOCKED" else 0,
                 "skipped": 1 if status == "SKIPPED" else 0,
                 "avg_time": float(row["time"] or 0),
                 "last_msg": row["message"],
@@ -356,11 +395,12 @@ def _build_tc_summaries_from_perf(
             continue
         passed = sum(1 for r in runs if r["status"] == "PASSED")
         failed = sum(1 for r in runs if r["status"] in ("FAILED", "ERROR"))
+        blocked = sum(1 for r in runs if r["status"] == "BLOCKED")
         skipped = sum(1 for r in runs if r["status"] == "SKIPPED")
         times = [float(r["time"]) for r in runs if r.get("time") and r["status"] != "MISSING"]
         avg_t = sum(times) / len(times) if times else 0.0
         last_msg = next(
-            (r["message"] for r in reversed(runs) if r["status"] in ("FAILED", "ERROR")),
+            (r["message"] for r in reversed(runs) if r["status"] in ("FAILED", "ERROR", "BLOCKED")),
             "",
         )
         result.append(
@@ -373,6 +413,7 @@ def _build_tc_summaries_from_perf(
                 "runs": len(runs),
                 "passed": passed,
                 "failed": failed,
+                "blocked": blocked,
                 "skipped": skipped,
                 "avg_time": avg_t,
                 "last_msg": last_msg,
@@ -386,6 +427,7 @@ def _render_single_run_table(summaries: list[dict]) -> str:
     _STATUS = {
         "pass": f"{_GREEN}PASS   {_RESET}",
         "fail": f"{_RED}FAIL   {_RESET}",
+        "block": f"\033[95mBLOCK  {_RESET}",
         "skip": f"{_YELLOW}SKIP   {_RESET}",
         "missing": f"{_DIM}MISSING{_RESET}",
     }
@@ -405,6 +447,8 @@ def _render_single_run_table(summaries: list[dict]) -> str:
             key = "pass"
         elif s["failed"]:
             key = "fail"
+        elif s.get("blocked"):
+            key = "block"
         elif s["skipped"]:
             key = "skip"
         else:
@@ -452,7 +496,9 @@ def _render_multi_run_table(summaries: list[dict]) -> str:
         failed = s["failed"]
         rate = f"{passed / runs * 100:.0f}%" if runs else "--"
 
-        if failed == 0:
+        if passed == 0 and failed == 0 and s.get("blocked"):
+            stability = "\033[95mBLOCKED\033[0m"
+        elif failed == 0:
             stability = f"{_GREEN}STABLE {_RESET}"
         elif passed == 0:
             stability = f"{_RED}FAILING{_RESET}"
@@ -511,6 +557,7 @@ def print_run_summary(
     total_runs = sum(s["runs"] for s in tc_summaries)
     total_passed = sum(s["passed"] for s in tc_summaries)
     total_failed = sum(s["failed"] for s in tc_summaries)
+    total_blocked = sum(s.get("blocked", 0) for s in tc_summaries)
     total_skipped = sum(s["skipped"] for s in tc_summaries)
     is_multi = repeat > 1
 
@@ -518,7 +565,7 @@ def print_run_summary(
 
     # ── Header ────────────────────────────────────────────────────────────────
     out.append(f"\n{_BOLD}{_BLUE}{'=' * W}{_RESET}")
-    out.append(f"{_BOLD}  BlazeUp HRMS  --  Test Run Summary{_RESET}")
+    out.append(f"{_BOLD}  BlazeUp  --  Test Run Summary{_RESET}")
     out.append(f"  Mode        : {_CYAN}{mode}{_RESET}")
     if is_multi:
         out.append(f"  Repeat      : {repeat}x  ({repeat_mode})")
@@ -546,6 +593,7 @@ def print_run_summary(
             f"  Total runs  : {total_runs}   "
             f"{_GREEN}Pass: {total_passed}{_RESET}   "
             f"{_RED}Fail: {total_failed}{_RESET}   "
+            f"\033[95mBlock: {total_blocked}\033[0m   "
             f"{_YELLOW}Skip: {total_skipped}{_RESET}"
         )
         if flaky_ids:
@@ -554,23 +602,25 @@ def print_run_summary(
             out.append(f"  {_RED}Failing: TC {', '.join(failing_ids)}{_RESET}")
     else:
         fail_ids = [str(s["tc_id"]) for s in tc_summaries if s["failed"] > 0]
+        blocked_ids = [str(s["tc_id"]) for s in tc_summaries if s.get("blocked", 0) > 0]
         skip_ids = [str(s["tc_id"]) for s in tc_summaries if s["skipped"] > 0]
         out.append(
             f"  Total : {total_tcs}   "
             f"{_GREEN}PASS: {total_passed}{_RESET}   "
             f"{_RED}FAIL: {total_failed}{_RESET}   "
+            f"\033[95mBLOCK: {total_blocked}\033[0m   "
             f"{_YELLOW}SKIP: {total_skipped}{_RESET}"
         )
         if fail_ids:
             out.append(f"  {_RED}Failed : TC {', '.join(fail_ids)}{_RESET}")
+        if blocked_ids:
+            out.append(f"  \033[95mBlocked: TC {', '.join(blocked_ids)}\033[0m")
         if skip_ids:
             out.append(f"  {_YELLOW}Skipped: TC {', '.join(skip_ids)}{_RESET}")
 
     if result_dir is not None:
         log_path = result_dir / "logs" / "test.log"
-        report_path = result_dir / "report.html"
         out.append(f"\n  Logs   : {_terminal_link(str(log_path), log_path.as_uri())}")
-        out.append(f"  Report : {_terminal_link(str(report_path), report_path.as_uri())}")
 
         if allure_html is not None:
             # Report generated — show the open command to copy-paste or click
@@ -673,6 +723,7 @@ def run_tc_ids(
 
     summary_rows = parse_junit_xml(result_dir / "logs" / "junit.xml", tcs)
     tc_summaries = _build_tc_summaries_from_rows(summary_rows)
+    total_blocked = sum(s.get("blocked", 0) for s in tc_summaries)
 
     # Generate static Allure HTML report (link shown in summary — Ctrl+Click to open).
     # shell=True makes this work on Windows where allure is a .bat/.cmd file.
@@ -720,6 +771,9 @@ def run_tc_ids(
         if rc != 0:
             print("Allure serve failed. Check the Allure CLI installation and retry.")
 
+    # A run with no real failures but BLOCKED TCs must not look like a clean pass.
+    if result.returncode == 0 and total_blocked > 0:
+        return _EXIT_BLOCKED
     return result.returncode
 
 
@@ -834,10 +888,14 @@ def run_performance_plan(
                 tag = f"{_GREEN}PASS{_RESET}"
             elif row["status"] in ("FAILED", "ERROR"):
                 tag = f"{_RED}FAIL{_RESET}"
+            elif row["status"] == "BLOCKED":
+                tag = "\033[95mBLOCK\033[0m"
             else:
                 tag = f"{_YELLOW}SKIP{_RESET}"
             print(f"TC{row['tc_id']}={tag}({row['time']}s)", end="  ")
             perf_results[int(row["tc_id"])].append(row)
+            # BLOCKED is an env/precondition state, not a test failure → does not
+            # count toward total_failures (so it never trips --fail-fast-count).
             if row["status"] in ("FAILED", "ERROR"):
                 total_failures += 1
 
@@ -864,7 +922,14 @@ def run_performance_plan(
     any_failed = any(
         r["status"] in ("FAILED", "ERROR") for runs in perf_results.values() for r in runs
     )
-    return 1 if any_failed else 0
+    any_blocked = any(r["status"] == "BLOCKED" for runs in perf_results.values() for r in runs)
+    # Real failures win (exit 1). Otherwise a run that was BLOCKED by the env must
+    # not look like a clean pass → exit _EXIT_BLOCKED, never 0.
+    if any_failed:
+        return 1
+    if any_blocked:
+        return _EXIT_BLOCKED
+    return 0
 
 
 # ---------------------------------------------------------------------------

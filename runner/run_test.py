@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Light wrapper to run BlazeUp HRMS tests by TC number.
+"""Light wrapper to run BlazeUp tests by TC number.
 
 Execution Modes (--mode):
   normal      Run TCs by explicit ID list (default)
@@ -245,7 +245,7 @@ def print_dry_run(base_ids: list[int], repeat: int, repeat_mode: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Run BlazeUp HRMS tests by TC ID",
+        description="Run BlazeUp tests by TC ID",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
