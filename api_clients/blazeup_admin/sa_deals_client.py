@@ -131,6 +131,106 @@ class SaDealsClient(BaseClient):
             f"{_DEALS_PATH}/{deal_id}/approve", json=body, expected_status=expected_status
         )
 
+    async def extend_protection(
+        self,
+        deal_id: str,
+        *,
+        added_days: int,
+        reasoning: str,
+        expected_status: int | tuple[int, ...] = 201,
+    ) -> DealWriteResponse:
+        """POST manually extend a deal's protection window (SA action + reasoning).
+
+        Body ``ExtendProtectionDto{addedDays, reasoning}`` (both required). On
+        success the deal's ``protectionExpiresAt`` is pushed out by ``addedDays``.
+        HTTP 201 / body statusCode 200 (same pattern as the other deal writes).
+        """
+        response = await self.post(
+            f"{_DEALS_PATH}/{deal_id}/extend-protection",
+            json={"addedDays": added_days, "reasoning": reasoning},
+            expected_status=expected_status,
+        )
+        return DealWriteResponse.model_validate(response.json())
+
+    async def raw_extend_protection(
+        self,
+        deal_id: str,
+        *,
+        added_days: int | None = None,
+        reasoning: str | None = None,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST extend-protection for negative tests — returns the response unvalidated."""
+        body: dict[str, Any] = {}
+        if added_days is not None:
+            body["addedDays"] = added_days
+        if reasoning is not None:
+            body["reasoning"] = reasoning
+        return await self.post(
+            f"{_DEALS_PATH}/{deal_id}/extend-protection", json=body, expected_status=expected_status
+        )
+
+    async def reject_deal(
+        self,
+        deal_id: str,
+        *,
+        review_notes: str | None = None,
+        expected_status: int | tuple[int, ...] = 201,
+    ) -> DealWriteResponse:
+        """POST reject a registered deal (body ``ReviewDealDto{reviewNotes}``, optional).
+
+        On success the deal transitions ``registered`` → ``rejected``. HTTP 201.
+        """
+        body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
+        response = await self.post(
+            f"{_DEALS_PATH}/{deal_id}/reject", json=body, expected_status=expected_status
+        )
+        return DealWriteResponse.model_validate(response.json())
+
+    async def raw_reject_deal(
+        self,
+        deal_id: str,
+        *,
+        review_notes: str | None = None,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST reject for negative tests — returns the response unvalidated."""
+        body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
+        return await self.post(
+            f"{_DEALS_PATH}/{deal_id}/reject", json=body, expected_status=expected_status
+        )
+
+    async def lose_deal(
+        self,
+        deal_id: str,
+        *,
+        notes: str | None = None,
+        expected_status: int | tuple[int, ...] = 201,
+    ) -> DealWriteResponse:
+        """POST mark an APPROVED deal as lost (body ``LoseDealDto{notes}``, optional).
+
+        Precondition: the deal must be ``approved`` (losing a ``registered`` deal is a
+        400 illegal transition). On success ``status`` → ``lost``. HTTP 201.
+        """
+        body: dict[str, Any] = {} if notes is None else {"notes": notes}
+        response = await self.post(
+            f"{_DEALS_PATH}/{deal_id}/lose", json=body, expected_status=expected_status
+        )
+        return DealWriteResponse.model_validate(response.json())
+
+    async def raw_lose_deal(
+        self,
+        deal_id: str,
+        *,
+        notes: str | None = None,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST lose for negative tests — returns the response unvalidated."""
+        body: dict[str, Any] = {} if notes is None else {"notes": notes}
+        return await self.post(
+            f"{_DEALS_PATH}/{deal_id}/lose", json=body, expected_status=expected_status
+        )
+
     async def resolve_conflict(
         self,
         deal_id: str,

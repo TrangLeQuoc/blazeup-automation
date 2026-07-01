@@ -17,6 +17,8 @@ from api_clients.base_client import BaseClient
 # <api_base_url>/sa-partners-api/v1/sa/partners.
 _PARTNERS_PATH = "/sa-partners-api/v1/sa/partners"
 _PARTNER_USERS_PATH = "/sa-partners-api/v1/sa/partner-users"
+_CERTIFICATIONS_PATH = "/sa-partners-api/v1/sa/certifications"  # SA-wide cert list
+_TERRITORIES_PATH = "/sa-partners-api/v1/sa/territories"
 
 
 class PartnerListResponse(BaseModel):
@@ -233,6 +235,32 @@ class SaPartnersClient(BaseClient):
             expected_status=expected_status,
         )
 
+    async def list_partner_users(
+        self,
+        *,
+        partner_id: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+        expected_status: int | tuple[int, ...] = 200,
+        **filters: Any,
+    ) -> PartnerListResponse:
+        """GET the SA partner-portal users list (optionally filtered by ``partner_id``)."""
+        params: dict[str, Any] = {"page": page, "limit": limit}
+        if partner_id is not None:
+            params["partnerId"] = partner_id
+        params.update({k: v for k, v in filters.items() if v is not None})
+        response = await self.get(
+            _PARTNER_USERS_PATH, params=params, expected_status=expected_status
+        )
+        return PartnerListResponse.model_validate(response.json())
+
+    async def raw_list_partner_users(
+        self, expected_status: int | tuple[int, ...] | None = None, **params: Any
+    ) -> httpx.Response:
+        """Raw GET partner-users for negative tests — arbitrary params, no schema validation."""
+        clean = {k: v for k, v in params.items() if v is not None}
+        return await self.get(_PARTNER_USERS_PATH, params=clean, expected_status=expected_status)
+
     async def invite_partner_user(
         self,
         payload: dict[str, Any],
@@ -244,6 +272,42 @@ class SaPartnersClient(BaseClient):
             _PARTNER_USERS_PATH, json=payload, expected_status=expected_status
         )
         return PartnerWriteResponse.model_validate(response.json())
+
+    async def raw_invite_partner_user(
+        self,
+        payload: dict[str, Any],
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST invite for negative/idempotency tests — arbitrary payload, no validation."""
+        return await self.post(_PARTNER_USERS_PATH, json=payload, expected_status=expected_status)
+
+    async def reset_partner_user_password(
+        self,
+        user_id: str,
+        *,
+        expected_status: int | tuple[int, ...] = 200,
+    ) -> PartnerWriteResponse:
+        """POST reset a partner-portal user's password — issues a fresh ``tempPassword``."""
+        response = await self.post(
+            f"{_PARTNER_USERS_PATH}/{user_id}/reset-password",
+            json={},
+            expected_status=expected_status,
+        )
+        return PartnerWriteResponse.model_validate(response.json())
+
+    async def raw_reset_partner_user_password(
+        self,
+        user_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST reset-password for negative tests — returns the response unvalidated."""
+        return await self.post(
+            f"{_PARTNER_USERS_PATH}/{user_id}/reset-password",
+            json={},
+            expected_status=expected_status,
+        )
 
     async def grant_certification(
         self,
@@ -292,17 +356,173 @@ class SaPartnersClient(BaseClient):
             expected_status=expected_status,
         )
 
+    async def revoke_certification(
+        self,
+        user_id: str,
+        certification_type: str,
+        *,
+        reason: str,
+        expected_status: int | tuple[int, ...] = 200,
+    ) -> PartnerWriteResponse:
+        """DELETE revoke a partner user's certification (body ``{reason}`` required).
+
+        Soft-revoke: the cert stays on the record with ``status='revoked'``. HTTP 200.
+        """
+        response = await self.delete(
+            f"{_PARTNER_USERS_PATH}/{user_id}/certifications/{certification_type}",
+            json={"reason": reason},
+            expected_status=expected_status,
+        )
+        return PartnerWriteResponse.model_validate(response.json())
+
+    async def raw_revoke_certification(
+        self,
+        user_id: str,
+        certification_type: str,
+        *,
+        reason: str | None = None,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw DELETE revoke-cert for negative tests — returns the response unvalidated."""
+        body: dict[str, Any] = {} if reason is None else {"reason": reason}
+        return await self.delete(
+            f"{_PARTNER_USERS_PATH}/{user_id}/certifications/{certification_type}",
+            json=body,
+            expected_status=expected_status,
+        )
+
     async def list_partner_certifications(
         self,
         partner_id: str,
         *,
+        page: int = 1,
+        limit: int = 20,
         expected_status: int | tuple[int, ...] = 200,
+        **filters: Any,
     ) -> PartnerListResponse:
-        """GET the certifications held across a partner's team."""
+        """GET the certifications held across a partner's team (status/type/expiring filters)."""
+        params: dict[str, Any] = {"page": page, "limit": limit}
+        params.update({k: v for k, v in filters.items() if v is not None})
         response = await self.get(
-            f"{_PARTNERS_PATH}/{partner_id}/certifications", expected_status=expected_status
+            f"{_PARTNERS_PATH}/{partner_id}/certifications",
+            params=params,
+            expected_status=expected_status,
         )
         return PartnerListResponse.model_validate(response.json())
+
+    async def raw_list_partner_certifications(
+        self,
+        partner_id: str,
+        expected_status: int | tuple[int, ...] | None = None,
+        **params: Any,
+    ) -> httpx.Response:
+        """Raw GET partner certifications for negative tests — arbitrary params, no validation."""
+        clean = {k: v for k, v in params.items() if v is not None}
+        return await self.get(
+            f"{_PARTNERS_PATH}/{partner_id}/certifications",
+            params=clean,
+            expected_status=expected_status,
+        )
+
+    async def list_certifications(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 20,
+        expected_status: int | tuple[int, ...] = 200,
+        **filters: Any,
+    ) -> PartnerListResponse:
+        """GET the SA-wide certifications list (filters: status/certificationType/expiringWithinDays)."""
+        params: dict[str, Any] = {"page": page, "limit": limit}
+        params.update({k: v for k, v in filters.items() if v is not None})
+        response = await self.get(
+            _CERTIFICATIONS_PATH, params=params, expected_status=expected_status
+        )
+        return PartnerListResponse.model_validate(response.json())
+
+    async def raw_list_certifications(
+        self, expected_status: int | tuple[int, ...] | None = None, **params: Any
+    ) -> httpx.Response:
+        """Raw GET SA-wide certifications for negative tests — arbitrary params, no validation."""
+        clean = {k: v for k, v in params.items() if v is not None}
+        return await self.get(_CERTIFICATIONS_PATH, params=clean, expected_status=expected_status)
+
+    async def assign_territory(
+        self,
+        payload: dict[str, Any],
+        *,
+        expected_status: int | tuple[int, ...] = 201,
+    ) -> PartnerWriteResponse:
+        """POST assign a territory to a partner (``CreateTerritoryDto``). Response data carries ``_id``."""
+        response = await self.post(_TERRITORIES_PATH, json=payload, expected_status=expected_status)
+        return PartnerWriteResponse.model_validate(response.json())
+
+    async def raw_assign_territory(
+        self,
+        payload: dict[str, Any],
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST assign-territory for negative/conflict tests — no validation."""
+        return await self.post(_TERRITORIES_PATH, json=payload, expected_status=expected_status)
+
+    async def list_territories(
+        self,
+        *,
+        partner_id: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+        expected_status: int | tuple[int, ...] = 200,
+        **filters: Any,
+    ) -> PartnerListResponse:
+        """GET the SA territories list (filters: partnerId/country/exclusivityType)."""
+        params: dict[str, Any] = {"page": page, "limit": limit}
+        if partner_id is not None:
+            params["partnerId"] = partner_id
+        params.update({k: v for k, v in filters.items() if v is not None})
+        response = await self.get(_TERRITORIES_PATH, params=params, expected_status=expected_status)
+        return PartnerListResponse.model_validate(response.json())
+
+    async def raw_list_territories(
+        self, expected_status: int | tuple[int, ...] | None = None, **params: Any
+    ) -> httpx.Response:
+        """Raw GET territories for negative tests — arbitrary params, no validation."""
+        clean = {k: v for k, v in params.items() if v is not None}
+        return await self.get(_TERRITORIES_PATH, params=clean, expected_status=expected_status)
+
+    async def get_territory(
+        self,
+        territory_id: str,
+        *,
+        expected_status: int | tuple[int, ...] = 200,
+    ) -> PartnerWriteResponse:
+        """GET a single territory by id."""
+        response = await self.get(
+            f"{_TERRITORIES_PATH}/{territory_id}", expected_status=expected_status
+        )
+        return PartnerWriteResponse.model_validate(response.json())
+
+    async def raw_get_territory(
+        self,
+        territory_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw GET territory by id for negative tests — returns the response unvalidated."""
+        return await self.get(
+            f"{_TERRITORIES_PATH}/{territory_id}", expected_status=expected_status
+        )
+
+    async def delete_territory(
+        self,
+        territory_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = (200, 204),
+    ) -> httpx.Response:
+        """DELETE remove a territory assignment by id (also used for test cleanup)."""
+        return await self.delete(
+            f"{_TERRITORIES_PATH}/{territory_id}", expected_status=expected_status
+        )
 
     async def list_audit_logs(
         self,
@@ -318,3 +538,71 @@ class SaPartnersClient(BaseClient):
             "/sa-partners-api/v1/sa/audit-logs", params=params, expected_status=expected_status
         )
         return PartnerListResponse.model_validate(response.json())
+
+    async def raw_list_audit_logs(
+        self, expected_status: int | tuple[int, ...] | None = None, **params: Any
+    ) -> httpx.Response:
+        """Raw GET audit-logs for negative tests — arbitrary params, no schema validation.
+
+        On 400 the body's ``message`` is a list of field errors (doesn't fit the
+        success envelope), so callers inspect the raw response themselves.
+        """
+        clean = {k: v for k, v in params.items() if v is not None}
+        return await self.get(
+            "/sa-partners-api/v1/sa/audit-logs", params=clean, expected_status=expected_status
+        )
+
+    async def get_audit_log_stats(
+        self,
+        *,
+        expected_status: int | tuple[int, ...] = 200,
+    ) -> PartnerWriteResponse:
+        """GET SA audit-log KPI stats — 24h counters + chain integrity (data is an object)."""
+        response = await self.get(
+            "/sa-partners-api/v1/sa/audit-logs/stats", expected_status=expected_status
+        )
+        return PartnerWriteResponse.model_validate(response.json())
+
+    async def export_audit_logs(
+        self,
+        *,
+        format: str | None = None,
+        expected_status: int | tuple[int, ...] | None = 200,
+        **filters: Any,
+    ) -> httpx.Response:
+        """GET export the SA audit log (``format`` csv|json, default csv).
+
+        Returns the raw response: the body is a file (CSV text or a JSON array),
+        NOT the standard envelope — callers inspect ``content-type`` + body. Omit
+        ``format`` to exercise the server default; pass ``expected_status=None`` for
+        negative cases (invalid format/filter) that inspect the raw error.
+        """
+        params = {k: v for k, v in {"format": format, **filters}.items() if v is not None}
+        return await self.get(
+            "/sa-partners-api/v1/sa/audit-logs/export",
+            params=params,
+            expected_status=expected_status,
+        )
+
+    async def get_audit_log(
+        self,
+        log_id: str,
+        *,
+        expected_status: int | tuple[int, ...] = 200,
+    ) -> PartnerWriteResponse:
+        """GET a single audit-log entry by id (envelope with the full entry in ``data``)."""
+        response = await self.get(
+            f"/sa-partners-api/v1/sa/audit-logs/{log_id}", expected_status=expected_status
+        )
+        return PartnerWriteResponse.model_validate(response.json())
+
+    async def raw_get_audit_log(
+        self,
+        log_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw GET audit-log by id for negative tests — returns the response unvalidated."""
+        return await self.get(
+            f"/sa-partners-api/v1/sa/audit-logs/{log_id}", expected_status=expected_status
+        )

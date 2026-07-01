@@ -139,22 +139,48 @@ def make_prospect(**overrides: Any) -> dict[str, Any]:
     return data
 
 
+def make_territory(partner_id: str, **overrides: Any) -> dict[str, Any]:
+    """Build a territory-assignment payload matching ``CreateTerritoryDto`` (sa-partners-api).
+
+    Required by the API: ``partnerId``, ``label``, ``countries`` (ISO 3166-1 alpha-2).
+    ``exclusivityType`` ∈ exclusive / preferred / open (defaults ``preferred`` so the
+    factory does not trigger cross-partner exclusive conflicts by default). Pass
+    ``exclusivityType="exclusive"`` + a specific ``countries`` to test conflicts.
+    """
+    data: dict[str, Any] = {
+        "partnerId": partner_id,
+        "label": tag(f"{_fake.last_name()} Territory"),
+        "countries": ["US"],
+        "verticals": ["technology"],
+        "exclusivityType": "preferred",
+        "exclusivityStartDate": "2026-01-01",
+        "exclusivityEndDate": "2026-12-31",
+        "notes": tag(_fake.sentence()),
+    }
+    data.update(overrides)
+    return data
+
+
 def make_deal(partner_id: str, plan_id: str, **overrides: Any) -> dict[str, Any]:
     """Build a deal-registration payload matching ``CreateDealDto`` (sa-partners-api).
 
-    Required by the API: ``partnerId``, ``dealType`` (referral / reseller / co_sell),
-    ``prospectName``, ``prospectCountry``, ``estimatedAcvCents``, ``expectedCloseDate``,
-    plus ``planId`` (a published billing plan; or pass an inline ``billingPlan``).
+    Required by the API: ``dealType`` (referral / reseller / co_sell), ``tenantDomain``,
+    ``prospectName``, ``prospectCountry``, ``estimatedAcvCents``, ``numberOfEmployee``,
+    ``billingCycle`` (monthly / annual), ``expectedCloseDate``, plus ``planId``
+    (a published billing plan; or pass an inline ``billingPlan``).
     """
     data: dict[str, Any] = {
         "partnerId": partner_id,
         "planId": plan_id,
         "dealType": "referral",
+        "tenantDomain": _fake.unique.domain_name(),
         "prospectName": tag(f"{_fake.company()} Opportunity"),
         "prospectEmail": unique_email(),
         "prospectPhone": valid_phone(),
         "prospectCountry": "US",
         "estimatedAcvCents": _fake.random_int(min=1_000_00, max=5_000_000_00),
+        "numberOfEmployee": _fake.random_int(min=10, max=5000),
+        "billingCycle": "annual",
         "expectedCloseDate": "2026-12-31",
         "notes": tag(_fake.sentence()),
     }

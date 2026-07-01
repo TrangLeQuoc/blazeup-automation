@@ -93,17 +93,17 @@ Rules:
 """
 
 OUTPUT_CONTRACT = """\
+You are given DISTINCT failure signatures (deduplicated across the whole run), each
+with an index and a representative log line. Classify ONLY these signatures.
+
 Return ONLY a JSON object (no markdown fences, no prose) with this exact shape:
 
 {
-  "failures": [
+  "classifications": [
     {
-      "tc_id": "<the test-case id from the log line, e.g. TC-90000001, or -->",
-      "item": "<page/test name, e.g. marketplace>",
+      "index": <int — the signature's index, exactly as given>,
       "category": "deploy_mfe|flaky_slow|test_or_ui_bug|app_bug|env_auth|unknown",
-      "confidence": 0.0,
       "reason": "<one short sentence>",
-      "evidence": "<the single most decisive log line, verbatim>",
       "recommendation": "<one short sentence>"
     }
   ],
@@ -126,6 +126,15 @@ _LINE_RE = re.compile(
 
 _FAIL_LEVELS = {"ERROR", "FAILED", "CRITICAL"}
 
+# Unknown (non-rule-classified) signatures are sent to the LLM in small BATCHES so
+# each request stays well under provider payload limits (no HTTP 413), while ALL of
+# them still get classified — this is what lets triage handle a run with many
+# genuinely-distinct failures. A hard ceiling bounds cost on a pathological run; if
+# it is hit, the dropped count is logged (never a silent cap).
+_LLM_BATCH = 30
+_MAX_LLM_SIGNATURES = 150
+_MAX_EVIDENCE_CHARS = 300
+
 
 @dataclass
 class LogLine:
@@ -136,11 +145,19 @@ class LogLine:
 
 
 @dataclass
-class TriageInput:
-    failed: bool
-    context_block: str
-    summary_block: str
-    screenshots: list[str] = field(default_factory=list)
+class FailGroup:
+    """A group of failing TCs that share one normalized failure signature."""
+
+    signature: str
+    evidence: str
+    category: str = "unknown"
+    reason: str = ""
+    recommendation: str = ""
+    tcs: list[str] = field(default_factory=list)
+
+    @property
+    def count(self) -> int:
+        return len(self.tcs)
 
 
 def _parse_lines(log_text: str) -> list[LogLine]:
@@ -162,43 +179,137 @@ def _extract_summary_block(log_text: str) -> str:
     return log_text[idx:].strip() if idx != -1 else ""
 
 
-def build_triage_input(log_text: str, context_before: int = 4) -> TriageInput:
-    """Filter the log down to failures + a few context lines before each.
+# Normalize a message to a stable signature so failures with the same root cause
+# collapse to one group (mongo ids / numbers / quoted values masked).
+_ID_RE = re.compile(r"\b[0-9a-fA-F]{24}\b")
+_QUOTED_RE = re.compile(r"(['\"]).*?\1")
+_NUM_RE = re.compile(r"\d+")
 
-    For every ERROR/FAILED line we keep the preceding ``context_before`` lines
-    (which page, which URL was navigated, the wait_ready step) so the model can
-    tell *why*, not just *that*, it failed. Screenshot paths are harvested from
-    "Saved failure screenshot to ..." lines.
+# Deterministic rules for the common, unambiguous causes — these never need the LLM,
+# so a run with hundreds of failures across a few known causes costs ZERO API calls.
+_RULES: list[tuple[tuple[str, ...], str]] = [
+    (
+        ("502", "503", "504", "bad gateway", "upstream", "service unavailable", "econnrefused"),
+        "env_auth",
+    ),
+    (("exceeded limit", "did not render", "timed out", "timeout"), "flaky_slow"),
+    (("dynamically imported module", "something went wrong"), "deploy_mfe"),
+    (("confirm with be", "confirm be"), "app_bug"),
+]
+
+
+def _signature(msg: str) -> str:
+    """Reduce a failure message to a stable signature so same-cause failures collapse.
+
+    Keys on the decisive error (the part after ``--``/``AssertionError:``) rather than
+    the step name + timing, so e.g. every "got 502" setup failure — regardless of which
+    step hit it — becomes ONE group. Ids / numbers / quoted values are masked.
+    """
+    core = msg.split(" -- ", 1)[-1]
+    if "AssertionError:" in core:
+        core = core.split("AssertionError:", 1)[-1]
+    s = _ID_RE.sub("<id>", core.strip())
+    s = _QUOTED_RE.sub("'<v>'", s)
+    s = _NUM_RE.sub("<n>", s)
+    return s.lower()[:120]
+
+
+def _rule_category(text: str) -> str:
+    """Best-effort deterministic category; ``unknown`` falls through to the LLM."""
+    t = text.lower()
+    for needles, cat in _RULES:
+        if any(n in t for n in needles):
+            return cat
+    if "assert" in t or "expected" in t or " got " in t:
+        return "test_or_ui_bug"
+    return "unknown"
+
+
+def collect_fail_groups(log_text: str) -> list[FailGroup]:
+    """Group failing TCs by a normalized failure signature (dedup), rule-classify each.
+
+    A TC's decisive evidence is its first ERROR/CRITICAL line (falling back to the
+    FAILED verdict). TCs that fail for the same reason collapse into one group, so the
+    LLM payload is proportional to the number of DISTINCT causes — not the total
+    failure count. This is what makes triage scale to 1000+ TC runs.
     """
     lines = _parse_lines(log_text)
-    keep_idx: set[int] = set()
-    screenshots: list[str] = []
-    any_fail = False
+    evidence_by_tc: dict[str, str] = {}
+    verdict_by_tc: dict[str, str] = {}
+    order: list[str] = []
+    for ln in lines:
+        if ln.level in {"ERROR", "CRITICAL"} and ln.msg and ln.tc not in evidence_by_tc:
+            evidence_by_tc[ln.tc] = ln.msg
+        if ln.level == "FAILED":
+            verdict_by_tc.setdefault(ln.tc, ln.msg)
+            if ln.tc not in order:
+                order.append(ln.tc)
 
-    for i, ln in enumerate(lines):
-        if "Saved failure screenshot to" in ln.msg:
-            screenshots.append(ln.msg.split("to", 1)[-1].strip())
-        if ln.level in _FAIL_LEVELS:
-            any_fail = True
-            for j in range(max(0, i - context_before), i + 1):
-                keep_idx.add(j)
-
-    block = "\n".join(lines[i].raw for i in sorted(keep_idx))
-    return TriageInput(
-        failed=any_fail,
-        context_block=block,
-        summary_block=_extract_summary_block(log_text),
-        screenshots=screenshots,
-    )
+    groups: dict[str, FailGroup] = {}
+    for tc in order:
+        evidence = evidence_by_tc.get(tc) or verdict_by_tc.get(tc, "(no evidence)")
+        sig = _signature(evidence)
+        g = groups.get(sig)
+        if g is None:
+            groups[sig] = FailGroup(
+                signature=sig, evidence=evidence, category=_rule_category(evidence), tcs=[tc]
+            )
+        else:
+            g.tcs.append(tc)
+    return list(groups.values())
 
 
-def build_prompt(ti: TriageInput) -> str:
+def _group_prompt(unknown: list[FailGroup]) -> str:
+    """Compact prompt: classify ONLY the distinct unknown signatures (index + one line each)."""
+    listing = "\n".join(f"[{i}] {g.evidence[:_MAX_EVIDENCE_CHARS]}" for i, g in enumerate(unknown))
     return (
         f"{PLAYBOOK}\n\n"
-        f"--- FILTERED LOG (failures + context) ---\n{ti.context_block}\n\n"
-        f"--- RUN SUMMARY ---\n{ti.summary_block or '(none)'}\n\n"
+        f"--- DISTINCT FAILURE SIGNATURES TO CLASSIFY ---\n{listing}\n\n"
         f"{OUTPUT_CONTRACT}"
     )
+
+
+def classify_unknown_groups(groups: list[FailGroup], *, provider: str, model: str, settings) -> str:
+    """Classify the unknown-category groups via the LLM in small batches.
+
+    Each batch is one bounded API call (no 413); ALL unknowns up to
+    ``_MAX_LLM_SIGNATURES`` get classified. A batch that errors is skipped (its groups
+    stay ``unknown``) so one bad reply never aborts the rest. Returns a run summary;
+    any signatures dropped by the hard ceiling are reported (never a silent cap).
+    """
+    all_unknown = [g for g in groups if g.category == "unknown"]
+    if not all_unknown:
+        return "All failures matched known causes (rule-classified) — no LLM call needed."
+
+    unknown = all_unknown[:_MAX_LLM_SIGNATURES]
+    dropped = len(all_unknown) - len(unknown)
+    summaries: list[str] = []
+    for start in range(0, len(unknown), _LLM_BATCH):
+        batch = unknown[start : start + _LLM_BATCH]  # indices in the prompt are 0..len(batch)-1
+        try:
+            result = _coerce_json(
+                call_ai(_group_prompt(batch), provider=provider, model=model, settings=settings)
+            )
+        except (json.JSONDecodeError, KeyError, ValueError) as exc:
+            print(f"  triage batch {start // _LLM_BATCH + 1} skipped ({type(exc).__name__})")
+            continue
+        for c in result.get("classifications", []):
+            i = c.get("index")
+            if isinstance(i, int) and 0 <= i < len(batch):
+                g = batch[i]
+                g.category = c.get("category", "unknown")
+                g.reason = c.get("reason", "")
+                g.recommendation = c.get("recommendation", "")
+        if result.get("summary"):
+            summaries.append(result["summary"])
+
+    summary = " ".join(summaries) or "Classified distinct failure causes via the LLM."
+    if dropped:
+        summary += (
+            f" NOTE: {dropped} additional distinct signature(s) exceeded the "
+            f"{_MAX_LLM_SIGNATURES}-signature ceiling and were left UNKNOWN — see test.log."
+        )
+    return summary
 
 
 # ---------------------------------------------------------------------------
@@ -346,44 +457,48 @@ def _coerce_json(text: str) -> dict:
     return json.loads(t)
 
 
-def render_markdown(result: dict, log_path: Path) -> str:
-    rows = result.get("failures", [])
+def _sample_tcs(g: FailGroup, n: int = 6) -> str:
+    head = ", ".join(g.tcs[:n])
+    return head + (f" +{g.count - n} more" if g.count > n else "")
+
+
+def render_markdown(groups: list[FailGroup], log_path: Path, summary: str) -> str:
+    groups = sorted(groups, key=lambda g: g.count, reverse=True)
+    total = sum(g.count for g in groups)
     lines = [
         "# AI Failure Triage",
         "",
         f"- Log: `{log_path}`",
-        f"- Failures analysed: **{len(rows)}**",
+        f"- Failures: **{total}** across **{len(groups)}** distinct cause(s)",
         "",
-        f"> {result.get('summary', '(no summary)')}",
+        f"> {summary or '(no summary)'}",
         "",
-        "| Test Case | Item | Category | Conf | Reason | Recommendation |",
-        "|-----------|------|----------|------|--------|----------------|",
+        "| Category | Count | Sample TCs | Reason | Recommendation |",
+        "|----------|-------|-----------|--------|----------------|",
     ]
-    for r in rows:
-        cat = _CAT_EMOJI.get(r.get("category", "unknown"), r.get("category", "?"))
-        lines.append(
-            f"| {r.get('tc_id', '--')} | {r.get('item', '?')} | {cat} | "
-            f"{r.get('confidence', '?')} | {r.get('reason', '')} | {r.get('recommendation', '')} |"
-        )
-    lines += ["", "## Evidence", ""]
-    for r in rows:
-        lines.append(
-            f"- **{r.get('tc_id', '--')} / {r.get('item', '?')}** — `{r.get('evidence', '')}`"
-        )
+    for g in groups:
+        cat = _CAT_EMOJI.get(g.category, g.category)
+        lines.append(f"| {cat} | {g.count} | {_sample_tcs(g)} | {g.reason} | {g.recommendation} |")
+    lines += ["", "## Evidence (one representative per cause)", ""]
+    for g in groups:
+        cat = _CAT_EMOJI.get(g.category, g.category)
+        lines.append(f"- **{cat}** ({g.count}× — {_sample_tcs(g)}) — `{g.evidence[:200]}`")
     return "\n".join(lines) + "\n"
 
 
-def _print_console(result: dict) -> None:
+def _print_console(groups: list[FailGroup], summary: str) -> None:
+    groups = sorted(groups, key=lambda g: g.count, reverse=True)
+    total = sum(g.count for g in groups)
     print("\n=== AI Failure Triage ===")
-    print(result.get("summary", "(no summary)"))
+    print(f"{total} failure(s) → {len(groups)} distinct cause(s)")
+    print(summary or "(no summary)")
     print("-" * 60)
-    for r in result.get("failures", []):
-        print(
-            f"  [{_CAT_EMOJI.get(r.get('category'), r.get('category', '?'))}] "
-            f"{r.get('tc_id', '--')}  {r.get('item', '?')}  (conf {r.get('confidence', '?')})"
-        )
-        print(f"      reason : {r.get('reason', '')}")
-        print(f"      action : {r.get('recommendation', '')}")
+    for g in groups:
+        print(f"  [{_CAT_EMOJI.get(g.category, g.category)}] {g.count}×  {_sample_tcs(g)}")
+        print(f"      reason : {g.reason or '(rule-classified)'}")
+        if g.recommendation:
+            print(f"      action : {g.recommendation}")
+        print(f"      example: {g.evidence[:120]}")
     print("-" * 60)
 
 
@@ -423,33 +538,37 @@ def main(argv: list[str] | None = None) -> int:
     log_path = _resolve_log_path(args.target)
     log_text = log_path.read_text(encoding="utf-8", errors="replace")
 
-    ti = build_triage_input(log_text)
-    if not ti.failed:
+    groups = collect_fail_groups(log_text)
+    if not groups:
         print(f"No failures found in {log_path} — nothing to triage.")
         return 0
 
-    prompt = build_prompt(ti)
+    total = sum(g.count for g in groups)
+    unknown = [g for g in groups if g.category == "unknown"]
+
     if args.print_prompt:
-        print(prompt)
+        print(
+            _group_prompt(unknown)
+            if unknown
+            else "(all failure groups were rule-classified — no LLM prompt needed)"
+        )
         return 0
 
     print(
-        f"Triaging {log_path}\n  provider={provider} model={model} "
-        f"(screenshots seen: {len(ti.screenshots)})"
+        f"Triaging {log_path}\n  {total} failure(s) → {len(groups)} distinct cause(s); "
+        f"{len(unknown)} need the LLM (provider={provider} model={model})"
     )
-    raw = call_ai(prompt, provider=provider, model=model, settings=settings)
-
     try:
-        result = _coerce_json(raw)
+        summary = classify_unknown_groups(groups, provider=provider, model=model, settings=settings)
     except json.JSONDecodeError as exc:
         out = log_path.parent / "ai_triage_raw.txt"
-        out.write_text(raw, encoding="utf-8")
-        raise SystemExit(f"Model did not return valid JSON. Raw reply saved to {out}") from exc
+        out.write_text(str(exc), encoding="utf-8")
+        raise SystemExit(f"Model did not return valid JSON. Detail saved to {out}") from exc
 
-    md = render_markdown(result, log_path)
+    md = render_markdown(groups, log_path, summary)
     out_md = log_path.parent.parent / "ai_triage.md"  # run_dir/ai_triage.md
     out_md.write_text(md, encoding="utf-8")
-    _print_console(result)
+    _print_console(groups, summary)
     print(f"\nSaved: {out_md}")
     return 0
 

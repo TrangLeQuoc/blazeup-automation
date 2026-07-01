@@ -789,3 +789,364 @@ async def test_partner_api_deal_registration_pipeline_029(
 
     assert not gaps, "resolve-conflict negative gaps:\n  - " + "\n  - ".join(gaps)
     logger.info("RESULT: all {} invalid resolve-conflict attempts rejected", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_016(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_016: extend deal protection (SA manual action) - window pushed out + reasoning recorded.
+
+    SA manually extends a registered deal's protection window via
+    POST /v1/sa/deals/{id}/extend-protection (body ``addedDays`` + ``reasoning``,
+    both required). The deal's ``protectionExpiresAt`` moves later, HTTP 201 / body
+    statusCode 200, and the deal stays ``registered``. Persistence is confirmed via
+    a follow-up GET.
+
+    Note: the plan frames this as "request queued for SA", but the implemented
+    endpoint is a DIRECT SA extension (applied immediately) — there is no separate
+    partner-initiated "request → queue" endpoint in the spec. Confirm with BE if a
+    queued partner-request flow is expected separately.
+    """
+    from datetime import datetime
+
+    def _parse(ts: object) -> datetime:
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+
+    async with async_step("Setup: partner + plan + a registered deal (has a protection window)"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
+        deal_id = deal.deal_id
+        old_exp = deal.data.get("protectionExpiresAt")
+        assert old_exp, "precondition: registered deal must have a protection window"
+        logger.info("SETUP: deal {} protectionExpiresAt={}", deal_id, old_exp)
+
+    added_days = 30
+    reasoning = "QA-AUTO manual protection extension"
+    async with async_step("[1/3] SA extends the protection window (+30 days)"):
+        resp = await sa_deals_client.extend_protection(
+            deal_id, added_days=added_days, reasoning=reasoning
+        )
+        assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+        assert resp.message, "`message` should confirm the extension"
+        logger.info("CHECK extended → OK (HTTP 201, message='{}')", resp.message)
+
+    async with async_step("[2/3] Verify the window moved later by the requested days"):
+        new_exp = resp.data.get("protectionExpiresAt")
+        assert new_exp, "response must carry the new protectionExpiresAt"
+        assert _parse(new_exp) > _parse(old_exp), (
+            f"protection window must extend later: new {new_exp} must be > old {old_exp}"
+        )
+        delta_days = (_parse(new_exp) - _parse(old_exp)).days
+        assert delta_days == added_days, (
+            f"window must extend by {added_days} days, got {delta_days} ({old_exp} → {new_exp})"
+        )
+        assert resp.data.get("status") == "registered", "deal must stay 'registered' after extend"
+        logger.info("CHECK window → OK (+{} days: {} → {})", delta_days, old_exp, new_exp)
+
+    async with async_step("[3/3] Verify the new window persists (GET by id)"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert _parse(fetched.data.get("protectionExpiresAt")) == _parse(new_exp), (
+            "persisted protectionExpiresAt must match the extended value"
+        )
+        logger.info("CHECK persisted → OK (GET returns the extended window)")
+
+    logger.info("RESULT: deal {} protection extended by {} days", deal_id, added_days)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_030(sa_deals_client):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_030: extend-protection invalid input - rejected with a clear error.
+
+    Negative counterpart of _016 (extend-protection). Each invalid input must be
+    rejected (4xx) with a descriptive message. The BE validates the body BEFORE the
+    deal lookup, so the field-validation cases are self-proving against a ghost id
+    (no real deal — hence no sa-plans dependency). Spec constraints: ``addedDays``
+    is required and must be 1..180; ``reasoning`` is required + non-empty. A
+    ghost/malformed deal id is rejected too. All cases run (failures collected) so
+    one gap never hides the others.
+    """
+    # (label, deal id, raw_extend_protection kwargs, expected message hint)
+    cases = [
+        ("missing addedDays", _GHOST_ID, {"reasoning": "QA-AUTO"}, "addeddays"),
+        ("missing reasoning", _GHOST_ID, {"added_days": 30}, "reasoning"),
+        ("addedDays = 0", _GHOST_ID, {"added_days": 0, "reasoning": "QA-AUTO"}, "less than 1"),
+        (
+            "negative addedDays",
+            _GHOST_ID,
+            {"added_days": -5, "reasoning": "QA-AUTO"},
+            "less than 1",
+        ),
+        (
+            "addedDays over max (181)",
+            _GHOST_ID,
+            {"added_days": 181, "reasoning": "QA-AUTO"},
+            "greater than 180",
+        ),
+        (
+            "non-numeric addedDays",
+            _GHOST_ID,
+            {"added_days": "abc", "reasoning": "QA-AUTO"},
+            "addeddays",
+        ),
+        (
+            "ghost deal id (valid body)",
+            _GHOST_ID,
+            {"added_days": 30, "reasoning": "QA-AUTO"},
+            "not found",
+        ),
+        ("malformed id", "not-an-id", {"added_days": 30, "reasoning": "QA-AUTO"}, "invalid id"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, did, kwargs, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject extend-protection: {label}"):
+            r = await sa_deals_client.raw_extend_protection(did, expected_status=None, **kwargs)
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+
+    assert not gaps, "extend-protection negative gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: all {} invalid extend-protection attempts rejected", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_020(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_020: SA retrieves a single deal by id - full record returned.
+
+    GET /v1/sa/deals/{id} returns the full deal record (id matches, required fields
+    present, status 'registered', protection window + conflictStatus).
+    """
+    async with async_step("Setup: partner + plan + a registered deal"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
+        deal_id = deal.deal_id
+        logger.info("SETUP: deal {} registered", deal_id)
+
+    async with async_step("[1/2] GET the deal by id"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert fetched.status_code == 200, (
+            f"expected body statusCode 200, got {fetched.status_code}"
+        )
+        assert fetched.deal_id == deal_id, "GET by id must return the same deal"
+        logger.info("CHECK by-id → OK (id matches)")
+
+    async with async_step("[2/2] Full record: required fields + status"):
+        d = fetched.data
+        for f in (
+            "partnerId",
+            "dealType",
+            "prospectName",
+            "prospectCountry",
+            "estimatedAcvCents",
+            "status",
+            "protectionExpiresAt",
+            "conflictStatus",
+        ):
+            assert d.get(f) is not None, f"deal record must include {f}"
+        assert d.get("status") == "registered", (
+            f"deal must be 'registered', got {d.get('status')!r}"
+        )
+        logger.info("CHECK record → OK (status='registered', full fields present)")
+
+    logger.info("RESULT: deal {} retrieved by id (full record)", deal_id)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_031(sa_deals_client):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_031: get deal by invalid id - rejected (4xx, never 5xx).
+
+    Negative counterpart of _020. A ghost id and a malformed id are rejected with 4xx
+    + a clear message (self-proving). GET → no idempotency concern.
+    """
+    cases = [("ghost id", _GHOST_ID, "not found"), ("malformed id", "not-an-id", "invalid id")]
+    gaps: list[str] = []
+    for idx, (label, did, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject get deal: {label}"):
+            r = await sa_deals_client.get_deal(did, expected_status=None)
+            msg = str(r.message or "")
+            if 400 <= (r.status_code or 0) < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+    assert not gaps, "get-deal negative gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: invalid get-deal-by-id rejected (ghost/malformed)")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_019(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_019: SA marks an approved deal as lost - status 'lost'.
+
+    Losing requires the deal to be ``approved`` first. POST /v1/sa/deals/{id}/lose
+    flips ``approved`` → ``lost`` (partner notification is downstream, out of scope).
+    """
+    async with async_step("Setup: partner + plan + register + approve a deal"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
+        deal_id = deal.deal_id
+        await sa_deals_client.approve_deal(deal_id)
+        logger.info("SETUP: deal {} approved", deal_id)
+
+    async with async_step("[1/2] Mark the deal as lost"):
+        resp = await sa_deals_client.lose_deal(
+            deal_id, notes="QA-AUTO lost — prospect chose a competitor"
+        )
+        assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+        assert resp.data.get("status") == "lost", (
+            f"deal must become 'lost', got {resp.data.get('status')!r}"
+        )
+        logger.info("CHECK lost → OK (status='lost')")
+
+    async with async_step("[2/2] The lost status persists (GET by id)"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert fetched.data.get("status") == "lost", "fetched deal must stay 'lost'"
+        logger.info("CHECK persisted → OK (GET returns status='lost')")
+
+    logger.info("RESULT: deal {} marked lost", deal_id)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_032(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_032: lose deal invalid/illegal-state - rejected (4xx).
+
+    Negative counterpart of _019. Losing a deal that is not approvable-state
+    (a fresh ``registered`` deal), a ghost id, and a malformed id must all be rejected
+    with 4xx + a clear message.
+    """
+    async with async_step("Setup: a registered (not approved) deal"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
+        logger.info("SETUP: registered (non-approved) deal {}", did)
+
+    cases = [
+        ("registered deal (illegal transition)", did, "cannot transition"),
+        ("ghost id", _GHOST_ID, "not found"),
+        ("malformed id", "not-an-id", "invalid id"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, target, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject lose: {label}"):
+            r = await sa_deals_client.raw_lose_deal(target, notes="QA", expected_status=None)
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+    assert not gaps, "lose-deal negative gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: all {} invalid/illegal lose attempts rejected", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_approval_queue_001(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_APPROVAL_QUEUE_001: SA rejects a registered deal - rejection persisted.
+
+    POST /v1/sa/deals/{id}/reject (body ReviewDealDto{reviewNotes}) flips a
+    ``registered`` deal to ``rejected``; the status persists via a follow-up GET.
+    """
+    async with async_step("Setup: partner + plan + a registered deal"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal_id = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
+        logger.info("SETUP: deal {} registered", deal_id)
+
+    async with async_step("[1/2] Reject the deal with a reason"):
+        resp = await sa_deals_client.reject_deal(
+            deal_id, review_notes="QA-AUTO reject — duplicate prospect"
+        )
+        assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+        assert resp.data.get("status") == "rejected", (
+            f"deal must become 'rejected', got {resp.data.get('status')!r}"
+        )
+        logger.info("CHECK rejected → OK (status='rejected')")
+
+    async with async_step("[2/2] The rejection persists (GET by id)"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert fetched.data.get("status") == "rejected", "fetched deal must stay 'rejected'"
+        logger.info("CHECK persisted → OK (GET returns status='rejected')")
+
+    logger.info("RESULT: deal {} rejected", deal_id)
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_approval_queue_011(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_APPROVAL_QUEUE_011: reject invalid/illegal-state deal - rejected (4xx).
+
+    Negative counterpart of _001. A ghost id, a malformed id, and re-rejecting an
+    already-rejected deal must all be rejected with 4xx + a clear message.
+    """
+    async with async_step("Setup: register + reject a deal (now 'rejected')"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
+        await sa_deals_client.reject_deal(did, review_notes="QA-AUTO first reject")
+        logger.info("SETUP: deal {} is now rejected", did)
+
+    cases = [
+        ("ghost id", _GHOST_ID, "not found"),
+        ("malformed id", "not-an-id", "invalid id"),
+        ("already-rejected deal", did, "cannot transition"),
+    ]
+    gaps: list[str] = []
+    for idx, (label, target, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject reject: {label}"):
+            r = await sa_deals_client.raw_reject_deal(
+                target, review_notes="QA", expected_status=None
+            )
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+    assert not gaps, "reject-deal negative gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: all {} invalid/illegal reject attempts rejected", len(cases))

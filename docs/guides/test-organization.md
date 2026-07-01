@@ -190,6 +190,13 @@ cạnh feature tương ứng. Cột **Test Type** ghi rõ `Functional` / `Negati
      positive đỏ vì lý do duplicate, đọc log nhầm là "tạo hỏng"). Ngoại lệ DUY NHẤT:
      nếu gửi-lại là một bước thật trong kịch bản `e2e/` (vd user bấm gửi 2 lần do
      mạng) thì là `async_step`, không phải atomic.
+   - **Chỉ áp công thức trên cho POST _tạo resource_.** Với POST tạo mới, gọi 2 lần ra
+     2 record = BUG → đáp án đúng cố định (reject **hoặc** idempotent), assert thẳng.
+     Với thao tác **mutating có tham số** (vd `extend-protection` +N ngày, đổi tier,
+     cộng điểm…), lặp lại CÓ THỂ đúng theo 2 kiểu — **additive** (cộng dồn) hoặc
+     **capped** (chặn lần 2) — **cả hai đều có thể là feature**. Đừng áp 409/idempotent
+     một cách mù: **probe / hỏi BE** xem ý định là gì rồi mới assert (đây là edge
+     "định nghĩa hành vi khi lặp", không phải duplicate-create).
 9. **Cập nhật tài liệu test case sau khi làm xong.** Mỗi khi viết xong (hoặc sửa) 1 TC,
    phải cập nhật **cả 2 file** với nội dung TC tương ứng (description + steps có
    → Expected + overall + note; nếu là gap thì ghi rõ "confirm BE"):
