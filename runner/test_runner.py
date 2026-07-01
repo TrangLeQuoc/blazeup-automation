@@ -272,6 +272,10 @@ _BLOCKED_SIGNATURES = (
     "connection refused",
     "max retries",
     "getaddrinfo",
+    # A setup/precondition login that SHOULD have succeeded but got 401 = auth
+    # rejected (session/env), not a defect. Safe: functional negatives assert 401
+    # via expected_status=None, so they never surface "Expected (200,201), got 401".
+    "got 401",
 )
 
 

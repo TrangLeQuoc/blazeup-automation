@@ -20,31 +20,11 @@ from api_clients.blazeup_admin.auth_client import AuthClient
 from api_clients.blazeup_admin.partner.sa_deals_client import SaDealsClient
 from api_clients.blazeup_admin.partner.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
-from utils.helpers import require_credentials
+from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui
 from utils.screenshot_on_fail import attach_screenshot
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-
-def _blocked_reason(exc: BaseException) -> str:
-    """Classify a shared-login failure into a short BLOCKED reason.
-
-    A failure to establish the shared session (auth rejected, or the auth
-    service is down/unreachable) is an ENVIRONMENT/precondition problem, not a
-    defect in the feature under test — so it is reported as BLOCKED, never
-    FAILED. The runner keys off the ``BLOCKED:`` prefix in the skip message.
-    """
-    text = str(exc)
-    low = text.lower()
-    first = text.splitlines()[0][:160] if text else ""
-    if any(s in low for s in ("502", "503", "504", "500", "bad gateway", "service unavailable")):
-        return f"auth service unavailable (5xx): {first}"
-    if any(s in low for s in ("connect", "timeout", "max retries", "getaddrinfo", "unreachable")):
-        return f"auth service unreachable: {first}"
-    if "invalid credentials" in low or "401" in low or "got 400" in low:
-        return f"auth login rejected (credentials/env): {first}"
-    return f"shared login failed: {first}"
 
 
 logging.getLogger("faker").setLevel(logging.WARNING)
@@ -387,7 +367,7 @@ async def auth_state(settings: Settings) -> AsyncGenerator[dict]:
             state = await context.storage_state()
         except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
             logger.error("Login UI FAILED — blocking the run: {}", exc)
-            pytest.skip(f"BLOCKED: shared SA UI login failed — {_blocked_reason(exc)}")
+            pytest.skip(f"BLOCKED: shared SA UI login failed — {blocked_reason(exc)}")
         finally:
             await context.close()
             await browser.close()
@@ -478,7 +458,7 @@ async def api_token(settings: Settings) -> AsyncGenerator[str]:
         )
     except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a test defect
         logger.error("Login API FAILED — blocking the run: {}", exc)
-        pytest.skip(f"BLOCKED: shared SA API login failed — {_blocked_reason(exc)}")
+        pytest.skip(f"BLOCKED: shared SA API login failed — {blocked_reason(exc)}")
     logger.info("Login API complete - token cached (no re-login for the rest of the run)")
     yield token
     logger.log("FINISH", "Disconnect API - shared API session token released")

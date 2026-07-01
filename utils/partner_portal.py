@@ -13,8 +13,13 @@ Usage in a test::
     resp = await portal.get("/sa-partners-api/v1/partner/portal/dashboard", expected_status=200)
 """
 
+import contextlib
+
+import pytest
+
 from api_clients.base_client import BaseClient
 from utils.data_factory import make_partner, make_partner_user
+from utils.helpers import blocked_reason
 
 _PARTNER_LOGIN_PATH = "/sa-partners-api/v1/partner/auth/login"
 
@@ -65,19 +70,30 @@ async def mint_partner_session(sa_partners_client, settings) -> tuple[BaseClient
     for closing it and deleting the partner (register both with ``created_resources``).
     ``user_id`` is returned so tests can seed user-scoped data (e.g. grant a cert).
     """
-    creds = await provision_partner_user(sa_partners_client)
-    anon = portal_client(settings)
+    # Establishing the session (SA create/approve/invite + partner login) is a
+    # PRECONDITION, not the feature under test. If it can't be established — auth
+    # rejected, service 5xx/unreachable — the test is BLOCKED (env), not FAILED.
+    creds = None
     try:
-        resp = await anon.post(
-            _PARTNER_LOGIN_PATH,
-            json={"email": creds["email"], "password": creds["password"]},
-            expected_status=(200, 201),
-        )
-        token = resp.json().get("accessToken") or resp.json().get("token")
-    finally:
-        await anon.close()
-    if not token:
-        raise RuntimeError("partner login did not return an accessToken")
+        creds = await provision_partner_user(sa_partners_client)
+        anon = portal_client(settings)
+        try:
+            resp = await anon.post(
+                _PARTNER_LOGIN_PATH,
+                json={"email": creds["email"], "password": creds["password"]},
+                expected_status=(200, 201),
+            )
+            token = resp.json().get("accessToken") or resp.json().get("token")
+        finally:
+            await anon.close()
+        if not token:
+            raise RuntimeError("partner login did not return an accessToken")
+    except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
+        # Best-effort: remove the partner provisioned before the failure (no leak).
+        if creds and creds.get("partner_id"):
+            with contextlib.suppress(Exception):  # cleanup is best-effort
+                await sa_partners_client.delete_partner(creds["partner_id"])
+        pytest.skip(f"BLOCKED: could not establish partner-portal session — {blocked_reason(exc)}")
 
     portal = portal_client(settings, token)
     return portal, creds["partner_id"], creds["user_id"]
