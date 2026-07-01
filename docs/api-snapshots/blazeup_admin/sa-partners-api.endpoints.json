@@ -99,6 +99,15 @@
       "200"
     ]
   },
+  "GET /sa-partners-api/v1/partner/portal/check-domain": {
+    "body_required": false,
+    "params": [
+      "domain"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-partners-api/v1/partner/portal/commissions": {
     "body_required": false,
     "params": [
@@ -141,6 +150,22 @@
     "body_required": false,
     "params": [
       "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/plans": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-partners-api/v1/partner/portal/plans/{planId}": {
+    "body_required": false,
+    "params": [
+      "planId"
     ],
     "responses": [
       "200"
@@ -396,6 +421,15 @@
       "200"
     ]
   },
+  "PATCH /sa-partners-api/v1/sa/deals/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "PATCH /sa-partners-api/v1/sa/partners/{id}": {
     "body_required": true,
     "params": [
@@ -440,7 +474,21 @@
       "204"
     ]
   },
+  "POST /sa-partners-api/v1/partner/auth/mfa/disable": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "204"
+    ]
+  },
   "POST /sa-partners-api/v1/partner/auth/mfa/email-otp/send": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /sa-partners-api/v1/partner/auth/mfa/setup": {
     "body_required": true,
     "params": [],
     "responses": [
@@ -452,13 +500,6 @@
     "params": [],
     "responses": [
       "204"
-    ]
-  },
-  "POST /sa-partners-api/v1/partner/auth/mfa/totp/setup": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
     ]
   },
   "POST /sa-partners-api/v1/partner/auth/mfa/verify": {

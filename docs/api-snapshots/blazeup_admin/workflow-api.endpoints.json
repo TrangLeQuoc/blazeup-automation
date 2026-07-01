@@ -104,6 +104,43 @@
       "200"
     ]
   },
+  "GET /workflow-api/common/document-template-keys": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/form-template-keys": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/modules": {
+    "body_required": false,
+    "params": [
+      "excludeIds",
+      "ids"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/trigger-events": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /workflow-api/custom-field-defs": {
     "body_required": false,
     "params": [
@@ -312,16 +349,6 @@
       "limit",
       "page",
       "sort"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /workflow-api/templates/module/{templateKey}": {
-    "body_required": false,
-    "params": [
-      "moduleKey",
-      "templateKey"
     ],
     "responses": [
       "200"

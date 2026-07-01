@@ -263,6 +263,7 @@
   "GET /setting-api/companies": {
     "body_required": false,
     "params": [
+      "companyId",
       "limit",
       "page",
       "search",
@@ -274,7 +275,9 @@
   },
   "GET /setting-api/companies/tree": {
     "body_required": false,
-    "params": [],
+    "params": [
+      "companyId"
+    ],
     "responses": [
       "200"
     ]
@@ -474,6 +477,7 @@
   "GET /setting-api/internal/platform-companies": {
     "body_required": false,
     "params": [
+      "companyId",
       "limit",
       "page",
       "search",

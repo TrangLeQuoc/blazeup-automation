@@ -51,6 +51,15 @@
       "200"
     ]
   },
+  "DELETE /admin-api/delegations-v3/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "DELETE /admin-api/integrations/api-keys/{id}": {
     "body_required": false,
     "params": [
@@ -203,6 +212,20 @@
   "GET /admin-api/approval-settings-v3": {
     "body_required": false,
     "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/approvals-v3": {
+    "body_required": false,
+    "params": [
+      "id",
+      "includeOverdue",
+      "page",
+      "pageSize",
+      "sortBy",
+      "status"
+    ],
     "responses": [
       "200"
     ]
@@ -497,6 +520,13 @@
     ]
   },
   "GET /admin-api/default-data/industries": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /admin-api/delegations-v3/history": {
     "body_required": false,
     "params": [],
     "responses": [
@@ -1054,6 +1084,15 @@
       "200"
     ]
   },
+  "PATCH /admin-api/delegations-v3/{id}": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "PATCH /admin-api/employee-admin/{employeeId}/user-groups": {
     "body_required": false,
     "params": [
@@ -1340,18 +1379,8 @@
       "201"
     ]
   },
-  "POST /admin-api/approval-admin-v3/{requestId}/steps/{stepId}/sla/pause": {
+  "POST /admin-api/approval-admin-v3/{requestId}/steps/{stepId}/sla": {
     "body_required": true,
-    "params": [
-      "requestId",
-      "stepId"
-    ],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /admin-api/approval-admin-v3/{requestId}/steps/{stepId}/sla/resume": {
-    "body_required": false,
     "params": [
       "requestId",
       "stepId"
@@ -1367,11 +1396,16 @@
       "201"
     ]
   },
-  "POST /admin-api/approval-flows-v3/{id}/publish": {
-    "body_required": false,
-    "params": [
-      "id"
-    ],
+  "POST /admin-api/approvals-v3/action": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /admin-api/approvals-v3/trigger": {
+    "body_required": true,
+    "params": [],
     "responses": [
       "201"
     ]
@@ -1453,6 +1487,13 @@
     "params": [],
     "responses": [
       "200"
+    ]
+  },
+  "POST /admin-api/delegations-v3": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
     ]
   },
   "POST /admin-api/employee-admin/bulk/assign-user-group": {

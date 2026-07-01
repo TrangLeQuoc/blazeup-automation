@@ -344,6 +344,13 @@
       "200"
     ]
   },
+  "GET /sa-tenants-api/tenants/regions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-tenants-api/tenants/stats": {
     "body_required": false,
     "params": [],

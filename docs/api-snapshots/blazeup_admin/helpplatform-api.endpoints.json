@@ -120,6 +120,13 @@
       "200"
     ]
   },
+  "GET /helpplatform-api/internal/debug/cron-jobs": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /helpplatform-api/internal/debug/overview": {
     "body_required": false,
     "params": [],
@@ -254,6 +261,13 @@
     ],
     "responses": [
       "201"
+    ]
+  },
+  "POST /helpplatform-api/internal/debug/scheduled-publish/trigger": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
     ]
   },
   "POST /helpplatform-api/internal/platform-help/manifest": {
