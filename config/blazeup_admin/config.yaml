@@ -76,13 +76,21 @@ modules:
   GOVERNANCE:
     number: 16
 
-# Excel lookup (optional) — supplies TC title/priority during sync.
-# The file path is HARD-CODED in sync_registry.py to
-#   docs/<domain>/Partner_Platform_Test_Plan.xlsx  (NOT read from here).
-# The title/priority lookup only activates when BOTH `sheet` and `module` are set
-# (see sync_registry.py); today titles come from each test's docstring, so this
-# block is inert. To enable Excel-driven titles later, uncomment + adjust:
-# excel:
-#   sheet: "Partner Platform"
-#   module: PARTNER
-#   excel_prefix: PARTNER_API   # TC-id prefix as written in the sheet
+# Excel result reporting — read by utils/excel_reporter.py when --excel-report is on.
+# The test-plan file path is hard-coded in the runner to
+#   docs/<domain>/Partner_Platform_Test_Plan.xlsx.
+# `sheets`: which tabs the reporter writes automation results into. Add a name
+#   here (e.g. "Tenant") to cover a NEW sheet — no code change. Every listed
+#   sheet must share the column layout below (1-based indices).
+# Lookup key = column C (Test Case Name) matched against each test's TC name.
+excel:
+  sheets:
+    - "Partner Platform"
+  col_tc_string: 3       # C: Test Case Name (lookup key)
+  col_auto_flag: 11      # K: Auto  ("YES")
+  col_auto_status: 12    # L: Automation Status (PASSED / FAILED / BLOCKED / NOT_STARTED)
+  data_start_row: 13     # first data row
+  # Optional (sync title/priority lookup — inert unless BOTH `sheet` + `module` set):
+  #   sheet: "Partner Platform"
+  #   module: PARTNER
+  #   excel_prefix: PARTNER_API

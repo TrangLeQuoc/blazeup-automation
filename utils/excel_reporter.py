@@ -25,26 +25,48 @@ from datetime import datetime
 from pathlib import Path
 
 import openpyxl
+import yaml
 from loguru import logger
 
-# ---------------------------------------------------------------------------
-# Module → Excel sheet mapping.  Must mirror EXCEL_SHEETS in sync_registry.py.
-# ---------------------------------------------------------------------------
-
-MODULE_TO_SHEET: dict[str, str] = {
-    "blazeup_partner": "Partner Platform",
-    # "health": "Health System",   # uncomment when that sheet exists
-}
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 # ---------------------------------------------------------------------------
-# Column positions (1-based — used with ws.cell(row=r, column=c))
+# Excel mapping is read PER-DOMAIN from config/<domain>/config.yaml (block
+# `excel:`), so covering a new sheet (e.g. "Tenant") or shifting a column is a
+# YAML edit — no code change. These are the fallbacks when the block/key is absent.
 # ---------------------------------------------------------------------------
 
-COL_TC_STRING = 3  # C: Test Case Name (lookup key)
-COL_AUTO_FLAG = 11  # K: Auto  ("YES" / "NO")
-COL_AUTO_STATUS = 12  # L: Automation Status
+_DEFAULT_SHEETS = ["Partner Platform"]
+_DEFAULT_COL_TC_STRING = 3  # C: Test Case Name (lookup key)
+_DEFAULT_COL_AUTO_FLAG = 11  # K: Auto ("YES" / "NO")
+_DEFAULT_COL_AUTO_STATUS = 12  # L: Automation Status
+_DEFAULT_DATA_START_ROW = 13  # first row that contains test-case data
 
-DATA_START_ROW = 13  # first row that contains test-case data
+
+def _load_excel_cfg(excel_path: Path) -> dict:
+    """Read the reporter's Excel mapping from config/<domain>/config.yaml.
+
+    Domain is inferred from the test-plan path (``docs/<domain>/<file>.xlsx``).
+    Every key falls back to the module defaults above, so a missing/partial
+    ``excel:`` block still works. To cover a new sheet, add its name to
+    ``excel.sheets`` in the domain's config.yaml — nothing here changes.
+    """
+    domain = excel_path.parent.name
+    cfg_path = _PROJECT_ROOT / "config" / domain / "config.yaml"
+    excel: dict = {}
+    try:
+        data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+        excel = data.get("excel") or {}
+    except Exception as exc:  # noqa: BLE001 — missing/bad config → use defaults
+        logger.debug("Excel reporter: could not read {} ({}) — using defaults", cfg_path, exc)
+    return {
+        "sheets": excel.get("sheets") or _DEFAULT_SHEETS,
+        "col_tc_string": excel.get("col_tc_string", _DEFAULT_COL_TC_STRING),
+        "col_auto_flag": excel.get("col_auto_flag", _DEFAULT_COL_AUTO_FLAG),
+        "col_auto_status": excel.get("col_auto_status", _DEFAULT_COL_AUTO_STATUS),
+        "data_start_row": excel.get("data_start_row", _DEFAULT_DATA_START_ROW),
+    }
+
 
 # ---------------------------------------------------------------------------
 # pytest outcome → Excel automation status
@@ -135,20 +157,19 @@ def write_excel_report(
     out_path = result_dir / out_name
     shutil.copy2(excel_path, out_path)
 
-    # ── Open and update ────────────────────────────────────────────────────
+    # ── Open and update (sheets + columns from config/<domain>/config.yaml) ──
+    cfg = _load_excel_cfg(excel_path)
     wb = openpyxl.load_workbook(out_path)
     updated = 0
 
-    for module_name, sheet_name in MODULE_TO_SHEET.items():
+    for sheet_name in cfg["sheets"]:
         if sheet_name not in wb.sheetnames:
-            logger.debug(
-                "Sheet '{}' not in workbook — skipping module '{}'", sheet_name, module_name
-            )
+            logger.debug("Sheet '{}' not in workbook — skipping", sheet_name)
             continue
 
         ws = wb[sheet_name]
-        for row_idx in range(DATA_START_ROW, ws.max_row + 1):
-            tc_str = ws.cell(row=row_idx, column=COL_TC_STRING).value
+        for row_idx in range(cfg["data_start_row"], ws.max_row + 1):
+            tc_str = ws.cell(row=row_idx, column=cfg["col_tc_string"]).value
             if not tc_str:
                 continue
             tc_str = str(tc_str).strip()
@@ -156,8 +177,8 @@ def write_excel_report(
                 continue
 
             outcome = result_lookup[tc_str]
-            ws.cell(row=row_idx, column=COL_AUTO_FLAG).value = "YES"
-            ws.cell(row=row_idx, column=COL_AUTO_STATUS).value = outcome
+            ws.cell(row=row_idx, column=cfg["col_auto_flag"]).value = "YES"
+            ws.cell(row=row_idx, column=cfg["col_auto_status"]).value = outcome
             logger.debug("  {} → Automation Status = {}", tc_str, outcome)
             updated += 1
 

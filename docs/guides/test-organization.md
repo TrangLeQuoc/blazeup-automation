@@ -24,13 +24,18 @@ Every test is located by 3 axes, mapping directly onto the directory structure:
 
 ```
 tests/<domain>/
-  api/      # group by RESOURCE/feature  → test_sa_partners.py, test_sa_deals.py
-  ui/       # group by PAGE              → test_dashboard.py, test_tenants.py
-  e2e/      # group by JOURNEY (multi-step, stateful) → test_partner_onboarding.py
+  api/<module>/   # group by RESOURCE/feature → api/partner/test_sa_deals.py, test_sa_partners.py
+  ui/<module>/    # group by PAGE            → ui/dashboard/test_dashboard.py · ui/shell/test_page_loads.py
+  e2e/            # group by JOURNEY (multi-step, stateful) → test_partner_onboarding.py (add when needed)
 ```
 
 - **API grouped by feature/resource**, NOT by page (1 API serves many pages).
 - **UI grouped by page**, one file per page.
+- Within a layer, files sit in a **`<module>/` subfolder** (the module declared in
+  `config/<domain>/config.yaml`) — e.g. `api/partner/`, `ui/dashboard/`, `ui/shell/`. This
+  keeps modules separate as the suite grows; API clients mirror it under
+  `api_clients/<domain>/<module>/`. (`sync_registry` scans recursively, so the subfolder
+  never affects TC IDs.)
 - **`e2e/`** is the ONLY place for multi-step scenarios that depend on each other (see §3).
 
 ---
@@ -88,19 +93,21 @@ module lookup).
 
 **Function naming convention:**
 ```
-test_{feature}_{layer}_{section}_{seq}
-        │         │        │        └─ 3-digit sequence number:  001, 002, …, 011
-        │         │        └─ sub-section/feature within the module
-        │         └─ api | ui
+test_{module}_{layer}_{section}_{seq}
+        │        │        │        └─ sequence (written 3-digit for readability, e.g. 002,
+        │        │        │           011, 033; packed as 2 digits in the ID → 01–99 / section)
+        │        │        └─ sub-section/feature within the module
+        │        └─ api | ui
         └─ module (must be declared in config/<domain>/config.yaml)
 ```
 Example: `test_partner_api_partner_account_management_002`
 → `PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_002` → ID `2060102`.
 
-**ID formula:** `{type}{project}{module:02d}{section:02d}{seq:02d}`
-- `type`: **1 = UI**, **0 = API**
+**ID formula (8 digits):** `{type}{project}{module:02d}{section:02d}{seq:02d}`
+- `type`: **1 = UI**, **0 = API** — an API id starts with `0`, so it displays as 7 digits (e.g. `2060102`); a UI id keeps all 8 (e.g. `12020101`)
 - `project`: the domain's digit (e.g. `blazeup_admin` = 2) — keeps IDs distinct across projects even if module names collide
-- module/section: 2 digits, taken from `config.yaml` (`modules.<NAME>.number` + `ui:`/`api:` section)
+- `module` / `section`: 2 digits each, from `config.yaml` (`modules.<NAME>.number` + the `ui:`/`api:` section map)
+- `seq`: **2 digits** (`01`–`99`) — max 99 TCs per section
 
 > Sections are numbered **incrementally as they are written**, they do NOT need to be
 > contiguous in meaning. E.g. validation being `_011` right after `_010` is normal —
@@ -180,6 +187,8 @@ Place it next to the corresponding feature. The **Test Type** column states clea
    - No token → **401**
    - Wrong role/permission → **403**
    - A token of a different entity trying to access a resource that is not its own → **403 or 404**
+     (target/guideline; on BlazeUp SA this currently returns **400** — still refused, no data
+     leak — see `PARTNER_API_AUTH_ACCESS_CONTROL_003`. Assert the real code; refusal is what matters.)
    - *(Auth is usually grouped under the Auth & Access Control feature, not crammed into each functional TC — but it must exist.)*
 6. **Each TC is self-contained:**
    - Set up fixture/data **within the TC itself** — do not use data created by another TC.
@@ -274,6 +283,6 @@ Before committing a test, ask yourself:
 ## 9. When to restructure
 
 - **< 20 TCs**: keep it flat under `api/` `ui/`. Do not optimize early.
-- **20–50 TCs**: split files by feature/page (in progress). Standardize markers.
-- **> 50 TCs**: consider subdirectories by feature within `api/`, split out `e2e/`, gather a
-  clear smoke-set. By now you have real data to decide, not guesses.
+- **20–50 TCs**: one file per feature/page; group into `<module>/` subfolders. Standardize markers.
+- **> 50 TCs** (current state): grouped by module under `api/<module>/` · `ui/<module>/`
+  (see §1); split out `e2e/` when real multi-step flows appear; maintain a clear smoke-set.

@@ -509,11 +509,11 @@ After each run the framework copies `Partner_Platform_Test_Plan.xlsx` into the r
 
 | Excel column | Value written |
 |---|---|
-| **J — Auto** | `YES` (marks row as covered by automation) |
-| **K — Automation Status** | `PASSED` / `FAILED` / `NOT_STARTED` |
-| **H — Status** | Formula — auto-recomputes in Excel when you open the file |
+| **K — Auto** | `YES` (marks row as covered by automation) |
+| **L — Automation Status** | `PASSED` / `FAILED` / `BLOCKED` / `NOT_STARTED` |
+| **I — Status** | Formula — auto-recomputes in Excel when you open the file (never written) |
 
-Columns A–I and L onward are never touched.
+Only columns **K** and **L** are written; everything else (incl. Manual Status in **J**) is left as-is. Column positions are configurable per domain — see §7.6.
 
 ### 7.2 Outcome mapping
 
@@ -521,6 +521,7 @@ Columns A–I and L onward are never touched.
 |---|---|
 | PASSED | `PASSED` |
 | FAILED / ERROR | `FAILED` |
+| BLOCKED (env/precondition down — login/service 5xx) | `BLOCKED` |
 | SKIPPED / MISSING | `NOT_STARTED` |
 
 ### 7.3 Enable / disable
@@ -552,25 +553,33 @@ results/run_YYYYMMDD_HHMMSS/
 Legacy TCs (IDs 1–13, `tc_string = "demo"`) have no Excel row and are skipped.  
 Only TCs with a proper `tc_string` (e.g. `PARTNER_UI_DASHBOARD_001`) are written.
 
-### 7.6 Add a new module / sheet
+### 7.6 Add a new sheet (config-driven, no code change)
 
-When a new Excel sheet is added (e.g. `Health System`), add it to **both** files:
+The reporter reads which sheets to write — and the column positions — from
+`config/<domain>/config.yaml` (block `excel:`). To cover a new tab (e.g. `Tenant`),
+add its name to `excel.sheets`; no code change:
 
-```python
-# utils/sync_registry.py  (line ~85)
-EXCEL_SHEETS: dict[str, str] = {
-    "Partner Platform": "PARTNER",
-    "Health System":    "HEALTH",   # ← add here
-}
-
-# utils/excel_reporter.py  (line ~35)
-MODULE_TO_SHEET: dict[str, str] = {
-    "partner": "Partner Platform",
-    "health":  "Health System",    # ← add here
-}
+```yaml
+# config/blazeup_admin/config.yaml
+excel:
+  sheets:
+    - "Partner Platform"
+    - "Tenant"            # ← add the new tab name
+  col_tc_string: 3        # C: Test Case Name (lookup key)
+  col_auto_flag: 11       # K: Auto
+  col_auto_status: 12     # L: Automation Status
+  data_start_row: 13      # first data row
 ```
 
-Then run `python utils/sync_registry.py` to pick up the new module's TCs.
+The new tab must share the column layout above (Test Case Name in **C**, Auto in
+**K**, Automation Status in **L**, data from **row 13**). The reporter matches each
+TC by its name in column C and writes K + L; a sheet not present in the workbook is
+skipped safely. Defaults (used when the block/key is absent) live in
+`utils/excel_reporter.py`.
+
+> If the new tab uses a *different* column layout, adjust `col_*` / `data_start_row`
+> — but those apply to all listed sheets, so keep the layout consistent (or split
+> into a separate domain/plan file).
 
 ---
 
