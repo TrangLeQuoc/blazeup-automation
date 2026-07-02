@@ -1,36 +1,36 @@
-# Quản lý test data (Faker + cleanup)
+# Test data management (Faker + cleanup)
 
-Mục tiêu: mỗi test có dữ liệu **độc nhất** (chạy song song không đụng nhau) và
-**tự dọn** sau khi xong (staging luôn sạch, kết quả ổn định).
+Goal: each test has **unique** data (parallel runs don't collide) and
+**cleans up automatically** when done (staging stays clean, results are stable).
 
-## 2 công cụ
+## 2 tools
 
-| Công cụ | File | Dùng để |
+| Tool | File | Used for |
 |---|---|---|
-| **Factory** | `utils/data_factory.py` | Sinh payload độc nhất, có tag `QA-AUTO` |
-| **Cleanup fixture** | `created_resources` (trong `pytest_support/fixtures.py`) | Đăng ký xóa resource → teardown tự gọi (kể cả khi test fail) |
+| **Factory** | `utils/data_factory.py` | Generate unique payloads, tagged `QA-AUTO` |
+| **Cleanup fixture** | `created_resources` (in `pytest_support/fixtures.py`) | Register a resource for deletion → teardown calls it automatically (even when the test fails) |
 
-## 1. Factory — sinh dữ liệu
+## 1. Factory — generate data
 
 ```python
 from utils.data_factory import make_user, make_tenant, make_deal
 
-make_user()                       # tất cả field random + email độc nhất
-make_user(department="Finance")   # override 1 field để assert
-make_tenant()                     # name có prefix "QA-AUTO ..."
+make_user()                       # all fields random + unique email
+make_user(department="Finance")   # override 1 field to assert on
+make_tenant()                     # name has prefix "QA-AUTO ..."
 ```
-- `fake.unique.*` đảm bảo **không trùng** trong 1 lần chạy.
-- Field human-readable mang prefix **`QA-AUTO`** → dễ nhận diện + dọn hàng loạt.
-- Trả về `dict` thuần → truyền thẳng vào `client.post(..., json=...)`.
+- `fake.unique.*` guarantees **no duplicates** within a single run.
+- Human-readable fields carry the **`QA-AUTO`** prefix → easy to identify + clean up in bulk.
+- Returns a plain `dict` → pass it straight into `client.post(..., json=...)`.
 
-> Các field trong factory là **điểm khởi đầu hợp lý**, không phải schema backend
-> chính thức. Khi API chốt contract, chỉnh field cho khớp.
+> The fields in the factory are a **reasonable starting point**, not the official
+> backend schema. Once the API finalizes its contract, adjust the fields to match.
 
-## 2. Cleanup — tự xóa sau test
+## 2. Cleanup — auto-delete after the test
 
-Fixture `created_resources`: đăng ký 1 callback xóa cho **mọi thứ bạn tạo**.
-Teardown chạy các callback theo thứ tự **ngược** (LIFO), nuốt lỗi (chỉ log) để
-một cleanup hỏng không chặn cái khác.
+The `created_resources` fixture: register one delete callback for **everything you create**.
+Teardown runs the callbacks in **reverse** order (LIFO), swallowing errors (only logging them) so
+one failed cleanup doesn't block another.
 
 ```python
 import pytest
@@ -40,39 +40,41 @@ from utils.data_factory import make_tenant
 @pytest.mark.api
 @pytest.mark.regression
 async def test_create_tenant_001(auth_client, created_resources):
-    """TENANT_API_CREATE_001: tạo tenant mới qua API trả 201 + có id."""
-    # ── Arrange + Act: tạo qua API (nhanh, ổn định hơn click UI) ──
+    """TENANT_API_CREATE_001: creating a new tenant via API returns 201 + has an id."""
+    # ── Arrange + Act: create via API (faster, more stable than clicking the UI) ──
     payload = make_tenant()
     resp = await auth_client.post("/tenants", json=payload, expected_status=201)
     tenant_id = resp.json()["data"]["id"]
 
-    # ── Đăng ký dọn NGAY sau khi tạo (trước assert) để chắc chắn được xóa ──
+    # ── Register cleanup RIGHT after creating (before asserts) to be sure it gets deleted ──
     created_resources.add(lambda: auth_client.delete(f"/tenants/{tenant_id}"))
 
     # ── Assert ──
-    assert tenant_id, "Tenant phải có id sau khi tạo"
-    # → teardown tự xóa tenant này, dù test pass hay fail.
+    assert tenant_id, "Tenant must have an id after creation"
+    # → teardown deletes this tenant automatically, whether the test passes or fails.
 ```
 
-### Nguyên tắc vàng
-1. **Đăng ký cleanup NGAY sau khi tạo** (trước các assert) — nếu assert fail giữa
-   chừng, resource vẫn được dọn.
-2. **Ưu tiên tạo/xóa qua API** trong setup/teardown (nhanh, ít flaky) — kể cả khi
-   test chính là test UI.
-3. **Không giả định data có sẵn** — test tự tạo cái nó cần (test isolation).
+### Golden rules
+1. **Register cleanup RIGHT after creating** (before the asserts) — if an assert fails
+   partway through, the resource still gets cleaned up.
+2. **Prefer creating/deleting via API** in setup/teardown (fast, less flaky) — even when
+   the main test is a UI test.
+3. **Don't assume data already exists** — the test creates what it needs (test isolation).
 
-## 3. Test isolation (cô lập)
-- Mỗi test sở hữu data riêng → chạy **bất kỳ thứ tự nào / song song / chạy lẻ** đều ra cùng kết quả.
-- `authenticated_page` đã cho mỗi test 1 browser context riêng (không chia cookie).
-- `created_resources` đảm bảo không để lại rác giữa các test.
+## 3. Test isolation
 
-## 4. Khi nào dùng
-- Test **chỉ đọc/kiểm tra** (vd load trang) → **không cần** factory/cleanup.
-- Test **CRUD** (tạo/sửa/xóa tenant, partner, deal, user...) → **bắt buộc** dùng cả hai.
+- Each test owns its own data → running in **any order / in parallel / individually** yields the same result.
+- `authenticated_page` already gives each test its own browser context (cookies are not shared).
+- `created_resources` ensures no leftover junk between tests.
 
-## Checklist viết 1 test CRUD
-- [ ] Dùng `make_*()` để sinh payload (đừng hard-code).
-- [ ] Tạo resource qua API client (`auth_client.post(...)`).
-- [ ] `created_resources.add(lambda: client.delete(...))` ngay sau khi tạo.
-- [ ] Assert hành vi.
-- [ ] (Không cần viết teardown thủ công — fixture lo.)
+## 4. When to use
+
+- Tests that **only read/check** (e.g. loading a page) → **no need** for factory/cleanup.
+- **CRUD** tests (create/update/delete tenant, partner, deal, user...) → **must** use both.
+
+## Checklist for writing a CRUD test
+- [ ] Use `make_*()` to generate the payload (don't hard-code).
+- [ ] Create the resource via the API client (`auth_client.post(...)`).
+- [ ] `created_resources.add(lambda: client.delete(...))` right after creating.
+- [ ] Assert the behavior.
+- [ ] (No need to write teardown manually — the fixture handles it.)

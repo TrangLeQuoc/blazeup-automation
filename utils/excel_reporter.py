@@ -9,11 +9,11 @@ Usage (called from runner/test_runner.py when --excel-report is active):
 
 Excel column mapping (Partner_Platform_Test_Plan.xlsx, "Partner Platform" sheet)
 ----------------------------------------------------------------------------------
-Col C  (3)  TestcaseId         — lookup key  (e.g. PARTNER_UI_DASHBOARD_001)
-Col H  (8)  Status             — formula, auto-recomputes in Excel — DO NOT WRITE
-Col I  (9)  Manual Status      — not touched by automation
-Col J  (10) Auto               — set to "YES" when automation covers the TC
-Col K  (11) Automation Status  — written with PASSED / FAILED / NOT_STARTED
+Col C  (3)  Test Case Name     — lookup key  (e.g. PARTNER_API_AUTH_ACCESS_CONTROL_001)
+Col I  (9)  Status             — formula, auto-recomputes in Excel — DO NOT WRITE
+Col J  (10) Manual Status      — not touched by automation
+Col K  (11) Auto               — set to "YES" when automation covers the TC
+Col L  (12) Automation Status  — written with PASSED / FAILED / BLOCKED / NOT_STARTED
 
 Status values accepted by the workbook formulas
 ------------------------------------------------
@@ -40,9 +40,9 @@ MODULE_TO_SHEET: dict[str, str] = {
 # Column positions (1-based — used with ws.cell(row=r, column=c))
 # ---------------------------------------------------------------------------
 
-COL_TC_STRING = 3  # C: TestcaseId
-COL_AUTO_FLAG = 10  # J: Auto  ("YES" / "NO")
-COL_AUTO_STATUS = 11  # K: Automation Status
+COL_TC_STRING = 3  # C: Test Case Name (lookup key)
+COL_AUTO_FLAG = 11  # K: Auto  ("YES" / "NO")
+COL_AUTO_STATUS = 12  # L: Automation Status
 
 DATA_START_ROW = 13  # first row that contains test-case data
 

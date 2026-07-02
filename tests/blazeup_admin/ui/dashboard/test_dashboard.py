@@ -2,10 +2,10 @@
 
 Per-page CONTENT tests for the Dashboard landing page (KPI cards, System Health,
 Risk Signals). The generic "does the page load" check is NOT here — it lives once
-for all 15 pages in test_page_loads.py (SHELL_UI_PAGE_LOADS_001).
+for all 16 pages in test_page_loads.py (SHELL_UI_PAGE_LOADS_001).
 
 Naming: each page is its own module, so content tests are DASHBOARD_UI_<FEATURE>_NNN
-(here VISIBLE = key widgets render). This file is the template for the other 14
+(here VISIBLE = key widgets render). This file is the template for the other 15
 pages: each gets test_<page>.py with <PAGE>_UI_<FEATURE>_NNN tests, plus a
 <page>_locators.py / <page>_page.py pair, created when real selectors exist.
 """

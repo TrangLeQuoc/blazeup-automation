@@ -2,7 +2,7 @@
 
 Relationship to the shell object:
     ShellPage (page_locators.py)  -> navigate + assert the section
-                                                module loaded (works for all 15).
+                                                module loaded (works for all 16).
     DashboardPage (this file)     -> read widgets ON the Dashboard
                                                 page once it has loaded.
 
@@ -14,12 +14,13 @@ A Layer-B test typically does both::
     dash = DashboardPage(authenticated_page, base_url)
     assert await dash.kpi_card_count() >= 1
 
-Use this file as the template for the other 14 pages: one
+Use this file as the template for the other 15 pages: one
 ``<Section>Page`` per section, reading from its
 ``<section>_locators.py`` locator file.
 """
 
 from loguru import logger
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import expect
 
 from locators.blazeup_admin.dashboard_locators import DashboardLocators
@@ -52,12 +53,24 @@ class DashboardPage(BasePage):
         text = " ".join((await card.inner_text(timeout=10_000)).split())
         return text[len(label) :].strip() if text.startswith(label) else text
 
+    async def _panel_visible(self, selector: str, timeout: int = 15_000) -> bool:
+        """Wait up to *timeout* for a panel to become visible; return True/False.
+
+        Dashboard panels (System Health / Risk Signals / Recent Activity) hydrate
+        AFTER the KPI cards, below the fold — a point-in-time ``is_visible()`` races
+        that render and gives a false negative. Wait for the visible state instead.
+        """
+        panel = self.page.locator(selector).first
+        try:
+            await panel.wait_for(state="visible", timeout=timeout)
+            return True
+        except PlaywrightTimeoutError:
+            return False
+
     async def is_system_health_visible(self) -> bool:
         """Return True if the 'System Health' panel is shown."""
-        panel = self.page.locator(DashboardLocators.SYSTEM_HEALTH_PANEL).first
-        return await panel.is_visible()
+        return await self._panel_visible(DashboardLocators.SYSTEM_HEALTH_PANEL)
 
     async def is_risk_signals_visible(self) -> bool:
         """Return True if the 'Risk Signals' panel is shown."""
-        panel = self.page.locator(DashboardLocators.RISK_SIGNALS_PANEL).first
-        return await panel.is_visible()
+        return await self._panel_visible(DashboardLocators.RISK_SIGNALS_PANEL)

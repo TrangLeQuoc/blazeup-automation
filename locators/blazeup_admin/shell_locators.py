@@ -96,4 +96,13 @@ class ShellLocators:
             "route": "/governance",
             "marker": "Platform Governance",
         },
+        # Added 2026-07-01 (live sidebar now has 16 items). The MFE currently fails
+        # on staging ("Something went wrong"), so the marker is the best-guess page
+        # title — re-verify once the deploy is healthy; until then READY_MARKER
+        # correctly fails for it (fail-by-design).
+        "user_groups_permissions": {
+            "label": "User Groups & Permissions",
+            "route": "/user-groups-permissions",
+            "marker": "User Groups & Permissions",
+        },
     }

@@ -1,226 +1,236 @@
-# Tổ chức test (Test Taxonomy)
+# Test Organization (Test Taxonomy)
 
-Cách phân loại, đặt tên, nhóm và viết test cho khung BlazeUp — để suite **không
-bừa** khi lớn dần. Đọc cùng: [test-data.md](test-data.md) (factory + cleanup),
-[add-domain.md](add-domain.md) (thêm domain mới).
+How to classify, name, group, and write tests for the BlazeUp framework — so the
+suite does **not become messy** as it grows. Read alongside:
+[test-data.md](test-data.md) (factory + cleanup),
+[add-domain.md](add-domain.md) (adding a new domain).
 
-> **Nguyên tắc vàng (đọc trước tất cả):**
-> **1 test case = 1 hàm `test_…` = 1 dòng trong test plan.** Mỗi test **độc lập,
-> tự setup, tự dọn**. Không test nào phụ thuộc thứ tự chạy của test khác.
+> **Golden rule (read before everything else):**
+> **1 test case = 1 `test_…` function = 1 row in the test plan.** Every test is
+> **independent, self-setup, self-cleanup**. No test depends on the run order of
+> another test.
 
 ---
 
-## 1. Ba trục tổ chức
+## 1. Three axes of organization
 
-Mọi test được định vị bằng 3 trục, ánh xạ thẳng vào cấu trúc thư mục:
+Every test is located by 3 axes, mapping directly onto the directory structure:
 
-| Trục | Câu hỏi | Ví dụ |
+| Axis | Question | Example |
 |------|---------|-------|
-| **Domain** | App nào? | `blazeup_admin` (SA Dashboard) · `blazeup_partner` (Partner Portal) |
-| **Layer** | Tầng nào? | `api` (HTTP contract) · `ui` (browser) · `e2e` (luồng nghiệp vụ) |
-| **Nhóm** | Thuộc về đâu? | API → theo **feature/resource** · UI → theo **page** |
+| **Domain** | Which app? | `blazeup_admin` (SA Dashboard) · `blazeup_partner` (Partner Portal) |
+| **Layer** | Which layer? | `api` (HTTP contract) · `ui` (browser) · `e2e` (business flow) |
+| **Group** | Where does it belong? | API → by **feature/resource** · UI → by **page** |
 
 ```
 tests/<domain>/
-  api/      # nhóm theo RESOURCE/feature  → test_sa_partners.py, test_sa_deals.py
-  ui/       # nhóm theo PAGE              → test_dashboard.py, test_tenants.py
-  e2e/      # nhóm theo JOURNEY (nhiều bước, có state) → test_partner_onboarding.py
+  api/      # group by RESOURCE/feature  → test_sa_partners.py, test_sa_deals.py
+  ui/       # group by PAGE              → test_dashboard.py, test_tenants.py
+  e2e/      # group by JOURNEY (multi-step, stateful) → test_partner_onboarding.py
 ```
 
-- **API gom theo feature/resource**, KHÔNG theo page (1 API phục vụ nhiều page).
-- **UI gom theo page**, mỗi page 1 file.
-- **`e2e/`** là chỗ DUY NHẤT cho kịch bản nhiều bước phụ thuộc nhau (xem §3).
+- **API grouped by feature/resource**, NOT by page (1 API serves many pages).
+- **UI grouped by page**, one file per page.
+- **`e2e/`** is the ONLY place for multi-step scenarios that depend on each other (see §3).
 
 ---
 
-## 2. Ba loại test — dùng loại nào khi nào
+## 2. Three types of test — which to use when
 
-| Loại | Mục đích | Đặc tính | Để ở |
+| Type | Purpose | Characteristics | Location |
 |------|----------|----------|------|
-| **Atomic contract** | Kiểm 1 endpoint / 1 hành vi | Độc lập, tự setup+cleanup, chạy song song được | `api/`, `ui/` |
-| **Negative / validation** | Input sai → bị từ chối đúng cách | Như atomic, nhưng assert lỗi (400/403/409…) | cạnh atomic, cùng feature |
-| **E2E scenario** | Luồng nghiệp vụ end-to-end | Nhiều bước **chia sẻ state**, tuần tự | `e2e/` |
+| **Atomic contract** | Check 1 endpoint / 1 behavior | Independent, self setup+cleanup, can run in parallel | `api/`, `ui/` |
+| **Negative / validation** | Wrong input → correctly rejected | Like atomic, but asserts errors (400/403/409…) | next to atomic, same feature |
+| **E2E scenario** | End-to-end business flow | Multiple steps **sharing state**, sequential | `e2e/` |
 
-**Quy tắc quyết định:**
+**Decision rule:**
 
-- Kiểm "API này trả đúng contract không?" → **atomic**.
-- Kiểm "gửi rác có bị chặn không?" → **negative** (TC riêng, không nhét vào positive).
-- Kiểm "partner đăng ký → SA duyệt → tạo deal → tính hoa hồng" (mỗi bước dùng kết
-  quả bước trước) → **E2E** trong `e2e/`.
+- Check "does this API return the correct contract?" → **atomic**.
+- Check "is garbage input blocked?" → **negative** (a separate TC, do not cram into positive).
+- Check "partner registers → SA approves → creates deal → computes commission" (each step
+  uses the result of the previous step) → **E2E** in `e2e/`.
 
-> ⚠️ **ĐỪNG** biến atomic API test thành chuỗi bước phụ thuộc nhau. Phụ thuộc ngầm
-> = không chạy lẻ/song song được, 1 lỗi kéo theo "fail giả" hàng loạt, khó tìm
-> nguồn lỗi. Đó chính là thứ làm suite bừa.
+> ⚠️ **DO NOT** turn an atomic API test into a chain of interdependent steps. Implicit
+> dependency = cannot run alone/in parallel, one failure drags along a mass of "false
+> failures", hard to find the source of the error. That is exactly what makes a suite
+> messy.
 
 ---
 
-## 3. E2E scenario — khi nào & viết thế nào
+## 3. E2E scenario — when & how to write it
 
-Chỉ dùng khi các bước **thật sự phụ thuộc state** (record tạo ở bước 1 được bước 4
-dùng). Vẫn là **1 hàm = 1 TC**, các bước là `async_step` (không tách thành nhiều
-hàm phụ thuộc nhau).
+Only use when the steps **truly depend on state** (a record created in step 1 is used by
+step 4). Still **1 function = 1 TC**, the steps are `async_step` (not split into multiple
+interdependent functions).
 
 ```python
 async def test_partner_onboarding_e2e(sa_partners_client, created_resources):
-    async with async_step("[1/4] Đăng ký partner (pending)"):
+    async with async_step("[1/4] Register partner (pending)"):
         partner = await sa_partners_client.create_partner(make_partner())
         created_resources.add(lambda: sa_partners_client.delete_partner(partner.partner_id))
-    async with async_step("[2/4] SA duyệt → active"):
+    async with async_step("[2/4] SA approves → active"):
         ...
-    async with async_step("[3/4] Tạo deal cho partner"):
+    async with async_step("[3/4] Create deal for partner"):
         ...
-    async with async_step("[4/4] Kiểm hoa hồng được tính"):
+    async with async_step("[4/4] Verify commission is computed"):
         ...
 ```
 
-Step nào fail thì step đó đỏ trong Allure → biết ngay chuỗi gãy ở đâu, mà test vẫn
-là 1 đơn vị độc lập, tự dọn.
+Whichever step fails goes red in Allure → you instantly know where the chain broke, while
+the test is still an independent, self-cleaning unit.
 
 ---
 
-## 4. Đặt tên & TC ID
+## 4. Naming & TC ID
 
-Tên hàm → TC ID do `utils/sync_registry.py` sinh tự động (viết hoa + tra module).
+Function name → TC ID is generated automatically by `utils/sync_registry.py` (uppercase +
+module lookup).
 
-**Quy ước tên hàm:**
+**Function naming convention:**
 ```
 test_{feature}_{layer}_{section}_{seq}
-        │         │        │        └─ số thứ tự 3 chữ số:  001, 002, …, 011
-        │         │        └─ section/feature con trong module
+        │         │        │        └─ 3-digit sequence number:  001, 002, …, 011
+        │         │        └─ sub-section/feature within the module
         │         └─ api | ui
-        └─ module (phải khai báo trong config/<domain>/config.yaml)
+        └─ module (must be declared in config/<domain>/config.yaml)
 ```
-Ví dụ: `test_partner_api_partner_account_management_002`
+Example: `test_partner_api_partner_account_management_002`
 → `PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_002` → ID `2060102`.
 
-**Công thức ID:** `{type}{project}{module:02d}{section:02d}{seq:02d}`
+**ID formula:** `{type}{project}{module:02d}{section:02d}{seq:02d}`
 - `type`: **1 = UI**, **0 = API**
-- `project`: digit của domain (vd `blazeup_admin` = 2) — giữ ID khác nhau giữa các project dù trùng tên module
-- module/section: 2 chữ số, lấy từ `config.yaml` (`modules.<NAME>.number` + `ui:`/`api:` section)
+- `project`: the domain's digit (e.g. `blazeup_admin` = 2) — keeps IDs distinct across projects even if module names collide
+- module/section: 2 digits, taken from `config.yaml` (`modules.<NAME>.number` + `ui:`/`api:` section)
 
-> Section đánh số **tăng dần theo lúc viết**, KHÔNG cần liền mạch theo nghĩa. Vd
-> validation là `_011` đứng sau `_010` là bình thường — **lọc bằng marker/Test
-> Type, đừng dựa vào số thứ tự** để phân nhóm.
+> Sections are numbered **incrementally as they are written**, they do NOT need to be
+> contiguous in meaning. E.g. validation being `_011` right after `_010` is normal —
+> **filter by marker/Test Type, do not rely on sequence numbers** for grouping.
 
-Thêm test mới mà ID chưa nhận ra? → module/section phải có trong
-`config/<domain>/config.yaml`, rồi chạy `python utils/sync_registry.py`.
+Added a new test but the ID isn't recognized? → the module/section must exist in
+`config/<domain>/config.yaml`, then run `python utils/sync_registry.py`.
 
 ---
 
-## 5. Markers — phân loại để lọc khi chạy
+## 5. Markers — classify to filter at run time
 
-Khai báo trong `pytest.ini`. Dùng marker để **lọc lúc chạy**, KHÔNG tách thành thư
-mục riêng theo loại.
+Declared in `pytest.ini`. Use markers to **filter at run time**, do NOT split into
+separate directories by type.
 
-| Marker | Nghĩa | Khi nào gắn |
+| Marker | Meaning | When to apply |
 |--------|-------|-------------|
-| `@pytest.mark.smoke` | Tập sống-còn, chạy nhanh mỗi commit | Vài TC chứng minh hệ thống "thở" |
-| `@pytest.mark.regression` | Bộ đầy đủ, chạy trước release | Hầu hết TC |
-| `@pytest.mark.api` | Test tầng HTTP | Mọi test trong `api/` |
-| `@pytest.mark.ui` | Test trình duyệt | Mọi test trong `ui/` |
-| `@pytest.mark.slow` | Chậm / E2E nhiều bước | E2E, job định kỳ |
-| `@pytest.mark.be_gap` | Gap BE đã biết, **cố ý đỏ** cho tới khi BE sửa (theo §6 rule 4) | TC mà bước kiểm chính fail vì BE thiếu logic |
+| `@pytest.mark.smoke` | Vital set, runs fast on every commit | A few TCs proving the system "breathes" |
+| `@pytest.mark.regression` | Full suite, run before release | Most TCs |
+| `@pytest.mark.api` | HTTP-layer test | Every test in `api/` |
+| `@pytest.mark.ui` | Browser test | Every test in `ui/` |
+| `@pytest.mark.slow` | Slow / multi-step E2E | E2E, scheduled jobs |
+| `@pytest.mark.be_gap` | Known BE gap, **intentionally red** until BE fixes it (per §6 rule 4) | A TC whose main check step fails because the BE lacks logic |
 
-> **Tách tín hiệu pass/fail:** TC gắn `be_gap` vẫn FAIL để báo gap (rule 4), nhưng
-> **merge gate chạy `-m "not be_gap"`** để 100% xanh = không regression. Một job
-> riêng chạy `-m be_gap` để theo dõi gap BE (được phép đỏ). Nhờ vậy "đỏ đã biết"
-> không che "đỏ mới".
+> **Separate the pass/fail signal:** a TC marked `be_gap` still FAILs to report the gap
+> (rule 4), but the **merge gate runs `-m "not be_gap"`** so 100% green = no regression. A
+> separate job runs `-m be_gap` to track BE gaps (allowed to be red). This way "known
+> reds" do not mask "new reds".
 
 ```bash
-python -m runner.<domain>.run_test --mode smoke        # chỉ smoke
-python -m runner.<domain>.run_test --type api          # chỉ API
-pytest -m "regression and not slow"                    # lọc trực tiếp
+python -m runner.<domain>.run_test --mode smoke        # smoke only
+python -m runner.<domain>.run_test --type api          # API only
+pytest -m "regression and not slow"                    # filter directly
 ```
 
-Quy ước gắn: **mỗi test ≥ 1 marker layer (`api`/`ui`) + 1 marker scope
-(`smoke`/`regression`)**. `--strict-markers` bắt buộc marker phải khai báo trước.
+Application convention: **each test ≥ 1 layer marker (`api`/`ui`) + 1 scope marker
+(`smoke`/`regression`)**. `--strict-markers` requires markers to be declared first.
 
 ---
 
 ## 6. Positive vs Negative
 
-- **Positive**: đường đi đúng → kết quả đúng (vd tạo partner hợp lệ → 201, pending).
-- **Negative**: input/điều kiện sai → bị từ chối **đúng cách** (vd thiếu field → 400 +
-  message nêu field + KHÔNG tạo record).
+- **Positive**: correct path → correct result (e.g. create a valid partner → 201, pending).
+- **Negative**: wrong input/condition → correctly rejected (e.g. missing field → 400 +
+  message naming the field + NO record created).
 
-Negative là **TC riêng** (dòng riêng trong test plan), không trộn vào positive. Đặt
-cạnh feature tương ứng. Cột **Test Type** ghi rõ `Functional` / `Negative` /
-`Security`.
+Negative is a **separate TC** (its own row in the test plan), not mixed into positive.
+Place it next to the corresponding feature. The **Test Type** column states clearly
+`Functional` / `Negative` / `Security`.
 
-### Quy tắc bắt buộc khi viết TC
+### Mandatory rules for writing test cases
 
-1. **Positive → kèm Negative.** Làm xong 1 TC positive thì làm luôn negative tương
-   ứng (nếu nghiệp vụ có) — không để trống một phía.
-2. **Phủ FULL param.** Mỗi TC tự rà hết:
-   - *Positive:* gửi **mọi** field (required + optional) và **assert echoed** từng cái
-     (bắt silent-mutation) + lifecycle/side-effects.
-   - *Negative:* **mọi** required ở dạng missing, + invalid enum, + sai format
-     (email/date), + boundary (âm/0/cực lớn), + FK không tồn tại.
-   - Giá trị enum lấy từ **OpenAPI spec**; đừng đoán.
-3. **Param là khóa ngoại (FK) → chứng minh "không tồn tại" TRONG test.** Nếu một
-   param trỏ tới data của service khác (`planId`→sa-plans, `partnerId`→partners,
-   `userId`→partner-users…), khi tạo data ghost cho negative phải **GET-by-id ở
-   service nguồn và assert nó vắng mặt (4xx) NGAY trong test**, rồi mới dùng. Tuyệt
-   đối không hard-code id rồi giả định. Nếu service nguồn báo "tồn tại" → fixture
-   sai → fail rõ ("fixture invalid") thay vì cho kết quả sai lệch.
-   - *Ngoại lệ:* nếu chính endpoint đang test đã trả "not found" cho ghost id
-     (self-proving trong assert) thì không cần GET riêng (vd ghost `partnerId` khi
-     register deal). Chỉ cần GET nguồn khi endpoint **không** tự báo (vd `planId`
-     bị nhận 201 → phải chứng minh absence từ sa-plans).
-4. **BE thiếu validation → fail thật + báo BE.** Không viết test xanh giả; để step
-   đó FAIL kèm message "confirm with BE", và ghi gap vào Note của TC.
-5. **Auth/Permission luôn có 3 TC cơ bản** (cho endpoint có bảo vệ):
-   - Không có token → **401**
-   - Sai role/permission → **403**
-   - Token của entity khác cố truy cập tài nguyên không thuộc về mình → **403 hoặc 404**
-   - *(Auth thường gom ở feature Auth & Access Control, không nhét vào từng TC chức năng — nhưng phải tồn tại.)*
-6. **Mỗi TC tự chứa (self-contained):**
-   - Setup fixture/data **trong chính TC** — không dùng data do TC khác tạo.
-   - **Cleanup** sau khi chạy (`created_resources`), pass hay fail đều sạch.
-   - Ghi rõ **precondition state** (vd "deal phải đang FLAGGED", "partner phải pending").
-7. **Assert schema, không chỉ assert value:**
-   - Kiểm **type** của field trả về (list/dict/int/str…), không chỉ giá trị.
-   - Kiểm **sensitive field không bị lộ** trong response (password, token, secret…).
-   - Kiểm **field bắt buộc luôn present** (id, status, code…).
-8. **Duplicate/Idempotency cho mọi POST tạo resource:**
-   - Gọi 2 lần payload giống nhau → **ghi rõ behavior mong đợi**: 409 (reject trùng)
-     hay idempotent (no-op/trả lại cái cũ)? Assert đúng cái đó, đừng để mơ hồ.
-   - **Là TC RIÊNG** (dòng riêng trong test plan, Test Type = `Negative`), đặt cạnh
-     feature create — KHÔNG nhét thành step cuối của TC positive (gộp 2 mục đích →
-     positive đỏ vì lý do duplicate, đọc log nhầm là "tạo hỏng"). Ngoại lệ DUY NHẤT:
-     nếu gửi-lại là một bước thật trong kịch bản `e2e/` (vd user bấm gửi 2 lần do
-     mạng) thì là `async_step`, không phải atomic.
-   - **Chỉ áp công thức trên cho POST _tạo resource_.** Với POST tạo mới, gọi 2 lần ra
-     2 record = BUG → đáp án đúng cố định (reject **hoặc** idempotent), assert thẳng.
-     Với thao tác **mutating có tham số** (vd `extend-protection` +N ngày, đổi tier,
-     cộng điểm…), lặp lại CÓ THỂ đúng theo 2 kiểu — **additive** (cộng dồn) hoặc
-     **capped** (chặn lần 2) — **cả hai đều có thể là feature**. Đừng áp 409/idempotent
-     một cách mù: **probe / hỏi BE** xem ý định là gì rồi mới assert (đây là edge
-     "định nghĩa hành vi khi lặp", không phải duplicate-create).
-9. **Cập nhật tài liệu test case sau khi làm xong.** Mỗi khi viết xong (hoặc sửa) 1 TC,
-   phải cập nhật **cả 2 file** với nội dung TC tương ứng (description + steps có
-   → Expected + overall + note; nếu là gap thì ghi rõ "confirm BE"):
+1. **Positive → paired with Negative.** After finishing a positive TC, immediately do the
+   corresponding negative (if the business logic has one) — do not leave one side empty.
+2. **Cover FULL params.** Each TC self-sweeps everything:
+   - *Positive:* send **every** field (required + optional) and **assert echoed** for each
+     one (catch silent-mutation) + lifecycle/side-effects.
+   - *Negative:* **every** required field as missing, + invalid enum, + wrong format
+     (email/date), + boundary (negative/0/extremely large), + non-existent FK.
+   - Take enum values from the **OpenAPI spec**; do not guess.
+3. **A param that is a foreign key (FK) → prove "does not exist" INSIDE the test.** If a
+   param points to another service's data (`planId`→sa-plans, `partnerId`→partners,
+   `userId`→partner-users…), when creating ghost data for negative you must **GET-by-id at
+   the source service and assert its absence (4xx) RIGHT INSIDE the test**, then use it.
+   Absolutely do not hard-code an id and assume. If the source service reports "exists" →
+   the fixture is wrong → fail clearly ("fixture invalid") instead of producing a
+   misleading result.
+   - *Exception:* if the very endpoint under test already returns "not found" for the ghost
+     id (self-proving in the assert) then a separate GET is not needed (e.g. ghost
+     `partnerId` when registering a deal). You only need to GET the source when the endpoint
+     does **not** self-report (e.g. a `planId` that gets accepted with 201 → you must prove
+     absence from sa-plans).
+4. **BE missing validation → fail for real + report to BE.** Do not write a fake-green
+   test; let that step FAIL with the message "confirm with BE", and record the gap in the
+   TC's Note.
+5. **Auth/Permission always has 3 basic TCs** (for a protected endpoint):
+   - No token → **401**
+   - Wrong role/permission → **403**
+   - A token of a different entity trying to access a resource that is not its own → **403 or 404**
+   - *(Auth is usually grouped under the Auth & Access Control feature, not crammed into each functional TC — but it must exist.)*
+6. **Each TC is self-contained:**
+   - Set up fixture/data **within the TC itself** — do not use data created by another TC.
+   - **Cleanup** after running (`created_resources`), clean whether it passes or fails.
+   - State the **precondition state** clearly (e.g. "deal must be FLAGGED", "partner must be pending").
+7. **Assert schema, not just assert value:**
+   - Check the **type** of the returned field (list/dict/int/str…), not just the value.
+   - Check that **sensitive fields are not leaked** in the response (password, token, secret…).
+   - Check that **required fields are always present** (id, status, code…).
+8. **Duplicate/Idempotency for every POST that creates a resource:**
+   - Call twice with the same payload → **state the expected behavior clearly**: 409 (reject
+     the duplicate) or idempotent (no-op/return the existing one)? Assert exactly that, do
+     not leave it ambiguous.
+   - **It is a SEPARATE TC** (its own row in the test plan, Test Type = `Negative`), placed
+     next to the create feature — DO NOT cram it as the last step of the positive TC
+     (combining 2 purposes → positive goes red for a duplicate reason, and reading the log
+     you mistake it for "create failed"). The ONLY exception: if resending is a real step in
+     an `e2e/` scenario (e.g. a user clicks submit twice due to the network) then it is an
+     `async_step`, not atomic.
+   - **Only apply the formula above to POST that _creates a resource_.** For a create POST,
+     calling twice producing 2 records = BUG → the correct answer is fixed (reject **or**
+     idempotent), assert it straight. For a **mutating action with a parameter** (e.g.
+     `extend-protection` +N days, change tier, add points…), repeating CAN be correct in 2
+     ways — **additive** (accumulates) or **capped** (blocks the 2nd time) — **both can be a
+     feature**. Do not blindly apply 409/idempotent: **probe / ask BE** what the intent is
+     before asserting (this is a "define behavior on repeat" edge, not duplicate-create).
+9. **Update the test case documentation after finishing.** Every time you finish writing (or
+   editing) a TC, you must update **both files** with the corresponding TC content
+   (description + steps with → Expected + overall + note; if it is a gap then state "confirm
+   BE" clearly):
    - `docs/blazeup_admin/PARTNER_TEST_CASES.md` (EN)
    - `docs/blazeup_admin/PARTNER_TEST_CASES_vi.md` (VI)
-   - NOT_STARTED chỉ để tên; BLOCKED ghi lý do; PASSED/FAILED ghi đầy đủ. Giữ 2 file
-     đồng bộ với code + test plan Excel.
+   - NOT_STARTED just has the name; BLOCKED records the reason; PASSED/FAILED records the
+     full detail. Keep the 2 files in sync with the code + the Excel test plan.
 
 ---
 
-## 7. Giải phẫu một test tốt
+## 7. Anatomy of a good test
 
 ```python
 @pytest.mark.api
 @pytest.mark.regression
 async def test_partner_api_partner_account_management_002(sa_partners_client, created_resources):
-    """<TC ID>: <mô tả 1 dòng>.  <giải thích contract đang kiểm>."""
-    # SETUP: dựng data độc nhất (factory) — log đúng field sẽ assert
+    """<TC ID>: <one-line description>.  <explanation of the contract being checked>."""
+    # SETUP: build unique data (factory) — log exactly the field to be asserted
     payload = make_partner(type="channel")
     logger.info("SETUP: payload → name='{}', email='{}'", payload["name"], payload["email"])
 
-    async with async_step("[1/N] Gọi API ..."):
+    async with async_step("[1/N] Call API ..."):
         resp = await sa_partners_client.create_partner(payload)
-        created_resources.add(lambda: sa_partners_client.delete_partner(resp.partner_id))  # dọn TRƯỚC assert
+        created_resources.add(lambda: sa_partners_client.delete_partner(resp.partner_id))  # clean up BEFORE assert
 
     async with async_step("[2/N] Verify ..."):
         assert ...
@@ -229,41 +239,41 @@ async def test_partner_api_partner_account_management_002(sa_partners_client, cr
     logger.info("RESULT: ...")
 ```
 
-Thành phần bắt buộc:
+Mandatory components:
 
-| Phần | Vai trò |
+| Part | Role |
 |------|---------|
-| **Docstring** | Dòng đầu = `<TC ID>: <mô tả>`; sau đó giải thích contract |
+| **Docstring** | First line = `<TC ID>: <description>`; then explain the contract |
 | **Marker** | layer + scope (§5) |
-| **`SETUP:`** | dựng data (factory, [test-data.md](test-data.md)); log field sẽ assert |
-| **`async_step("[n/N] …")`** | mỗi bước → 1 node Pass/Fail trong Allure ([log_helper](../../utils/log_helper.py)) |
-| **`CHECK … → OK`** | mỗi assertion log 1 dòng → đọc như checklist |
-| **`created_resources.add(...)`** | đăng ký cleanup **ngay sau khi tạo, trước assert** |
-| **`RESULT:`** | kết quả cuối |
+| **`SETUP:`** | build data (factory, [test-data.md](test-data.md)); log the field to be asserted |
+| **`async_step("[n/N] …")`** | each step → 1 Pass/Fail node in Allure ([log_helper](../../utils/log_helper.py)) |
+| **`CHECK … → OK`** | each assertion logs 1 line → reads like a checklist |
+| **`created_resources.add(...)`** | register cleanup **right after creating, before assert** |
+| **`RESULT:`** | final result |
 
-Request/response **tự được log + đính vào Allure step** bởi `BaseClient` — không cần
-log payload thủ công.
-
----
-
-## 8. Checklist chống bừa
-
-Trước khi commit 1 test, tự hỏi:
-
-- [ ] 1 hàm này = đúng 1 TC trong test plan? (không gộp 2 mục đích)
-- [ ] Chạy **lẻ** được không? (không phụ thuộc test khác)
-- [ ] Tự **dọn** data đã tạo? (`created_resources`)
-- [ ] Data **độc nhất**? (factory `fake.unique`, prefix `QA-AUTO`)
-- [ ] Có **marker** layer + scope?
-- [ ] Tên hàm khớp convention → `sync_registry` ra đúng ID?
-- [ ] Positive/negative tách đúng dòng test plan?
-- [ ] Mỗi bước bọc `async_step`, mỗi assert có `CHECK`?
+Request/response is **logged automatically + attached to the Allure step** by `BaseClient`
+— no need to log the payload manually.
 
 ---
 
-## 9. Khi nào tái cấu trúc
+## 8. Anti-mess checklist
 
-- **< 20 TC**: giữ phẳng theo `api/` `ui/`. Đừng tối ưu sớm.
-- **20–50 TC**: tách file theo feature/page (đang làm). Chuẩn hóa marker.
-- **> 50 TC**: cân nhắc thư mục con theo feature trong `api/`, tách `e2e/`, gom
-  smoke-set rõ ràng. Lúc này có dữ liệu thật để quyết, không đoán.
+Before committing a test, ask yourself:
+
+- [ ] Is this one function = exactly 1 TC in the test plan? (not combining 2 purposes)
+- [ ] Can it run **alone**? (not dependent on another test)
+- [ ] Does it **clean up** the data it created? (`created_resources`)
+- [ ] Is the data **unique**? (factory `fake.unique`, prefix `QA-AUTO`)
+- [ ] Does it have a layer + scope **marker**?
+- [ ] Does the function name match the convention → does `sync_registry` produce the right ID?
+- [ ] Are positive/negative split into the correct test plan rows?
+- [ ] Is each step wrapped in `async_step`, does each assert have a `CHECK`?
+
+---
+
+## 9. When to restructure
+
+- **< 20 TCs**: keep it flat under `api/` `ui/`. Do not optimize early.
+- **20–50 TCs**: split files by feature/page (in progress). Standardize markers.
+- **> 50 TCs**: consider subdirectories by feature within `api/`, split out `e2e/`, gather a
+  clear smoke-set. By now you have real data to decide, not guesses.

@@ -1,7 +1,7 @@
 """SA Dashboard — all-pages load check (UI, shell-level).
 
 Two tests, one per navigation method.  Each one is a SINGLE test case that walks
-all 15 nav pages in a loop and asserts every page's micro-frontend module loads
+all 16 nav pages in a loop and asserts every page's micro-frontend module loads
 without the "Something went wrong / Failed to fetch dynamically imported module"
 panel:
 

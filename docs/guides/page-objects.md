@@ -1,31 +1,31 @@
-# Quy ước Page Object / Locator / Fixture
+# Page Object / Locator / Fixture Conventions
 
-Tài liệu chuẩn cho lớp UI automation. Theo đúng các quy ước này để code mới nhất
-quán và dễ bảo trì.
+Standard document for the UI automation layer. Follow these conventions exactly so that new code is
+consistent and easy to maintain.
 
-## Phân lớp (3 tầng tách biệt)
+## Layering (3 separate tiers)
 
 ```
-locators/<domain>/<x>_locators.py   →  DỮ LIỆU: chỉ chứa chuỗi selector
-pages/<domain>/<x>_page.py          →  HÀNH VI: actions + assertions
-tests/<domain>/ui/test_<x>.py       →  KỊCH BẢN: gọi page object, assert
+locators/<domain>/<x>_locators.py   →  DATA: contains selector strings only
+pages/<domain>/<x>_page.py          →  BEHAVIOR: actions + assertions
+tests/<domain>/ui/test_<x>.py       →  SCENARIO: calls the page object, asserts
 ```
 
-Nguyên tắc: **test không bao giờ hard-code selector** — selector chỉ sống trong
-`locators/`. Test gọi method của page object, page object dùng locator.
+Principle: **a test never hard-codes selectors** — selectors live only in
+`locators/`. The test calls page object methods, and the page object uses locators.
 
-## Quy ước đặt tên (BẮT BUỘC)
+## Naming conventions (MANDATORY)
 
-| Loại | File | Class | Ví dụ |
+| Type | File | Class | Example |
 |---|---|---|---|
 | Locator | `<x>_locators.py` | `<X>Locators` | `login_locators.py` → `LoginLocators` |
 | Page object | `<x>_page.py` | `<X>Page(BasePage)` | `shell_page.py` → `ShellPage` |
-| Test | `test_<x>.py` | hàm `test_<scope>_<feature>_NNN` | `test_shell_ui_page_loads_001` |
+| Test | `test_<x>.py` | function `test_<scope>_<feature>_NNN` | `test_shell_ui_page_loads_001` |
 
-> Dùng hậu tố **`Locators`** (không phải `Selectors`) cho khớp thư mục `locators/`
-> và thuật ngữ gốc của Playwright (`Locator`).
+> Use the suffix **`Locators`** (not `Selectors`) to match the `locators/` directory
+> and Playwright's original terminology (`Locator`).
 
-## Locator — chỉ là dữ liệu
+## Locator — just data
 
 ```python
 # locators/blazeup_admin/login_locators.py
@@ -34,10 +34,10 @@ class LoginLocators:
     IDENTIFIER_INPUT = "input[type='email'], input[name*='email' i]"
     PASSWORD_INPUT = "input[type='password']"
 ```
-- Ưu tiên hook ổn định: `[data-testid=...]` > role/text > CSS class.
-- Không đặt logic ở đây — chỉ hằng chuỗi.
+- Prefer stable hooks: `[data-testid=...]` > role/text > CSS class.
+- Do not put logic here — string constants only.
 
-## Page object — kế thừa `BasePage`
+## Page object — inherit from `BasePage`
 
 ```python
 # pages/blazeup_admin/login_page.py
@@ -49,46 +49,45 @@ class LoginPage(BasePage):
         await self.fill(LoginLocators.IDENTIFIER_INPUT, email, label="Email Input")
         await self.click(LoginLocators.PROCEED_BUTTON, label="Proceed")
 ```
-- Luôn kế thừa `BasePage(page, base_url)` để có sẵn `goto/click/fill/get_text`
-  (đã kèm retry, logging STEP, mask password).
-- Method là **hành động nghiệp vụ** (`login`, `open_dashboard`), không phải thao
-  tác Playwright thô.
+- Always inherit from `BasePage(page, base_url)` to get `goto/click/fill/get_text` out of the box
+  (which already include retry, STEP logging, password masking).
+- Methods are **business actions** (`login`, `open_dashboard`), not raw Playwright operations.
 
-## Tạo page object trong test — dùng `make_page`
+## Creating a page object in a test — use `make_page`
 
-Page object **đã đăng nhập** (đa số trường hợp):
+An **already logged-in** page object (most cases):
 ```python
 async def test_dashboard_ui_visible_001(make_page):
-    shell = make_page(ShellPage)        # gọn — không cần truyền page + base_url
+    shell = make_page(ShellPage)        # concise — no need to pass page + base_url
     dash  = make_page(DashboardPage)
     await shell.open("dashboard")
 ```
 
-Luồng **chưa đăng nhập** (vd trang login) — dựng trực tiếp với fixture `page`:
+A **not-yet-logged-in** flow (e.g. the login page) — build it directly with the `page` fixture:
 ```python
 async def test_login_invalid(page, settings):
     login = LoginPage(page, str(settings.base_url))
     await login.open()
 ```
 
-## Fixtures chính (định nghĩa ở `pytest_support/fixtures.py`)
+## Main fixtures (defined in `pytest_support/fixtures.py`)
 
-| Fixture | Scope | Dùng khi |
+| Fixture | Scope | Use when |
 |---|---|---|
-| `settings` | session | Cấu hình runtime (URL, browser, credentials) |
-| `page` | function | Trang **chưa** đăng nhập (test login / không cần auth) |
-| `authenticated_page` | function | Trang **đã** đăng nhập (context cô lập mỗi test, login 1 lần/run) |
-| `make_page` | function | Factory dựng page object đã đăng nhập |
-| `auth_state` | session | Login UI 1 lần, cache storage state |
-| `api_token` | session | Token API dùng chung cho mọi API test |
-| `auth_client` / `attendance_client` | function | API client đã gắn token |
-| `fake` / `test_user` | session/func | Sinh test data động (Faker) |
+| `settings` | session | Runtime configuration (URL, browser, credentials) |
+| `page` | function | Page that is **not** logged in (login test / no auth needed) |
+| `authenticated_page` | function | Page that **is** logged in (isolated context per test, login once per run) |
+| `make_page` | function | Factory that builds an already-logged-in page object |
+| `auth_state` | session | Log in via UI once, cache the storage state |
+| `api_token` | session | API token shared across all API tests |
+| `auth_client` / `attendance_client` | function | API client with the token already attached |
+| `fake` / `test_user` | session/func | Generate dynamic test data (Faker) |
 
-Quy tắc: **login chỉ 1 lần mỗi run** (session-scoped), nhưng **mỗi test 1 context
-cô lập** (không chia sẻ cookie/state giữa các test).
+Rule: **log in only once per run** (session-scoped), but **one isolated context per test**
+(no sharing of cookies/state between tests).
 
-## Thêm 1 trang/section mới — checklist
-1. `locators/<domain>/<x>_locators.py` → class `<X>Locators` (selector).
-2. `pages/<domain>/<x>_page.py` → class `<X>Page(BasePage)` (action).
-3. `tests/<domain>/ui/test_<x>.py` → test gọi `make_page(<X>Page)`.
-4. Đặt tên test `test_<scope>_<feature>_NNN` để `sync_registry` map đúng TC.
+## Adding a new page/section — checklist
+1. `locators/<domain>/<x>_locators.py` → class `<X>Locators` (selectors).
+2. `pages/<domain>/<x>_page.py` → class `<X>Page(BasePage)` (actions).
+3. `tests/<domain>/ui/test_<x>.py` → test calls `make_page(<X>Page)`.
+4. Name the test `test_<scope>_<feature>_NNN` so `sync_registry` maps to the correct TC.

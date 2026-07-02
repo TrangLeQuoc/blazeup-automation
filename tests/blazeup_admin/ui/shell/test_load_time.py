@@ -1,7 +1,7 @@
 """SA Dashboard — page load-time tests (UI).
 
 Two tests, one per navigation method.  Each one is a SINGLE test case that walks
-all 15 nav pages in a loop and measures how long each takes to load (wall-clock
+all 16 nav pages in a loop and measures how long each takes to load (wall-clock
 until the micro-frontend module renders):
 
     SHELL_UI_LOAD_TIME_PAGE_001  — via direct URL  (ShellPage.open_and_measure)
