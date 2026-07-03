@@ -20,14 +20,11 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-# Services to monitor even if no API client exists for them yet.
-EXTRA_SERVICES: list[str] = ["sa-partners-api"]
-
-
 if __name__ == "__main__":
     from config.settings import get_settings
-    from utils.health_check import check_services, discover_services
+    from utils.health_check import check_services, discover_services, extra_services
 
+    # Extra services come from config/blazeup_partner/config.yaml → `services:`.
     settings = get_settings()
-    services = discover_services("blazeup_partner") | set(EXTRA_SERVICES)
+    services = discover_services("blazeup_partner") | set(extra_services("blazeup_partner"))
     sys.exit(check_services("blazeup_partner", str(settings.api_base_url), services))

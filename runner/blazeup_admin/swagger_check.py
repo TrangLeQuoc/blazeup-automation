@@ -17,13 +17,9 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-# Services whose Swagger to track even if no API client references them yet.
-# Single source of truth: runner/blazeup_admin/services.py (shared with health.py).
-from runner.blazeup_admin.services import SERVICES as EXTRA_SERVICES  # noqa: E402
-
 if __name__ == "__main__":
     from config.settings import get_settings
-    from utils.health_check import discover_services
+    from utils.health_check import discover_services, extra_services
     from utils.swagger_check import check_swagger
 
     parser = argparse.ArgumentParser(description="Swagger drift detector (blazeup_admin).")
@@ -32,6 +28,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Extra services to track come from config/blazeup_admin/config.yaml → `services:`.
     settings = get_settings()
-    services = discover_services("blazeup_admin") | set(EXTRA_SERVICES)
+    services = discover_services("blazeup_admin") | set(extra_services("blazeup_admin"))
     sys.exit(check_swagger("blazeup_admin", str(settings.api_base_url), services, save=args.save))

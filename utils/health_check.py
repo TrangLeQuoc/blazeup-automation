@@ -99,6 +99,24 @@ def discover_services(domain: str) -> set[str]:
     return services
 
 
+def extra_services(domain: str) -> list[str]:
+    """Services to monitor even if no API client references them yet.
+
+    Read from ``config/<domain>/config.yaml`` (top-level ``services:`` list) — the
+    single source of truth, shared by health.py + swagger_check.py. Combined with
+    :func:`discover_services` (which auto-finds services used by client code).
+    Returns ``[]`` when the file/key is absent.
+    """
+    import yaml  # local import: health-check only, keep module import-light
+
+    cfg = _PROJECT_ROOT / "config" / domain / "config.yaml"
+    try:
+        data = yaml.safe_load(cfg.read_text(encoding="utf-8")) or {}
+        return list(data.get("services") or [])
+    except Exception:  # noqa: BLE001 — missing/bad config → no extras
+        return []
+
+
 def _classify(status: int | None) -> str:
     """Map an HTTP status to a health state.
 
@@ -190,7 +208,7 @@ def check_services(
         return 2
 
     if not services:
-        print("  (no services discovered — add an API client or EXTRA_SERVICES)")
+        print("  (no services discovered — add an API client or config.yaml `services:`)")
         print("-" * 78)
         return 0
 

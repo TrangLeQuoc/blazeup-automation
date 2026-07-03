@@ -1,6 +1,22 @@
 # SA domain configuration
 tc_prefix: "SA"
 
+# Backend services to health-check / swagger-drift-monitor even when no API client
+# references them yet. Single source of truth (read by runner health.py + swagger_check.py
+# via utils.health_check.extra_services). Auto-discovered services are added on top.
+services:
+  - admin-api
+  - compliance-api
+  - connectors
+  - helpplatform-api
+  - sa-auth-api
+  - sa-governance-api
+  - sa-partners-api
+  - sa-plans-api
+  - sa-tenants-api
+  - setting-api
+  - workflow-api
+
 # --- TC ID numbering (read by utils/sync_registry.py) -----------------------
 # project_number  : the leading PROJECT digit in every TC ID for this domain.
 # modules.<NAME>  : number  = the module's 2-digit slot,

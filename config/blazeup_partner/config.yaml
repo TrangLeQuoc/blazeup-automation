@@ -1,6 +1,11 @@
 # Partner domain configuration
 tc_prefix: "PARTNER"
 
+# Backend services to health-check / swagger-drift-monitor even when no API client
+# references them yet (single source of truth — read by health.py + swagger_check.py).
+services:
+  - sa-partners-api
+
 # --- TC ID numbering (read by utils/sync_registry.py) -----------------------
 # project_number  : the leading PROJECT digit in every TC ID for this domain.
 # modules.<NAME>  : number  = the module's 2-digit slot,
