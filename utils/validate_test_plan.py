@@ -13,12 +13,18 @@ Usage::
 Column contract (the "schema" this enforces)
 ---------------------------------------------
 Required columns must exist; required cells must be non-empty; enum columns may
-only hold allowed values; TC IDs must be unique + well-formed; negative-named
-TCs should be typed Negative/Security; cols A/B must not duplicate; any TC that
+only hold allowed values; the "Test Case Name" string id (col C, e.g.
+``PARTNER_API_DEAL_..._001``) must be unique + well-formed; negative-scoped TCs
+should be typed Negative/Security; cols A/B must not duplicate; any TC that
 already has automation (present in the registry) must be flagged Auto = YES.
+
+Note on the two id columns: col C "Test Case Name" holds the *string* id that
+matches the code registry (this is what we validate/cross-check); col D "Test
+Case ID" holds the *numeric* automation id and is not linted here.
 """
 
 import argparse
+import contextlib
 import re
 import sys
 from pathlib import Path
@@ -28,10 +34,17 @@ import openpyxl
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SHEET = "Partner Platform"
 
-# ── Column contract ─────────────────────────────────────────────────────────
+# ── Column contract (header names exactly as they appear on the sheet) ────────
+# The string id lives in "Test Case Name" (col C); "Action" (col E) is the
+# human-readable scenario. "Test Case ID" (col D) is the numeric automation id.
+COL_ID = "Test Case Name"  # string id we validate + cross-check with the registry
+COL_ACTION = "Action"  # scenario text, scanned for negative wording
+
 REQUIRED_COLUMNS = [
-    "TestcaseId",
-    "Testcase",
+    "Main Section",
+    "Main Feature/Function",
+    COL_ID,
+    COL_ACTION,
     "Test Type",
     "Priority",
     "Severity",
@@ -39,7 +52,7 @@ REQUIRED_COLUMNS = [
     "Auto",
     "Automation Status",
 ]
-REQUIRED_NONEMPTY = ["Testcase", "Test Type", "Priority", "Severity", "Owner"]
+REQUIRED_NONEMPTY = [COL_ID, COL_ACTION, "Test Type", "Priority", "Severity", "Status", "Owner"]
 
 ENUMS: dict[str, set[str]] = {
     "Test Type": {"Functional", "Negative", "Security", "Performance", "Compliance"},
@@ -81,12 +94,16 @@ def _resolve_path(args: argparse.Namespace) -> Path:
 
 
 def _find_header_row(ws) -> int:
-    """Return the row index whose cells contain the 'TestcaseId' header."""
+    """Return the row index that holds the column headers.
+
+    Anchored on the "Test Case ID" cell (a banner row above it may say
+    "UI Test Cases", so we scan for the real header, not just row 1).
+    """
     for r in range(1, 40):
         for c in range(1, ws.max_column + 1):
-            if str(ws.cell(r, c).value or "").strip() == "TestcaseId":
+            if str(ws.cell(r, c).value or "").strip() == "Test Case ID":
                 return r
-    raise ValueError("Header row with 'TestcaseId' not found in the first 40 rows")
+    raise ValueError("Header row with 'Test Case ID' not found in the first 40 rows")
 
 
 def _registry_tc_strings() -> set[str]:
@@ -135,20 +152,22 @@ def validate(path: Path, sheet: str) -> "Report | None":
     seen_ids: dict[str, int] = {}
 
     for r in range(hdr + 1, ws.max_row + 1):
-        tc = val(r, "TestcaseId")
+        tc = val(r, COL_ID)
         if not tc:
-            continue
+            continue  # section banner / blank row — not a test case
         tc = str(tc).strip()
 
-        # 1) duplicate ID
+        # 1) duplicate id
         if tc in seen_ids:
-            rep.error(r, tc, f"duplicate TestcaseId (also at row {seen_ids[tc]})")
+            rep.error(r, tc, f"duplicate Test Case Name (also at row {seen_ids[tc]})")
         else:
             seen_ids[tc] = r
 
-        # 2) ID format
+        # 2) id format
         if not ID_RE.match(tc):
-            rep.error(r, tc, "TestcaseId format invalid (expect <PREFIX>_(UI|API)_<MODULE>_NNN)")
+            rep.error(
+                r, tc, "Test Case Name format invalid (expect <PREFIX>_(UI|API)_<MODULE>_NNN)"
+            )
 
         # 3) required non-empty cells
         for f in REQUIRED_NONEMPTY:
@@ -165,12 +184,14 @@ def validate(path: Path, sheet: str) -> "Report | None":
             if str(v).strip() not in allowed:
                 rep.error(r, tc, f"'{f}' = {v!r} not allowed (use one of {sorted(allowed)})")
 
-        # 5) negative-named TC should be typed Negative/Security
-        name = str(val(r, "Testcase") or "")
+        # 5) negative-scoped TC (by its Action wording) should be typed Negative/Security
+        action = str(val(r, COL_ACTION) or "")
         ttype = str(val(r, "Test Type") or "").strip()
-        if NEG_RE.search(name) and ttype not in ("Negative", "Security"):
+        if NEG_RE.search(action) and ttype not in ("Negative", "Security"):
             rep.warn(
-                r, tc, f"name looks negative but Test Type = {ttype!r} (consider Negative/Security)"
+                r,
+                tc,
+                f"Action looks negative but Test Type = {ttype!r} (consider Negative/Security)",
             )
 
         # 6) cols A/B must not duplicate
@@ -193,6 +214,11 @@ def validate(path: Path, sheet: str) -> "Report | None":
 
 
 def main() -> int:
+    # Windows consoles default to cp1252 and choke on the ✅/⚠/❌ glyphs — force UTF-8.
+    for stream in (sys.stdout, sys.stderr):
+        with contextlib.suppress(Exception):  # older/odd streams: fall back to default
+            stream.reconfigure(encoding="utf-8")
+
     ap = argparse.ArgumentParser(description="Validate the Excel test plan against the schema.")
     ap.add_argument("--domain", default="blazeup_admin", help="domain folder under docs/")
     ap.add_argument("--file", help="explicit path to the .xlsx (overrides --domain)")
@@ -201,6 +227,17 @@ def main() -> int:
     args = ap.parse_args()
 
     path = _resolve_path(args)
+    if not path.exists():
+        # An explicit --file that's missing is a user mistake (fail). A domain that
+        # simply has no plan (e.g. blazeup_partner) is "nothing to lint" — not an error.
+        if args.file:
+            print(f"ERROR: --file not found: {path}", file=sys.stderr)
+            return 2
+        print(
+            f"\nNo test plan for domain '{args.domain}' (expected {path.name}) — nothing to validate."
+        )
+        return 0
+
     rep = validate(path, args.sheet)
     if rep is None:
         return 2

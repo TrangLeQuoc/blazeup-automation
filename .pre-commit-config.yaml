@@ -41,3 +41,15 @@ repos:
         language: system
         pass_filenames: false
         files: ^(utils/sync_registry\.py|docs/.*\.xlsx)$
+
+      # ── Lint the Excel test plan (well-formed + in sync with the code) ─────
+      # Read-only: never edits the .xlsx. Fails the commit on a real ERROR
+      # (bad enum, duplicate/mis-formatted id, missing required cell, an
+      # automated TC not flagged Auto=YES). Runs when the plan OR a generated
+      # registry changes, so the plan↔code cross-check stays honest either way.
+      - id: validate-test-plan
+        name: validate Excel test plan
+        entry: python utils/validate_test_plan.py
+        language: system
+        pass_filenames: false
+        files: ^(utils/validate_test_plan\.py|docs/.*\.xlsx|runner/.*/registry\.py)$

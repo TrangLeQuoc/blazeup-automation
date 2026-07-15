@@ -1,4 +1,11 @@
-"""Deal Registration API client + schemas.  (SCAFFOLD — fill in the TODO endpoints)
+"""Deal Registration API client + schemas.
+
+⚠️ SCAFFOLD — NOT WIRED YET. The `blazeup_partner` domain has no tests; the endpoint
+paths below are placeholders. Calling any method raises NotImplementedError until
+`_DEALS` is set to a real path. (Partner deals ARE tested today via the SA-minted
+partner session under `blazeup_admin` — see `tests/blazeup_admin/api/partner/
+test_sa_pipeline_management.py` + `utils/partner_portal.py`.) Fill this in only when
+the `blazeup_partner` domain is built out.
 
 Mirrors ``api_clients/blazeup_admin/auth_client.py``:
     api_clients/base_client.py            → BaseClient (get/post/put/patch/delete)
@@ -42,12 +49,22 @@ class DealRegistrationClient(BaseClient):
     """Client for Partner Deal Registration endpoints."""
 
     # ── Endpoints: replace TODO with the real paths ──────────────────────────
-    # TODO: real path, e.g. "/partner-api/deals"
+    # TODO: real path, e.g. "/sa-partners-api/v1/partner/portal/deals"
     _DEALS = "TODO-partner-deals-endpoint"
+
+    def _endpoint(self) -> str:
+        """Return the deals endpoint, or fail fast while this client is a scaffold."""
+        path = self.__class__._DEALS
+        if path.startswith("TODO"):
+            raise NotImplementedError(
+                "DealRegistrationClient is a SCAFFOLD — set `_DEALS` to the real partner-deals "
+                "endpoint before use (probe the live OpenAPI / see the Partner Platform PRD)."
+            )
+        return path
 
     async def list_deals(self, expected_status: int = 200) -> list[dict[str, Any]]:
         """GET all deals registered by the current partner."""
-        response = await self.get(self._DEALS, expected_status=expected_status)
+        response = await self.get(self._endpoint(), expected_status=expected_status)
         payload = response.json()
         return payload.get("data", payload) if isinstance(payload, dict) else payload
 
@@ -57,7 +74,9 @@ class DealRegistrationClient(BaseClient):
         expected_status: int | tuple[int, ...] = (200, 201),
     ) -> Deal:
         """POST a new deal registration; returns the validated Deal."""
-        return await self.post(self._DEALS, json=body, expected_status=expected_status, schema=Deal)
+        return await self.post(
+            self._endpoint(), json=body, expected_status=expected_status, schema=Deal
+        )
 
     async def update_deal(
         self,
@@ -67,9 +86,9 @@ class DealRegistrationClient(BaseClient):
     ) -> Deal:
         """PATCH an existing deal (partial update)."""
         return await self.patch(
-            f"{self._DEALS}/{deal_id}", json=body, expected_status=expected_status, schema=Deal
+            f"{self._endpoint()}/{deal_id}", json=body, expected_status=expected_status, schema=Deal
         )
 
     async def delete_deal(self, deal_id: str | int, expected_status: int = 204) -> None:
         """DELETE a deal registration."""
-        await self.delete(f"{self._DEALS}/{deal_id}", expected_status=expected_status)
+        await self.delete(f"{self._endpoint()}/{deal_id}", expected_status=expected_status)

@@ -1,0 +1,61 @@
+name: Validate Test Plan
+
+# ─────────────────────────────────────────────────────────────────────────────
+# A fast, automatic guard for the hand-edited Excel test plan. Unlike test.yml
+# (heavy, manual, needs staging secrets + a live backend), this job needs no
+# secrets and no services — it only reads the workbook + the committed TC
+# registry — so it can run on EVERY push / pull request.
+#
+# It fails the check (exit 1) on a real ERROR:
+#   • bad enum value (Status / Test Type / Priority / Severity / Auto)
+#   • duplicate or mis-formatted "Test Case Name" id
+#   • a required cell left empty
+#   • an automated TC (present in the registry) not flagged Auto = YES
+# Warnings (e.g. a negative-looking Action still typed Functional) do NOT fail
+# the build — add `--strict` below if you want them to.
+#
+# The path filter keeps it from running on unrelated changes: it fires only when
+# the plan, a generated registry, the validator, or this workflow changes.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    paths:
+      - "docs/**/*.xlsx"
+      - "runner/**/registry.py"
+      - "utils/validate_test_plan.py"
+      - ".github/workflows/validate-test-plan.yml"
+  pull_request:
+    paths:
+      - "docs/**/*.xlsx"
+      - "runner/**/registry.py"
+      - "utils/validate_test_plan.py"
+      - ".github/workflows/validate-test-plan.yml"
+
+# Silence the "Node.js 20 actions are deprecated" warning (matches test.yml).
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # openpyxl is the validator's ONLY third-party dependency (the TC registry
+      # it cross-checks is pure-stdlib), so the full requirements.txt / Playwright
+      # install is unnecessary here — keeping this job seconds-fast.
+      - name: Install dependency (openpyxl only)
+        run: pip install openpyxl==3.1.5
+
+      # Runs per domain. A domain with no plan (e.g. blazeup_partner) exits 0 with
+      # "nothing to validate", so this is future-proof as new domains are added.
+      - name: Validate the Excel test plan(s)
+        run: |
+          python utils/validate_test_plan.py --domain blazeup_admin
+          python utils/validate_test_plan.py --domain blazeup_partner

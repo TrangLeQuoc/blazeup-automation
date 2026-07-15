@@ -17,12 +17,12 @@ pydantic-settings==2.14.0       # Typed settings loaded from .env
 
 # ── Configuration & test data ─────────────────────────────────────────────────
 python-dotenv==1.2.2            # Required by pydantic-settings to read .env files
-pyyaml==6.0.3                   # Load fixtures/test_data.yaml
+pyyaml==6.0.3                   # Parse config/<domain>/config.yaml (modules, excel, services)
 faker==40.15.0                  # Dynamic test data generation
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 loguru==0.7.3                   # Structured logging with custom levels (STEP/START/PASSED/FAILED)
 
 # ── Spreadsheet ───────────────────────────────────────────────────────────────
-openpyxl==3.1.5                 # Read Partner_Platform_Test_Plan.xlsx (sync_registry)
-                                # and write Excel reports (excel_reporter)
+openpyxl==3.1.5                 # Read Partner_Platform_Test_Plan.xlsx (sync_registry +
+                                # validate_test_plan) and write Excel reports (excel_reporter)

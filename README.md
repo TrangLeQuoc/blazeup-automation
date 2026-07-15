@@ -262,6 +262,9 @@ python -m pytest tests/ --co                          # Collect tests (show disc
 
 # Sync TC registry (after adding new test functions)
 python utils/sync_registry.py
+
+# Lint the Excel test plan (well-formed + in sync with code; read-only)
+python utils/validate_test_plan.py            # --strict = warnings fail too
 ```
 
 ---
@@ -393,9 +396,18 @@ DEFAULT_RESPONSE_TIME_MS=30000   # 30 seconds
 
 ## CI / CD
 
-A single workflow — `.github/workflows/test.yml` — runs **on manual dispatch only**
-(no push/schedule trigger). Start it from **Actions → BlazeUp Automation Tests →
-Run workflow** (works from the GitHub Mobile app), choosing:
+Two workflows under `.github/workflows/`:
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| `test.yml` | **manual** (workflow_dispatch) | Runs the actual test suites against staging (needs secrets + a live backend) |
+| `validate-test-plan.yml` | **automatic** on every push / PR | Lints the Excel test plan — fast, no secrets, no services |
+
+### Test suite — `test.yml` (manual)
+
+Runs **on manual dispatch only** (no push/schedule trigger). Start it from
+**Actions → BlazeUp Automation Tests → Run workflow** (works from the GitHub Mobile
+app), choosing:
 
 | Input | Options | Notes |
 |-------|---------|-------|
@@ -411,7 +423,19 @@ GitHub Pages, and sends a **Telegram** summary (+ triage file).
 
 **Dashboard:** `https://<owner>.github.io/<repo>/<domain>/` (e.g. `.../blazeup_admin/`).
 
+### Test-plan validation — `validate-test-plan.yml` (automatic)
+
+Runs on **every push / pull request** that touches the Excel plan, a generated
+registry, or the validator itself. It reads the workbook + the committed TC registry
+(only `openpyxl` needed — no secrets, no backend) and **fails the check** on a real
+ERROR: bad enum, duplicate/mis-formatted `Test Case Name` id, a required cell left
+empty, or an automated TC not flagged `Auto = YES`. Warnings don't fail the build.
+To make it block merges: **Settings → Branch protection → require "Validate Test
+Plan"**. Run it locally the same way: `python utils/validate_test_plan.py`.
+
 ### Required GitHub secrets
+
+> Only `test.yml` needs secrets. `validate-test-plan.yml` needs none.
 
 | Secret | Purpose |
 |--------|---------|
@@ -438,9 +462,11 @@ ruff format .                          # format
 pre-commit run --all-files             # run all hooks manually
 ```
 
-On every `git commit`, hooks auto-run `ruff` (lint + format) and re-sync the TC
-registry. If a hook modifies files, the commit pauses so you can review + re-`git add`.
-Config lives in `pyproject.toml` and `.pre-commit-config.yaml`.
+On every `git commit`, hooks auto-run `ruff` (lint + format), re-sync the TC
+registry, and **lint the Excel test plan** (`validate-test-plan` — blocks the commit
+on a real plan ERROR; read-only, never edits the `.xlsx`). If a hook modifies files,
+the commit pauses so you can review + re-`git add`. Config lives in `pyproject.toml`
+and `.pre-commit-config.yaml`.
 
 ---
 

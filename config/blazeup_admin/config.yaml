@@ -7,7 +7,7 @@ tc_prefix: "SA"
 services:
   - admin-api
   - compliance-api
-  - connectors
+  - connectors-api
   - helpplatform-api
   - sa-auth-api
   - sa-governance-api
