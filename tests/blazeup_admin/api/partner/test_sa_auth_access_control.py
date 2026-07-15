@@ -45,7 +45,10 @@ async def test_partner_api_auth_access_control_001(sa_partners_client, settings,
         assert token, "login must return an accessToken"
         portal = portal_client(settings, token)
         created_resources.add(lambda: portal.close())
-        logger.info("SETUP: partner {} logged in", creds["partner_id"])
+        logger.info(
+            "SETUP: [4] partner user logged in → partner JWT acquired (partner {})",
+            creds["partner_id"],
+        )
 
     async with async_step("[1/1] A partner-scoped request with the JWT succeeds"):
         resp = await portal.get(f"{_AUTH}/me", expected_status=200)

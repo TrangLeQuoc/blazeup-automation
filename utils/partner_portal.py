@@ -16,6 +16,7 @@ Usage in a test::
 import contextlib
 
 import pytest
+from loguru import logger
 
 from api_clients.base_client import BaseClient
 from utils.data_factory import make_partner, make_partner_user
@@ -48,7 +49,11 @@ async def provision_partner_user(sa_partners_client) -> dict:
     pid = partner.partner_id
     if not pid:
         raise RuntimeError("could not create a partner")
+    logger.info(
+        "SETUP: [1] SA created partner {} — status pending", getattr(partner, "code", None) or pid
+    )
     await sa_partners_client.approve_partner(pid)  # pending → active (else login is rejected)
+    logger.info("SETUP: [2] SA approved partner {} — now active", pid)
     invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
     creds = {
         "partner_id": pid,
@@ -58,6 +63,7 @@ async def provision_partner_user(sa_partners_client) -> dict:
     }
     if not (creds["email"] and creds["password"]):
         raise RuntimeError("invite did not return email + tempPassword")
+    logger.info("SETUP: [3] SA invited partner user {} (role admin)", creds["email"])
     return creds
 
 
@@ -88,6 +94,7 @@ async def mint_partner_session(sa_partners_client, settings) -> tuple[BaseClient
             await anon.close()
         if not token:
             raise RuntimeError("partner login did not return an accessToken")
+        logger.info("SETUP: [4] partner user logged in → partner JWT acquired")
     except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
         # Best-effort: remove the partner provisioned before the failure (no leak).
         if creds and creds.get("partner_id"):
