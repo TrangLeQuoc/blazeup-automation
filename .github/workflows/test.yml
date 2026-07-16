@@ -143,13 +143,19 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Legacy per-domain secret — used as a fallback so existing setups keep
+          # working without re-creating the plain TELEGRAM_CHAT_ID secret.
+          TELEGRAM_CHAT_ID_BLAZEUP_ADMIN: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_ADMIN }}
           MODE: ${{ inputs.mode }}
           EXECUTE: ${{ inputs.execute }}
           REPO_NAME: ${{ github.event.repository.name }}
           OWNER: ${{ github.repository_owner }}
           RUN_NUM: ${{ github.run_number }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+          # Prefer the plain TELEGRAM_CHAT_ID; fall back to the legacy per-domain
+          # secret so existing setups keep working.
+          CHAT_ID="${TELEGRAM_CHAT_ID:-$TELEGRAM_CHAT_ID_BLAZEUP_ADMIN}"
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
             echo "::warning::No Telegram bot token / chat id — skipping notice."
             exit 0
           fi
@@ -162,7 +168,7 @@ jobs:
           MSG=$(printf '%s <b>Job run #%s</b>\n\n<b>BlazeUp CI</b>\nResult: <b>%s</b>\nSelection: <code>%s</code>\n\n🔗 <a href="%s">View run</a>   📊 <a href="%s">Dashboard</a>' \
             "$ICON" "$RUN_NUM" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
           curl -s -X POST "${API}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d chat_id="${CHAT_ID}" \
             -d parse_mode=HTML \
             -d disable_web_page_preview=true \
             --data-urlencode "text=${MSG}" >/dev/null \
@@ -175,7 +181,7 @@ jobs:
           fi
           if [ "${PYTEST_EXIT:-0}" -ne 0 ] && [ -n "$TRIAGE" ] && [ -f "$TRIAGE" ]; then
             HTTP=$(curl -s -o /tmp/tg_doc.json -w '%{http_code}' -X POST "${API}/sendDocument" \
-              -F chat_id="${TELEGRAM_CHAT_ID}" \
+              -F chat_id="${CHAT_ID}" \
               -F caption="🔍 AI triage (run #${RUN_NUM})" \
               -F document=@"$TRIAGE")
             if [ "$HTTP" != "200" ]; then
