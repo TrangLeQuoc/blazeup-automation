@@ -327,6 +327,20 @@
       "200"
     ]
   },
+  "GET /setting-api/cross-entity-authority": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /setting-api/cross-entity-authority/group-roles": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /setting-api/currencies": {
     "body_required": false,
     "params": [
@@ -624,6 +638,15 @@
       "200"
     ]
   },
+  "PATCH /setting-api/cross-entity-authority/{id}/revoke": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "PATCH /setting-api/currencies/multiple": {
     "body_required": true,
     "params": [],
@@ -816,6 +839,13 @@
     "params": [
       "id"
     ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /setting-api/cross-entity-authority": {
+    "body_required": true,
+    "params": [],
     "responses": [
       "201"
     ]

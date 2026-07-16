@@ -125,6 +125,86 @@
       "200"
     ]
   },
+  "GET /sa-tenants-api/common/countries": {
+    "body_required": false,
+    "params": [
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/countries/{countryId}/calling-phone": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/countries/{countryId}/currency": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/countries/{countryId}/states": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/currencies": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/document-template-keys": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/form-template-keys": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/modules": {
+    "body_required": false,
+    "params": [
+      "excludeIds",
+      "ids"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/common/trigger-events": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-tenants-api/countries": {
     "body_required": false,
     "params": [],
@@ -321,6 +401,15 @@
       "200"
     ]
   },
+  "GET /sa-tenants-api/tenants/check-domain": {
+    "body_required": false,
+    "params": [
+      "domain"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-tenants-api/tenants/internal": {
     "body_required": false,
     "params": [
@@ -367,6 +456,17 @@
       "200"
     ]
   },
+  "GET /sa-tenants-api/tenants/{id}/blazey-usage": {
+    "body_required": false,
+    "params": [
+      "id",
+      "month",
+      "year"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-tenants-api/tenants/{id}/invoices": {
     "body_required": false,
     "params": [
@@ -388,10 +488,55 @@
       "200"
     ]
   },
+  "GET /sa-tenants-api/tenants/{id}/overview": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-tenants-api/tenants/{id}/provisioning-status": {
     "body_required": false,
     "params": [
       "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{id}/support-stats": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{id}/support-tickets": {
+    "body_required": false,
+    "params": [
+      "id",
+      "limit",
+      "page",
+      "search",
+      "severity",
+      "sort",
+      "status",
+      "team"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-tenants-api/tenants/{id}/usage": {
+    "body_required": false,
+    "params": [
+      "id",
+      "month",
+      "year"
     ],
     "responses": [
       "200"
@@ -483,6 +628,24 @@
     "params": [
       "id",
       "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/common/countries/{countryId}/calling-phone": {
+    "body_required": true,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-tenants-api/common/countries/{countryId}/currency": {
+    "body_required": false,
+    "params": [
+      "countryId"
     ],
     "responses": [
       "200"
@@ -618,6 +781,15 @@
     ]
   },
   "POST /sa-tenants-api/tenants/{id}/provision": {
+    "body_required": true,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-tenants-api/tenants/{id}/provision/retry": {
     "body_required": true,
     "params": [
       "id"

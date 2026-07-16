@@ -134,6 +134,13 @@
       "200"
     ]
   },
+  "GET /helpplatform-api/modules": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /helpplatform-api/platform/audit-log": {
     "body_required": false,
     "params": [

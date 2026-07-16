@@ -831,15 +831,17 @@ Pages: `https://<owner>.github.io/<repo>/blazeup/`.
 
 ### Required GitHub secrets
 
-CI maps these to the env vars settings reads (`API_BASE_URL` ← `ADMIN_API_BASE_URL`):
+Secret names match the `.env` keys 1:1 (CI writes them straight to the environment):
 
 | Secret | Purpose |
 |--------|---------|
-| `ADMIN_API_BASE_URL` | shared API gateway → `API_BASE_URL` |
-| `ADMIN_BASE_URL`, `ADMIN_TEST_EMAIL`, `ADMIN_TEST_PASSWORD` | SA UI origin + login |
-| `PARTNER_BASE_URL`, `PARTNER_TEST_EMAIL`, `PARTNER_TEST_PASSWORD` | Partner UI origin + login |
+| `API_BASE_URL` | shared API gateway |
+| `ADMIN_BASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | SA UI origin + login |
+| `PARTNER_BASE_URL`, `PARTNER_EMAIL`, `PARTNER_PASSWORD` | Partner UI origin + login |
 | `GROQ_API_KEY` | AI triage (Groq) |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Telegram notifications |
+
+> Store all of these as **Secrets** (not Variables) so credentials are masked in logs.
 
 > Workflow permissions must allow **Read and write** (Settings → Actions → General)
 > for the dashboard deploy.

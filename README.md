@@ -408,16 +408,17 @@ Plan"**. Run it locally the same way: `python utils/validate_test_plan.py`.
 
 > Only `test.yml` needs secrets. `validate-test-plan.yml` needs none.
 
-CI maps these secrets to the env vars `settings.py` reads (`API_BASE_URL` ←
-`ADMIN_API_BASE_URL`; `ADMIN_*`/`PARTNER_*` as named):
+Secret names match the `.env` keys 1:1 (CI writes them straight to the environment):
 
 | Secret | Purpose |
 |--------|---------|
-| `ADMIN_API_BASE_URL` | shared API gateway → `API_BASE_URL` |
-| `ADMIN_BASE_URL` / `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` | SA UI origin + login |
-| `PARTNER_BASE_URL` / `PARTNER_TEST_EMAIL` / `PARTNER_TEST_PASSWORD` | Partner UI origin + login |
+| `API_BASE_URL` | shared API gateway |
+| `ADMIN_BASE_URL` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | SA UI origin + login |
+| `PARTNER_BASE_URL` / `PARTNER_EMAIL` / `PARTNER_PASSWORD` | Partner UI origin + login |
 | `GROQ_API_KEY` | AI triage (Groq provider) |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram notifications |
+
+> Store all of these as **Secrets** (not Variables) so credentials are masked in logs.
 
 ---
 

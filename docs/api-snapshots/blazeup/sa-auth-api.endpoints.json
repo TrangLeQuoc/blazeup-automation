@@ -1,4 +1,77 @@
 {
+  "DELETE /sa-auth-api/abac/aliases/{alias}/unassign-user": {
+    "body_required": true,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/aliases/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/attribute-definitions/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/components/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/grants/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/modules/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/policies/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /sa-auth-api/abac/policies/{policyId}/unassign-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "policyId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "DELETE /sa-auth-api/cache/clear": {
     "body_required": false,
     "params": [],
@@ -9,62 +82,6 @@
   "DELETE /sa-auth-api/components": {
     "body_required": true,
     "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "DELETE /sa-auth-api/dev/abac/aliases/{alias}/unassign-user/{userId}": {
-    "body_required": false,
-    "params": [
-      "alias",
-      "userId"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "DELETE /sa-auth-api/dev/abac/aliases/{id}": {
-    "body_required": false,
-    "params": [
-      "id"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "DELETE /sa-auth-api/dev/abac/attribute-definitions/{id}": {
-    "body_required": false,
-    "params": [
-      "id"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "DELETE /sa-auth-api/dev/abac/grants/{id}": {
-    "body_required": false,
-    "params": [
-      "id"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "DELETE /sa-auth-api/dev/abac/policies/{id}": {
-    "body_required": false,
-    "params": [
-      "id"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "DELETE /sa-auth-api/dev/abac/policies/{policyId}/unassign-user/{userId}": {
-    "body_required": false,
-    "params": [
-      "policyId",
-      "userId"
-    ],
     "responses": [
       "200"
     ]
@@ -148,6 +165,275 @@
       "200"
     ]
   },
+  "GET /sa-auth-api/abac-sync/flow-bundle": {
+    "body_required": false,
+    "params": [
+      "includeUserManages"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac-sync/snapshot": {
+    "body_required": false,
+    "params": [
+      "includeUserManages"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac-sync/sync-rbac/debug": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac-sync/sync-rbac/fe-modules": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/aliases": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/aliases/{alias}": {
+    "body_required": false,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/aliases/{alias}/policies": {
+    "body_required": false,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/aliases/{alias}/users": {
+    "body_required": false,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/attribute-definitions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/attribute-definitions/usage": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/components": {
+    "body_required": false,
+    "params": [
+      "moduleId",
+      "platformId",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/departments": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/enums": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/fe-modules": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/grants": {
+    "body_required": false,
+    "params": [
+      "tenant",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/grants/alias-counts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/grants/counts": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/import-template": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/locations": {
+    "body_required": false,
+    "params": [
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/modules": {
+    "body_required": false,
+    "params": [
+      "moduleId",
+      "platform",
+      "platformId",
+      "platformName",
+      "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/my-modules": {
+    "body_required": false,
+    "params": [
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/my-permissions": {
+    "body_required": false,
+    "params": [
+      "module",
+      "modules[]",
+      "platform"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/platforms": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/policies": {
+    "body_required": false,
+    "params": [
+      "feModuleId",
+      "limit",
+      "platform",
+      "platformGlobal"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/policies/by-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "assignedOnly",
+      "includeAllStatuses",
+      "platform",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/routes": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/sign-in-platforms": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/user-abac": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/user-aliases/{userId}": {
+    "body_required": false,
+    "params": [
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-auth-api/abac/users": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "search",
+      "tenant"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-auth-api/admin/auth-audit": {
     "body_required": false,
     "params": [
@@ -208,229 +494,6 @@
   "GET /sa-auth-api/current-user": {
     "body_required": false,
     "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/aliases": {
-    "body_required": false,
-    "params": [
-      "tenant"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/aliases/{alias}": {
-    "body_required": false,
-    "params": [
-      "alias"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/aliases/{alias}/policies": {
-    "body_required": false,
-    "params": [
-      "alias"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/aliases/{alias}/users": {
-    "body_required": false,
-    "params": [
-      "alias"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/attribute-definitions": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/attribute-definitions/usage": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/departments": {
-    "body_required": false,
-    "params": [
-      "tenant"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/fe-modules": {
-    "body_required": false,
-    "params": [
-      "platform"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/flow-bundle": {
-    "body_required": false,
-    "params": [
-      "includeUserManages",
-      "tenant"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/grants": {
-    "body_required": false,
-    "params": [
-      "tenant",
-      "userId"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/grants/alias-counts": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/grants/counts": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/locations": {
-    "body_required": false,
-    "params": [
-      "tenant"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/my-modules": {
-    "body_required": false,
-    "params": [
-      "platform"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/my-modules-keys": {
-    "body_required": false,
-    "params": [
-      "platform"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/my-permissions": {
-    "body_required": false,
-    "params": [
-      "modules[]"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/my-permissions-keys": {
-    "body_required": false,
-    "params": [
-      "module",
-      "modules[]",
-      "platform"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/platforms": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/policies": {
-    "body_required": false,
-    "params": [
-      "feModuleId",
-      "platform"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/policies/by-user/{userId}": {
-    "body_required": false,
-    "params": [
-      "assignedOnly",
-      "includeAllStatuses",
-      "platform",
-      "userId"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/sign-in-platforms": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/snapshot": {
-    "body_required": false,
-    "params": [
-      "includeUserManages",
-      "tenant"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/sync-rbac/debug": {
-    "body_required": false,
-    "params": [
-      "tenant"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/user-aliases/{userId}": {
-    "body_required": false,
-    "params": [
-      "userId"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /sa-auth-api/dev/abac/users": {
-    "body_required": false,
-    "params": [
-      "search",
-      "tenant"
-    ],
     "responses": [
       "200"
     ]
@@ -972,7 +1035,7 @@
       "200"
     ]
   },
-  "PATCH /sa-auth-api/dev/abac/aliases/{id}": {
+  "PATCH /sa-auth-api/abac/aliases/{id}": {
     "body_required": false,
     "params": [
       "id"
@@ -981,7 +1044,7 @@
       "200"
     ]
   },
-  "PATCH /sa-auth-api/dev/abac/attribute-definitions/{id}": {
+  "PATCH /sa-auth-api/abac/attribute-definitions/{id}": {
     "body_required": false,
     "params": [
       "id"
@@ -990,7 +1053,25 @@
       "200"
     ]
   },
-  "PATCH /sa-auth-api/dev/abac/policies/{id}": {
+  "PATCH /sa-auth-api/abac/components/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/abac/modules/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-auth-api/abac/policies/{id}": {
     "body_required": false,
     "params": [
       "id"
@@ -1150,7 +1231,148 @@
       "200"
     ]
   },
-  "POST /sa-auth-api/abac/sync": {
+  "POST /sa-auth-api/abac-sync/analyze": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac-sync/stubs": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac-sync/sync": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac-sync/sync-rbac": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac-sync/sync-user": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac-sync/sync-user-abac": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/aliases": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/aliases/{alias}/assign-user": {
+    "body_required": true,
+    "params": [
+      "alias"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/attribute-definitions": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/check-access": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/components": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/cross-check": {
+    "body_required": false,
+    "params": [
+      "authorization"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/grants": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/import": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/import/file": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/modules": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/policies": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/policies/{policyId}/assign-user/{userId}": {
+    "body_required": false,
+    "params": [
+      "alias",
+      "policyId",
+      "userId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/rebuild-user": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /sa-auth-api/abac/sync-user-claim": {
     "body_required": true,
     "params": [],
     "responses": [
@@ -1183,114 +1405,6 @@
     ]
   },
   "POST /sa-auth-api/automation-credential": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/aliases": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/aliases/{alias}/assign-user/{userId}": {
-    "body_required": false,
-    "params": [
-      "alias",
-      "userId"
-    ],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/analyze": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/attribute-definitions": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/check-access": {
-    "body_required": true,
-    "params": [
-      "Authorization",
-      "authorization"
-    ],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/grants": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/policies": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/policies/{policyId}/assign-user/{userId}": {
-    "body_required": false,
-    "params": [
-      "alias",
-      "policyId",
-      "userId"
-    ],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/sign-in": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/stubs": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/sync-rbac": {
-    "body_required": false,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/sync-user": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/sync-user-abac": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/dev/abac/test-token": {
     "body_required": true,
     "params": [],
     "responses": [
@@ -1475,32 +1589,11 @@
       "201"
     ]
   },
-  "POST /sa-auth-api/m/sign-in": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
   "POST /sa-auth-api/m/verify-code": {
     "body_required": true,
     "params": [
       "tenant"
     ],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/otp/request": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/otp/verify": {
-    "body_required": true,
-    "params": [],
     "responses": [
       "201"
     ]
@@ -1548,13 +1641,6 @@
     ]
   },
   "POST /sa-auth-api/resend": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /sa-auth-api/sign-in": {
     "body_required": true,
     "params": [],
     "responses": [

@@ -1,0 +1,1638 @@
+{
+  "DELETE /connectors-api/accounting/{provider}/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "syncToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/cache/clear": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/calendar/{provider}/events/{eventId}": {
+    "body_required": false,
+    "params": [
+      "eventId",
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/credentials/oauth/{provider}": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/crm/{connectionId}/contacts/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "DELETE /connectors-api/drive/{provider}/items/{itemId}": {
+    "body_required": false,
+    "params": [
+      "driveId",
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/drive/{provider}/items/{itemId}/permissions/{permissionId}": {
+    "body_required": false,
+    "params": [
+      "driveId",
+      "itemId",
+      "permissionId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/identity/{provider}/users/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/identity/{provider}/users/{id}/fully": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/identity/{provider}/users/{id}/roles/{roleId}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "roleId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/mail/{provider}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "messageId",
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/ticketing/{provider}/{sys_id}": {
+    "body_required": false,
+    "params": [
+      "hard",
+      "provider",
+      "sys_id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "DELETE /connectors-api/v1/storage/file": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/accounting/{provider}/customers": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "limit",
+      "modifiedAfter",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/accounting/{provider}/customers/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/accounting/{provider}/invoices": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "limit",
+      "modifiedAfter",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/accounting/{provider}/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/accounting/{provider}/projects": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "customerId",
+      "limit",
+      "modifiedAfter",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/accounting/{provider}/projects/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/cache/{id}": {
+    "body_required": false,
+    "params": [
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/calendar/{provider}/calendars": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/calendar/{provider}/events": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "direction",
+      "orgScope",
+      "pageSize",
+      "provider",
+      "source",
+      "status",
+      "timeMax",
+      "timeMin",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/calendar/{provider}/events/{eventId}": {
+    "body_required": false,
+    "params": [
+      "eventId",
+      "provider",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/channels": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/chats": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/chats/{chatId}/messages": {
+    "body_required": false,
+    "params": [
+      "chatId",
+      "pageSize",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/dm": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/profile": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/teams": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "pageSize",
+      "provider",
+      "source"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/teams/{teamId}/channels/{channelId}/messages": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "pageSize",
+      "provider",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/teams/{teamId}/channels/{channelId}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "messageId",
+      "provider",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/teams/{teamId}/channels/{channelId}/messages/{messageId}/replies": {
+    "body_required": false,
+    "params": [
+      "channelId",
+      "messageId",
+      "pageSize",
+      "provider",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/teams/{teamId}/members": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "teamId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/chat/{provider}/templates": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/credentials/oauth/{provider}/callback": {
+    "body_required": false,
+    "params": [
+      "code",
+      "error",
+      "error_description",
+      "provider",
+      "realmId",
+      "scope",
+      "state"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/credentials/oauth/{provider}/status": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/credentials/oauth/{provider}/token": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/crm/{connectionId}/contacts": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "cursor",
+      "modifiedAfter",
+      "pageSize",
+      "source"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/crm/{connectionId}/contacts/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors-api/devops/{connectionId}/contributor-stats": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "repoFullName"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/devops/{connectionId}/pull-requests": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "pageSize",
+      "repoFullName",
+      "state"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/devops/{connectionId}/pull-requests/{number}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "number",
+      "repoFullName"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/docs/{provider}/documents": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/docs/{provider}/documents/{documentId}": {
+    "body_required": false,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/docs/{provider}/documents/{documentId}/text": {
+    "body_required": false,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/info": {
+    "body_required": false,
+    "params": [
+      "driveId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/items": {
+    "body_required": false,
+    "params": [
+      "driveId",
+      "folderId",
+      "pageSize",
+      "path",
+      "provider",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/items/{itemId}": {
+    "body_required": false,
+    "params": [
+      "driveId",
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/items/{itemId}/download": {
+    "body_required": false,
+    "params": [
+      "base64",
+      "driveId",
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/items/{itemId}/permissions": {
+    "body_required": false,
+    "params": [
+      "driveId",
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/recent": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/sites": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/drive/{provider}/sites/{siteId}/drives": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "siteId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/health": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/health/deep": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "modifiedAfter",
+      "page",
+      "provider",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/me": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/me/timezone": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/roles": {
+    "body_required": false,
+    "params": [
+      "limit",
+      "offset",
+      "provider",
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/{id}/licenses": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/{id}/presence": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/identity/{provider}/users/{id}/roles": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/drafts": {
+    "body_required": false,
+    "params": [
+      "pageSize",
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/folders": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/messages": {
+    "body_required": false,
+    "params": [
+      "cursor",
+      "folder",
+      "modifiedAfter",
+      "pageSize",
+      "provider",
+      "search",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/messages/{messageId}": {
+    "body_required": false,
+    "params": [
+      "messageId",
+      "provider",
+      "source",
+      "userId"
+    ],
+    "responses": [
+      "200",
+      "404"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/messages/{messageId}/attachments/{attachmentId}": {
+    "body_required": false,
+    "params": [
+      "attachmentId",
+      "messageId",
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/profile": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/mail/{provider}/threads/{threadId}": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "threadId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/meetings/{provider}/{meetingId}/transcripts": {
+    "body_required": false,
+    "params": [
+      "meetingId",
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/meetings/{provider}/{meetingId}/transcripts/{transcriptId}": {
+    "body_required": false,
+    "params": [
+      "meetingId",
+      "provider",
+      "transcriptId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/meetings/{provider}/{meetingId}/transcripts/{transcriptId}/content": {
+    "body_required": false,
+    "params": [
+      "format",
+      "meetingId",
+      "provider",
+      "transcriptId",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/sheets/{provider}/spreadsheets": {
+    "body_required": false,
+    "params": [
+      "nameContains",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/slides/{provider}/presentations": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/slides/{provider}/presentations/{presentationId}": {
+    "body_required": false,
+    "params": [
+      "presentationId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/slides/{provider}/presentations/{presentationId}/slides/{slideIndex}": {
+    "body_required": false,
+    "params": [
+      "presentationId",
+      "provider",
+      "slideIndex"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/tasks/{provider}/planner/plans": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/tasks/{provider}/planner/tasks": {
+    "body_required": false,
+    "params": [
+      "includeCompleted",
+      "pageSize",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/tasks/{provider}/planner/tasks/{taskId}": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/tasks/{provider}/todo/tasks": {
+    "body_required": false,
+    "params": [
+      "listId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/ticketing/{provider}": {
+    "body_required": false,
+    "params": [
+      "assignedTo",
+      "limit",
+      "offset",
+      "priority",
+      "provider",
+      "query",
+      "status"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /connectors-api/ticketing/{provider}/{sys_id}": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "sys_id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/accounting/{provider}/customers/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "syncToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/accounting/{provider}/invoices/{id}": {
+    "body_required": false,
+    "params": [
+      "id",
+      "provider",
+      "syncToken"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/calendar/{provider}/events/{eventId}": {
+    "body_required": true,
+    "params": [
+      "eventId",
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/crm/{connectionId}/contacts/bulk": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/crm/{connectionId}/contacts/{id}": {
+    "body_required": false,
+    "params": [
+      "connectionId",
+      "id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/drive/{provider}/items/{itemId}": {
+    "body_required": true,
+    "params": [
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "400"
+    ]
+  },
+  "PATCH /connectors-api/drive/{provider}/items/{itemId}/permissions/{permissionId}": {
+    "body_required": true,
+    "params": [
+      "itemId",
+      "permissionId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/identity/{provider}/users/{id}": {
+    "body_required": true,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/tasks/{provider}/planner/tasks/{taskId}": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /connectors-api/ticketing/{provider}/{sys_id}": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "sys_id"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/accounting/{provider}/customers": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/accounting/{provider}/invoices": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/calendar/{provider}/events": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /connectors-api/calendar/{provider}/events/bulk": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "userId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/calendar/{provider}/events/find-times": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/calendar/{provider}/events/quick-add": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/calendar/{provider}/events/{eventId}/respond": {
+    "body_required": true,
+    "params": [
+      "eventId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/calendar/{provider}/free-busy": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/chat/{provider}/dm": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/chat/{provider}/messages": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /connectors-api/chat/{provider}/teams": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/chat/{provider}/teams/{teamId}/channels": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "teamId"
+    ],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /connectors-api/credentials/oauth/start": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/credentials/oauth/{provider}/refresh": {
+    "body_required": false,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/crm/{connectionId}/contacts": {
+    "body_required": false,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/crm/{connectionId}/contacts/bulk": {
+    "body_required": true,
+    "params": [
+      "connectionId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/append-text": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/batch-update": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/insert-image": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/insert-page-break": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/insert-table": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/insert-text": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/paragraph-style": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/replace-text": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/docs/{provider}/documents/{documentId}/style-text": {
+    "body_required": true,
+    "params": [
+      "documentId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/drive/{provider}/folders": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/drive/{provider}/items/{itemId}/copy": {
+    "body_required": true,
+    "params": [
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/drive/{provider}/items/{itemId}/permissions": {
+    "body_required": true,
+    "params": [
+      "itemId",
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/drive/{provider}/search": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/drive/{provider}/upload": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /connectors-api/identity/{provider}/users": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201",
+      "400"
+    ]
+  },
+  "POST /connectors-api/identity/{provider}/users/{id}/action": {
+    "body_required": true,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200",
+      "400"
+    ]
+  },
+  "POST /connectors-api/identity/{provider}/users/{id}/licenses": {
+    "body_required": true,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/identity/{provider}/users/{id}/roles": {
+    "body_required": true,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/forward": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "202"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/messages/{messageId}/flag": {
+    "body_required": true,
+    "params": [
+      "messageId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/messages/{messageId}/labels": {
+    "body_required": true,
+    "params": [
+      "messageId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/messages/{messageId}/move": {
+    "body_required": true,
+    "params": [
+      "messageId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/messages/{messageId}/read": {
+    "body_required": true,
+    "params": [
+      "messageId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/reply": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "202"
+    ]
+  },
+  "POST /connectors-api/mail/{provider}/send": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "202"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}/append": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}/batch-update": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}/charts": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}/pivot-tables": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}/read": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/sheets/{provider}/spreadsheets/{spreadsheetId}/write": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "spreadsheetId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/slides/{provider}/presentations": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/slides/{provider}/presentations/full-deck": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/slides/{provider}/presentations/{presentationId}/batch-update": {
+    "body_required": true,
+    "params": [
+      "presentationId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/slides/{provider}/presentations/{presentationId}/shape-text": {
+    "body_required": true,
+    "params": [
+      "presentationId",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/slides/{provider}/presentations/{presentationId}/sheets-chart": {
+    "body_required": true,
+    "params": [
+      "presentationId",
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/slides/{provider}/presentations/{presentationId}/slides": {
+    "body_required": true,
+    "params": [
+      "presentationId",
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/tasks/{provider}/planner/tasks": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/tasks/{provider}/planner/tasks/{taskId}/complete": {
+    "body_required": false,
+    "params": [
+      "provider",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/tasks/{provider}/todo/tasks": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/tasks/{provider}/todo/tasks/{taskId}/complete": {
+    "body_required": false,
+    "params": [
+      "listId",
+      "provider",
+      "taskId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /connectors-api/tenant": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/ticketing/{provider}": {
+    "body_required": true,
+    "params": [
+      "provider"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/ticketing/{provider}/{sys_id}/close": {
+    "body_required": true,
+    "params": [
+      "provider",
+      "sys_id"
+    ],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/v1/storage/presigned-download": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/v1/storage/presigned-upload": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "POST /connectors-api/v1/storage/validate": {
+    "body_required": true,
+    "params": [],
+    "responses": [
+      "201"
+    ]
+  },
+  "PUT /connectors-api/identity/{provider}/users/{id}/roles": {
+    "body_required": true,
+    "params": [
+      "id",
+      "provider"
+    ],
+    "responses": [
+      "200"
+    ]
+  }
+}

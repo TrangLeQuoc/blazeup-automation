@@ -24,6 +24,86 @@
       "200"
     ]
   },
+  "GET /sa-plans-api/common/countries": {
+    "body_required": false,
+    "params": [
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/countries/{countryId}/calling-phone": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/countries/{countryId}/currency": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/countries/{countryId}/states": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/currencies": {
+    "body_required": false,
+    "params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/document-template-keys": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/form-template-keys": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/modules": {
+    "body_required": false,
+    "params": [
+      "excludeIds",
+      "ids"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /sa-plans-api/common/trigger-events": {
+    "body_required": false,
+    "params": [
+      "moduleKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /sa-plans-api/health": {
     "body_required": false,
     "params": [],
@@ -78,6 +158,24 @@
     "params": [
       "force",
       "tenantId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-plans-api/common/countries/{countryId}/calling-phone": {
+    "body_required": true,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /sa-plans-api/common/countries/{countryId}/currency": {
+    "body_required": false,
+    "params": [
+      "countryId"
     ],
     "responses": [
       "200"

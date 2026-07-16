@@ -51,36 +51,6 @@
       "200"
     ]
   },
-  "GET /workflow-api/audit-logs": {
-    "body_required": false,
-    "params": [
-      "action",
-      "collectionName",
-      "cursor",
-      "limit",
-      "page",
-      "resourceId",
-      "sort"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
-  "GET /workflow-api/audit-logs/{resourceId}": {
-    "body_required": false,
-    "params": [
-      "action",
-      "collectionName",
-      "cursor",
-      "limit",
-      "page",
-      "resourceId",
-      "sort"
-    ],
-    "responses": [
-      "200"
-    ]
-  },
   "GET /workflow-api/audit-trail/{collectionName}": {
     "body_required": false,
     "params": [
@@ -100,6 +70,49 @@
     "params": [
       "id"
     ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/countries": {
+    "body_required": false,
+    "params": [
+      "search"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/countries/{countryId}/calling-phone": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/countries/{countryId}/currency": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/countries/{countryId}/states": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/common/currencies": {
+    "body_required": false,
+    "params": [],
     "responses": [
       "200"
     ]
@@ -205,6 +218,15 @@
     ]
   },
   "GET /workflow-api/instances/{instanceId}": {
+    "body_required": false,
+    "params": [
+      "instanceId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /workflow-api/instances/{instanceId}/context": {
     "body_required": false,
     "params": [
       "instanceId"
@@ -418,6 +440,24 @@
       "200"
     ]
   },
+  "PATCH /workflow-api/common/countries/{countryId}/calling-phone": {
+    "body_required": true,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "PATCH /workflow-api/common/countries/{countryId}/currency": {
+    "body_required": false,
+    "params": [
+      "countryId"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "PATCH /workflow-api/custom-field-defs/{id}/promote": {
     "body_required": false,
     "params": [
@@ -437,13 +477,6 @@
     ]
   },
   "POST /workflow-api/admin/variable-schemas/register": {
-    "body_required": true,
-    "params": [],
-    "responses": [
-      "201"
-    ]
-  },
-  "POST /workflow-api/audit-logs": {
     "body_required": true,
     "params": [],
     "responses": [
@@ -489,21 +522,41 @@
       "201"
     ]
   },
-  "POST /workflow-api/instances/{instanceId}/steps/{stepId}/signal": {
+  "POST /workflow-api/instances/{instanceId}/steps/{stepKey}/complete": {
     "body_required": true,
     "params": [
       "instanceId",
-      "stepId"
+      "stepKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /workflow-api/instances/{instanceId}/steps/{stepKey}/fail": {
+    "body_required": true,
+    "params": [
+      "instanceId",
+      "stepKey"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /workflow-api/instances/{instanceId}/steps/{stepKey}/signal": {
+    "body_required": true,
+    "params": [
+      "instanceId",
+      "stepKey"
     ],
     "responses": [
       "201"
     ]
   },
-  "POST /workflow-api/instances/{instanceId}/steps/{stepId}/submit": {
+  "POST /workflow-api/instances/{instanceId}/steps/{stepKey}/submit": {
     "body_required": true,
     "params": [
       "instanceId",
-      "stepId"
+      "stepKey"
     ],
     "responses": [
       "201"

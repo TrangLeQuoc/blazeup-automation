@@ -2,6 +2,7 @@
   "DELETE /admin-api/approval-flows-v3/module-bindings/{module}": {
     "body_required": false,
     "params": [
+      "campusId",
       "module"
     ],
     "responses": [
@@ -176,7 +177,9 @@
   "GET /admin-api/approval-admin-v3/active": {
     "body_required": false,
     "params": [
+      "campusId",
       "includeOverdue",
+      "module",
       "page",
       "pageSize",
       "sortBy",
@@ -209,6 +212,15 @@
       "200"
     ]
   },
+  "GET /admin-api/approval-flows-v3/module-bindings/{module}": {
+    "body_required": false,
+    "params": [
+      "module"
+    ],
+    "responses": [
+      "200"
+    ]
+  },
   "GET /admin-api/approval-settings-v3": {
     "body_required": false,
     "params": [],
@@ -219,8 +231,10 @@
   "GET /admin-api/approvals-v3": {
     "body_required": false,
     "params": [
+      "campusId",
       "id",
       "includeOverdue",
+      "module",
       "page",
       "pageSize",
       "sortBy",

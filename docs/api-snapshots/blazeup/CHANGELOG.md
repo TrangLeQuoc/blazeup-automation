@@ -1,3 +1,223 @@
+# API Change Log — blazeup
+
+## 2026-07-16 13:10 · workflow-api
+- 🟢 ADDED   GET /workflow-api/common/countries
+- 🟢 ADDED   GET /workflow-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   GET /workflow-api/common/countries/{countryId}/currency
+- 🟢 ADDED   GET /workflow-api/common/countries/{countryId}/states
+- 🟢 ADDED   GET /workflow-api/common/currencies
+- 🟢 ADDED   GET /workflow-api/instances/{instanceId}/context
+- 🟢 ADDED   PATCH /workflow-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   PATCH /workflow-api/common/countries/{countryId}/currency
+- 🟢 ADDED   POST /workflow-api/instances/{instanceId}/steps/{stepKey}/complete
+- 🟢 ADDED   POST /workflow-api/instances/{instanceId}/steps/{stepKey}/fail
+- 🟢 ADDED   POST /workflow-api/instances/{instanceId}/steps/{stepKey}/signal
+- 🟢 ADDED   POST /workflow-api/instances/{instanceId}/steps/{stepKey}/submit
+- 🔴 REMOVED GET /workflow-api/audit-logs
+- 🔴 REMOVED GET /workflow-api/audit-logs/{resourceId}
+- 🔴 REMOVED POST /workflow-api/audit-logs
+- 🔴 REMOVED POST /workflow-api/instances/{instanceId}/steps/{stepId}/signal
+- 🔴 REMOVED POST /workflow-api/instances/{instanceId}/steps/{stepId}/submit
+
+## 2026-07-16 13:10 · setting-api
+- 🟢 ADDED   GET /setting-api/cross-entity-authority
+- 🟢 ADDED   GET /setting-api/cross-entity-authority/group-roles
+- 🟢 ADDED   PATCH /setting-api/cross-entity-authority/{id}/revoke
+- 🟢 ADDED   POST /setting-api/cross-entity-authority
+
+## 2026-07-16 13:10 · sa-tenants-api
+- 🟢 ADDED   GET /sa-tenants-api/common/countries
+- 🟢 ADDED   GET /sa-tenants-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   GET /sa-tenants-api/common/countries/{countryId}/currency
+- 🟢 ADDED   GET /sa-tenants-api/common/countries/{countryId}/states
+- 🟢 ADDED   GET /sa-tenants-api/common/currencies
+- 🟢 ADDED   GET /sa-tenants-api/common/document-template-keys
+- 🟢 ADDED   GET /sa-tenants-api/common/form-template-keys
+- 🟢 ADDED   GET /sa-tenants-api/common/modules
+- 🟢 ADDED   GET /sa-tenants-api/common/trigger-events
+- 🟢 ADDED   GET /sa-tenants-api/tenants/check-domain
+- 🟢 ADDED   GET /sa-tenants-api/tenants/{id}/blazey-usage
+- 🟢 ADDED   GET /sa-tenants-api/tenants/{id}/overview
+- 🟢 ADDED   GET /sa-tenants-api/tenants/{id}/support-stats
+- 🟢 ADDED   GET /sa-tenants-api/tenants/{id}/support-tickets
+- 🟢 ADDED   GET /sa-tenants-api/tenants/{id}/usage
+- 🟢 ADDED   PATCH /sa-tenants-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   PATCH /sa-tenants-api/common/countries/{countryId}/currency
+- 🟢 ADDED   POST /sa-tenants-api/tenants/{id}/provision/retry
+
+## 2026-07-16 13:10 · sa-plans-api
+- 🟢 ADDED   GET /sa-plans-api/common/countries
+- 🟢 ADDED   GET /sa-plans-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   GET /sa-plans-api/common/countries/{countryId}/currency
+- 🟢 ADDED   GET /sa-plans-api/common/countries/{countryId}/states
+- 🟢 ADDED   GET /sa-plans-api/common/currencies
+- 🟢 ADDED   GET /sa-plans-api/common/document-template-keys
+- 🟢 ADDED   GET /sa-plans-api/common/form-template-keys
+- 🟢 ADDED   GET /sa-plans-api/common/modules
+- 🟢 ADDED   GET /sa-plans-api/common/trigger-events
+- 🟢 ADDED   PATCH /sa-plans-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   PATCH /sa-plans-api/common/countries/{countryId}/currency
+
+## 2026-07-16 13:10 · sa-partners-api
+- 🟢 ADDED   GET /sa-partners-api/common/countries
+- 🟢 ADDED   GET /sa-partners-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   GET /sa-partners-api/common/countries/{countryId}/currency
+- 🟢 ADDED   GET /sa-partners-api/common/countries/{countryId}/states
+- 🟢 ADDED   GET /sa-partners-api/common/document-template-keys
+- 🟢 ADDED   GET /sa-partners-api/common/form-template-keys
+- 🟢 ADDED   GET /sa-partners-api/common/modules
+- 🟢 ADDED   GET /sa-partners-api/common/trigger-events
+- 🟢 ADDED   GET /sa-partners-api/v1/partner/portal/countries
+- 🟢 ADDED   GET /sa-partners-api/v1/partner/portal/modules
+- 🟢 ADDED   PATCH /sa-partners-api/common/countries/{countryId}/calling-phone
+- 🟢 ADDED   PATCH /sa-partners-api/common/countries/{countryId}/currency
+- 🟢 ADDED   POST /sa-partners-api/v1/sa/admin/migrations/partner-account-code-index
+- 🟡 CHANGED POST /sa-partners-api/v1/sa/deals/{id}/approve
+    · responses: +['200']
+- 🟡 CHANGED POST /sa-partners-api/v1/sa/deals/{id}/extend-protection
+    · responses: +['200']
+- 🟡 CHANGED POST /sa-partners-api/v1/sa/deals/{id}/lose
+    · responses: +['200']
+- 🟡 CHANGED POST /sa-partners-api/v1/sa/deals/{id}/reject
+    · responses: +['200']
+- 🟡 CHANGED POST /sa-partners-api/v1/sa/deals/{id}/resolve-conflict
+    · responses: +['200']
+- 🟡 CHANGED POST /sa-partners-api/v1/sa/deals/{id}/win
+    · responses: +['200']
+
+## 2026-07-16 13:10 · sa-auth-api
+- 🟢 ADDED   DELETE /sa-auth-api/abac/aliases/{alias}/unassign-user
+- 🟢 ADDED   DELETE /sa-auth-api/abac/aliases/{id}
+- 🟢 ADDED   DELETE /sa-auth-api/abac/attribute-definitions/{id}
+- 🟢 ADDED   DELETE /sa-auth-api/abac/components/{id}
+- 🟢 ADDED   DELETE /sa-auth-api/abac/grants/{id}
+- 🟢 ADDED   DELETE /sa-auth-api/abac/modules/{id}
+- 🟢 ADDED   DELETE /sa-auth-api/abac/policies/{id}
+- 🟢 ADDED   DELETE /sa-auth-api/abac/policies/{policyId}/unassign-user/{userId}
+- 🟢 ADDED   GET /sa-auth-api/abac-sync/flow-bundle
+- 🟢 ADDED   GET /sa-auth-api/abac-sync/snapshot
+- 🟢 ADDED   GET /sa-auth-api/abac-sync/sync-rbac/debug
+- 🟢 ADDED   GET /sa-auth-api/abac-sync/sync-rbac/fe-modules
+- 🟢 ADDED   GET /sa-auth-api/abac/aliases
+- 🟢 ADDED   GET /sa-auth-api/abac/aliases/{alias}
+- 🟢 ADDED   GET /sa-auth-api/abac/aliases/{alias}/policies
+- 🟢 ADDED   GET /sa-auth-api/abac/aliases/{alias}/users
+- 🟢 ADDED   GET /sa-auth-api/abac/attribute-definitions
+- 🟢 ADDED   GET /sa-auth-api/abac/attribute-definitions/usage
+- 🟢 ADDED   GET /sa-auth-api/abac/components
+- 🟢 ADDED   GET /sa-auth-api/abac/departments
+- 🟢 ADDED   GET /sa-auth-api/abac/enums
+- 🟢 ADDED   GET /sa-auth-api/abac/fe-modules
+- 🟢 ADDED   GET /sa-auth-api/abac/grants
+- 🟢 ADDED   GET /sa-auth-api/abac/grants/alias-counts
+- 🟢 ADDED   GET /sa-auth-api/abac/grants/counts
+- 🟢 ADDED   GET /sa-auth-api/abac/import-template
+- 🟢 ADDED   GET /sa-auth-api/abac/locations
+- 🟢 ADDED   GET /sa-auth-api/abac/modules
+- 🟢 ADDED   GET /sa-auth-api/abac/my-modules
+- 🟢 ADDED   GET /sa-auth-api/abac/my-permissions
+- 🟢 ADDED   GET /sa-auth-api/abac/platforms
+- 🟢 ADDED   GET /sa-auth-api/abac/policies
+- 🟢 ADDED   GET /sa-auth-api/abac/policies/by-user/{userId}
+- 🟢 ADDED   GET /sa-auth-api/abac/routes
+- 🟢 ADDED   GET /sa-auth-api/abac/sign-in-platforms
+- 🟢 ADDED   GET /sa-auth-api/abac/user-abac
+- 🟢 ADDED   GET /sa-auth-api/abac/user-aliases/{userId}
+- 🟢 ADDED   GET /sa-auth-api/abac/users
+- 🟢 ADDED   PATCH /sa-auth-api/abac/aliases/{id}
+- 🟢 ADDED   PATCH /sa-auth-api/abac/attribute-definitions/{id}
+- 🟢 ADDED   PATCH /sa-auth-api/abac/components/{id}
+- 🟢 ADDED   PATCH /sa-auth-api/abac/modules/{id}
+- 🟢 ADDED   PATCH /sa-auth-api/abac/policies/{id}
+- 🟢 ADDED   POST /sa-auth-api/abac-sync/analyze
+- 🟢 ADDED   POST /sa-auth-api/abac-sync/stubs
+- 🟢 ADDED   POST /sa-auth-api/abac-sync/sync
+- 🟢 ADDED   POST /sa-auth-api/abac-sync/sync-rbac
+- 🟢 ADDED   POST /sa-auth-api/abac-sync/sync-user
+- 🟢 ADDED   POST /sa-auth-api/abac-sync/sync-user-abac
+- 🟢 ADDED   POST /sa-auth-api/abac/aliases
+- 🟢 ADDED   POST /sa-auth-api/abac/aliases/{alias}/assign-user
+- 🟢 ADDED   POST /sa-auth-api/abac/attribute-definitions
+- 🟢 ADDED   POST /sa-auth-api/abac/check-access
+- 🟢 ADDED   POST /sa-auth-api/abac/components
+- 🟢 ADDED   POST /sa-auth-api/abac/cross-check
+- 🟢 ADDED   POST /sa-auth-api/abac/grants
+- 🟢 ADDED   POST /sa-auth-api/abac/import
+- 🟢 ADDED   POST /sa-auth-api/abac/import/file
+- 🟢 ADDED   POST /sa-auth-api/abac/modules
+- 🟢 ADDED   POST /sa-auth-api/abac/policies
+- 🟢 ADDED   POST /sa-auth-api/abac/policies/{policyId}/assign-user/{userId}
+- 🟢 ADDED   POST /sa-auth-api/abac/rebuild-user
+- 🟢 ADDED   POST /sa-auth-api/abac/sync-user-claim
+- 🔴 REMOVED DELETE /sa-auth-api/dev/abac/aliases/{alias}/unassign-user/{userId}
+- 🔴 REMOVED DELETE /sa-auth-api/dev/abac/aliases/{id}
+- 🔴 REMOVED DELETE /sa-auth-api/dev/abac/attribute-definitions/{id}
+- 🔴 REMOVED DELETE /sa-auth-api/dev/abac/grants/{id}
+- 🔴 REMOVED DELETE /sa-auth-api/dev/abac/policies/{id}
+- 🔴 REMOVED DELETE /sa-auth-api/dev/abac/policies/{policyId}/unassign-user/{userId}
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/aliases
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/aliases/{alias}
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/aliases/{alias}/policies
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/aliases/{alias}/users
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/attribute-definitions
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/attribute-definitions/usage
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/departments
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/fe-modules
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/flow-bundle
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/grants
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/grants/alias-counts
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/grants/counts
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/locations
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/my-modules
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/my-modules-keys
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/my-permissions
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/my-permissions-keys
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/platforms
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/policies
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/policies/by-user/{userId}
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/sign-in-platforms
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/snapshot
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/sync-rbac/debug
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/user-aliases/{userId}
+- 🔴 REMOVED GET /sa-auth-api/dev/abac/users
+- 🔴 REMOVED PATCH /sa-auth-api/dev/abac/aliases/{id}
+- 🔴 REMOVED PATCH /sa-auth-api/dev/abac/attribute-definitions/{id}
+- 🔴 REMOVED PATCH /sa-auth-api/dev/abac/policies/{id}
+- 🔴 REMOVED POST /sa-auth-api/abac/sync
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/aliases
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/aliases/{alias}/assign-user/{userId}
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/analyze
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/attribute-definitions
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/check-access
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/grants
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/policies
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/policies/{policyId}/assign-user/{userId}
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/sign-in
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/stubs
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/sync-rbac
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/sync-user
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/sync-user-abac
+- 🔴 REMOVED POST /sa-auth-api/dev/abac/test-token
+- 🔴 REMOVED POST /sa-auth-api/m/sign-in
+- 🔴 REMOVED POST /sa-auth-api/otp/request
+- 🔴 REMOVED POST /sa-auth-api/otp/verify
+- 🔴 REMOVED POST /sa-auth-api/sign-in
+
+## 2026-07-16 13:10 · helpplatform-api
+- 🟢 ADDED   GET /helpplatform-api/modules
+
+## 2026-07-16 13:10 · connectors-api
+- baseline (160 endpoints)
+
+## 2026-07-16 13:10 · admin-api
+- 🟢 ADDED   GET /admin-api/approval-flows-v3/module-bindings/{module}
+- 🟡 CHANGED DELETE /admin-api/approval-flows-v3/module-bindings/{module}
+    · params: +['campusId']
+- 🟡 CHANGED GET /admin-api/approval-admin-v3/active
+    · params: +['campusId', 'module']
+- 🟡 CHANGED GET /admin-api/approvals-v3
+    · params: +['campusId', 'module']
+
 # API Change Log — blazeup_admin
 
 ## 2026-07-01 15:36 · workflow-api

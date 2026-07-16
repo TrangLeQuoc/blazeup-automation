@@ -80,13 +80,13 @@ jobs:
       - name: Map secrets to env
         run: |
           {
-            echo "API_BASE_URL=${{ secrets.ADMIN_API_BASE_URL }}"
+            echo "API_BASE_URL=${{ secrets.API_BASE_URL }}"
             echo "ADMIN_BASE_URL=${{ secrets.ADMIN_BASE_URL }}"
-            echo "ADMIN_EMAIL=${{ secrets.ADMIN_TEST_EMAIL }}"
-            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_TEST_PASSWORD }}"
+            echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}"
+            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}"
             echo "PARTNER_BASE_URL=${{ secrets.PARTNER_BASE_URL }}"
-            echo "PARTNER_EMAIL=${{ secrets.PARTNER_TEST_EMAIL }}"
-            echo "PARTNER_PASSWORD=${{ secrets.PARTNER_TEST_PASSWORD }}"
+            echo "PARTNER_EMAIL=${{ secrets.PARTNER_EMAIL }}"
+            echo "PARTNER_PASSWORD=${{ secrets.PARTNER_PASSWORD }}"
           } >> "$GITHUB_ENV"
 
       # ── Run via the merged runner — same entry point you use locally ───────
