@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Wallace-Colon",
+    "code": "PAR-920668",
+    "email": "qa.auto+allenmorgan@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://rivera.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589229974898259eb0f648",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:21.024Z",
+    "updatedAt": "2026-07-16T08:11:21.024Z"
+  },
+  "message": "Partner created successfully"
+}

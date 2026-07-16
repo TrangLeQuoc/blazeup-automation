@@ -1,0 +1,314 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a58923b974898259eb0f889",
+      "tenantId": "blazeup-platform",
+      "correlationId": "51c4b7d3-8273-4e21-a818-c8eac4cda626",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Ponce, Weaver and Hart",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58923b974898259eb0f85c",
+        "label": "QA-AUTO Ponce, Weaver and Hart"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "d6bb066cf4a034060ef6aab8d9c0d2b93555541b3e0d72bbcc8bd1e8efc6a462",
+      "selfHash": "1a408228dc7c177ba19ddc8f6740bdd04ff06614db237a3c9b7ddef17d68aee4",
+      "createdAt": "2026-07-16T08:11:39.678Z",
+      "updatedAt": "2026-07-16T08:11:39.678Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923b974898259eb0f85e",
+      "tenantId": "blazeup-platform",
+      "correlationId": "c59645d4-86b1-4e6e-adcc-2daaffbfd6cb",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Ponce, Weaver and Hart",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58923b974898259eb0f85c",
+        "label": "QA-AUTO Ponce, Weaver and Hart"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Ponce, Weaver and Hart",
+        "email": "qa.auto+raydavid@mailinator.com",
+        "type": "channel",
+        "code": "PAR-059408"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:39.115Z",
+      "updatedAt": "2026-07-16T08:11:39.115Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f318a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "8a347601-0f3d-4e0d-94bb-a87b0a8e4311",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Chavez, Ruiz and Roman",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589239974898259eb0f838",
+        "label": "QA-AUTO Chavez, Ruiz and Roman"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "3677e62c1ca3bd0904dca17cebf0da1a0ec025dfd112a21a7b4fd65992ed1eb9",
+      "selfHash": "d6bb066cf4a034060ef6aab8d9c0d2b93555541b3e0d72bbcc8bd1e8efc6a462",
+      "createdAt": "2026-07-16T08:11:38.902Z",
+      "updatedAt": "2026-07-16T08:11:38.902Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f317f",
+      "tenantId": "blazeup-platform",
+      "correlationId": "b4ffe40b-20f8-4390-88b4-2e1c20aec08c",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.certification.revoked",
+      "title": "Partner certification revoked: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a58923a04e6a6bbc86f316b",
+        "label": "sales_certified"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "revoked",
+        "partnerId": "6a589239974898259eb0f838",
+        "userId": "6a58923a04e6a6bbc86f3160",
+        "certificationType": "sales_certified",
+        "revokeReason": "QA-AUTO first"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "56674ec595fbb9b81b570eed06e1f39e96a02038b5a2aa6e1135276f5fe61980",
+      "selfHash": "3677e62c1ca3bd0904dca17cebf0da1a0ec025dfd112a21a7b4fd65992ed1eb9",
+      "createdAt": "2026-07-16T08:11:38.689Z",
+      "updatedAt": "2026-07-16T08:11:38.689Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f316e",
+      "tenantId": "blazeup-platform",
+      "correlationId": "766d9b35-40b5-4070-b66e-c4120eb3777d",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.certification.granted",
+      "title": "Partner certification granted: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a58923a04e6a6bbc86f316b",
+        "label": "sales_certified"
+      },
+      "before": null,
+      "after": {
+        "partnerId": "6a589239974898259eb0f838",
+        "userId": "6a58923a04e6a6bbc86f3160",
+        "certificationType": "sales_certified",
+        "expiresAt": "2027-07-16T08:11:38.215Z",
+        "score": 90
+      },
+      "retentionClass": "permanent",
+      "prevHash": "32df24d28ae2e573a3aded635d5af8fd0e5eab055590d3f50527c572465b7343",
+      "selfHash": "56674ec595fbb9b81b570eed06e1f39e96a02038b5a2aa6e1135276f5fe61980",
+      "createdAt": "2026-07-16T08:11:38.231Z",
+      "updatedAt": "2026-07-16T08:11:38.231Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f3162",
+      "tenantId": "blazeup-platform",
+      "correlationId": "5a6ba0cb-65ea-4a56-928b-072b0b0b44b0",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+rbowen@mailinator.com to QA-AUTO Chavez, Ruiz and Roman",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a58923a04e6a6bbc86f3160",
+        "label": "qa.auto+rbowen@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:38.150Z",
+      "updatedAt": "2026-07-16T08:11:38.150Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589239974898259eb0f83a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "6408f98f-78b0-441b-b54a-e99ebd2d7fa7",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Chavez, Ruiz and Roman",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589239974898259eb0f838",
+        "label": "QA-AUTO Chavez, Ruiz and Roman"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Chavez, Ruiz and Roman",
+        "email": "qa.auto+vaughnroberto@mailinator.com",
+        "type": "channel",
+        "code": "PAR-262429"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:37.328Z",
+      "updatedAt": "2026-07-16T08:11:37.328Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923804e6a6bbc86f314a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "c769eee2-d88e-47e7-a5f3-9e5e04657ba4",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Ray-Thompson",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58923704e6a6bbc86f3129",
+        "label": "QA-AUTO Ray-Thompson"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "9f6d68459443c15d9469067c950889811483480107182f56b4b4a1176e15d0c0",
+      "selfHash": "32df24d28ae2e573a3aded635d5af8fd0e5eab055590d3f50527c572465b7343",
+      "createdAt": "2026-07-16T08:11:36.951Z",
+      "updatedAt": "2026-07-16T08:11:36.951Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923804e6a6bbc86f3138",
+      "tenantId": "blazeup-platform",
+      "correlationId": "7830f9f9-bc4e-4d4e-afc6-9743f29da3a4",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.certification.granted",
+      "title": "Partner certification granted: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a58923804e6a6bbc86f3135",
+        "label": "sales_certified"
+      },
+      "before": null,
+      "after": {
+        "partnerId": "6a58923704e6a6bbc86f3129",
+        "userId": "6a589238974898259eb0f827",
+        "certificationType": "sales_certified",
+        "expiresAt": "2027-07-16T08:11:36.669Z",
+        "score": 90
+      },
+      "retentionClass": "permanent",
+      "prevHash": "355578cef5c540d817f9dfa1cf10db35a3584d68c3ee8d4be87fa51c477c97a3",
+      "selfHash": "9f6d68459443c15d9469067c950889811483480107182f56b4b4a1176e15d0c0",
+      "createdAt": "2026-07-16T08:11:36.689Z",
+      "updatedAt": "2026-07-16T08:11:36.689Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589238974898259eb0f829",
+      "tenantId": "blazeup-platform",
+      "correlationId": "abc4f1fd-6fbc-4840-bb4e-ea978950635c",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+ryansoto@mailinator.com to QA-AUTO Ray-Thompson",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a589238974898259eb0f827",
+        "label": "qa.auto+ryansoto@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:36.593Z",
+      "updatedAt": "2026-07-16T08:11:36.593Z",
+      "__v": 0
+    }
+  ],
+  "total": 1165,
+  "page": 1,
+  "limit": 10,
+  "message": "SA audit log retrieved successfully"
+}

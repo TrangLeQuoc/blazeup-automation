@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lam, Young and Brewer",
+    "code": "PAR-848356",
+    "email": "qa.auto+gordonjoshua@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.miller.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589234974898259eb0f7e5",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:32.510Z",
+    "updatedAt": "2026-07-16T08:11:32.510Z"
+  },
+  "message": "Partner created successfully"
+}

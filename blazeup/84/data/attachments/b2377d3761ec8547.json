@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "humphrey-sampson.com",
+    "prospectName": "QA-AUTO Christensen-Cruz Prospect",
+    "prospectEmail": "qa.auto+carly26@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 408057733,
+    "currency": "USD",
+    "numberOfEmployee": 434,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Husband question street rate material."
+  }
+}

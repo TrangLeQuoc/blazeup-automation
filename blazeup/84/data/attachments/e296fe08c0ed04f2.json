@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922204e6a6bbc86f2df5",
+    "partnerName": "QA-AUTO Serrano PLC",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Figueroa PLC Prospect",
+    "prospectEmail": "qa.auto+courtneythomas@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 246008999,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Music glass probably while your purpose.",
+    "tenantDomain": "baker.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2021,
+    "protectionExpiresAt": "2026-09-14T08:11:15.070Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58922304e6a6bbc86f2e0b",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:15.244Z",
+    "updatedAt": "2026-07-16T08:11:15.244Z"
+  },
+  "message": "Deal registered successfully"
+}

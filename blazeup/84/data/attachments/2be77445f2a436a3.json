@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a58923704e6a6bbc86f30f6",
+    "partnerId": "6a58923604e6a6bbc86f30ec",
+    "email": "qa.auto+waterssandra@mailinator.com",
+    "firstName": "Gary",
+    "lastName": "Ball",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

@@ -1,0 +1,42 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58922704e6a6bbc86f2ead",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922704e6a6bbc86f2e97",
+    "partnerName": "QA-AUTO Preston and Sons",
+    "dealType": "referral",
+    "status": "rejected",
+    "prospectName": "QA-AUTO Delgado-Cook Prospect",
+    "prospectEmail": "qa.auto+jennifer12@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 176939195,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Authority peace population total.",
+    "tenantDomain": "mason.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3173,
+    "protectionExpiresAt": "2026-09-14T08:11:19.438Z",
+    "conflictStatus": "resolved_against_partner",
+    "conflictingDealIds": [
+      "6a58922704e6a6bbc86f2eb9"
+    ],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:19.446Z",
+    "updatedAt": "2026-07-16T08:11:19.700Z",
+    "__v": 0,
+    "conflictResolution": {
+      "resolvedBy": "696466c7e092b1dce3ed8e95",
+      "resolvedAt": "2026-07-16T08:11:19.675Z",
+      "decision": "resolved_against_partner",
+      "reasoning": "Prospect confirmed this partner is the engaged reseller"
+    },
+    "reviewNotes": "Conflict resolved against this deal: Prospect confirmed this partner is the engaged reseller",
+    "reviewedAt": "2026-07-16T08:11:19.675Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal retrieved successfully"
+}

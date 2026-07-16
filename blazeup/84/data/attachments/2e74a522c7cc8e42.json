@@ -1,0 +1,26 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58921c04e6a6bbc86f2cfe",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Young, Rodriguez and Gonzalez",
+    "code": "PAR-385216",
+    "email": "qa.auto+ramirezlisa@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.smith.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "suspended",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:08.113Z",
+    "updatedAt": "2026-07-16T08:11:08.197Z",
+    "internalNotes": "first"
+  },
+  "message": "Partner deactivated successfully"
+}

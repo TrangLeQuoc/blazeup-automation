@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922a04e6a6bbc86f2f3a",
+    "partnerName": "QA-AUTO Walker Inc",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Wilson, Hernandez and Burns Opportunity",
+    "prospectEmail": "qa.auto+michael65@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 365258767,
+    "planId": "no-such-plan-qa",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Program forward door full medical they east suggest.",
+    "tenantDomain": "willis-rowland.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4103,
+    "protectionExpiresAt": "2026-09-14T08:11:23.603Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58922b04e6a6bbc86f2f7f",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:23.614Z",
+    "updatedAt": "2026-07-16T08:11:23.614Z"
+  },
+  "message": "Deal registered successfully"
+}

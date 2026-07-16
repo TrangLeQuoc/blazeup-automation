@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922104e6a6bbc86f2ddf",
+    "planId": "pro-test-v1",
+    "dealType": "co_sell",
+    "tenantDomain": "dawson.com",
+    "prospectName": "QA-AUTO Olson-Walker Opportunity",
+    "prospectEmail": "qa.auto+kelsey94@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 419150978,
+    "currency": "USD",
+    "numberOfEmployee": 1356,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO You world every power."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "williamson.com",
+    "prospectName": "QA-AUTO Moore Ltd Prospect",
+    "prospectEmail": "qa.auto+wmitchell@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 310668083,
+    "currency": "USD",
+    "numberOfEmployee": 1105,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Recent carry bad marriage."
+  }
+}

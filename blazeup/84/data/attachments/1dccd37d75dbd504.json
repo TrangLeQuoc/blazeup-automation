@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Hernandez-Craig",
+    "code": "PAR-268759",
+    "email": "qa.auto+mhorton@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.chen.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589224974898259eb0f5e6",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:16.976Z",
+    "updatedAt": "2026-07-16T08:11:16.976Z"
+  },
+  "message": "Partner created successfully"
+}

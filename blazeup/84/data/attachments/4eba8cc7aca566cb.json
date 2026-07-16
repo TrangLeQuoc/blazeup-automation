@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922f04e6a6bbc86f2fe9",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "williams-ramirez.com",
+    "prospectName": "QA-AUTO Walsh-Little Opportunity",
+    "prospectEmail": "qa.auto+kevinmay@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 316708808,
+    "currency": "USD",
+    "numberOfEmployee": 1991,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Line myself help change describe."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a58927f04e6a6bbc86f3596",
+    "partnerId": "6a58927e04e6a6bbc86f3582",
+    "email": "qa.auto+craiganderson@mailinator.com",
+    "firstName": "Martin",
+    "lastName": "Martin",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

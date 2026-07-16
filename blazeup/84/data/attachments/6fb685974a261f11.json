@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58927804e6a6bbc86f352d",
+    "partnerName": "QA-AUTO Brown-Johnson",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Christensen-Cruz Prospect",
+    "prospectEmail": "qa.auto+carly26@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 408057733,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Husband question street rate material.",
+    "tenantDomain": "humphrey-sampson.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 434,
+    "protectionExpiresAt": "2026-09-14T08:12:43.134Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58927b04e6a6bbc86f354a",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:12:43.141Z",
+    "updatedAt": "2026-07-16T08:12:43.141Z"
+  },
+  "message": "Deal registered"
+}

@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a589266974898259eb0fa90",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Wilkinson Inc",
+    "code": "PAR-715559",
+    "email": "qa.auto+johnsonsamuel@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.mitchell-baker.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:22.856Z",
+    "updatedAt": "2026-07-16T08:12:22.976Z",
+    "approvedAt": "2026-07-16T08:12:22.971Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

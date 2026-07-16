@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a58922404e6a6bbc86f2e4b/approve",
+  "payload": {
+    "reviewNotes": "QA-AUTO approve"
+  }
+}

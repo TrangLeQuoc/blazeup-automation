@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "tier must be one of the following values: registered, select, advanced, premier"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:08.850Z",
+  "path": "/sa-partners-api/v1/sa/partners/6a58921c04e6a6bbc86f2d2a/upgrade-tier"
+}

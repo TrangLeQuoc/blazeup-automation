@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "params": {
+    "page": -1,
+    "limit": 5
+  }
+}

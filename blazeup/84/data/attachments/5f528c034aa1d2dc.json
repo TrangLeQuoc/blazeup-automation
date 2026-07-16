@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58923204e6a6bbc86f3061",
+    "partnerName": "QA-AUTO Martin, Jackson and Cordova",
+    "label": "QA-AUTO Griffin Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Current hold remain large teacher garden.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a58923304e6a6bbc86f306b",
+    "createdAt": "2026-07-16T08:11:31.070Z",
+    "updatedAt": "2026-07-16T08:11:31.070Z"
+  },
+  "message": "Territory assigned successfully"
+}

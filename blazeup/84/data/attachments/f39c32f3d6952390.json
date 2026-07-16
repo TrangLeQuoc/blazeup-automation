@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Rivas-Robinson",
+    "code": "PAR-311959",
+    "email": "qa.auto+reynoldsshelly@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://mack.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58927704e6a6bbc86f34f1",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:39.569Z",
+    "updatedAt": "2026-07-16T08:12:39.569Z"
+  },
+  "message": "Partner created successfully"
+}

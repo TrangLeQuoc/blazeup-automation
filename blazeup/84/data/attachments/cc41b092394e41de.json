@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Cannot transition deal from rejected to rejected",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:12:40.168Z",
+  "path": "/sa-partners-api/v1/sa/deals/6a58927704e6a6bbc86f34fd/reject"
+}

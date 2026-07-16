@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lewis, Miller and James",
+    "code": "PAR-226261",
+    "email": "qa.auto+tinaherrera@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://harper.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922604e6a6bbc86f2e8c",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:18.172Z",
+    "updatedAt": "2026-07-16T08:11:18.172Z"
+  },
+  "message": "Partner created successfully"
+}

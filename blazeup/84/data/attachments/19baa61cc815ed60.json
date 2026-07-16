@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Wise Ltd",
+    "email": "qa.auto+cameron67@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://gallegos.com/"
+  }
+}

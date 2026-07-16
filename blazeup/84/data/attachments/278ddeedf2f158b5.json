@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Parker, Maldonado and Brock",
+    "code": "PAR-615118",
+    "email": "qa.auto+ahansen@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://ibarra-payne.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922c04e6a6bbc86f2f9f",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:24.618Z",
+    "updatedAt": "2026-07-16T08:11:24.618Z"
+  },
+  "message": "Partner created successfully"
+}

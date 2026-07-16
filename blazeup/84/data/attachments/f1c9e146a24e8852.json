@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922d04e6a6bbc86f2fbf",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "willis.com",
+    "prospectName": "QA-AUTO Freeman, Salinas and Murphy Opportunity",
+    "prospectEmail": "qa.auto+brian41@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 322548972,
+    "currency": "USD",
+    "numberOfEmployee": 164,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Ground woman federal standard whatever."
+  }
+}

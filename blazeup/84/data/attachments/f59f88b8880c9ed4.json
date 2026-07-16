@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922004e6a6bbc86f2db9",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "le.com",
+    "prospectName": "QA-AUTO Baird Ltd Opportunity",
+    "prospectEmail": "qa.auto+daniel90@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 278165498,
+    "currency": "USD",
+    "numberOfEmployee": 2456,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Read TV coach rest American stuff."
+  }
+}

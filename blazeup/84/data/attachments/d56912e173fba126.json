@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Stanton, Prince and Thomas",
+    "code": "PAR-679814",
+    "email": "qa.auto+ugarza@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://bonilla-hernandez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589264974898259eb0fa6a",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:20.189Z",
+    "updatedAt": "2026-07-16T08:12:20.189Z"
+  },
+  "message": "Partner created successfully"
+}

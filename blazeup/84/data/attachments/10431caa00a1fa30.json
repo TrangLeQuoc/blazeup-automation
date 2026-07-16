@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid pagination: skip must be a non-negative integer",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:48.579Z",
+  "path": "/sa-partners-api/v1/sa/partner-users"
+}

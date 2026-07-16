@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "userId": "6a58926204e6a6bbc86f33f3",
+  "partnerId": "6a58926104e6a6bbc86f33e9",
+  "partnerName": "QA-AUTO Harper Inc",
+  "email": "qa.auto+kathryn53@mailinator.com",
+  "firstName": "Mark",
+  "lastName": "Newman",
+  "role": "admin",
+  "tier": "registered",
+  "type": "channel",
+  "status": "active",
+  "lastLoginAt": "2026-07-16T08:12:19.576Z",
+  "mfaEnrolled": false,
+  "mfaMethods": []
+}

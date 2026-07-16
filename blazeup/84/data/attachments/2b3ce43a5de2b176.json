@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58924d04e6a6bbc86f3319",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Martin, Lewis and Kelly",
+    "code": "PAR-720010",
+    "email": "qa.auto+hday@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.robinson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:57.173Z",
+    "updatedAt": "2026-07-16T08:11:57.273Z",
+    "approvedAt": "2026-07-16T08:11:57.271Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

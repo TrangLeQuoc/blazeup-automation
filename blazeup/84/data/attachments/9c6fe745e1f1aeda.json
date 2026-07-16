@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a589221974898259eb0f597",
+    "partnerName": "QA-AUTO Combs LLC",
+    "dealType": "reseller",
+    "status": "registered",
+    "prospectName": "QA-AUTO Mueller Inc Opportunity",
+    "prospectEmail": "qa.auto+vphillips@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 204844645,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Difference model reason kitchen water such.",
+    "tenantDomain": "kim.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4264,
+    "protectionExpiresAt": "2026-09-14T08:11:13.571Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a589221974898259eb0f5a3",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:13.579Z",
+    "updatedAt": "2026-07-16T08:11:13.579Z"
+  },
+  "message": "Deal registered successfully"
+}

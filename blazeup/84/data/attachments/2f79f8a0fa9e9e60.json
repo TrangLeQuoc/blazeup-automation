@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "status must be one of the following values: active, expired, revoked"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:39.202Z",
+  "path": "/sa-partners-api/v1/sa/partners/6a58923b974898259eb0f85c/certifications"
+}

@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a589229974898259eb0f654",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a589229974898259eb0f648",
+    "partnerName": "QA-AUTO Wallace-Colon",
+    "dealType": "referral",
+    "status": "lost",
+    "prospectName": "QA-AUTO Berger-Olson Opportunity",
+    "prospectEmail": "qa.auto+monica17@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 249306232,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO lost — prospect chose a competitor",
+    "tenantDomain": "nguyen.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4728,
+    "protectionExpiresAt": "2026-09-14T08:11:21.255Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:21.265Z",
+    "updatedAt": "2026-07-16T08:11:21.502Z",
+    "reviewedAt": "2026-07-16T08:11:21.375Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95",
+    "closedAt": "2026-07-16T08:11:21.499Z"
+  },
+  "message": "Deal marked as lost"
+}

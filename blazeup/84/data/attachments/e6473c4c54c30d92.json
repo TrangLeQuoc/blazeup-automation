@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Phillips, Rivera and Simmons",
+    "code": "PAR-158373",
+    "email": "qa.auto+stephensangel@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://sanders.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58921b04e6a6bbc86f2cc3",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:07.117Z",
+    "updatedAt": "2026-07-16T08:11:07.117Z"
+  },
+  "message": "Partner created successfully"
+}

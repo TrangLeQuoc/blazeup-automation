@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a589234974898259eb0f7e5",
+    "label": "QA-AUTO Olsen Territory",
+    "countries": [
+      "IS"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "exclusive",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Wall reach old keep a."
+  }
+}

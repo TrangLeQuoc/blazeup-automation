@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Martin, Jackson and Cordova",
+    "code": "PAR-802012",
+    "email": "qa.auto+patrickrusso@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.graves.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58923204e6a6bbc86f3061",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:30.966Z",
+    "updatedAt": "2026-07-16T08:11:30.966Z"
+  },
+  "message": "Partner created successfully"
+}

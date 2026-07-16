@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Williams, Hall and Hernandez",
+    "code": "PAR-200377",
+    "email": "qa.auto+ibarrakaren@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://wilkerson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58923104e6a6bbc86f301d",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:29.147Z",
+    "updatedAt": "2026-07-16T08:11:29.147Z"
+  },
+  "message": "Partner created successfully"
+}

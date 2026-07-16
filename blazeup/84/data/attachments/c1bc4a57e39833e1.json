@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners/6a589217974898259eb0f4de/upgrade-tier",
+  "payload": {
+    "tier": "advanced",
+    "reason": "QA-AUTO up advanced PAR-116104"
+  }
+}

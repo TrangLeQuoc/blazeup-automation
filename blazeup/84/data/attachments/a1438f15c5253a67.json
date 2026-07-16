@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Cochran, Stewart and Obrien",
+    "email": "qa.auto+christybush@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://garcia.com/"
+  }
+}

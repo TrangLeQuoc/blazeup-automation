@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58922404e6a6bbc86f2e4b",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922304e6a6bbc86f2e3f",
+    "partnerName": "QA-AUTO Johnson, Woods and Ramirez",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Barker-Bryant Opportunity",
+    "prospectEmail": "qa.auto+steven40@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 267436230,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Rate sport ability appear yes occur ahead.",
+    "tenantDomain": "gates.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1052,
+    "protectionExpiresAt": "2026-09-14T08:11:16.218Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:16.237Z",
+    "updatedAt": "2026-07-16T08:11:16.354Z",
+    "reviewNotes": "QA-AUTO approve",
+    "reviewedAt": "2026-07-16T08:11:16.350Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal approved successfully"
+}

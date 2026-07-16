@@ -1,0 +1,35 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58923b974898259eb0f889",
+    "tenantId": "blazeup-platform",
+    "correlationId": "51c4b7d3-8273-4e21-a818-c8eac4cda626",
+    "category": "SA_AUDIT_PARTNER",
+    "severity": "warning",
+    "action": "partner.account.deactivated",
+    "title": "Partner deactivated: QA-AUTO Ponce, Weaver and Hart",
+    "actor": {
+      "type": "sa-staff",
+      "saUserId": "system"
+    },
+    "resource": {
+      "type": "partner_account",
+      "id": "6a58923b974898259eb0f85c",
+      "label": "QA-AUTO Ponce, Weaver and Hart"
+    },
+    "before": {
+      "status": "pending"
+    },
+    "after": {
+      "status": "suspended",
+      "reason": "Deleted by SA"
+    },
+    "retentionClass": "permanent",
+    "prevHash": "d6bb066cf4a034060ef6aab8d9c0d2b93555541b3e0d72bbcc8bd1e8efc6a462",
+    "selfHash": "1a408228dc7c177ba19ddc8f6740bdd04ff06614db237a3c9b7ddef17d68aee4",
+    "createdAt": "2026-07-16T08:11:39.678Z",
+    "updatedAt": "2026-07-16T08:11:39.678Z",
+    "__v": 0
+  },
+  "message": "SA audit log entry retrieved successfully"
+}

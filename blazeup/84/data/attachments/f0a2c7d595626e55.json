@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a589245974898259eb0f937",
+    "email": "qa.auto+scottbaird@mailinator.com",
+    "firstName": "Scott",
+    "lastName": "Jones",
+    "role": "bogus"
+  }
+}

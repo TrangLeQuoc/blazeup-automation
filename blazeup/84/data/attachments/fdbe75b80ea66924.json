@@ -1,0 +1,7 @@
+{
+  "statusCode": 401,
+  "message": "Session expired",
+  "error": "Unauthorized",
+  "timestamp": "2026-07-16T08:12:32.124Z",
+  "path": "/sa-partners-api/v1/partner/auth/refresh"
+}

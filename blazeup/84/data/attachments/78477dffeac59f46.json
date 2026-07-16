@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a589258974898259eb0f9fd",
+    "email": "qa.auto+mcfarlandkaren@mailinator.com",
+    "firstName": "Barbara",
+    "lastName": "Stephens",
+    "role": "admin"
+  }
+}

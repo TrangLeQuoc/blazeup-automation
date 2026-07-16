@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Nichols-Jones",
+    "code": "PAR-874998",
+    "email": "qa.auto+keithanderson@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://arellano-hill.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922d04e6a6bbc86f2fbf",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:25.581Z",
+    "updatedAt": "2026-07-16T08:11:25.581Z"
+  },
+  "message": "Partner created successfully"
+}

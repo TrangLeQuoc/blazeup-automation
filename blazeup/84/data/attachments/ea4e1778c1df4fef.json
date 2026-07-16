@@ -1,0 +1,168 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a58923b974898259eb0f889",
+      "tenantId": "blazeup-platform",
+      "correlationId": "51c4b7d3-8273-4e21-a818-c8eac4cda626",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Ponce, Weaver and Hart",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58923b974898259eb0f85c",
+        "label": "QA-AUTO Ponce, Weaver and Hart"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "d6bb066cf4a034060ef6aab8d9c0d2b93555541b3e0d72bbcc8bd1e8efc6a462",
+      "selfHash": "1a408228dc7c177ba19ddc8f6740bdd04ff06614db237a3c9b7ddef17d68aee4",
+      "createdAt": "2026-07-16T08:11:39.678Z",
+      "updatedAt": "2026-07-16T08:11:39.678Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923b974898259eb0f85e",
+      "tenantId": "blazeup-platform",
+      "correlationId": "c59645d4-86b1-4e6e-adcc-2daaffbfd6cb",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Ponce, Weaver and Hart",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58923b974898259eb0f85c",
+        "label": "QA-AUTO Ponce, Weaver and Hart"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Ponce, Weaver and Hart",
+        "email": "qa.auto+raydavid@mailinator.com",
+        "type": "channel",
+        "code": "PAR-059408"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:39.115Z",
+      "updatedAt": "2026-07-16T08:11:39.115Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f318a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "8a347601-0f3d-4e0d-94bb-a87b0a8e4311",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Chavez, Ruiz and Roman",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589239974898259eb0f838",
+        "label": "QA-AUTO Chavez, Ruiz and Roman"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "3677e62c1ca3bd0904dca17cebf0da1a0ec025dfd112a21a7b4fd65992ed1eb9",
+      "selfHash": "d6bb066cf4a034060ef6aab8d9c0d2b93555541b3e0d72bbcc8bd1e8efc6a462",
+      "createdAt": "2026-07-16T08:11:38.902Z",
+      "updatedAt": "2026-07-16T08:11:38.902Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f317f",
+      "tenantId": "blazeup-platform",
+      "correlationId": "b4ffe40b-20f8-4390-88b4-2e1c20aec08c",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.certification.revoked",
+      "title": "Partner certification revoked: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a58923a04e6a6bbc86f316b",
+        "label": "sales_certified"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "revoked",
+        "partnerId": "6a589239974898259eb0f838",
+        "userId": "6a58923a04e6a6bbc86f3160",
+        "certificationType": "sales_certified",
+        "revokeReason": "QA-AUTO first"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "56674ec595fbb9b81b570eed06e1f39e96a02038b5a2aa6e1135276f5fe61980",
+      "selfHash": "3677e62c1ca3bd0904dca17cebf0da1a0ec025dfd112a21a7b4fd65992ed1eb9",
+      "createdAt": "2026-07-16T08:11:38.689Z",
+      "updatedAt": "2026-07-16T08:11:38.689Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58923a04e6a6bbc86f316e",
+      "tenantId": "blazeup-platform",
+      "correlationId": "766d9b35-40b5-4070-b66e-c4120eb3777d",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.certification.granted",
+      "title": "Partner certification granted: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a58923a04e6a6bbc86f316b",
+        "label": "sales_certified"
+      },
+      "before": null,
+      "after": {
+        "partnerId": "6a589239974898259eb0f838",
+        "userId": "6a58923a04e6a6bbc86f3160",
+        "certificationType": "sales_certified",
+        "expiresAt": "2027-07-16T08:11:38.215Z",
+        "score": 90
+      },
+      "retentionClass": "permanent",
+      "prevHash": "32df24d28ae2e573a3aded635d5af8fd0e5eab055590d3f50527c572465b7343",
+      "selfHash": "56674ec595fbb9b81b570eed06e1f39e96a02038b5a2aa6e1135276f5fe61980",
+      "createdAt": "2026-07-16T08:11:38.231Z",
+      "updatedAt": "2026-07-16T08:11:38.231Z",
+      "__v": 0
+    }
+  ],
+  "total": 1228,
+  "page": 1,
+  "limit": 5,
+  "message": "SA audit log retrieved successfully"
+}

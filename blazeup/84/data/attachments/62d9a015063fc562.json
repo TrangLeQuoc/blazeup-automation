@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "exclusivityType must be one of the following values: exclusive, preferred, open"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:33.271Z",
+  "path": "/sa-partners-api/v1/sa/territories"
+}

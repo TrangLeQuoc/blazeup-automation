@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Marshall, Dalton and Le",
+    "code": "PAR-709294",
+    "email": "qa.auto+hughesbob@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.sullivan-mcdonald.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589233974898259eb0f7ac",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:31.542Z",
+    "updatedAt": "2026-07-16T08:11:31.542Z"
+  },
+  "message": "Partner created successfully"
+}

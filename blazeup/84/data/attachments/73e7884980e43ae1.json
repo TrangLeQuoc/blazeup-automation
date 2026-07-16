@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners/6a58921c04e6a6bbc86f2d2a/upgrade-tier",
+  "payload": {
+    "tier": "silver"
+  }
+}

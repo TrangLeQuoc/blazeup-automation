@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922d04e6a6bbc86f2fbf",
+    "partnerName": "QA-AUTO Nichols-Jones",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Freeman, Salinas and Murphy Opportunity",
+    "prospectEmail": "qa.auto+brian41@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 322548972,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Ground woman federal standard whatever.",
+    "tenantDomain": "willis.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 164,
+    "protectionExpiresAt": "2026-09-14T08:11:25.806Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58922d974898259eb0f6c1",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:25.813Z",
+    "updatedAt": "2026-07-16T08:11:25.813Z"
+  },
+  "message": "Deal registered successfully"
+}

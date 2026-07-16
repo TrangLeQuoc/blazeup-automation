@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922304e6a6bbc86f2e3f",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "gates.com",
+    "prospectName": "QA-AUTO Barker-Bryant Opportunity",
+    "prospectEmail": "qa.auto+steven40@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 267436230,
+    "currency": "USD",
+    "numberOfEmployee": 1052,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Rate sport ability appear yes occur ahead."
+  }
+}

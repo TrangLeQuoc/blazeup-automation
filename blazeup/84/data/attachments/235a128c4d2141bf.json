@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Harper Inc",
+    "code": "PAR-540277",
+    "email": "qa.auto+thomaslori@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://castro-dalton.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58926104e6a6bbc86f33e9",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:17.272Z",
+    "updatedAt": "2026-07-16T08:12:17.272Z"
+  },
+  "message": "Partner created successfully"
+}

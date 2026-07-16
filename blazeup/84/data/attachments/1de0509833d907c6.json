@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922904e6a6bbc86f2f12",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "james.com",
+    "prospectName": "QA-AUTO Thomas Ltd Opportunity",
+    "prospectEmail": "qa.auto+amandamoore@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 45483201,
+    "currency": "USD",
+    "numberOfEmployee": 3685,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Represent approach drop yourself."
+  }
+}

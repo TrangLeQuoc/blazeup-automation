@@ -1,0 +1,29 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58924a04e6a6bbc86f32e1",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Valentine Group",
+    "code": "PAR-098596",
+    "email": "qa.auto+ryan56@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://lopez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:54.532Z",
+    "updatedAt": "2026-07-16T08:11:54.642Z",
+    "__v": 0,
+    "approvedAt": "2026-07-16T08:11:54.639Z",
+    "approvedBy": "system",
+    "openDealsCount": 0
+  },
+  "message": "Profile retrieved"
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Combs LLC",
+    "code": "PAR-254600",
+    "email": "qa.auto+doylejoshua@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.clayton-smith.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589221974898259eb0f597",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:13.194Z",
+    "updatedAt": "2026-07-16T08:11:13.194Z"
+  },
+  "message": "Partner created successfully"
+}

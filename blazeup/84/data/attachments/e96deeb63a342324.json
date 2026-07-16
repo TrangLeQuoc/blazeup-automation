@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922f04e6a6bbc86f2fe9",
+    "partnerName": "QA-AUTO Lawson-Harris",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Walsh-Little Opportunity",
+    "prospectEmail": "qa.auto+kevinmay@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 316708808,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Line myself help change describe.",
+    "tenantDomain": "williams-ramirez.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1991,
+    "protectionExpiresAt": "2026-09-14T08:11:27.725Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58922f04e6a6bbc86f2ff5",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:27.732Z",
+    "updatedAt": "2026-07-16T08:11:27.732Z"
+  },
+  "message": "Deal registered successfully"
+}

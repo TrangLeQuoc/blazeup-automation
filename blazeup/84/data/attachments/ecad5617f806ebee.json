@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922c04e6a6bbc86f2f9f",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "gamble-harrison.biz",
+    "prospectName": "QA-AUTO Olsen LLC Opportunity",
+    "prospectEmail": "qa.auto+robinsonmark@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 210589091,
+    "currency": "USD",
+    "numberOfEmployee": 1240,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO North civil manage trouble."
+  }
+}

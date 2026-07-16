@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jones-Myers",
+    "code": "PAR-988942",
+    "email": "qa.auto+michaelsimmons@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.foster-kim.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589216974898259eb0f4ae",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:02.692Z",
+    "updatedAt": "2026-07-16T08:11:02.692Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,1782 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a588f25ad46cb820a80aa37",
+      "planId": "pro-test-v1",
+      "displayName": "pro-test-v1 (v2)",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a55e01d008d9edc2009e286"
+      },
+      "localePricing": {
+        "US": {
+          "price": 18,
+          "discountPercent": 10
+        },
+        "VN": {
+          "price": 15,
+          "discountPercent": 5
+        },
+        "IN": {
+          "price": 12,
+          "discountPercent": 0
+        }
+      },
+      "annualDiscountPercent": 15,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 50 seats",
+          "minSeats": 1,
+          "maxSeats": 50,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a55e01d008d9edc2009e288"
+          },
+          "discountPercent": 0,
+          "_id": "6a55e01d008d9edc2009e287"
+        },
+        {
+          "tierLabel": "51 - 100 seats",
+          "minSeats": 51,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a55e01d008d9edc2009e28a"
+          },
+          "discountPercent": 0,
+          "_id": "6a55e01d008d9edc2009e289"
+        },
+        {
+          "tierLabel": "101 - 150 seats",
+          "minSeats": 101,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 18.799999999999997,
+            "_id": "6a55e01d008d9edc2009e28c"
+          },
+          "discountPercent": 6,
+          "_id": "6a55e01d008d9edc2009e28b"
+        },
+        {
+          "tierLabel": "151 - 200 seats",
+          "minSeats": 151,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 18,
+            "_id": "6a55e01d008d9edc2009e28e"
+          },
+          "discountPercent": 10,
+          "_id": "6a55e01d008d9edc2009e28d"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 30,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb5"
+        },
+        {
+          "value": "OFFBOARDING",
+          "label": "Offboarding",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb6"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb7"
+        },
+        {
+          "value": "TIMEOFF",
+          "label": "Time Off",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb8"
+        },
+        {
+          "value": "TIMESHEET",
+          "label": "Timesheet",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb9"
+        },
+        {
+          "value": "PAYROLL",
+          "label": "Payroll",
+          "group": "Finance",
+          "_id": "6a55afff008d9edc2009ddba"
+        },
+        {
+          "value": "EXPENSE",
+          "label": "Expenses",
+          "group": "Finance",
+          "_id": "6a55afff008d9edc2009ddbb"
+        },
+        {
+          "value": "TICKET",
+          "label": "Ticket",
+          "group": "Business Ops",
+          "_id": "6a55afff008d9edc2009ddbc"
+        }
+      ],
+      "connectorIds": [
+        "teamsync"
+      ],
+      "addOns": [
+        {
+          "addOnId": "expense-tracking",
+          "moduleKey": "***",
+          "displayName": "expense-tracking",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 15,
+            "_id": "6a55e01d008d9edc2009e298"
+          },
+          "_id": "6a55e01d008d9edc2009e297"
+        },
+        {
+          "addOnId": "time-off-requests",
+          "moduleKey": "***",
+          "displayName": "time-off-requests",
+          "pricingModel": "per_seat",
+          "pricePerSeatPerCycle": {
+            "value": 10,
+            "_id": "6a55e01d008d9edc2009e29a"
+          },
+          "_id": "6a55e01d008d9edc2009e299"
+        }
+      ],
+      "meters": [
+        {
+          "meterId": "blazey-tokens",
+          "displayName": "blazey-tokens",
+          "unitName": "tokens",
+          "includedQuantity": 100000000,
+          "pricePerUnit": {
+            "value": 5,
+            "_id": "6a55e01d008d9edc2009e29c"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55e01d008d9edc2009e29b"
+        },
+        {
+          "meterId": "automation-runs",
+          "displayName": "automation-runs",
+          "unitName": "tokens",
+          "includedQuantity": 155500,
+          "pricePerUnit": {
+            "value": 0,
+            "_id": "6a55e01d008d9edc2009e29e"
+          },
+          "hardCap": 186600,
+          "hardCapExempt": false,
+          "_id": "6a55e01d008d9edc2009e29d"
+        }
+      ],
+      "status": "published",
+      "planVersion": 2,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-16T07:58:29.709Z",
+      "updatedAt": "2026-07-16T07:58:48.848Z",
+      "__v": 0,
+      "publishedAt": "2026-07-16T07:58:48.823Z",
+      "versionChangeSummary": "update v2\n- test 1"
+    },
+    {
+      "_id": "6a55afff008d9edc2009ddab",
+      "planId": "pro-test-v1",
+      "displayName": "pro-test-v1",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a55e01d008d9edc2009e286"
+      },
+      "localePricing": {
+        "US": {
+          "price": 18,
+          "discountPercent": 10
+        },
+        "VN": {
+          "price": 15,
+          "discountPercent": 5
+        },
+        "IN": {
+          "price": 12,
+          "discountPercent": 0
+        }
+      },
+      "annualDiscountPercent": 15,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 50 seats",
+          "minSeats": 1,
+          "maxSeats": 50,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a55e01d008d9edc2009e288"
+          },
+          "discountPercent": 0,
+          "_id": "6a55e01d008d9edc2009e287"
+        },
+        {
+          "tierLabel": "51 - 100 seats",
+          "minSeats": 51,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a55e01d008d9edc2009e28a"
+          },
+          "discountPercent": 0,
+          "_id": "6a55e01d008d9edc2009e289"
+        },
+        {
+          "tierLabel": "101 - 150 seats",
+          "minSeats": 101,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 18.799999999999997,
+            "_id": "6a55e01d008d9edc2009e28c"
+          },
+          "discountPercent": 6,
+          "_id": "6a55e01d008d9edc2009e28b"
+        },
+        {
+          "tierLabel": "151 - 200 seats",
+          "minSeats": 151,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 18,
+            "_id": "6a55e01d008d9edc2009e28e"
+          },
+          "discountPercent": 10,
+          "_id": "6a55e01d008d9edc2009e28d"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 30,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb5"
+        },
+        {
+          "value": "OFFBOARDING",
+          "label": "Offboarding",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb6"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb7"
+        },
+        {
+          "value": "TIMEOFF",
+          "label": "Time Off",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb8"
+        },
+        {
+          "value": "TIMESHEET",
+          "label": "Timesheet",
+          "group": "Core HR",
+          "_id": "6a55afff008d9edc2009ddb9"
+        },
+        {
+          "value": "PAYROLL",
+          "label": "Payroll",
+          "group": "Finance",
+          "_id": "6a55afff008d9edc2009ddba"
+        },
+        {
+          "value": "EXPENSE",
+          "label": "Expenses",
+          "group": "Finance",
+          "_id": "6a55afff008d9edc2009ddbb"
+        },
+        {
+          "value": "TICKET",
+          "label": "Ticket",
+          "group": "Business Ops",
+          "_id": "6a55afff008d9edc2009ddbc"
+        }
+      ],
+      "connectorIds": [
+        "teamsync"
+      ],
+      "addOns": [
+        {
+          "addOnId": "expense-tracking",
+          "moduleKey": "***",
+          "displayName": "expense-tracking",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 15,
+            "_id": "6a55e01d008d9edc2009e298"
+          },
+          "_id": "6a55e01d008d9edc2009e297"
+        },
+        {
+          "addOnId": "time-off-requests",
+          "moduleKey": "***",
+          "displayName": "time-off-requests",
+          "pricingModel": "per_seat",
+          "pricePerSeatPerCycle": {
+            "value": 10,
+            "_id": "6a55e01d008d9edc2009e29a"
+          },
+          "_id": "6a55e01d008d9edc2009e299"
+        }
+      ],
+      "meters": [
+        {
+          "meterId": "blazey-tokens",
+          "displayName": "blazey-tokens",
+          "unitName": "tokens",
+          "includedQuantity": 100000000,
+          "pricePerUnit": {
+            "value": 5,
+            "_id": "6a55e01d008d9edc2009e29c"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55e01d008d9edc2009e29b"
+        },
+        {
+          "meterId": "automation-runs",
+          "displayName": "automation-runs",
+          "unitName": "tokens",
+          "includedQuantity": 155500,
+          "pricePerUnit": {
+            "value": 0,
+            "_id": "6a55e01d008d9edc2009e29e"
+          },
+          "hardCap": 186600,
+          "hardCapExempt": false,
+          "_id": "6a55e01d008d9edc2009e29d"
+        }
+      ],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-14T03:41:51.095Z",
+      "updatedAt": "2026-07-16T07:58:48.834Z",
+      "__v": 0,
+      "publishedAt": "2026-07-16T07:54:47.196Z",
+      "versionChangeSummary": "-",
+      "archivedAt": "2026-07-16T07:58:48.823Z"
+    },
+    {
+      "_id": "6a588ed8ad46cb820a80a99f",
+      "planId": "pro-wed-v1",
+      "displayName": "pro-wed-v1 (v3)",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "VND",
+      "basePrice": {
+        "value": 200000,
+        "_id": "6a57309cc728a60f28ed63a1"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 150000,
+          "discountPercent": 5
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 150 seats",
+          "minSeats": 1,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 200000,
+            "_id": "6a57309cc728a60f28ed63a3"
+          },
+          "discountPercent": 0,
+          "_id": "6a57309cc728a60f28ed63a2"
+        },
+        {
+          "tierLabel": "151 - 200 seats",
+          "minSeats": 151,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 190000,
+            "_id": "6a57309cc728a60f28ed63a5"
+          },
+          "discountPercent": 5,
+          "_id": "6a57309cc728a60f28ed63a4"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 20,
+      "includedModules": [
+        {
+          "value": "OFFBOARDING",
+          "label": "Offboarding",
+          "group": "Core HR",
+          "_id": "6a57309cc728a60f28ed63a6"
+        },
+        {
+          "value": "ONBOARDING",
+          "label": "Onboarding",
+          "group": "Core HR",
+          "_id": "6a57309cc728a60f28ed63a7"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [
+        {
+          "addOnId": "EMPLOYEE",
+          "moduleKey": "***",
+          "displayName": "EMPLOYEE",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 15000000,
+            "_id": "6a57309cc728a60f28ed63a9"
+          },
+          "_id": "6a57309cc728a60f28ed63a8"
+        }
+      ],
+      "meters": [
+        {
+          "meterId": "blazey-tokens",
+          "displayName": "blazey-tokens",
+          "unitName": "tokens",
+          "includedQuantity": 1000000000,
+          "pricePerUnit": {
+            "value": 15000,
+            "_id": "6a57309cc728a60f28ed63ab"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a57309cc728a60f28ed63aa"
+        }
+      ],
+      "status": "draft",
+      "planVersion": 3,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-16T07:57:12.097Z",
+      "updatedAt": "2026-07-16T07:57:12.097Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5856d6ad46cb820a80a00b",
+      "planId": "pro-wed-v1",
+      "displayName": "pro-wed-v1 (v2)",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "VND",
+      "basePrice": {
+        "value": 200000,
+        "_id": "6a57309cc728a60f28ed63a1"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 150000,
+          "discountPercent": 5
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 150 seats",
+          "minSeats": 1,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 200000,
+            "_id": "6a57309cc728a60f28ed63a3"
+          },
+          "discountPercent": 0,
+          "_id": "6a57309cc728a60f28ed63a2"
+        },
+        {
+          "tierLabel": "151 - 200 seats",
+          "minSeats": 151,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 190000,
+            "_id": "6a57309cc728a60f28ed63a5"
+          },
+          "discountPercent": 5,
+          "_id": "6a57309cc728a60f28ed63a4"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 20,
+      "includedModules": [
+        {
+          "value": "OFFBOARDING",
+          "label": "Offboarding",
+          "group": "Core HR",
+          "_id": "6a57309cc728a60f28ed63a6"
+        },
+        {
+          "value": "ONBOARDING",
+          "label": "Onboarding",
+          "group": "Core HR",
+          "_id": "6a57309cc728a60f28ed63a7"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [
+        {
+          "addOnId": "EMPLOYEE",
+          "moduleKey": "***",
+          "displayName": "EMPLOYEE",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 15000000,
+            "_id": "6a57309cc728a60f28ed63a9"
+          },
+          "_id": "6a57309cc728a60f28ed63a8"
+        }
+      ],
+      "meters": [
+        {
+          "meterId": "blazey-tokens",
+          "displayName": "blazey-tokens",
+          "unitName": "tokens",
+          "includedQuantity": 1000000000,
+          "pricePerUnit": {
+            "value": 15000,
+            "_id": "6a57309cc728a60f28ed63ab"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a57309cc728a60f28ed63aa"
+        }
+      ],
+      "status": "published",
+      "planVersion": 2,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-16T03:58:14.043Z",
+      "updatedAt": "2026-07-16T07:55:34.662Z",
+      "__v": 0,
+      "publishedAt": "2026-07-16T07:55:34.643Z",
+      "versionChangeSummary": "v2"
+    },
+    {
+      "_id": "6a57309cc728a60f28ed63a0",
+      "planId": "pro-wed-v1",
+      "displayName": "pro-wed-v1",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "VND",
+      "basePrice": {
+        "value": 200000,
+        "_id": "6a57309cc728a60f28ed63a1"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 150000,
+          "discountPercent": 5
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 150 seats",
+          "minSeats": 1,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 200000,
+            "_id": "6a57309cc728a60f28ed63a3"
+          },
+          "discountPercent": 0,
+          "_id": "6a57309cc728a60f28ed63a2"
+        },
+        {
+          "tierLabel": "151 - 200 seats",
+          "minSeats": 151,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 190000,
+            "_id": "6a57309cc728a60f28ed63a5"
+          },
+          "discountPercent": 5,
+          "_id": "6a57309cc728a60f28ed63a4"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 20,
+      "includedModules": [
+        {
+          "value": "OFFBOARDING",
+          "label": "Offboarding",
+          "group": "Core HR",
+          "_id": "6a57309cc728a60f28ed63a6"
+        },
+        {
+          "value": "ONBOARDING",
+          "label": "Onboarding",
+          "group": "Core HR",
+          "_id": "6a57309cc728a60f28ed63a7"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [
+        {
+          "addOnId": "EMPLOYEE",
+          "moduleKey": "***",
+          "displayName": "EMPLOYEE",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 15000000,
+            "_id": "6a57309cc728a60f28ed63a9"
+          },
+          "_id": "6a57309cc728a60f28ed63a8"
+        }
+      ],
+      "meters": [
+        {
+          "meterId": "blazey-tokens",
+          "displayName": "blazey-tokens",
+          "unitName": "tokens",
+          "includedQuantity": 1000000000,
+          "pricePerUnit": {
+            "value": 15000,
+            "_id": "6a57309cc728a60f28ed63ab"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a57309cc728a60f28ed63aa"
+        }
+      ],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-15T07:02:52.135Z",
+      "updatedAt": "2026-07-16T07:55:34.651Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T08:30:39.170Z",
+      "versionChangeSummary": "ok",
+      "archivedAt": "2026-07-16T07:55:34.643Z"
+    },
+    {
+      "_id": "6a58564dad46cb820a809faa",
+      "planId": "enterprise-n",
+      "displayName": "enterprise-n (v4)",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 100,
+        "_id": "6a55ae99008d9edc2009dcd1"
+      },
+      "annualDiscountPercent": 0,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 200 seats",
+          "minSeats": 1,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 100,
+            "_id": "6a55ae99008d9edc2009dcd3"
+          },
+          "discountPercent": 0,
+          "_id": "6a55ae99008d9edc2009dcd2"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 12,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd4"
+        },
+        {
+          "value": "TIMEOFF",
+          "label": "Time Off",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd5"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd6"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "automation-runs",
+          "displayName": "automation-runs",
+          "unitName": "tokens",
+          "includedQuantity": 1,
+          "pricePerUnit": {
+            "value": 10,
+            "_id": "6a55ae99008d9edc2009dcd8"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55ae99008d9edc2009dcd7"
+        }
+      ],
+      "status": "draft",
+      "planVersion": 4,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-16T03:55:57.260Z",
+      "updatedAt": "2026-07-16T03:55:57.260Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a573714c728a60f28ed6523",
+      "planId": "enterprise-n",
+      "displayName": "enterprise-n (v3)",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 100,
+        "_id": "6a55ae99008d9edc2009dcd1"
+      },
+      "annualDiscountPercent": 0,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 200 seats",
+          "minSeats": 1,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 100,
+            "_id": "6a55ae99008d9edc2009dcd3"
+          },
+          "discountPercent": 0,
+          "_id": "6a55ae99008d9edc2009dcd2"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 12,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd4"
+        },
+        {
+          "value": "TIMEOFF",
+          "label": "Time Off",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd5"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd6"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "automation-runs",
+          "displayName": "automation-runs",
+          "unitName": "tokens",
+          "includedQuantity": 1,
+          "pricePerUnit": {
+            "value": 10,
+            "_id": "6a55ae99008d9edc2009dcd8"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55ae99008d9edc2009dcd7"
+        }
+      ],
+      "status": "published",
+      "planVersion": 3,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-15T07:30:28.118Z",
+      "updatedAt": "2026-07-15T09:17:50.497Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T09:17:50.485Z",
+      "versionChangeSummary": "ok"
+    },
+    {
+      "_id": "6a5743cec728a60f28ed6904",
+      "planId": "custom-plan-testcompany",
+      "displayName": "custom-plan-testcompany",
+      "edition": "customize",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 200000,
+        "_id": "6a5743cec728a60f28ed6905"
+      },
+      "annualDiscountPercent": null,
+      "seatTiers": [
+        {
+          "tierLabel": "1–150 seats",
+          "minSeats": 1,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 200000,
+            "_id": "6a5743cec728a60f28ed6907"
+          },
+          "discountPercent": 0,
+          "_id": "6a5743cec728a60f28ed6906"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 14,
+      "includedModules": [
+        {
+          "value": "HR",
+          "label": "HR",
+          "group": "General",
+          "_id": "6a5743cec728a60f28ed6908"
+        },
+        {
+          "value": "PAYROLL",
+          "label": "Payroll",
+          "group": "Finance",
+          "_id": "6a5743cec728a60f28ed6909"
+        },
+        {
+          "value": "CRM",
+          "label": "Customers (CRM)",
+          "group": "Business Ops",
+          "_id": "6a5743cec728a60f28ed690a"
+        },
+        {
+          "value": "Finance",
+          "label": "Finance",
+          "group": "General",
+          "_id": "6a5743cec728a60f28ed690b"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "published",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "partner:6a44cdb8ce54e808583d002a",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-15T08:24:46.068Z",
+      "updatedAt": "2026-07-15T08:35:14.075Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T08:35:14.060Z",
+      "versionChangeSummary": "1"
+    },
+    {
+      "_id": "6a55f24523e4c349349362f1",
+      "planId": "enterprise-n",
+      "displayName": "enterprise-n (v2)",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 100,
+        "_id": "6a55ae99008d9edc2009dcd1"
+      },
+      "annualDiscountPercent": 0,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 200 seats",
+          "minSeats": 1,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 100,
+            "_id": "6a55ae99008d9edc2009dcd3"
+          },
+          "discountPercent": 0,
+          "_id": "6a55ae99008d9edc2009dcd2"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 12,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd4"
+        },
+        {
+          "value": "TIMEOFF",
+          "label": "Time Off",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd5"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd6"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "automation-runs",
+          "displayName": "automation-runs",
+          "unitName": "tokens",
+          "includedQuantity": 1,
+          "pricePerUnit": {
+            "value": 10,
+            "_id": "6a55ae99008d9edc2009dcd8"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55ae99008d9edc2009dcd7"
+        }
+      ],
+      "status": "archived",
+      "planVersion": 2,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-14T08:24:38.023Z",
+      "updatedAt": "2026-07-15T08:21:46.296Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T07:28:25.573Z",
+      "versionChangeSummary": "publish plan ver 2 - test dup",
+      "archivedAt": "2026-07-15T08:21:46.282Z"
+    },
+    {
+      "_id": "6a574064c728a60f28ed67b1",
+      "planId": "custom-plan-hanoi11-manufacturing-corp23123123",
+      "displayName": "custom-plan-hanoi11-manufacturing-corp23123123",
+      "description": "Custom plan for Saigon Logistics JSC (deal 6a1fa72923c1351fcc63b510)",
+      "edition": "customize",
+      "billingCycle": "annual",
+      "currency": "USD",
+      "basePrice": {
+        "value": 4800000,
+        "_id": "6a574064c728a60f28ed67b2"
+      },
+      "annualDiscountPercent": null,
+      "seatTiers": [
+        {
+          "tierLabel": "1-80 seats",
+          "minSeats": 1,
+          "maxSeats": 80,
+          "pricePerSeatPerCycle": {
+            "value": 60000,
+            "_id": "6a574064c728a60f28ed67b4"
+          },
+          "discountPercent": 0,
+          "_id": "6a574064c728a60f28ed67b3"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 14,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a574064c728a60f28ed67b5"
+        },
+        {
+          "value": "PAYROLL",
+          "label": "Payroll",
+          "group": "Finance",
+          "_id": "6a574064c728a60f28ed67b6"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "draft",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "partner:664f7a1b2c3d4e5f60718293",
+      "updatedBy": "partner:664f7a1b2c3d4e5f60718293",
+      "createdAt": "2026-07-15T08:10:12.691Z",
+      "updatedAt": "2026-07-15T08:10:12.691Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a573d45c728a60f28ed6728",
+      "planId": "enterprise-wed-v1",
+      "displayName": "enterprise-wed-v1",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a573d45c728a60f28ed6729"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 15,
+          "discountPercent": 5
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 100 seats",
+          "minSeats": 1,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a573d45c728a60f28ed672b"
+          },
+          "discountPercent": 0,
+          "_id": "6a573d45c728a60f28ed672a"
+        },
+        {
+          "tierLabel": "101 - 200 seats",
+          "minSeats": 101,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a573d45c728a60f28ed672d"
+          },
+          "discountPercent": 0,
+          "_id": "6a573d45c728a60f28ed672c"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 30,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a573d45c728a60f28ed672e"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a573d45c728a60f28ed672f"
+        },
+        {
+          "value": "SOCIAL_PULSE",
+          "label": "Social Pulse",
+          "group": "Core HR",
+          "_id": "6a573d45c728a60f28ed6730"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "published",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-15T07:56:53.369Z",
+      "updatedAt": "2026-07-15T07:58:23.792Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T07:58:23.782Z",
+      "versionChangeSummary": "test publish dup plan"
+    },
+    {
+      "_id": "6a57353fc728a60f28ed646e",
+      "planId": "pro-web-dup",
+      "displayName": "pro-web-dup",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a57353fc728a60f28ed646f"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 15,
+          "discountPercent": 5
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 100 seats",
+          "minSeats": 1,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a57353fc728a60f28ed6471"
+          },
+          "discountPercent": 0,
+          "_id": "6a57353fc728a60f28ed6470"
+        },
+        {
+          "tierLabel": "101 - 200 seats",
+          "minSeats": 101,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 19,
+            "_id": "6a57353fc728a60f28ed6473"
+          },
+          "discountPercent": 5,
+          "_id": "6a57353fc728a60f28ed6472"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 30,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a57353fc728a60f28ed6474"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a57353fc728a60f28ed6475"
+        },
+        {
+          "value": "SOCIAL_PULSE",
+          "label": "Social Pulse",
+          "group": "Core HR",
+          "_id": "6a57353fc728a60f28ed6476"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-15T07:22:39.357Z",
+      "updatedAt": "2026-07-15T07:37:07.661Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T07:25:07.823Z",
+      "versionChangeSummary": "test duplicate plan - pro edition",
+      "archivedAt": "2026-07-15T07:37:07.653Z"
+    },
+    {
+      "_id": "6a547d15976f4a0dcbe7f9de",
+      "planId": "pro-mday",
+      "displayName": "pro-mday",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 10,
+        "_id": "6a55d6f2008d9edc2009e035"
+      },
+      "localePricing": {},
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 50 seats",
+          "minSeats": 1,
+          "maxSeats": 50,
+          "pricePerSeatPerCycle": {
+            "value": 10,
+            "_id": "6a55d6f2008d9edc2009e037"
+          },
+          "discountPercent": 0,
+          "_id": "6a55d6f2008d9edc2009e036"
+        },
+        {
+          "tierLabel": "51 - 150 seats",
+          "minSeats": 51,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 9.5,
+            "_id": "6a55d6f2008d9edc2009e039"
+          },
+          "discountPercent": 5,
+          "_id": "6a55d6f2008d9edc2009e038"
+        },
+        {
+          "tierLabel": "151 - 300 seats",
+          "minSeats": 151,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 9,
+            "_id": "6a55d6f2008d9edc2009e03b"
+          },
+          "discountPercent": 10,
+          "_id": "6a55d6f2008d9edc2009e03a"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 15,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a547d15976f4a0dcbe7f9e6"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a547d15976f4a0dcbe7f9e7"
+        },
+        {
+          "value": "SOCIAL_PULSE",
+          "label": "Social Pulse",
+          "group": "Core HR",
+          "_id": "6a547d15976f4a0dcbe7f9e8"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "blazey-tokens",
+          "displayName": "blazey-tokens",
+          "unitName": "tokens",
+          "includedQuantity": 5,
+          "pricePerUnit": {
+            "value": 5,
+            "_id": "6a55d6f2008d9edc2009e040"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55d6f2008d9edc2009e03f"
+        }
+      ],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-13T05:52:21.030Z",
+      "updatedAt": "2026-07-15T07:36:58.811Z",
+      "__v": 0,
+      "publishedAt": "2026-07-15T03:46:51.460Z",
+      "versionChangeSummary": "change plan for pro",
+      "archivedAt": "2026-07-15T07:36:58.796Z"
+    },
+    {
+      "_id": "6a45c2a1c2ae2cdbd9660c99",
+      "planId": "pro-v1",
+      "displayName": "pro-v1 publshed",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a44c5f312fc083ec9c390a9"
+      },
+      "localePricing": {
+        "vietnam": {
+          "price": 18,
+          "discountPercent": 10
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 100 seats",
+          "minSeats": 1,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a44c5f312fc083ec9c390ab"
+          },
+          "discountPercent": 0,
+          "_id": "6a44c5f312fc083ec9c390aa"
+        },
+        {
+          "tierLabel": "101 - 300 seats",
+          "minSeats": 101,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 18,
+            "_id": "6a44c5f312fc083ec9c390ad"
+          },
+          "discountPercent": 10,
+          "_id": "6a44c5f312fc083ec9c390ac"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 14,
+      "includedModules": [
+        "api"
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 3,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-02T01:45:05.354Z",
+      "updatedAt": "2026-07-15T07:36:51.674Z",
+      "__v": 0,
+      "publishedAt": "2026-07-02T03:42:17.142Z",
+      "versionChangeSummary": "ok",
+      "archivedAt": "2026-07-15T07:36:51.668Z"
+    },
+    {
+      "_id": "6a5067081d3a09a5eccd71d5",
+      "planId": "pro-new-v2",
+      "displayName": "pro-new-v2",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 11,
+        "_id": "6a5067081d3a09a5eccd71d6"
+      },
+      "localePricing": {
+        "AD": {
+          "price": 9,
+          "discountPercent": 10
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 300 seats",
+          "minSeats": 1,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 11,
+            "_id": "6a5067081d3a09a5eccd71d8"
+          },
+          "discountPercent": 0,
+          "_id": "6a5067081d3a09a5eccd71d7"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 15,
+      "includedModules": [
+        {
+          "value": "RECRUITMENT",
+          "label": "Recruitment",
+          "group": "Core HR",
+          "_id": "6a5067081d3a09a5eccd71d9"
+        },
+        {
+          "value": "ONBOARDING",
+          "label": "Onboarding",
+          "group": "Core HR",
+          "_id": "6a5067081d3a09a5eccd71da"
+        },
+        {
+          "value": "OFFBOARDING",
+          "label": "Offboarding",
+          "group": "Core HR",
+          "_id": "6a5067081d3a09a5eccd71db"
+        },
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a5067081d3a09a5eccd71dc"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-10T03:29:12.105Z",
+      "updatedAt": "2026-07-15T07:36:43.215Z",
+      "__v": 0,
+      "publishedAt": "2026-07-10T03:46:03.217Z",
+      "versionChangeSummary": "publish v1",
+      "archivedAt": "2026-07-15T07:36:43.199Z"
+    },
+    {
+      "_id": "6a55ae99008d9edc2009dcd0",
+      "planId": "enterprise-n",
+      "displayName": "enterprise-n",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 100,
+        "_id": "6a55ae99008d9edc2009dcd1"
+      },
+      "annualDiscountPercent": 0,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 200 seats",
+          "minSeats": 1,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 100,
+            "_id": "6a55ae99008d9edc2009dcd3"
+          },
+          "discountPercent": 0,
+          "_id": "6a55ae99008d9edc2009dcd2"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 12,
+      "includedModules": [
+        {
+          "value": "EMPLOYEE",
+          "label": "Employee Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd4"
+        },
+        {
+          "value": "TIMEOFF",
+          "label": "Time Off",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd5"
+        },
+        {
+          "value": "TIME",
+          "label": "Time Management",
+          "group": "Core HR",
+          "_id": "6a55ae99008d9edc2009dcd6"
+        }
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "automation-runs",
+          "displayName": "automation-runs",
+          "unitName": "tokens",
+          "includedQuantity": 1,
+          "pricePerUnit": {
+            "value": 10,
+            "_id": "6a55ae99008d9edc2009dcd8"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6a55ae99008d9edc2009dcd7"
+        }
+      ],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-14T03:35:53.925Z",
+      "updatedAt": "2026-07-15T07:28:25.583Z",
+      "__v": 0,
+      "publishedAt": "2026-07-14T03:36:47.565Z",
+      "versionChangeSummary": "Publish test version",
+      "archivedAt": "2026-07-15T07:28:25.573Z"
+    },
+    {
+      "_id": "6a4f3cf235fa9379fe49b3c8",
+      "planId": "pro-v21",
+      "displayName": "pro-v21",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 10,
+        "_id": "6a4f3cf235fa9379fe49b3c9"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 12,
+          "discountPercent": 12
+        },
+        "US": {
+          "price": 12,
+          "discountPercent": 23
+        },
+        "IN": {
+          "price": 12,
+          "discountPercent": 13
+        }
+      },
+      "annualDiscountPercent": 12,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 300 seats",
+          "minSeats": 1,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 10,
+            "_id": "6a4f3cf235fa9379fe49b3cb"
+          },
+          "discountPercent": 0,
+          "_id": "6a4f3cf235fa9379fe49b3ca"
+        }
+      ],
+      "overageRatePercent": null,
+      "trialDays": 14,
+      "includedModules": [
+        "api",
+        "data_security"
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-09T06:17:22.780Z",
+      "updatedAt": "2026-07-14T03:48:16.459Z",
+      "__v": 0,
+      "publishedAt": "2026-07-09T06:24:44.315Z",
+      "versionChangeSummary": "Publish",
+      "archivedAt": "2026-07-14T03:48:16.453Z"
+    },
+    {
+      "_id": "6a4b6d5822ee85caafeebb97",
+      "planId": "starter-n",
+      "displayName": "starter-n",
+      "edition": "starter",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 100,
+        "_id": "6a4b6d5822ee85caafeebb98"
+      },
+      "localePricing": {
+        "VN": {
+          "price": 80,
+          "discountPercent": 5
+        },
+        "US": {
+          "price": 110,
+          "discountPercent": 5
+        }
+      },
+      "annualDiscountPercent": 5,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 50 seats",
+          "minSeats": 1,
+          "maxSeats": 50,
+          "pricePerSeatPerCycle": {
+            "value": 100,
+            "_id": "6a4b6d5822ee85caafeebb9a"
+          },
+          "discountPercent": 0,
+          "_id": "6a4b6d5822ee85caafeebb99"
+        },
+        {
+          "tierLabel": "51 - 150 seats",
+          "minSeats": 51,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 95,
+            "_id": "6a4b6d5822ee85caafeebb9c"
+          },
+          "discountPercent": 5,
+          "_id": "6a4b6d5822ee85caafeebb9b"
+        },
+        {
+          "tierLabel": "151 - 200 seats",
+          "minSeats": 151,
+          "maxSeats": 200,
+          "pricePerSeatPerCycle": {
+            "value": 90,
+            "_id": "6a4b6d5822ee85caafeebb9e"
+          },
+          "discountPercent": 10,
+          "_id": "6a4b6d5822ee85caafeebb9d"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 14,
+      "includedModules": [
+        "api"
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-06T08:54:48.177Z",
+      "updatedAt": "2026-07-09T06:48:43.845Z",
+      "__v": 0,
+      "publishedAt": "2026-07-09T06:27:21.848Z",
+      "versionChangeSummary": "test",
+      "archivedAt": "2026-07-09T06:48:43.838Z"
+    },
+    {
+      "_id": "6a45c281c2ae2cdbd9660c3f",
+      "planId": "pro-v1",
+      "displayName": "pro-v1",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a44c5f312fc083ec9c390a9"
+      },
+      "localePricing": {
+        "vietnam": {
+          "price": 18,
+          "discountPercent": 10
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 100 seats",
+          "minSeats": 1,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a44c5f312fc083ec9c390ab"
+          },
+          "discountPercent": 0,
+          "_id": "6a44c5f312fc083ec9c390aa"
+        },
+        {
+          "tierLabel": "101 - 300 seats",
+          "minSeats": 101,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 18,
+            "_id": "6a44c5f312fc083ec9c390ad"
+          },
+          "discountPercent": 10,
+          "_id": "6a44c5f312fc083ec9c390ac"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 14,
+      "includedModules": [
+        "api"
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 2,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-02T01:44:33.564Z",
+      "updatedAt": "2026-07-02T03:41:42.228Z",
+      "__v": 0,
+      "publishedAt": "2026-07-02T01:44:55.200Z",
+      "versionChangeSummary": "ver 2",
+      "archivedAt": "2026-07-02T03:41:42.222Z"
+    },
+    {
+      "_id": "6a44c5f312fc083ec9c390a8",
+      "planId": "pro-v1",
+      "displayName": "pro-v1",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6a44c5f312fc083ec9c390a9"
+      },
+      "localePricing": {
+        "vietnam": {
+          "price": 18,
+          "discountPercent": 10
+        }
+      },
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 100 seats",
+          "minSeats": 1,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6a44c5f312fc083ec9c390ab"
+          },
+          "discountPercent": 0,
+          "_id": "6a44c5f312fc083ec9c390aa"
+        },
+        {
+          "tierLabel": "101 - 300 seats",
+          "minSeats": 101,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 18,
+            "_id": "6a44c5f312fc083ec9c390ad"
+          },
+          "discountPercent": 10,
+          "_id": "6a44c5f312fc083ec9c390ac"
+        }
+      ],
+      "overageRatePercent": 20,
+      "trialDays": 14,
+      "includedModules": [
+        "api"
+      ],
+      "connectorIds": [],
+      "addOns": [],
+      "meters": [],
+      "status": "archived",
+      "planVersion": 1,
+      "tenantCount": 0,
+      "schemaVersion": 1,
+      "createdBy": "Super Admin 1",
+      "updatedBy": "Super Admin 1",
+      "createdAt": "2026-07-01T07:46:59.893Z",
+      "updatedAt": "2026-07-02T01:44:55.206Z",
+      "__v": 0,
+      "publishedAt": "2026-07-02T01:44:23.773Z",
+      "versionChangeSummary": "ver 1",
+      "archivedAt": "2026-07-02T01:44:55.200Z"
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false,
+  "total": 20,
+  "totalAll": {
+    "archived": 12,
+    "published": 5,
+    "draft": 3
+  },
+  "message": "Get billing plans successfully"
+}

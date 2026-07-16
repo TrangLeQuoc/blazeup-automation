@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a589239974898259eb0f838",
+    "email": "qa.auto+rbowen@mailinator.com",
+    "firstName": "Debra",
+    "lastName": "Rush",
+    "role": "admin"
+  }
+}

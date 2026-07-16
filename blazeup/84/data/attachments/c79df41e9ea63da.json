@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58927604e6a6bbc86f34d5",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "fernandez-hammond.com",
+    "prospectName": "QA-AUTO Brown, Moore and Gomez Opportunity",
+    "prospectEmail": "qa.auto+nicole87@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 174420749,
+    "currency": "USD",
+    "numberOfEmployee": 4644,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Try item worker."
+  }
+}

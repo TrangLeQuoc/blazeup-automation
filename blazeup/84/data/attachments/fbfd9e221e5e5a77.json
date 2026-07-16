@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58927b974898259eb0fb29",
+    "partnerName": "QA-AUTO Rivera LLC",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Waters-Scott Prospect",
+    "prospectEmail": "qa.auto+fjones@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 126095772,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Life player animal pick local especially stop.",
+    "tenantDomain": "smith-brady.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1635,
+    "protectionExpiresAt": "2026-09-14T08:12:46.016Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58927e04e6a6bbc86f356b",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:12:46.025Z",
+    "updatedAt": "2026-07-16T08:12:46.025Z"
+  },
+  "message": "Deal registered"
+}

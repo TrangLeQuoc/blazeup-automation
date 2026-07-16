@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58927804e6a6bbc86f352d",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Brown-Johnson",
+    "code": "PAR-569453",
+    "email": "qa.auto+johnsonjoyce@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.herrera.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:40.587Z",
+    "updatedAt": "2026-07-16T08:12:40.703Z",
+    "approvedAt": "2026-07-16T08:12:40.697Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

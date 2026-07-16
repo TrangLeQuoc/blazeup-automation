@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "000000000000000000000000",
+    "label": "QA-AUTO Moore Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Enough bring analysis join."
+  }
+}

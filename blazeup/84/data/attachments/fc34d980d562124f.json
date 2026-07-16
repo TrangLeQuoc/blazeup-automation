@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Bell, Pennington and Elliott",
+    "code": "PAR-984211",
+    "email": "qa.auto+bridget98@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.love.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58924004e6a6bbc86f322e",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:44.020Z",
+    "updatedAt": "2026-07-16T08:11:44.020Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "actorType must be one of the following values: sa-staff, impersonation, system, tenant-user, partner-user"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:42.542Z",
+  "path": "/sa-partners-api/v1/sa/audit-logs"
+}

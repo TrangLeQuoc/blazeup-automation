@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a589264974898259eb0fa6a",
+    "partnerName": "QA-AUTO Stanton, Prince and Thomas",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Moore Ltd Prospect",
+    "prospectEmail": "qa.auto+wmitchell@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 310668083,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Recent carry bad marriage.",
+    "tenantDomain": "williamson.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1105,
+    "protectionExpiresAt": "2026-09-14T08:12:22.730Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a589266974898259eb0fa86",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:12:22.737Z",
+    "updatedAt": "2026-07-16T08:12:22.737Z"
+  },
+  "message": "Deal registered"
+}

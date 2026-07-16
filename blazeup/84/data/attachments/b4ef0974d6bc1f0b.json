@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Jones, Alexander and Mclean",
+    "email": "qa.auto+novaksteven@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.thompson-dawson.org/"
+  }
+}

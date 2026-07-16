@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "severity must be one of the following values: info, warning, critical"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:43.030Z",
+  "path": "/sa-partners-api/v1/sa/audit-logs/export"
+}

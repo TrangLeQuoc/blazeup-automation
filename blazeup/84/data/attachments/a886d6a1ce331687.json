@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Cochran, Stewart and Obrien",
+    "code": "PAR-102615",
+    "email": "qa.auto+christybush@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://garcia.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589245974898259eb0f937",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:49.255Z",
+    "updatedAt": "2026-07-16T08:11:49.255Z"
+  },
+  "message": "Partner created successfully"
+}

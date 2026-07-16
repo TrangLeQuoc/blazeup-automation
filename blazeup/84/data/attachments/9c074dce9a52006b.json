@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a589229974898259eb0f648",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "nguyen.com",
+    "prospectName": "QA-AUTO Berger-Olson Opportunity",
+    "prospectEmail": "qa.auto+monica17@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 249306232,
+    "currency": "USD",
+    "numberOfEmployee": 4728,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Operation operation point material reach."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58921604e6a6bbc86f2c3a",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Wise Ltd",
+    "code": "PAR-634338",
+    "email": "qa.auto+cameron67@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://gallegos.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "suspended",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:02.002Z",
+    "updatedAt": "2026-07-16T08:11:02.095Z",
+    "internalNotes": "QA-AUTO decline reason for PAR-634338"
+  },
+  "message": "Partner deactivated successfully"
+}

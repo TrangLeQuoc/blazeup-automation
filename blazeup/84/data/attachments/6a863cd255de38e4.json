@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a58921f974898259eb0f56e",
+    "partnerId": "6a58921f04e6a6bbc86f2d95",
+    "email": "qa.auto+nhayes@mailinator.com",
+    "firstName": "Angela",
+    "lastName": "Cardenas",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

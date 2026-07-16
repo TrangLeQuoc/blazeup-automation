@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a58924e04e6a6bbc86f332d",
+    "partnerId": "6a58924d04e6a6bbc86f3319",
+    "email": "qa.auto+cheryldalton@mailinator.com",
+    "firstName": "Matthew",
+    "lastName": "Byrd",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

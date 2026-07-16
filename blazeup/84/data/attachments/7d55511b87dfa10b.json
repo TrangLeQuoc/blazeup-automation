@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922b04e6a6bbc86f2f94",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "shannon-williams.com",
+    "prospectName": "QA-AUTO Flores, Atkins and Weaver Prospect",
+    "prospectEmail": "qa.auto+steven04@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 282246081,
+    "currency": "USD",
+    "numberOfEmployee": 4638,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Seek letter race rock."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Mcgrath, Wood and Valencia",
+    "code": "PAR-204482",
+    "email": "qa.auto+jenniferwalsh@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://bradford.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922904e6a6bbc86f2f12",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:21.868Z",
+    "updatedAt": "2026-07-16T08:11:21.868Z"
+  },
+  "message": "Partner created successfully"
+}

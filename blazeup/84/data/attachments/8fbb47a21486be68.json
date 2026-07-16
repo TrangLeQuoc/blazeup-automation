@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Collins, Ferguson and Ramirez",
+    "email": "qa.auto+lnash@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://ballard.info/"
+  }
+}

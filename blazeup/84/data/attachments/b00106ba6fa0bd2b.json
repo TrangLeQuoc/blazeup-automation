@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a589234974898259eb0f7da",
+    "partnerName": "QA-AUTO Lewis, Johnson and Conner",
+    "label": "QA-AUTO Baker Territory",
+    "countries": [
+      "IS"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "exclusive",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Piece grow whether not friend relationship magazine.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a58923404e6a6bbc86f3092",
+    "createdAt": "2026-07-16T08:11:32.747Z",
+    "updatedAt": "2026-07-16T08:11:32.747Z"
+  },
+  "message": "Territory assigned successfully"
+}

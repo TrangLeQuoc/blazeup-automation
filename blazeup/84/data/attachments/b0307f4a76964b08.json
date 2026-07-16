@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58922c974898259eb0f6a5",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922c04e6a6bbc86f2f9f",
+    "partnerName": "QA-AUTO Parker, Maldonado and Brock",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Olsen LLC Opportunity",
+    "prospectEmail": "qa.auto+robinsonmark@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 210589091,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO North civil manage trouble.",
+    "tenantDomain": "gamble-harrison.biz",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1240,
+    "protectionExpiresAt": "2026-09-14T08:11:24.831Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:24.846Z",
+    "updatedAt": "2026-07-16T08:11:24.958Z",
+    "reviewedAt": "2026-07-16T08:11:24.954Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal approved successfully"
+}

@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Partner cannot be approved from status active",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:07.645Z",
+  "path": "/sa-partners-api/v1/sa/partners/6a58921b04e6a6bbc86f2cc3/approve"
+}

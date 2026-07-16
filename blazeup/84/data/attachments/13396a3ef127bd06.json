@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a58921f04e6a6bbc86f2d95",
+    "email": "qa.auto+nhayes@mailinator.com",
+    "firstName": "Angela",
+    "lastName": "Cardenas",
+    "role": "admin"
+  }
+}

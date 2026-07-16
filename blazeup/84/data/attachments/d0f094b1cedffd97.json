@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58926d04e6a6bbc86f346a",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Sanchez Inc",
+    "code": "PAR-026094",
+    "email": "qa.auto+mjones@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://grant.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:29.664Z",
+    "updatedAt": "2026-07-16T08:12:29.774Z",
+    "approvedAt": "2026-07-16T08:12:29.770Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Territory 6a589236974898259eb0f80f not found",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:34.358Z",
+  "path": "/sa-partners-api/v1/sa/territories/6a589236974898259eb0f80f"
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Moore, Smith and Bailey",
+    "code": "PAR-061330",
+    "email": "qa.auto+williamsbeverly@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.hodges.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58924504e6a6bbc86f328f",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:49.992Z",
+    "updatedAt": "2026-07-16T08:11:49.992Z"
+  },
+  "message": "Partner created successfully"
+}

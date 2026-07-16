@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "status must be one of the following values: registered, approved, in_progress, won, lost, expired, rejected"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:12:48.826Z",
+  "path": "/sa-partners-api/v1/partner/portal/deals"
+}

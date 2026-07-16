@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a589232974898259eb0f780",
+    "label": "QA-AUTO Robbins Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Structure true attack line fire team education."
+  }
+}

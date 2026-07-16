@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lawson-Harris",
+    "code": "PAR-983553",
+    "email": "qa.auto+beverly53@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://freeman.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922f04e6a6bbc86f2fe9",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:27.482Z",
+    "updatedAt": "2026-07-16T08:11:27.482Z"
+  },
+  "message": "Partner created successfully"
+}

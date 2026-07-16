@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58923504e6a6bbc86f30c7",
+    "partnerName": "QA-AUTO Warren, Butler and Mccarthy",
+    "label": "QA-AUTO Meyers Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Way let bed investment civil.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a589236974898259eb0f80f",
+    "createdAt": "2026-07-16T08:11:34.008Z",
+    "updatedAt": "2026-07-16T08:11:34.008Z"
+  },
+  "message": "Territory assigned successfully"
+}

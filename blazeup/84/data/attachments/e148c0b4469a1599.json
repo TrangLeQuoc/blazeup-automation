@@ -1,0 +1,1062 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "userId": "6a589242974898259eb0f902",
+      "partnerId": "6a589242974898259eb0f8f7",
+      "email": "qa.auto+achang@mailinator.com",
+      "firstName": "Stephanie",
+      "lastName": "Young",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a589241974898259eb0f8e6",
+      "partnerId": "6a589241974898259eb0f8dc",
+      "email": "qa.auto+todd84@mailinator.com",
+      "firstName": "Troy",
+      "lastName": "Miranda",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a589240974898259eb0f8c0",
+      "partnerId": "6a58924004e6a6bbc86f322e",
+      "email": "qa.auto+bellkaren@mailinator.com",
+      "firstName": "Rebekah",
+      "lastName": "Hernandez",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58923a04e6a6bbc86f3160",
+      "partnerId": "6a589239974898259eb0f838",
+      "email": "qa.auto+rbowen@mailinator.com",
+      "firstName": "Debra",
+      "lastName": "Rush",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a589238974898259eb0f827",
+      "partnerId": "6a58923704e6a6bbc86f3129",
+      "email": "qa.auto+ryansoto@mailinator.com",
+      "firstName": "Maurice",
+      "lastName": "Garner",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58923704e6a6bbc86f30f6",
+      "partnerId": "6a58923604e6a6bbc86f30ec",
+      "email": "qa.auto+waterssandra@mailinator.com",
+      "firstName": "Gary",
+      "lastName": "Ball",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58921f974898259eb0f56e",
+      "partnerId": "6a58921f04e6a6bbc86f2d95",
+      "email": "qa.auto+nhayes@mailinator.com",
+      "firstName": "Angela",
+      "lastName": "Cardenas",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58921e974898259eb0f553",
+      "partnerId": "6a58921d04e6a6bbc86f2d5f",
+      "email": "qa.auto+michael23@mailinator.com",
+      "firstName": "Samantha",
+      "lastName": "Sims",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58921904e6a6bbc86f2c8d",
+      "partnerId": "6a589218974898259eb0f516",
+      "email": "qa.auto+monicaalexander@mailinator.com",
+      "firstName": "Matthew",
+      "lastName": "Molina",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585d275af9d378a9a9214e",
+      "partnerId": "6a585d265af9d378a9a9213a",
+      "email": "qa.auto+vclark@mailinator.com",
+      "firstName": "Adam",
+      "lastName": "Bennett",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:25:13.889Z"
+    },
+    {
+      "userId": "6a585d2104e6a6bbc86f119f",
+      "partnerId": "6a585d1f5af9d378a9a92117",
+      "email": "qa.auto+tonya14@mailinator.com",
+      "firstName": "Brooke",
+      "lastName": "Fisher",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:25:07.569Z"
+    },
+    {
+      "userId": "6a585d1a04e6a6bbc86f117c",
+      "partnerId": "6a585d1904e6a6bbc86f1168",
+      "email": "qa.auto+codygarcia@mailinator.com",
+      "firstName": "Penny",
+      "lastName": "Perry",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:25:00.521Z"
+    },
+    {
+      "userId": "6a585d0a5af9d378a9a920ac",
+      "partnerId": "6a585d085af9d378a9a92097",
+      "email": "qa.auto+christine37@mailinator.com",
+      "firstName": "Cassandra",
+      "lastName": "Sanders",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:49.108Z"
+    },
+    {
+      "userId": "6a585d0504e6a6bbc86f10f5",
+      "partnerId": "6a585d0304e6a6bbc86f10e0",
+      "email": "qa.auto+quinnsteven@mailinator.com",
+      "firstName": "Caitlin",
+      "lastName": "Cruz",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:38.975Z"
+    },
+    {
+      "userId": "6a585cfd5af9d378a9a92062",
+      "partnerId": "6a585cfc5af9d378a9a9204e",
+      "email": "qa.auto+ericacollins@mailinator.com",
+      "firstName": "Debra",
+      "lastName": "Wilson",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:31.833Z"
+    },
+    {
+      "userId": "6a585cf804e6a6bbc86f10be",
+      "partnerId": "6a585cf75af9d378a9a92020",
+      "email": "qa.auto+wmartinez@mailinator.com",
+      "firstName": "Brian",
+      "lastName": "Tapia",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:26.490Z"
+    },
+    {
+      "userId": "6a585cf35af9d378a9a9200d",
+      "partnerId": "6a585cf25af9d378a9a91ff9",
+      "email": "qa.auto+lindapham@mailinator.com",
+      "firstName": "Brooke",
+      "lastName": "Leach",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:21.736Z"
+    },
+    {
+      "userId": "6a585cec5af9d378a9a91fe0",
+      "partnerId": "6a585cea5af9d378a9a91fcb",
+      "email": "qa.auto+christopherwilliams@mailinator.com",
+      "firstName": "Justin",
+      "lastName": "Patel",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:13.966Z"
+    },
+    {
+      "userId": "6a585ce65af9d378a9a91fbf",
+      "partnerId": "6a585ce504e6a6bbc86f107b",
+      "email": "qa.auto+brandon97@mailinator.com",
+      "firstName": "John",
+      "lastName": "Young",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:08.812Z"
+    },
+    {
+      "userId": "6a585ce05af9d378a9a91f9c",
+      "partnerId": "6a585cdf04e6a6bbc86f1058",
+      "email": "qa.auto+yturner@mailinator.com",
+      "firstName": "Gloria",
+      "lastName": "Hernandez",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:24:02.656Z"
+    },
+    {
+      "userId": "6a585cdb04e6a6bbc86f1034",
+      "partnerId": "6a585cda04e6a6bbc86f101f",
+      "email": "qa.auto+derek37@mailinator.com",
+      "firstName": "Angela",
+      "lastName": "Frye",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:57.705Z"
+    },
+    {
+      "userId": "6a585cd504e6a6bbc86f0fe6",
+      "partnerId": "6a585cd304e6a6bbc86f0fd1",
+      "email": "qa.auto+linda07@mailinator.com",
+      "firstName": "Pamela",
+      "lastName": "Whitehead",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:51.445Z"
+    },
+    {
+      "userId": "6a585cd004e6a6bbc86f0fad",
+      "partnerId": "6a585cce04e6a6bbc86f0f99",
+      "email": "qa.auto+towens@mailinator.com",
+      "firstName": "Ross",
+      "lastName": "Preston",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:46.118Z"
+    },
+    {
+      "userId": "6a585cc904e6a6bbc86f0f67",
+      "partnerId": "6a585cc804e6a6bbc86f0f52",
+      "email": "qa.auto+farmeramanda@mailinator.com",
+      "firstName": "Sara",
+      "lastName": "Alexander",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:40.152Z"
+    },
+    {
+      "userId": "6a585cc304e6a6bbc86f0f27",
+      "partnerId": "6a585cc204e6a6bbc86f0f12",
+      "email": "qa.auto+longstephanie@mailinator.com",
+      "firstName": "Joseph",
+      "lastName": "Gonzalez",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:33.452Z"
+    },
+    {
+      "userId": "6a585cbe04e6a6bbc86f0eee",
+      "partnerId": "6a585cbd04e6a6bbc86f0ed9",
+      "email": "qa.auto+ellisondawn@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Williamson",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:28.389Z"
+    },
+    {
+      "userId": "6a585cb804e6a6bbc86f0eb3",
+      "partnerId": "6a585cb704e6a6bbc86f0e9e",
+      "email": "qa.auto+rkent@mailinator.com",
+      "firstName": "Meghan",
+      "lastName": "Haney",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:23:22.819Z"
+    },
+    {
+      "userId": "6a585cb504e6a6bbc86f0e76",
+      "partnerId": "6a585cb304e6a6bbc86f0e61",
+      "email": "qa.auto+jessica17@mailinator.com",
+      "firstName": "Kathryn",
+      "lastName": "Ward",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a585cb404e6a6bbc86f0e6b",
+      "partnerId": "6a585cb304e6a6bbc86f0e61",
+      "email": "qa.auto+jessica17@mailinator.com",
+      "firstName": "Kathryn",
+      "lastName": "Ward",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a585ca904e6a6bbc86f0dc1",
+      "partnerId": "6a585ca804e6a6bbc86f0db6",
+      "email": "qa.auto+sjones@mailinator.com",
+      "firstName": "Ashley",
+      "lastName": "Murphy",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585ca604e6a6bbc86f0d9a",
+      "partnerId": "6a585ca504e6a6bbc86f0d8f",
+      "email": "qa.auto+thomasbrenda@mailinator.com",
+      "firstName": "Julie",
+      "lastName": "Cortez",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a585ca404e6a6bbc86f0d73",
+      "partnerId": "6a585ca304e6a6bbc86f0d68",
+      "email": "qa.auto+efox@mailinator.com",
+      "firstName": "William",
+      "lastName": "Walsh",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585c8c04e6a6bbc86f0c18",
+      "partnerId": "6a585c8b04e6a6bbc86f0c0d",
+      "email": "qa.auto+heather03@mailinator.com",
+      "firstName": "Scott",
+      "lastName": "Garcia",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585c8804e6a6bbc86f0bcf",
+      "partnerId": "6a585c8704e6a6bbc86f0bc4",
+      "email": "qa.auto+albert09@mailinator.com",
+      "firstName": "Alexander",
+      "lastName": "Mckinney",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585c8504e6a6bbc86f0b90",
+      "partnerId": "6a585c8404e6a6bbc86f0b86",
+      "email": "qa.auto+sydneyanthony@mailinator.com",
+      "firstName": "Daniel",
+      "lastName": "Andersen",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585c2704e6a6bbc86f056a",
+      "partnerId": "6a585c2604e6a6bbc86f0560",
+      "email": "qa.auto+ybrown@mailinator.com",
+      "firstName": "Claire",
+      "lastName": "Berry",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585c2204e6a6bbc86f0518",
+      "partnerId": "6a585c2004e6a6bbc86f050e",
+      "email": "qa.auto+rachelcannon@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Alvarez",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585c1104e6a6bbc86f0405",
+      "partnerId": "6a585c1004e6a6bbc86f03fb",
+      "email": "qa.auto+tmartin@mailinator.com",
+      "firstName": "David",
+      "lastName": "Grimes",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a585ba904e6a6bbc86f0298",
+      "partnerId": "6a585ba704e6a6bbc86f0283",
+      "email": "qa.auto+saraclark@mailinator.com",
+      "firstName": "Benjamin",
+      "lastName": "Foster",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:18:50.884Z"
+    },
+    {
+      "userId": "6a585ba104e6a6bbc86f025d",
+      "partnerId": "6a585b9f974898259eb0da4d",
+      "email": "qa.auto+lorimiller@mailinator.com",
+      "firstName": "Eddie",
+      "lastName": "Wells",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:18:43.285Z"
+    },
+    {
+      "userId": "6a585b9404e6a6bbc86f0202",
+      "partnerId": "6a585b9204e6a6bbc86f01ed",
+      "email": "qa.auto+garcianicole@mailinator.com",
+      "firstName": "Andrew",
+      "lastName": "Hunter",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:18:30.430Z"
+    },
+    {
+      "userId": "6a585b8e04e6a6bbc86f01d5",
+      "partnerId": "6a585b8d04e6a6bbc86f01c0",
+      "email": "qa.auto+erinmartinez@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Jenkins",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:18:24.926Z"
+    },
+    {
+      "userId": "6a585b8704e6a6bbc86f01a8",
+      "partnerId": "6a585b8504e6a6bbc86f0194",
+      "email": "qa.auto+halltracy@mailinator.com",
+      "firstName": "Laura",
+      "lastName": "Moody",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:18:18.570Z"
+    },
+    {
+      "userId": "6a585b8304e6a6bbc86f0177",
+      "partnerId": "6a585b8204e6a6bbc86f0162",
+      "email": "qa.auto+dfuentes@mailinator.com",
+      "firstName": "Eric",
+      "lastName": "Andrade",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a585b8304e6a6bbc86f016c",
+      "partnerId": "6a585b8204e6a6bbc86f0162",
+      "email": "qa.auto+dfuentes@mailinator.com",
+      "firstName": "Eric",
+      "lastName": "Andrade",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a585b4604e6a6bbc86efee7",
+      "partnerId": "6a585b4504e6a6bbc86efedc",
+      "email": "qa.auto+hsmith@mailinator.com",
+      "firstName": "Eric",
+      "lastName": "Reed",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5859d904e6a6bbc86efdcf",
+      "partnerId": "6a5859d804e6a6bbc86efdbb",
+      "email": "qa.auto+aanderson@mailinator.com",
+      "firstName": "Nicole",
+      "lastName": "White",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T04:11:07.747Z"
+    },
+    {
+      "userId": "6a58545f04e6a6bbc86efaa1",
+      "partnerId": "6a58545d04e6a6bbc86efa8d",
+      "email": "qa.auto+dnorton@mailinator.com",
+      "firstName": "Steve",
+      "lastName": "Sloan",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:47:45.428Z"
+    },
+    {
+      "userId": "6a58545704e6a6bbc86efa69",
+      "partnerId": "6a5854555af9d378a9a918ef",
+      "email": "qa.auto+randall75@mailinator.com",
+      "firstName": "Stacey",
+      "lastName": "Gonzalez",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:47:37.434Z"
+    },
+    {
+      "userId": "6a58544f04e6a6bbc86efa47",
+      "partnerId": "6a58544d04e6a6bbc86efa33",
+      "email": "qa.auto+jeffrey72@mailinator.com",
+      "firstName": "Alexandria",
+      "lastName": "Michael",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:47:30.355Z"
+    },
+    {
+      "userId": "6a58543e04e6a6bbc86ef9bc",
+      "partnerId": "6a58543c04e6a6bbc86ef9a7",
+      "email": "qa.auto+qhansen@mailinator.com",
+      "firstName": "Frank",
+      "lastName": "Johnson",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:47:17.996Z"
+    },
+    {
+      "userId": "6a5854385af9d378a9a918c8",
+      "partnerId": "6a5854365af9d378a9a918b3",
+      "email": "qa.auto+fnguyen@mailinator.com",
+      "firstName": "Roberto",
+      "lastName": "Andrews",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:47:06.237Z"
+    },
+    {
+      "userId": "6a58542f5af9d378a9a9188d",
+      "partnerId": "6a58542e5af9d378a9a91878",
+      "email": "qa.auto+xboyle@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Flores",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:57.628Z"
+    },
+    {
+      "userId": "6a5854285af9d378a9a91860",
+      "partnerId": "6a58542704e6a6bbc86ef963",
+      "email": "qa.auto+lwoods@mailinator.com",
+      "firstName": "Joseph",
+      "lastName": "Knight",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:50.467Z"
+    },
+    {
+      "userId": "6a58541f5af9d378a9a91847",
+      "partnerId": "6a58541e04e6a6bbc86ef946",
+      "email": "qa.auto+kfischer@mailinator.com",
+      "firstName": "Terri",
+      "lastName": "Daugherty",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:42.081Z"
+    },
+    {
+      "userId": "6a5854185af9d378a9a91825",
+      "partnerId": "6a5854165af9d378a9a91810",
+      "email": "qa.auto+jennifer24@mailinator.com",
+      "firstName": "William",
+      "lastName": "Miles",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:35.300Z"
+    },
+    {
+      "userId": "6a5854115af9d378a9a917f7",
+      "partnerId": "6a58540f5af9d378a9a917e3",
+      "email": "qa.auto+aliciabrooks@mailinator.com",
+      "firstName": "Kevin",
+      "lastName": "Lowe",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:27.453Z"
+    },
+    {
+      "userId": "6a585409974898259eb0d56b",
+      "partnerId": "6a585407974898259eb0d556",
+      "email": "qa.auto+lisaskinner@mailinator.com",
+      "firstName": "Brenda",
+      "lastName": "Lopez",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:20.932Z"
+    },
+    {
+      "userId": "6a58540204e6a6bbc86ef909",
+      "partnerId": "6a58540004e6a6bbc86ef8f4",
+      "email": "qa.auto+washingtonbradley@mailinator.com",
+      "firstName": "Andre",
+      "lastName": "Jones",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:12.433Z"
+    },
+    {
+      "userId": "6a5853fa04e6a6bbc86ef8d0",
+      "partnerId": "6a5853f804e6a6bbc86ef8bb",
+      "email": "qa.auto+cabrerajames@mailinator.com",
+      "firstName": "Erika",
+      "lastName": "Jones",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:46:05.607Z"
+    },
+    {
+      "userId": "6a5853f304e6a6bbc86ef88a",
+      "partnerId": "6a5853f104e6a6bbc86ef875",
+      "email": "qa.auto+meredithellis@mailinator.com",
+      "firstName": "Ross",
+      "lastName": "Hendricks",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:45:57.597Z"
+    },
+    {
+      "userId": "6a5853eb04e6a6bbc86ef852",
+      "partnerId": "6a5853e904e6a6bbc86ef83d",
+      "email": "qa.auto+moorebrianna@mailinator.com",
+      "firstName": "Mary",
+      "lastName": "Williams",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:45:49.416Z"
+    },
+    {
+      "userId": "6a5853e404e6a6bbc86ef818",
+      "partnerId": "6a5853e304e6a6bbc86ef803",
+      "email": "qa.auto+joshua61@mailinator.com",
+      "firstName": "Rebecca",
+      "lastName": "Williams",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:45:43.192Z"
+    },
+    {
+      "userId": "6a5853de04e6a6bbc86ef7d4",
+      "partnerId": "6a5853dd04e6a6bbc86ef7c0",
+      "email": "qa.auto+jenkinskayla@mailinator.com",
+      "firstName": "Martin",
+      "lastName": "Gallagher",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-16T03:45:37.522Z"
+    },
+    {
+      "userId": "6a5853da04e6a6bbc86ef798",
+      "partnerId": "6a5853d804e6a6bbc86ef783",
+      "email": "qa.auto+mcole@mailinator.com",
+      "firstName": "Lisa",
+      "lastName": "Cabrera",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853d904e6a6bbc86ef78d",
+      "partnerId": "6a5853d804e6a6bbc86ef783",
+      "email": "qa.auto+mcole@mailinator.com",
+      "firstName": "Lisa",
+      "lastName": "Cabrera",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853cd04e6a6bbc86ef6e2",
+      "partnerId": "6a5853cc04e6a6bbc86ef6d7",
+      "email": "qa.auto+brooksdakota@mailinator.com",
+      "firstName": "Kimberly",
+      "lastName": "Richard",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853ca04e6a6bbc86ef6bb",
+      "partnerId": "6a5853c95af9d378a9a917b9",
+      "email": "qa.auto+john54@mailinator.com",
+      "firstName": "Elizabeth",
+      "lastName": "Guerrero",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853c75af9d378a9a9179c",
+      "partnerId": "6a5853c65af9d378a9a91791",
+      "email": "qa.auto+jwade@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Larsen",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853ac5af9d378a9a916f1",
+      "partnerId": "6a5853ab5af9d378a9a916e7",
+      "email": "qa.auto+leealexandra@mailinator.com",
+      "firstName": "Melanie",
+      "lastName": "English",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853a75af9d378a9a916d4",
+      "partnerId": "6a5853a6974898259eb0d464",
+      "email": "qa.auto+pwoods@mailinator.com",
+      "firstName": "Joshua",
+      "lastName": "Anderson",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853a45af9d378a9a916aa",
+      "partnerId": "6a5853a3974898259eb0d44e",
+      "email": "qa.auto+martinjohnson@mailinator.com",
+      "firstName": "Sarah",
+      "lastName": "Huang",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58535b5af9d378a9a91466",
+      "partnerId": "6a58535a5af9d378a9a9145b",
+      "email": "qa.auto+jack51@mailinator.com",
+      "firstName": "James",
+      "lastName": "Frank",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5853565af9d378a9a91439",
+      "partnerId": "6a58535504e6a6bbc86ef46d",
+      "email": "qa.auto+andersonmichele@mailinator.com",
+      "firstName": "Marcus",
+      "lastName": "Brown",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a58534704e6a6bbc86ef3f6",
+      "partnerId": "6a58534604e6a6bbc86ef3ec",
+      "email": "qa.auto+scott25@mailinator.com",
+      "firstName": "William",
+      "lastName": "Martin",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5754e9339a34d84842a119",
+      "partnerId": "6a5754e8339a34d84842a104",
+      "email": "qa.auto+ricecharles@mailinator.com",
+      "firstName": "Todd",
+      "lastName": "Blankenship",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-15T09:37:48.531Z"
+    },
+    {
+      "userId": "6a573f5b359324fac62c1a4f",
+      "partnerId": "6a573f5a359324fac62c1a3a",
+      "email": "qa.auto+cvelazquez@mailinator.com",
+      "firstName": "David",
+      "lastName": "Arnold",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-15T08:05:50.088Z"
+    },
+    {
+      "userId": "6a573f2a9a57aa3767f70f7a",
+      "partnerId": "6a573f28d9caa3c72652f7ca",
+      "email": "qa.auto+kristiecole@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Mcdaniel",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-15T08:05:00.246Z"
+    },
+    {
+      "userId": "6a573bb69a57aa3767f70dc3",
+      "partnerId": "6a573bb59a57aa3767f70daf",
+      "email": "qa.auto+rvasquez@mailinator.com",
+      "firstName": "Joseph",
+      "lastName": "Harvey",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-15T07:50:17.208Z"
+    },
+    {
+      "userId": "6a44e2a09eafd0de7247aca6",
+      "partnerId": "6a44e29f9eafd0de7247ac8a",
+      "email": "qa.auto+ifoster@mailinator.com",
+      "firstName": "Tyler",
+      "lastName": "Riddle",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T09:49:22.334Z"
+    },
+    {
+      "userId": "6a44d027ce54e808583d092e",
+      "partnerId": "6a44d022ce54e808583d0910",
+      "email": "qa.auto+sarahjones@mailinator.com",
+      "firstName": "Michelle",
+      "lastName": "Perry",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:30:33.450Z"
+    },
+    {
+      "userId": "6a44ce21ce54e808583d0659",
+      "partnerId": "6a44ce20ce54e808583d0640",
+      "email": "qa.auto+linda58@mailinator.com",
+      "firstName": "Shannon",
+      "lastName": "Wiley",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:55.879Z"
+    },
+    {
+      "userId": "6a44ce1bce54e808583d05f7",
+      "partnerId": "6a44ce1ace54e808583d05dc",
+      "email": "qa.auto+hcollins@mailinator.com",
+      "firstName": "Brittney",
+      "lastName": "Collins",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:49.403Z"
+    },
+    {
+      "userId": "6a44ce14ce54e808583d0597",
+      "partnerId": "6a44ce13ce54e808583d0574",
+      "email": "qa.auto+mayonathan@mailinator.com",
+      "firstName": "Ronald",
+      "lastName": "Lewis",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:42.732Z"
+    },
+    {
+      "userId": "6a44ce02ce54e808583d0485",
+      "partnerId": "6a44ce01ce54e808583d046c",
+      "email": "qa.auto+castrostephanie@mailinator.com",
+      "firstName": "Wendy",
+      "lastName": "Herrera",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:28.839Z"
+    },
+    {
+      "userId": "6a44cdfdce54e808583d0439",
+      "partnerId": "6a44cdfcce54e808583d041f",
+      "email": "qa.auto+nmorris@mailinator.com",
+      "firstName": "Dana",
+      "lastName": "Nichols",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:19.210Z"
+    },
+    {
+      "userId": "6a44cdf7ce54e808583d03eb",
+      "partnerId": "6a44cdf5ce54e808583d03c9",
+      "email": "qa.auto+carolmann@mailinator.com",
+      "firstName": "Breanna",
+      "lastName": "Wallace",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:12.688Z"
+    },
+    {
+      "userId": "6a44cdf0ce54e808583d0386",
+      "partnerId": "6a44cdeece54e808583d0364",
+      "email": "qa.auto+lindsay96@mailinator.com",
+      "firstName": "Courtney",
+      "lastName": "Weaver",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:06.771Z"
+    },
+    {
+      "userId": "6a44cdebce54e808583d032e",
+      "partnerId": "6a44cdeace54e808583d0314",
+      "email": "qa.auto+cklein@mailinator.com",
+      "firstName": "Cindy",
+      "lastName": "Weeks",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:21:01.090Z"
+    },
+    {
+      "userId": "6a44cde3ce54e808583d02da",
+      "partnerId": "6a44cde2ce54e808583d02b9",
+      "email": "qa.auto+wilsonadam@mailinator.com",
+      "firstName": "Amy",
+      "lastName": "Schneider",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:53.413Z"
+    },
+    {
+      "userId": "6a44cddece54e808583d0284",
+      "partnerId": "6a44cddcce54e808583d0261",
+      "email": "qa.auto+bscott@mailinator.com",
+      "firstName": "Kayla",
+      "lastName": "Russo",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:47.961Z"
+    },
+    {
+      "userId": "6a44cdd8ce54e808583d022b",
+      "partnerId": "6a44cdd6ce54e808583d020a",
+      "email": "qa.auto+james29@mailinator.com",
+      "firstName": "Suzanne",
+      "lastName": "Brown",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:41.770Z"
+    },
+    {
+      "userId": "6a44cdd3ce54e808583d01d1",
+      "partnerId": "6a44cdd2ce54e808583d01b1",
+      "email": "qa.auto+normannicholas@mailinator.com",
+      "firstName": "Stephen",
+      "lastName": "Luna",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:37.178Z"
+    },
+    {
+      "userId": "6a44cdcdce54e808583d015d",
+      "partnerId": "6a44cdcbce54e808583d0139",
+      "email": "qa.auto+david45@mailinator.com",
+      "firstName": "Eugene",
+      "lastName": "Taylor",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:30.935Z"
+    },
+    {
+      "userId": "6a44cdc7ce54e808583d010c",
+      "partnerId": "6a44cdc6ce54e808583d00ed",
+      "email": "qa.auto+jonesalison@mailinator.com",
+      "firstName": "Daniel",
+      "lastName": "Williams",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:25.192Z"
+    },
+    {
+      "userId": "6a44cdc1ce54e808583d00a8",
+      "partnerId": "6a44cdc0ce54e808583d008f",
+      "email": "qa.auto+fernandogoodman@mailinator.com",
+      "firstName": "Tammy",
+      "lastName": "Whitaker",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:19.316Z"
+    },
+    {
+      "userId": "6a44cdbbce54e808583d0060",
+      "partnerId": "6a44cdbace54e808583d003c",
+      "email": "qa.auto+thomasfernando@mailinator.com",
+      "firstName": "Alexis",
+      "lastName": "Jenkins",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:13.154Z"
+    },
+    {
+      "userId": "6a44cdb8ce54e808583d002a",
+      "partnerId": "6a44cdb6ce54e808583d0006",
+      "email": "qa.auto+zhutchinson@mailinator.com",
+      "firstName": "Chad",
+      "lastName": "Miller",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-15T08:16:45.730Z"
+    },
+    {
+      "userId": "6a44cdb2ce54e808583cffcd",
+      "partnerId": "6a44cdb1ce54e808583cffb2",
+      "email": "qa.auto+hooverkyle@mailinator.com",
+      "firstName": "Alyssa",
+      "lastName": "Smith",
+      "role": "admin",
+      "status": "active",
+      "lastLoginAt": "2026-07-01T08:20:05.220Z"
+    },
+    {
+      "userId": "6a44cdaece54e808583cff7b",
+      "partnerId": "6a44cdadce54e808583cff63",
+      "email": "qa.auto+youngjames@mailinator.com",
+      "firstName": "Richard",
+      "lastName": "Murray",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cdaece54e808583cff6f",
+      "partnerId": "6a44cdadce54e808583cff63",
+      "email": "qa.auto+youngjames@mailinator.com",
+      "firstName": "Richard",
+      "lastName": "Murray",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cda3ce54e808583cfe98",
+      "partnerId": "6a44cda2ce54e808583cfe81",
+      "email": "qa.auto+blakemargaret@mailinator.com",
+      "firstName": "Judy",
+      "lastName": "Kelly",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cda0ce54e808583cfe59",
+      "partnerId": "6a44cd9fce54e808583cfe4b",
+      "email": "qa.auto+gonzalesmonique@mailinator.com",
+      "firstName": "Elizabeth",
+      "lastName": "Browning",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd9ece54e808583cfe1f",
+      "partnerId": "6a44cd9dce54e808583cfe13",
+      "email": "qa.auto+jmendoza@mailinator.com",
+      "firstName": "Brittany",
+      "lastName": "Allen",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd88ce54e808583cfc82",
+      "partnerId": "6a44cd87ce54e808583cfc6f",
+      "email": "qa.auto+francomary@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Rodriguez",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd84ce54e808583cfc12",
+      "partnerId": "6a44cd83ce54e808583cfc05",
+      "email": "qa.auto+perryjoel@mailinator.com",
+      "firstName": "James",
+      "lastName": "Mullins",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd80ce54e808583cfbbc",
+      "partnerId": "6a44cd7fce54e808583cfbaf",
+      "email": "qa.auto+xwatkins@mailinator.com",
+      "firstName": "Kelly",
+      "lastName": "Robinson",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd18ce54e808583cf2e7",
+      "partnerId": "6a44cd17ce54e808583cf2db",
+      "email": "qa.auto+jasonmunoz@mailinator.com",
+      "firstName": "Rhonda",
+      "lastName": "Dickson",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd13ce54e808583cf288",
+      "partnerId": "6a44cd13ce54e808583cf278",
+      "email": "qa.auto+eileenwood@mailinator.com",
+      "firstName": "Donna",
+      "lastName": "Johnson",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a44cd04ce54e808583cf13b",
+      "partnerId": "6a44cd03ce54e808583cf12f",
+      "email": "qa.auto+ithornton@mailinator.com",
+      "firstName": "Matthew",
+      "lastName": "Morris",
+      "role": "admin",
+      "status": "active"
+    }
+  ],
+  "total": 110,
+  "message": "Partner users retrieved successfully"
+}

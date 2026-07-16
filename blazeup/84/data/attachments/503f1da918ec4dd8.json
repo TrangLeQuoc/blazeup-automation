@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922104e6a6bbc86f2ddf",
+    "partnerName": "QA-AUTO Wright-Brewer",
+    "dealType": "co_sell",
+    "status": "registered",
+    "prospectName": "QA-AUTO Olson-Walker Opportunity",
+    "prospectEmail": "qa.auto+kelsey94@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 419150978,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO You world every power.",
+    "tenantDomain": "dawson.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1356,
+    "protectionExpiresAt": "2026-09-14T08:11:14.251Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a589222974898259eb0f5b5",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:14.260Z",
+    "updatedAt": "2026-07-16T08:11:14.260Z"
+  },
+  "message": "Deal registered successfully"
+}

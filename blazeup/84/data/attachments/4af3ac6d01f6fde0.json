@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "An active deal for \"QA-AUTO Flores, Atkins and Weaver Prospect\" already exists. Update or close it before registering a new one.",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:24.353Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

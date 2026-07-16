@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a589221974898259eb0f597",
+    "planId": "pro-test-v1",
+    "dealType": "reseller",
+    "tenantDomain": "kim.net",
+    "prospectName": "QA-AUTO Mueller Inc Opportunity",
+    "prospectEmail": "qa.auto+vphillips@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 204844645,
+    "currency": "USD",
+    "numberOfEmployee": 4264,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Difference model reason kitchen water such."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "statusCode": 400,
+  "message": [
+    "estimatedAcvCents must not be less than 1",
+    "estimatedAcvCents must be an integer number"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:23.229Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

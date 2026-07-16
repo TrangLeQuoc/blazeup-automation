@@ -1,0 +1,40 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58923004e6a6bbc86f300d",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a589230974898259eb0f71d",
+    "partnerName": "QA-AUTO Hall, Payne and Jackson",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Maynard-Simpson Opportunity",
+    "prospectEmail": "qa.auto+sandersgary@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 131133474,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Reflect realize check age bank yard mission.",
+    "tenantDomain": "johnston.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3371,
+    "protectionExpiresAt": "2026-10-14T08:11:28.485Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [
+      {
+        "extendedBy": "696466c7e092b1dce3ed8e95",
+        "extendedAt": "2026-07-16T08:11:28.592Z",
+        "previousExpiresAt": "2026-09-14T08:11:28.485Z",
+        "newExpiresAt": "2026-10-14T08:11:28.485Z",
+        "addedDays": 30,
+        "trigger": "manual",
+        "reasoning": "QA-AUTO extend #1"
+      }
+    ],
+    "createdAt": "2026-07-16T08:11:28.493Z",
+    "updatedAt": "2026-07-16T08:11:28.598Z"
+  },
+  "message": "Deal protection extended"
+}

@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a589255974898259eb0f9bf",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Velazquez Group",
+    "code": "PAR-200942",
+    "email": "qa.auto+christopher46@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://martin.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:05.812Z",
+    "updatedAt": "2026-07-16T08:12:05.921Z",
+    "approvedAt": "2026-07-16T08:12:05.918Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

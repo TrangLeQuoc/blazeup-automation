@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a58922f04e6a6bbc86f2ff5/lose",
+  "payload": {
+    "notes": "QA"
+  }
+}

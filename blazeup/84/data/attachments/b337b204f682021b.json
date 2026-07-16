@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Baker and Sons",
+    "code": "PAR-790695",
+    "email": "qa.auto+briggsrobert@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.jones-perez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58927604e6a6bbc86f34d5",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:38.832Z",
+    "updatedAt": "2026-07-16T08:12:38.832Z"
+  },
+  "message": "Partner created successfully"
+}

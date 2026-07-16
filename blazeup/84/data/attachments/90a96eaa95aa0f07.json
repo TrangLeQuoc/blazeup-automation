@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "smith-brady.com",
+    "prospectName": "QA-AUTO Waters-Scott Prospect",
+    "prospectEmail": "qa.auto+fjones@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 126095772,
+    "currency": "USD",
+    "numberOfEmployee": 1635,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Life player animal pick local especially stop."
+  }
+}

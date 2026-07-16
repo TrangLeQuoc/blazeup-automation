@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Ponce, Weaver and Hart",
+    "email": "qa.auto+raydavid@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://www.martin.com/"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "params": {
+    "page": 1,
+    "limit": 100,
+    "partnerId": "6a58924504e6a6bbc86f328f"
+  }
+}

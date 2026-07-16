@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid id: 'no-such-plan-qa'",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:22.728Z",
+  "path": "/sa-plans-api/v1/billing-plans/no-such-plan-qa"
+}

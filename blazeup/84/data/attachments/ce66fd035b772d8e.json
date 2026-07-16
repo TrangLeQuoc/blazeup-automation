@@ -1,0 +1,29 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a589258974898259eb0f9de",
+      "tenantId": "blazeup-platform",
+      "partnerId": "6a589255974898259eb0f9bf",
+      "partnerName": "QA-AUTO Velazquez Group",
+      "label": "QA-AUTO Rangel Territory",
+      "countries": [
+        "DE"
+      ],
+      "verticals": [
+        "technology"
+      ],
+      "exclusivityType": "preferred",
+      "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+      "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+      "notes": "QA-AUTO Newspaper no firm prevent.",
+      "assignedBy": "696466c7e092b1dce3ed8e95",
+      "schemaVersion": 1,
+      "createdAt": "2026-07-16T08:12:08.074Z",
+      "updatedAt": "2026-07-16T08:12:08.074Z",
+      "__v": 0
+    }
+  ],
+  "total": 1,
+  "message": "Territories retrieved"
+}

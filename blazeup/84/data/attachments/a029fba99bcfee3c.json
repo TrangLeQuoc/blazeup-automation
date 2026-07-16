@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Ponce, Weaver and Hart",
+    "code": "PAR-059408",
+    "email": "qa.auto+raydavid@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.martin.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58923b974898259eb0f85c",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:39.093Z",
+    "updatedAt": "2026-07-16T08:11:39.093Z"
+  },
+  "message": "Partner created successfully"
+}

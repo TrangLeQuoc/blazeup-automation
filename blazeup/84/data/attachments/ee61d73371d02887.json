@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922704e6a6bbc86f2ea1",
+    "partnerName": "QA-AUTO Jacobs, Medina and Horne",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Delgado-Cook Prospect",
+    "prospectEmail": "qa.auto+jennifer12@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 300422907,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Get when mouth against attention strong.",
+    "tenantDomain": "cannon.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 496,
+    "protectionExpiresAt": "2026-09-14T08:11:19.549Z",
+    "conflictStatus": "flagged",
+    "conflictingDealIds": [
+      "6a58922704e6a6bbc86f2ead"
+    ],
+    "schemaVersion": 1,
+    "_id": "6a58922704e6a6bbc86f2eb9",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:19.557Z",
+    "updatedAt": "2026-07-16T08:11:19.557Z"
+  },
+  "message": "Deal registered successfully"
+}

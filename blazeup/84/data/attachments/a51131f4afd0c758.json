@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/000000000000000000000000/extend-protection",
+  "payload": {
+    "addedDays": 181,
+    "reasoning": "QA-AUTO"
+  }
+}

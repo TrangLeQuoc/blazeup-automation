@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a58923504e6a6bbc86f30c7",
+    "label": "QA-AUTO Meyers Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Way let bed investment civil."
+  }
+}

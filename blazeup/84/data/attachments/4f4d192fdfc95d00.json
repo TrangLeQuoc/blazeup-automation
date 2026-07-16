@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/partners/6a58921f04e6a6bbc86f2d95/certifications",
+  "params": {
+    "page": 1,
+    "limit": 20
+  }
+}

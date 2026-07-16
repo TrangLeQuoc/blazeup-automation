@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Preston and Sons",
+    "code": "PAR-706319",
+    "email": "qa.auto+joel54@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://jackson.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922704e6a6bbc86f2e97",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:19.097Z",
+    "updatedAt": "2026-07-16T08:11:19.097Z"
+  },
+  "message": "Partner created successfully"
+}

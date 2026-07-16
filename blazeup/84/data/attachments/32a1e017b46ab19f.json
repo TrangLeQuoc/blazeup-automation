@@ -1,0 +1,5 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/6a58921e974898259eb0f553/certifications",
+  "payload": {}
+}

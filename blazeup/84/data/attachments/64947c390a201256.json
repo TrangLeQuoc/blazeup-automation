@@ -1,0 +1,41 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a589228974898259eb0f638",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922804e6a6bbc86f2ef1",
+    "partnerName": "QA-AUTO Howell Inc",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO West LLC Opportunity",
+    "prospectEmail": "qa.auto+andersonderek@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 384025211,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Action relationship job especially computer style before a.",
+    "tenantDomain": "wong.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1907,
+    "protectionExpiresAt": "2026-10-14T08:11:20.539Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [
+      {
+        "extendedBy": "696466c7e092b1dce3ed8e95",
+        "extendedAt": "2026-07-16T08:11:20.654Z",
+        "previousExpiresAt": "2026-09-14T08:11:20.539Z",
+        "newExpiresAt": "2026-10-14T08:11:20.539Z",
+        "addedDays": 30,
+        "trigger": "manual",
+        "reasoning": "QA-AUTO manual protection extension"
+      }
+    ],
+    "createdAt": "2026-07-16T08:11:20.553Z",
+    "updatedAt": "2026-07-16T08:11:20.658Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

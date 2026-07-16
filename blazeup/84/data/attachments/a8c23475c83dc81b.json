@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Preston and Sons",
+    "email": "qa.auto+joel54@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://jackson.info/"
+  }
+}

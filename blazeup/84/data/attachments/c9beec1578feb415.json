@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58925004e6a6bbc86f334a",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Clark-Conrad",
+    "code": "PAR-337678",
+    "email": "qa.auto+vdaniels@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://davis.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:00.399Z",
+    "updatedAt": "2026-07-16T08:12:00.514Z",
+    "approvedAt": "2026-07-16T08:12:00.509Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

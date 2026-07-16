@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Davis, Lawson and Alexander",
+    "code": "PAR-463408",
+    "email": "qa.auto+johnsonmelinda@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.montoya.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58927004e6a6bbc86f34a3",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:32.382Z",
+    "updatedAt": "2026-07-16T08:12:32.382Z"
+  },
+  "message": "Partner created successfully"
+}

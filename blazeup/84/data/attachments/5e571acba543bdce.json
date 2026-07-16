@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "userId": "6a58926a04e6a6bbc86f343a",
+  "partnerId": "6a58926904e6a6bbc86f3426",
+  "partnerName": "QA-AUTO Lewis, Taylor and Higgins",
+  "email": "qa.auto+mjohnson@mailinator.com",
+  "firstName": "Karen",
+  "lastName": "Price",
+  "role": "admin",
+  "tier": "registered",
+  "type": "channel",
+  "status": "active",
+  "lastLoginAt": "2026-07-16T08:12:27.765Z",
+  "mfaEnrolled": false,
+  "mfaMethods": []
+}

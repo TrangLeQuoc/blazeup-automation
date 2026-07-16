@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Good-Rodriguez",
+    "code": "PAR-490760",
+    "email": "qa.auto+qboyd@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://brandt.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589232974898259eb0f780",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:30.382Z",
+    "updatedAt": "2026-07-16T08:11:30.382Z"
+  },
+  "message": "Partner created successfully"
+}

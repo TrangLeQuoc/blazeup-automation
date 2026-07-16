@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a58924804e6a6bbc86f32ca",
+    "email": "qa.auto+thomasdenise@mailinator.com",
+    "firstName": "Krystal",
+    "lastName": "Luna",
+    "role": "admin"
+  }
+}

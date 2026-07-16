@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a589226974898259eb0f608",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922604e6a6bbc86f2e8c",
+    "partnerName": "QA-AUTO Lewis, Miller and James",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Morrison Inc Opportunity",
+    "prospectEmail": "qa.auto+charleshall@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 473456839,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Write cut fast four clear.",
+    "tenantDomain": "scott.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3464,
+    "protectionExpiresAt": "2026-09-14T08:11:18.423Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:18.430Z",
+    "updatedAt": "2026-07-16T08:11:18.677Z",
+    "reviewedAt": "2026-07-16T08:11:18.670Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal approved successfully"
+}

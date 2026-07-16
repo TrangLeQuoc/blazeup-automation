@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58924d04e6a6bbc86f3319",
+    "partnerName": "QA-AUTO Martin, Lewis and Kelly",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Brown, Sullivan and Watts Prospect",
+    "prospectEmail": "qa.auto+ruth78@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 372994233,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Dinner walk break community.",
+    "tenantDomain": "bates.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2271,
+    "protectionExpiresAt": "2026-09-14T08:11:59.907Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58925004e6a6bbc86f3335",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:12:00.049Z",
+    "updatedAt": "2026-07-16T08:12:00.049Z"
+  },
+  "message": "Deal registered"
+}

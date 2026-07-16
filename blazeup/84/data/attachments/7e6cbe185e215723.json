@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a589224974898259eb0f5e6",
+    "partnerName": "QA-AUTO Hernandez-Craig",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Stone, Buck and White Prospect",
+    "prospectEmail": "qa.auto+trodriguez@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 421544518,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Long suffer catch present.",
+    "tenantDomain": "nelson.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4555,
+    "protectionExpiresAt": "2026-09-14T08:11:17.410Z",
+    "conflictStatus": "flagged",
+    "conflictingDealIds": [
+      "6a58922504e6a6bbc86f2e58"
+    ],
+    "schemaVersion": 1,
+    "_id": "6a58922504e6a6bbc86f2e64",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:17.418Z",
+    "updatedAt": "2026-07-16T08:11:17.418Z"
+  },
+  "message": "Deal registered successfully"
+}

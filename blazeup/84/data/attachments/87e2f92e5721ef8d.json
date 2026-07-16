@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Brady, Hill and Dalton",
+    "email": "qa.auto+mark85@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://spears.com/"
+  }
+}

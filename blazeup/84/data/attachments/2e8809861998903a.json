@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Nichols-Jones",
+    "email": "qa.auto+keithanderson@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://arellano-hill.com/"
+  }
+}

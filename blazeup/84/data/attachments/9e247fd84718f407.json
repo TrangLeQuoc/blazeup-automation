@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jacobs, Medina and Horne",
+    "code": "PAR-578690",
+    "email": "qa.auto+dana97@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://wright.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922704e6a6bbc86f2ea1",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:19.207Z",
+    "updatedAt": "2026-07-16T08:11:19.207Z"
+  },
+  "message": "Partner created successfully"
+}

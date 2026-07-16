@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a58925c974898259eb0fa31",
+    "partnerId": "6a58925b974898259eb0fa1d",
+    "email": "qa.auto+danareeves@mailinator.com",
+    "firstName": "Adam",
+    "lastName": "Lang",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

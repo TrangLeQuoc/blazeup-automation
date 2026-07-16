@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a589224974898259eb0f5e6",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "nelson.info",
+    "prospectName": "QA-AUTO Stone, Buck and White Prospect",
+    "prospectEmail": "qa.auto+trodriguez@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 421544518,
+    "currency": "USD",
+    "numberOfEmployee": 4555,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Long suffer catch present."
+  }
+}

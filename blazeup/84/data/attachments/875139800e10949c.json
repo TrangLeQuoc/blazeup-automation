@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Martin, Jackson and Cordova",
+    "email": "qa.auto+patrickrusso@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.graves.net/"
+  }
+}

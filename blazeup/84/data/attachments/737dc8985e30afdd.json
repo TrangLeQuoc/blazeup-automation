@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "reason should not be empty"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:02.611Z",
+  "path": "/sa-partners-api/v1/sa/partners/6a589216974898259eb0f4a4/deactivate"
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Johns-Elliott",
+    "code": "PAR-891372",
+    "email": "qa.auto+jenkinsjacob@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://arnold-morgan.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58921c04e6a6bbc86f2d2a",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:08.628Z",
+    "updatedAt": "2026-07-16T08:11:08.628Z"
+  },
+  "message": "Partner created successfully"
+}

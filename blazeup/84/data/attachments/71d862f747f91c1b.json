@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a589217974898259eb0f4de",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Moore, Davis and Ramirez",
+    "code": "PAR-116104",
+    "email": "qa.auto+nross@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://nelson.info/",
+    "tier": "select",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:03.370Z",
+    "updatedAt": "2026-07-16T08:11:03.483Z"
+  },
+  "message": "Partner tier updated successfully"
+}

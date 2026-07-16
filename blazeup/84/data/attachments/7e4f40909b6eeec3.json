@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "params": {
+    "limit": 20,
+    "status": "registered"
+  }
+}

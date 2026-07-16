@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a58922704e6a6bbc86f2eb9/resolve-conflict",
+  "payload": {
+    "decision": "resolved_for_partner",
+    "reasoning": "Prospect confirmed this partner is the engaged reseller"
+  }
+}

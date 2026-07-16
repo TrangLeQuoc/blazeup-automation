@@ -1,0 +1,19 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922a04e6a6bbc86f2f3a",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "willis-rowland.info",
+    "prospectName": "QA-AUTO Wilson, Hernandez and Burns Opportunity",
+    "prospectEmail": "qa.auto+michael65@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "currency": "USD",
+    "numberOfEmployee": 4103,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Program forward door full medical they east suggest."
+  }
+}

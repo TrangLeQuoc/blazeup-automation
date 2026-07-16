@@ -1,0 +1,9 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/certifications",
+  "params": {
+    "page": 1,
+    "limit": 5,
+    "expiringWithinDays": 365
+  }
+}

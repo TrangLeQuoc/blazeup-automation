@@ -1,0 +1,1516 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a589219974898259eb0f524",
+      "tenantId": "blazeup-platform",
+      "correlationId": "064e6058-3816-4447-a089-fd3c52087ebe",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.certification.granted",
+      "title": "Partner certification granted: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a589219974898259eb0f521",
+        "label": "sales_certified"
+      },
+      "before": null,
+      "after": {
+        "partnerId": "6a589218974898259eb0f516",
+        "userId": "6a58921904e6a6bbc86f2c8d",
+        "certificationType": "sales_certified",
+        "expiresAt": "2027-07-16T08:11:05.307Z",
+        "score": 95
+      },
+      "retentionClass": "permanent",
+      "prevHash": "223415e83b702b992d735e34fff725387c5591186f046e91906857beeeee26bc",
+      "selfHash": "308b61206ecbaeace8d4cc7e17c3a06b19cec7224373c7673d54b2fa4c23118a",
+      "createdAt": "2026-07-16T08:11:05.344Z",
+      "updatedAt": "2026-07-16T08:11:05.344Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921904e6a6bbc86f2c8f",
+      "tenantId": "blazeup-platform",
+      "correlationId": "0833f85e-5123-496b-8cc0-4fe25b0593e6",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+monicaalexander@mailinator.com to QA-AUTO Lewis Inc",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a58921904e6a6bbc86f2c8d",
+        "label": "qa.auto+monicaalexander@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:05.235Z",
+      "updatedAt": "2026-07-16T08:11:05.235Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589218974898259eb0f518",
+      "tenantId": "blazeup-platform",
+      "correlationId": "919a1f6f-e501-40f1-92b7-fb7af3569e50",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Lewis Inc",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589218974898259eb0f516",
+        "label": "QA-AUTO Lewis Inc"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Lewis Inc",
+        "email": "qa.auto+marksmith@mailinator.com",
+        "type": "channel",
+        "code": "PAR-624548"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:04.503Z",
+      "updatedAt": "2026-07-16T08:11:04.503Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589218974898259eb0f50d",
+      "tenantId": "blazeup-platform",
+      "correlationId": "3004cbe4-a761-4172-aeaa-843598fa5f38",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Moore, Davis and Ramirez",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589217974898259eb0f4de",
+        "label": "QA-AUTO Moore, Davis and Ramirez"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "ace819add0d4d355560d9a7d808abf9c3e4fbdc2d1f5f85302693e260de05a1a",
+      "selfHash": "223415e83b702b992d735e34fff725387c5591186f046e91906857beeeee26bc",
+      "createdAt": "2026-07-16T08:11:04.212Z",
+      "updatedAt": "2026-07-16T08:11:04.212Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589217974898259eb0f4f4",
+      "tenantId": "blazeup-platform",
+      "correlationId": "9d64bf2b-2ea2-4022-aaa6-37a47bf10e0d",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.tier.changed",
+      "title": "Partner tier changed: QA-AUTO Moore, Davis and Ramirez (premier → select)",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589217974898259eb0f4de",
+        "label": "QA-AUTO Moore, Davis and Ramirez"
+      },
+      "before": {
+        "tier": "premier"
+      },
+      "after": {
+        "tier": "select",
+        "reason": "QA-AUTO down select PAR-116104"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:03.933Z",
+      "updatedAt": "2026-07-16T08:11:03.933Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921704e6a6bbc86f2c7d",
+      "tenantId": "blazeup-platform",
+      "correlationId": "c53a627b-e914-4290-9cbc-4fe10b0b00b0",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.tier.changed",
+      "title": "Partner tier changed: QA-AUTO Moore, Davis and Ramirez (advanced → premier)",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589217974898259eb0f4de",
+        "label": "QA-AUTO Moore, Davis and Ramirez"
+      },
+      "before": {
+        "tier": "advanced"
+      },
+      "after": {
+        "tier": "premier",
+        "reason": "QA-AUTO up premier PAR-116104"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:03.722Z",
+      "updatedAt": "2026-07-16T08:11:03.722Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589217974898259eb0f4ea",
+      "tenantId": "blazeup-platform",
+      "correlationId": "e6d073ff-323c-4616-bedf-4a74a5358f3e",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.tier.changed",
+      "title": "Partner tier changed: QA-AUTO Moore, Davis and Ramirez (select → advanced)",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589217974898259eb0f4de",
+        "label": "QA-AUTO Moore, Davis and Ramirez"
+      },
+      "before": {
+        "tier": "select"
+      },
+      "after": {
+        "tier": "advanced",
+        "reason": "QA-AUTO up advanced PAR-116104"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:03.609Z",
+      "updatedAt": "2026-07-16T08:11:03.609Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921704e6a6bbc86f2c73",
+      "tenantId": "blazeup-platform",
+      "correlationId": "d442b464-89ab-44c9-8b84-a09fb6a25243",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.tier.changed",
+      "title": "Partner tier changed: QA-AUTO Moore, Davis and Ramirez (registered → select)",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589217974898259eb0f4de",
+        "label": "QA-AUTO Moore, Davis and Ramirez"
+      },
+      "before": {
+        "tier": "registered"
+      },
+      "after": {
+        "tier": "select",
+        "reason": "QA-AUTO up select PAR-116104"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:03.500Z",
+      "updatedAt": "2026-07-16T08:11:03.500Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589217974898259eb0f4e0",
+      "tenantId": "blazeup-platform",
+      "correlationId": "2c596ae2-a1ae-448e-9202-4d965d58ab7d",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Moore, Davis and Ramirez",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589217974898259eb0f4de",
+        "label": "QA-AUTO Moore, Davis and Ramirez"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Moore, Davis and Ramirez",
+        "email": "qa.auto+nross@mailinator.com",
+        "type": "channel",
+        "code": "PAR-116104"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:03.393Z",
+      "updatedAt": "2026-07-16T08:11:03.393Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589217974898259eb0f4d6",
+      "tenantId": "blazeup-platform",
+      "correlationId": "a867b02e-cc56-41f6-9f84-f6e368c9af30",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Wise Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921604e6a6bbc86f2c3a",
+        "label": "QA-AUTO Wise Ltd"
+      },
+      "before": {
+        "status": "suspended"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "b35e9a0330c8edf6de5e56767234d04f6d539e6f9d1180bf8b2fd59c4d2ff975",
+      "selfHash": "ace819add0d4d355560d9a7d808abf9c3e4fbdc2d1f5f85302693e260de05a1a",
+      "createdAt": "2026-07-16T08:11:03.222Z",
+      "updatedAt": "2026-07-16T08:11:03.222Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589217974898259eb0f4cb",
+      "tenantId": "blazeup-platform",
+      "correlationId": "605dfd06-3c1e-461c-b62b-2701bed1c77f",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Cruz Group",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921604e6a6bbc86f2c56",
+        "label": "QA-AUTO Cruz Group"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "6b1d0d7c7e48a16a6425fd1dcb3ef285e8162f8bd0df80c530395c76e6dc8e14",
+      "selfHash": "b35e9a0330c8edf6de5e56767234d04f6d539e6f9d1180bf8b2fd59c4d2ff975",
+      "createdAt": "2026-07-16T08:11:03.106Z",
+      "updatedAt": "2026-07-16T08:11:03.106Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921604e6a6bbc86f2c69",
+      "tenantId": "blazeup-platform",
+      "correlationId": "0abe66b6-1726-48e7-b5f4-622b30e92bf7",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Ali, Duncan and Williams",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589216974898259eb0f4a4",
+        "label": "QA-AUTO Ali, Duncan and Williams"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "6ec13d697932c1fb3772ccca93f596ccd2686e01297d636a727ff1f6fcf9c713",
+      "selfHash": "6b1d0d7c7e48a16a6425fd1dcb3ef285e8162f8bd0df80c530395c76e6dc8e14",
+      "createdAt": "2026-07-16T08:11:02.983Z",
+      "updatedAt": "2026-07-16T08:11:02.983Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589216974898259eb0f4c0",
+      "tenantId": "blazeup-platform",
+      "correlationId": "1f747551-faa5-4a0b-b573-3db686fbe3f2",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Jones-Myers",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589216974898259eb0f4ae",
+        "label": "QA-AUTO Jones-Myers"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "335951a0ceafe8fd91678afaed54482b96a1f2b87a8f8b93e8ccf0c7c9af2c56",
+      "selfHash": "6ec13d697932c1fb3772ccca93f596ccd2686e01297d636a727ff1f6fcf9c713",
+      "createdAt": "2026-07-16T08:11:02.888Z",
+      "updatedAt": "2026-07-16T08:11:02.888Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589216974898259eb0f4b0",
+      "tenantId": "blazeup-platform",
+      "correlationId": "319c1df5-b8b1-45a1-9487-594f0b845755",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Jones-Myers",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589216974898259eb0f4ae",
+        "label": "QA-AUTO Jones-Myers"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Jones-Myers",
+        "email": "qa.auto+michaelsimmons@mailinator.com",
+        "type": "channel",
+        "code": "PAR-988942"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:02.709Z",
+      "updatedAt": "2026-07-16T08:11:02.709Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589216974898259eb0f4a6",
+      "tenantId": "blazeup-platform",
+      "correlationId": "9932a9d7-f5bb-4284-9982-336e85fd2a38",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Ali, Duncan and Williams",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589216974898259eb0f4a4",
+        "label": "QA-AUTO Ali, Duncan and Williams"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Ali, Duncan and Williams",
+        "email": "qa.auto+johnfrank@mailinator.com",
+        "type": "channel",
+        "code": "PAR-314451"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:02.524Z",
+      "updatedAt": "2026-07-16T08:11:02.524Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921604e6a6bbc86f2c58",
+      "tenantId": "blazeup-platform",
+      "correlationId": "32ac648a-9507-40ba-8402-55cd686cfcb5",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Cruz Group",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921604e6a6bbc86f2c56",
+        "label": "QA-AUTO Cruz Group"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Cruz Group",
+        "email": "qa.auto+jodyherrera@mailinator.com",
+        "type": "channel",
+        "code": "PAR-769191"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:02.318Z",
+      "updatedAt": "2026-07-16T08:11:02.318Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921604e6a6bbc86f2c47",
+      "tenantId": "blazeup-platform",
+      "correlationId": "13c85cdd-6cff-4855-b974-f4c0a7a9b0f0",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Wise Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921604e6a6bbc86f2c3a",
+        "label": "QA-AUTO Wise Ltd"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "QA-AUTO decline reason for PAR-634338"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "fb4869f1df78aa6486d0e79dccc37579f482bd7a74ed7d6e2910fe6ed8b4a686",
+      "selfHash": "335951a0ceafe8fd91678afaed54482b96a1f2b87a8f8b93e8ccf0c7c9af2c56",
+      "createdAt": "2026-07-16T08:11:02.115Z",
+      "updatedAt": "2026-07-16T08:11:02.115Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921604e6a6bbc86f2c3c",
+      "tenantId": "blazeup-platform",
+      "correlationId": "a6506141-8cce-47a8-aab3-52870aff44ef",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Wise Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921604e6a6bbc86f2c3a",
+        "label": "QA-AUTO Wise Ltd"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Wise Ltd",
+        "email": "qa.auto+cameron67@mailinator.com",
+        "type": "channel",
+        "code": "PAR-634338"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:02.018Z",
+      "updatedAt": "2026-07-16T08:11:02.018Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921504e6a6bbc86f2c32",
+      "tenantId": "blazeup-platform",
+      "correlationId": "47f172df-7460-4859-b790-fa9adba159a7",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Garrison LLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921504e6a6bbc86f2c14",
+        "label": "QA-AUTO Garrison LLC"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "7fad62f7855fe7b0f4caf7c6f8141f0429a05c04625a2539ba3c86c2b6f4faf5",
+      "selfHash": "fb4869f1df78aa6486d0e79dccc37579f482bd7a74ed7d6e2910fe6ed8b4a686",
+      "createdAt": "2026-07-16T08:11:01.862Z",
+      "updatedAt": "2026-07-16T08:11:01.862Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921504e6a6bbc86f2c20",
+      "tenantId": "blazeup-platform",
+      "correlationId": "bf354426-a2b7-4f9d-8139-6bf2de9fc415",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.approved",
+      "title": "Partner approved: QA-AUTO Garrison LLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921504e6a6bbc86f2c14",
+        "label": "QA-AUTO Garrison LLC"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "active"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:01.660Z",
+      "updatedAt": "2026-07-16T08:11:01.660Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921504e6a6bbc86f2c16",
+      "tenantId": "blazeup-platform",
+      "correlationId": "9dde681a-9812-4fd3-a2b0-854652e6c0fa",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Garrison LLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a58921504e6a6bbc86f2c14",
+        "label": "QA-AUTO Garrison LLC"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Garrison LLC",
+        "email": "qa.auto+codybrown@mailinator.com",
+        "type": "channel",
+        "code": "PAR-750651"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:01.545Z",
+      "updatedAt": "2026-07-16T08:11:01.545Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a58921504e6a6bbc86f2c0c",
+      "tenantId": "blazeup-platform",
+      "correlationId": "d4da6092-1a2f-477a-bd96-6871d16f272a",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Cowan, Spence and Richmond",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589214974898259eb0f494",
+        "label": "QA-AUTO Cowan, Spence and Richmond"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "377c2075b80d618f4bdac2c8edd2f45bda9802551680c2256d9432fd8ed214f9",
+      "selfHash": "7fad62f7855fe7b0f4caf7c6f8141f0429a05c04625a2539ba3c86c2b6f4faf5",
+      "createdAt": "2026-07-16T08:11:01.226Z",
+      "updatedAt": "2026-07-16T08:11:01.226Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a589215974898259eb0f496",
+      "tenantId": "blazeup-platform",
+      "correlationId": "15b11bb7-a218-40c2-8b6b-019273ba1fb1",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Cowan, Spence and Richmond",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a589214974898259eb0f494",
+        "label": "QA-AUTO Cowan, Spence and Richmond"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Cowan, Spence and Richmond",
+        "email": "qa.auto+toddkelley@mailinator.com",
+        "type": "channel",
+        "code": "PAR-330286"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T08:11:01.013Z",
+      "updatedAt": "2026-07-16T08:11:01.013Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5874325af9d378a9a92d19",
+      "tenantId": "blazeup-platform",
+      "correlationId": "51292ae3-fcce-4c44-84f6-1d6a9e2ad57c",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.deal.updated",
+      "title": "Deal updated: QA-AUTO Duncan PLC → test",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "696466c7e092b1dce3ed8e95"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a4f11fd6df4843caef565d7",
+        "label": "test"
+      },
+      "before": {
+        "planId": null
+      },
+      "after": {
+        "planId": "6a5743cec728a60f28ed6904"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T06:03:30.140Z",
+      "updatedAt": "2026-07-16T06:03:30.140Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d2c5af9d378a9a9215e",
+      "tenantId": "blazeup-platform",
+      "correlationId": "250a0536-2a50-442a-b324-d03e60dfcf61",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Watson, Pratt and Guerrero",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d265af9d378a9a9213a",
+        "label": "QA-AUTO Watson, Pratt and Guerrero"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "33e5613057c85015773a3bcc4727785804df7c38500dd16643cc2ba2e42a280b",
+      "selfHash": "377c2075b80d618f4bdac2c8edd2f45bda9802551680c2256d9432fd8ed214f9",
+      "createdAt": "2026-07-16T04:25:16.399Z",
+      "updatedAt": "2026-07-16T04:25:16.399Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d2904e6a6bbc86f11c3",
+      "tenantId": "blazeup-platform",
+      "correlationId": "9ec02773-e9f3-4ada-a6e5-03ceeff306f9",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.login",
+      "title": "Partner login: qa.auto+vclark@mailinator.com",
+      "actor": {
+        "type": "partner-user",
+        "partnerUserId": "6a585d275af9d378a9a9214e"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a585d275af9d378a9a9214e",
+        "label": "qa.auto+vclark@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "standard",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:13.899Z",
+      "updatedAt": "2026-07-16T04:25:13.899Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d275af9d378a9a92150",
+      "tenantId": "blazeup-platform",
+      "correlationId": "9bb1ce09-7fdb-4d05-9f41-9325930d5d97",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+vclark@mailinator.com to QA-AUTO Watson, Pratt and Guerrero",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a585d275af9d378a9a9214e",
+        "label": "qa.auto+vclark@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:11.665Z",
+      "updatedAt": "2026-07-16T04:25:11.665Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d265af9d378a9a92146",
+      "tenantId": "blazeup-platform",
+      "correlationId": "0b65f38a-9ca2-4468-9f70-ba844d8cb4e7",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.approved",
+      "title": "Partner approved: QA-AUTO Watson, Pratt and Guerrero",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d265af9d378a9a9213a",
+        "label": "QA-AUTO Watson, Pratt and Guerrero"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "active"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:10.872Z",
+      "updatedAt": "2026-07-16T04:25:10.872Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d265af9d378a9a9213c",
+      "tenantId": "blazeup-platform",
+      "correlationId": "efde87df-bef0-4905-8444-28c7f55e634b",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Watson, Pratt and Guerrero",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d265af9d378a9a9213a",
+        "label": "QA-AUTO Watson, Pratt and Guerrero"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Watson, Pratt and Guerrero",
+        "email": "qa.auto+smithcatherine@mailinator.com",
+        "type": "channel",
+        "code": "PAR-045501"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:10.611Z",
+      "updatedAt": "2026-07-16T04:25:10.611Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d255af9d378a9a92131",
+      "tenantId": "blazeup-platform",
+      "correlationId": "93cd8835-cd22-497e-b3c5-fb4759854e8b",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Valenzuela Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1f5af9d378a9a92117",
+        "label": "QA-AUTO Valenzuela Ltd"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "55e3567fdd5217a6b820b803b169866c00644de6559dcee8f1e3a2c8cbc0ab8a",
+      "selfHash": "33e5613057c85015773a3bcc4727785804df7c38500dd16643cc2ba2e42a280b",
+      "createdAt": "2026-07-16T04:25:09.853Z",
+      "updatedAt": "2026-07-16T04:25:09.853Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d2504e6a6bbc86f11b5",
+      "tenantId": "blazeup-platform",
+      "correlationId": "c034ba09-c001-4a31-b9c2-2de3f7662d8e",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.deal.registered",
+      "title": "Deal registered: QA-AUTO Valenzuela Ltd → QA-AUTO Powell-Nunez Prospect",
+      "actor": {
+        "type": "partner-user",
+        "partnerUserId": "6a585d2104e6a6bbc86f119f"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a585d2504e6a6bbc86f11b3",
+        "label": "QA-AUTO Powell-Nunez Prospect"
+      },
+      "before": null,
+      "after": {
+        "dealType": "referral",
+        "estimatedAcvCents": 473237206,
+        "conflictStatus": "none"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:09.247Z",
+      "updatedAt": "2026-07-16T04:25:09.247Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d2304e6a6bbc86f11ac",
+      "tenantId": "blazeup-platform",
+      "correlationId": "d9e2ee9f-34b4-437b-8bc0-cc94cd200897",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.login",
+      "title": "Partner login: qa.auto+tonya14@mailinator.com",
+      "actor": {
+        "type": "partner-user",
+        "partnerUserId": "6a585d2104e6a6bbc86f119f"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a585d2104e6a6bbc86f119f",
+        "label": "qa.auto+tonya14@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "standard",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:07.572Z",
+      "updatedAt": "2026-07-16T04:25:07.572Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d2104e6a6bbc86f11a1",
+      "tenantId": "blazeup-platform",
+      "correlationId": "818b2a9a-410f-4a5a-aad7-86803b5afe4d",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+tonya14@mailinator.com to QA-AUTO Valenzuela Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a585d2104e6a6bbc86f119f",
+        "label": "qa.auto+tonya14@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:05.039Z",
+      "updatedAt": "2026-07-16T04:25:05.039Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d205af9d378a9a92123",
+      "tenantId": "blazeup-platform",
+      "correlationId": "0b3875cc-f90f-43c7-bc3a-4543871c0140",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.approved",
+      "title": "Partner approved: QA-AUTO Valenzuela Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1f5af9d378a9a92117",
+        "label": "QA-AUTO Valenzuela Ltd"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "active"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:04.095Z",
+      "updatedAt": "2026-07-16T04:25:04.095Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1f5af9d378a9a92119",
+      "tenantId": "blazeup-platform",
+      "correlationId": "27aa5fee-f6f1-46b6-982f-cb1a8c0e4673",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Valenzuela Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1f5af9d378a9a92117",
+        "label": "QA-AUTO Valenzuela Ltd"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Valenzuela Ltd",
+        "email": "qa.auto+zacharymatthews@mailinator.com",
+        "type": "channel",
+        "code": "PAR-408205"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:03.795Z",
+      "updatedAt": "2026-07-16T04:25:03.795Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1e04e6a6bbc86f1195",
+      "tenantId": "blazeup-platform",
+      "correlationId": "1faf5dfc-5925-43c8-af7d-61391efd2c2b",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Garcia-Phillips",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1904e6a6bbc86f1168",
+        "label": "QA-AUTO Garcia-Phillips"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "10cc3ae31533e94555608d1de262552ae576f216056ad80c71edb68022b9d1a0",
+      "selfHash": "55e3567fdd5217a6b820b803b169866c00644de6559dcee8f1e3a2c8cbc0ab8a",
+      "createdAt": "2026-07-16T04:25:02.757Z",
+      "updatedAt": "2026-07-16T04:25:02.757Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1e04e6a6bbc86f1188",
+      "tenantId": "blazeup-platform",
+      "correlationId": "7f506b6f-4068-4bfe-8c6b-465f7763260e",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.deal.registered",
+      "title": "Deal registered: QA-AUTO Garcia-Phillips → QA-AUTO Hall Ltd Prospect",
+      "actor": {
+        "type": "partner-user",
+        "partnerUserId": "6a585d1a04e6a6bbc86f117c"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a585d1e04e6a6bbc86f1186",
+        "label": "QA-AUTO Hall Ltd Prospect"
+      },
+      "before": null,
+      "after": {
+        "dealType": "referral",
+        "estimatedAcvCents": 160592807,
+        "conflictStatus": "none"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:02.127Z",
+      "updatedAt": "2026-07-16T04:25:02.127Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1c5af9d378a9a9210c",
+      "tenantId": "blazeup-platform",
+      "correlationId": "7ca1afab-af67-404c-a828-b814a7ffa793",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.login",
+      "title": "Partner login: qa.auto+codygarcia@mailinator.com",
+      "actor": {
+        "type": "partner-user",
+        "partnerUserId": "6a585d1a04e6a6bbc86f117c"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a585d1a04e6a6bbc86f117c",
+        "label": "qa.auto+codygarcia@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "standard",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:25:00.525Z",
+      "updatedAt": "2026-07-16T04:25:00.525Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1a04e6a6bbc86f117e",
+      "tenantId": "blazeup-platform",
+      "correlationId": "7f3d4dce-00e3-4d0b-aae1-c83880e8d6a2",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+codygarcia@mailinator.com to QA-AUTO Garcia-Phillips",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a585d1a04e6a6bbc86f117c",
+        "label": "qa.auto+codygarcia@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:58.604Z",
+      "updatedAt": "2026-07-16T04:24:58.604Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1904e6a6bbc86f1174",
+      "tenantId": "blazeup-platform",
+      "correlationId": "a83b4331-f9b1-4436-978d-99728d2d0ef0",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.approved",
+      "title": "Partner approved: QA-AUTO Garcia-Phillips",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1904e6a6bbc86f1168",
+        "label": "QA-AUTO Garcia-Phillips"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "active"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:57.561Z",
+      "updatedAt": "2026-07-16T04:24:57.561Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1904e6a6bbc86f116a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "5c0e45c3-cf37-4316-84d8-897780ffa8fc",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Garcia-Phillips",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1904e6a6bbc86f1168",
+        "label": "QA-AUTO Garcia-Phillips"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Garcia-Phillips",
+        "email": "qa.auto+bfisher@mailinator.com",
+        "type": "channel",
+        "code": "PAR-860073"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:57.276Z",
+      "updatedAt": "2026-07-16T04:24:57.276Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d185af9d378a9a920ff",
+      "tenantId": "blazeup-platform",
+      "correlationId": "def6404a-6382-46e0-9acb-ded731fdc0d2",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Ross PLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d165af9d378a9a920eb",
+        "label": "QA-AUTO Ross PLC"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "5a97032d4c03d64207a0a671a6ed13698501d6c0f92e0f6a75d2227e261ac727",
+      "selfHash": "10cc3ae31533e94555608d1de262552ae576f216056ad80c71edb68022b9d1a0",
+      "createdAt": "2026-07-16T04:24:56.276Z",
+      "updatedAt": "2026-07-16T04:24:56.276Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1704e6a6bbc86f1154",
+      "tenantId": "blazeup-platform",
+      "correlationId": "53c961f5-db0a-4b77-b1a3-00e8411c9840",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.deal.rejected",
+      "title": "Deal rejected: QA-AUTO Ross PLC → QA-AUTO Norman, May and Rowe Opportunity",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "696466c7e092b1dce3ed8e95"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a585d1604e6a6bbc86f1148",
+        "label": "QA-AUTO Norman, May and Rowe Opportunity"
+      },
+      "before": {
+        "status": "registered"
+      },
+      "after": {
+        "status": "rejected",
+        "reviewNotes": "QA-AUTO first reject"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:55.252Z",
+      "updatedAt": "2026-07-16T04:24:55.252Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1604e6a6bbc86f114a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "f9a10692-43f0-4c09-9201-98b28c639fb4",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.deal.registered",
+      "title": "Deal registered: QA-AUTO Ross PLC → QA-AUTO Norman, May and Rowe Opportunity",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "696466c7e092b1dce3ed8e95"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a585d1604e6a6bbc86f1148",
+        "label": "QA-AUTO Norman, May and Rowe Opportunity"
+      },
+      "before": null,
+      "after": {
+        "dealType": "referral",
+        "estimatedAcvCents": 128119691,
+        "conflictStatus": "none"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:54.937Z",
+      "updatedAt": "2026-07-16T04:24:54.937Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d165af9d378a9a920ed",
+      "tenantId": "blazeup-platform",
+      "correlationId": "4e021d01-66f3-4ca5-afb2-a90833d05c54",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Ross PLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d165af9d378a9a920eb",
+        "label": "QA-AUTO Ross PLC"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Ross PLC",
+        "email": "qa.auto+pamelareynolds@mailinator.com",
+        "type": "channel",
+        "code": "PAR-505790"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:54.219Z",
+      "updatedAt": "2026-07-16T04:24:54.219Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1504e6a6bbc86f113d",
+      "tenantId": "blazeup-platform",
+      "correlationId": "f2714b23-6c27-4bdd-83bb-6194ccc6319a",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Murray Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1304e6a6bbc86f111d",
+        "label": "QA-AUTO Murray Ltd"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "6846735aa0f7e747146c998199267d69c299b87f20bdd2274e38860ce9cd85fd",
+      "selfHash": "5a97032d4c03d64207a0a671a6ed13698501d6c0f92e0f6a75d2227e261ac727",
+      "createdAt": "2026-07-16T04:24:53.158Z",
+      "updatedAt": "2026-07-16T04:24:53.158Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d145af9d378a9a920e2",
+      "tenantId": "blazeup-platform",
+      "correlationId": "a60c8948-61b1-4bf8-b26d-c1b8a62a7a09",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.deal.rejected",
+      "title": "Deal rejected: QA-AUTO Murray Ltd → QA-AUTO Morris, Adkins and Frost Opportunity",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "696466c7e092b1dce3ed8e95"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a585d1404e6a6bbc86f1129",
+        "label": "QA-AUTO Morris, Adkins and Frost Opportunity"
+      },
+      "before": {
+        "status": "registered"
+      },
+      "after": {
+        "status": "rejected",
+        "reviewNotes": "QA-AUTO reject — duplicate prospect"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:52.653Z",
+      "updatedAt": "2026-07-16T04:24:52.653Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1404e6a6bbc86f112b",
+      "tenantId": "blazeup-platform",
+      "correlationId": "2670fed2-0f34-42a7-bf1b-3250d69e664a",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.deal.registered",
+      "title": "Deal registered: QA-AUTO Murray Ltd → QA-AUTO Morris, Adkins and Frost Opportunity",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "696466c7e092b1dce3ed8e95"
+      },
+      "resource": {
+        "type": "partner_deal",
+        "id": "6a585d1404e6a6bbc86f1129",
+        "label": "QA-AUTO Morris, Adkins and Frost Opportunity"
+      },
+      "before": null,
+      "after": {
+        "dealType": "referral",
+        "estimatedAcvCents": 499224616,
+        "conflictStatus": "none"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:52.366Z",
+      "updatedAt": "2026-07-16T04:24:52.366Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d1304e6a6bbc86f111f",
+      "tenantId": "blazeup-platform",
+      "correlationId": "0b9e0eb4-7374-4436-af91-5165a310bebe",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Murray Ltd",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d1304e6a6bbc86f111d",
+        "label": "QA-AUTO Murray Ltd"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Murray Ltd",
+        "email": "qa.auto+ojones@mailinator.com",
+        "type": "channel",
+        "code": "PAR-668194"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-16T04:24:51.517Z",
+      "updatedAt": "2026-07-16T04:24:51.517Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a585d125af9d378a9a920d7",
+      "tenantId": "blazeup-platform",
+      "correlationId": "97edf626-a743-414e-96e2-0103c4b8ffec",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Tyler PLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a585d085af9d378a9a92097",
+        "label": "QA-AUTO Tyler PLC"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "7fd5c3ec0be3e30eb852db0070a081571032b0c51f3648c1f5c29d58e99480ee",
+      "selfHash": "6846735aa0f7e747146c998199267d69c299b87f20bdd2274e38860ce9cd85fd",
+      "createdAt": "2026-07-16T04:24:50.483Z",
+      "updatedAt": "2026-07-16T04:24:50.483Z",
+      "__v": 0
+    }
+  ],
+  "total": 1092,
+  "page": 1,
+  "limit": 50,
+  "message": "SA audit log retrieved successfully"
+}

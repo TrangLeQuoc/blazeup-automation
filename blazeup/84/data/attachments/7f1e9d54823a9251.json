@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Olson, Brown and Cannon",
+    "email": "qa.auto+mcmillanmelinda@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.avila-dennis.com/"
+  }
+}

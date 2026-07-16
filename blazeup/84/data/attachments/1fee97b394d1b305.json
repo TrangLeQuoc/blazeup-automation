@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Johns-Elliott",
+    "email": "qa.auto+jenkinsjacob@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://arnold-morgan.com/"
+  }
+}

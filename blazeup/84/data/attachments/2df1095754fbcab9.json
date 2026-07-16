@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "000000000000000000000000",
+    "email": "qa.auto+brucejones@mailinator.com",
+    "firstName": "Scott",
+    "lastName": "Jones",
+    "role": "admin"
+  }
+}

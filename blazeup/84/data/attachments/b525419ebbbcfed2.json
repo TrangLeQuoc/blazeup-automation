@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid id: 'not-an-id'",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:27.058Z",
+  "path": "/sa-partners-api/v1/sa/deals/not-an-id/extend-protection"
+}

@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "expiringWithinDays must not be less than 1"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:40.017Z",
+  "path": "/sa-partners-api/v1/sa/certifications"
+}

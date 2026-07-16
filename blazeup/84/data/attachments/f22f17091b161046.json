@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Whitaker-Edwards",
+    "code": "PAR-968848",
+    "email": "qa.auto+gardnerpatrick@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://boone.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58923604e6a6bbc86f30ec",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:34.577Z",
+    "updatedAt": "2026-07-16T08:11:34.577Z"
+  },
+  "message": "Partner created successfully"
+}

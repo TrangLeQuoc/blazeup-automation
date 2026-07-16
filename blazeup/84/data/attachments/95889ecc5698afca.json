@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Diaz, Allen and Ward",
+    "code": "PAR-391198",
+    "email": "qa.auto+jonessusan@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://vang-castaneda.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a58922b04e6a6bbc86f2f94",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:23.978Z",
+    "updatedAt": "2026-07-16T08:11:23.978Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58927704e6a6bbc86f34f1",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "davis.net",
+    "prospectName": "QA-AUTO Franklin, Hernandez and Cox Opportunity",
+    "prospectEmail": "qa.auto+phoffman@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 339447514,
+    "currency": "USD",
+    "numberOfEmployee": 3053,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Expect suffer lot decade."
+  }
+}

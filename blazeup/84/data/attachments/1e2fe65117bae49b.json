@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a58926904e6a6bbc86f3426",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lewis, Taylor and Higgins",
+    "code": "PAR-511216",
+    "email": "qa.auto+petersenmichelle@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://rodriguez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:12:25.556Z",
+    "updatedAt": "2026-07-16T08:12:25.650Z",
+    "approvedAt": "2026-07-16T08:12:25.648Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

@@ -1,0 +1,26 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58923104e6a6bbc86f301d",
+    "partnerName": "QA-AUTO Williams, Hall and Hernandez",
+    "label": "QA-AUTO Anderson Territory",
+    "countries": [
+      "US",
+      "CA"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Those watch everyone.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a58923104e6a6bbc86f3027",
+    "createdAt": "2026-07-16T08:11:29.278Z",
+    "updatedAt": "2026-07-16T08:11:29.278Z"
+  },
+  "message": "Territory assigned successfully"
+}

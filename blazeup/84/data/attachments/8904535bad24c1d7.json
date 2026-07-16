@@ -1,0 +1,19 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a58923104e6a6bbc86f301d",
+    "label": "QA-AUTO Anderson Territory",
+    "countries": [
+      "US",
+      "CA"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Those watch everyone."
+  }
+}

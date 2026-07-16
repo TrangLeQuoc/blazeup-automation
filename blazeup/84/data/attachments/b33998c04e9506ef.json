@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a589255974898259eb0f9bf",
+    "email": "qa.auto+jamiebriggs@mailinator.com",
+    "firstName": "James",
+    "lastName": "Velasquez",
+    "role": "admin"
+  }
+}

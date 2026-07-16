@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a58922204e6a6bbc86f2dff",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "kim.info",
+    "prospectName": "QA-AUTO Figueroa PLC Prospect",
+    "prospectEmail": "qa.auto+courtneythomas@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 367609300,
+    "currency": "USD",
+    "numberOfEmployee": 2857,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Old time build."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58927704e6a6bbc86f34f1",
+    "partnerName": "QA-AUTO Rivas-Robinson",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Franklin, Hernandez and Cox Opportunity",
+    "prospectEmail": "qa.auto+phoffman@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 339447514,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Expect suffer lot decade.",
+    "tenantDomain": "davis.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3053,
+    "protectionExpiresAt": "2026-09-14T08:12:39.814Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58927704e6a6bbc86f34fd",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:12:39.831Z",
+    "updatedAt": "2026-07-16T08:12:39.831Z"
+  },
+  "message": "Deal registered successfully"
+}

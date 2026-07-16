@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Cannon, Haynes and Ward",
+    "code": "PAR-256769",
+    "email": "qa.auto+coreyjones@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://wheeler.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a589242974898259eb0f8f7",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-16T08:11:46.199Z",
+    "updatedAt": "2026-07-16T08:11:46.199Z"
+  },
+  "message": "Partner created successfully"
+}

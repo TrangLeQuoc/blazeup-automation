@@ -1,0 +1,7 @@
+{
+  "method": "DELETE",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/6a58923a04e6a6bbc86f3160/certifications/hr_specialist",
+  "payload": {
+    "reason": "QA-AUTO"
+  }
+}

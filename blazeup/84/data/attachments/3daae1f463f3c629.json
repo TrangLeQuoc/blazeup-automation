@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a58922b04e6a6bbc86f2f94",
+    "partnerName": "QA-AUTO Diaz, Allen and Ward",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Flores, Atkins and Weaver Prospect",
+    "prospectEmail": "qa.auto+steven04@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 199645608,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Remember know rock find clear.",
+    "tenantDomain": "mcclain.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1960,
+    "protectionExpiresAt": "2026-09-14T08:11:24.233Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a58922c974898259eb0f686",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-16T08:11:24.241Z",
+    "updatedAt": "2026-07-16T08:11:24.241Z"
+  },
+  "message": "Deal registered successfully"
+}

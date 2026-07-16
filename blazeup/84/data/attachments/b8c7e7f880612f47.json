@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Active hr_specialist certification not found for user 6a58923a04e6a6bbc86f3160",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:38.421Z",
+  "path": "/sa-partners-api/v1/sa/partner-users/6a58923a04e6a6bbc86f3160/certifications/hr_specialist"
+}

@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Deal 6a58922504e6a6bbc86f2e64 is not in FLAGGED conflict state",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:17.706Z",
+  "path": "/sa-partners-api/v1/sa/deals/6a58922504e6a6bbc86f2e64/resolve-conflict"
+}

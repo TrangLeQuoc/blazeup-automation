@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "dealType must be one of the following values: referral, reseller, co_sell"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:22.948Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

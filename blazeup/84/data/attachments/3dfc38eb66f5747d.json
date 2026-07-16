@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Exclusive territory conflict: countries already exclusively assigned to another partner",
+  "error": "Bad Request",
+  "timestamp": "2026-07-16T08:11:32.867Z",
+  "path": "/sa-partners-api/v1/sa/territories"
+}
