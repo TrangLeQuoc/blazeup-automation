@@ -5,8 +5,8 @@ response model, the login/logout/me calls) are identical across BlazeUp domains;
 only the *endpoints* differ. So the common logic lives here once, and each domain
 ships a thin subclass that sets its own paths:
 
-    api_clients/blazeup_admin/auth_client.py    → AuthClient(BaseAuthClient)
-    api_clients/blazeup_partner/auth_client.py  → PartnerAuthClient(BaseAuthClient)
+    api_clients/blazeup/admin/auth_client.py    → AuthClient(BaseAuthClient)
+    api_clients/blazeup/partner/auth_client.py  → PartnerAuthClient(BaseAuthClient)
 
 This keeps per-domain auth isolated (different API URL / endpoints per domain are
 just config + a subclass) while avoiding duplicated login code.

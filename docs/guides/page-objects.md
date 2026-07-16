@@ -28,7 +28,7 @@ Principle: **a test never hard-codes selectors** — selectors live only in
 ## Locator — just data
 
 ```python
-# locators/blazeup_admin/login_locators.py
+# locators/blazeup/admin/login_locators.py
 class LoginLocators:
     """Login page locators."""
     IDENTIFIER_INPUT = "input[type='email'], input[name*='email' i]"
@@ -40,8 +40,8 @@ class LoginLocators:
 ## Page object — inherit from `BasePage`
 
 ```python
-# pages/blazeup_admin/login_page.py
-from locators.blazeup_admin.login_locators import LoginLocators
+# pages/blazeup/admin/login_page.py
+from locators.blazeup.admin.login_locators import LoginLocators
 from pages.base_page import BasePage
 
 class LoginPage(BasePage):

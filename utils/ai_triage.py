@@ -457,9 +457,13 @@ def _coerce_json(text: str) -> dict:
     return json.loads(t)
 
 
-def _sample_tcs(g: FailGroup, n: int = 6) -> str:
-    head = ", ".join(g.tcs[:n])
-    return head + (f" +{g.count - n} more" if g.count > n else "")
+def _sample_tcs(g: FailGroup) -> str:
+    """List EVERY failing TC id in the group.
+
+    A failure report must never hide which tests failed behind a "+N more"
+    truncation — the reader needs the full list to know exactly what to check.
+    """
+    return ", ".join(g.tcs)
 
 
 def render_markdown(groups: list[FailGroup], log_path: Path, summary: str) -> str:

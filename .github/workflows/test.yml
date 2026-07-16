@@ -3,31 +3,19 @@ name: BlazeUp Automation Tests
 # ─────────────────────────────────────────────────────────────────────────────
 # Triggers
 #   manual (workflow_dispatch) → Jenkins-style "Build with Parameters":
-#                                you pick domain + mode + specific TC IDs.
-#                                Works from the GitHub Mobile app:
-#                                Actions tab → this workflow → "Run workflow".
+#                                pick mode + specific TC IDs. Works from the
+#                                GitHub Mobile app: Actions → this workflow → Run.
 #
 #   NOTE: runs are started by hand only — neither push nor a schedule triggers CI.
 #
-# This mirrors how you run locally:
-#   python -m runner.blazeup_admin.run_test --mode smoke
-#   python -m runner.blazeup_admin.run_test --execute 12010101 12010102
-#
-# Multi-domain: the `tests` job runs once PER domain via a matrix. Picking
-# domain=all fans out into parallel jobs (one per domain), each loading that
-# domain's own BASE_URL + credentials from per-domain secrets.
+# Single merged `blazeup` domain (SA + partner share one API gateway). Mirrors
+# how you run locally:
+#   python -m runner.blazeup.run_test --mode smoke
+#   python -m runner.blazeup.run_test --execute 2061001 2061002
 # ─────────────────────────────────────────────────────────────────────────────
 on:
   workflow_dispatch:
     inputs:
-      domain:
-        description: "Which domain to test"
-        type: choice
-        default: blazeup_admin
-        options:
-          - blazeup_admin
-          - blazeup_partner
-          - all
       mode:
         description: "Test mode (ignored when 'Test case IDs' is filled in)"
         type: choice
@@ -37,11 +25,11 @@ on:
           - smoke
           - regression
       execute:
-        description: "Specific TC IDs, space-separated (e.g. 12010101 12010102). Leave blank to use mode."
+        description: "Specific TC IDs, space-separated (e.g. 2061001 2061002). Leave blank to use mode."
         type: string
         default: ""
       excel:
-        description: "Export Excel report (only effective for domains where it's supported, e.g. blazeup_admin)"
+        description: "Export Excel report"
         type: boolean
         default: true
       ai_triage:
@@ -49,48 +37,13 @@ on:
         type: boolean
         default: true
 
-# Opt the JavaScript-based actions (checkout / setup-python / cache /
-# upload-artifact) into the Node.js 24 runtime now, silencing the
-# "Node.js 20 actions are deprecated" warning ahead of the June 2026 cutoff.
+# Opt JS-based actions into the Node.js 24 runtime (silences the deprecation warning).
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # ── Decide what to run, then hand the matrix to the `tests` job ────────────
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      domains: ${{ steps.cfg.outputs.domains }}
-      mode: ${{ steps.cfg.outputs.mode }}
-      execute: ${{ steps.cfg.outputs.execute }}
-      excel: ${{ steps.cfg.outputs.excel }}
-      ai_triage: ${{ steps.cfg.outputs.ai_triage }}
-    steps:
-      - name: Resolve domain matrix + params
-        id: cfg
-        run: |
-          DOMAIN="${{ inputs.domain }}";  MODE="${{ inputs.mode }}";  EXECUTE="${{ inputs.execute }}";  EXCEL="${{ inputs.excel }}";  AITRIAGE="${{ inputs.ai_triage }}"
-
-          # domain=all fans out into one matrix entry per domain.
-          case "$DOMAIN" in
-            all) DOMAINS='["blazeup_admin","blazeup_partner"]' ;;
-            *)   DOMAINS="[\"$DOMAIN\"]" ;;
-          esac
-
-          echo "domains=$DOMAINS"     >> "$GITHUB_OUTPUT"
-          echo "mode=$MODE"           >> "$GITHUB_OUTPUT"
-          echo "execute=$EXECUTE"     >> "$GITHUB_OUTPUT"
-          echo "excel=$EXCEL"         >> "$GITHUB_OUTPUT"
-          echo "ai_triage=$AITRIAGE"  >> "$GITHUB_OUTPUT"
-          echo "::notice::domains=$DOMAINS mode='$MODE' execute='$EXECUTE' excel='$EXCEL' ai_triage='$AITRIAGE'"
-
   tests:
-    needs: setup
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false   # one domain failing must not cancel the others
-      matrix:
-        domain: ${{ fromJSON(needs.setup.outputs.domains) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -114,146 +67,106 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps
 
-      - name: Validate registries are up-to-date
+      - name: Validate registry is up-to-date
         run: |
           python utils/sync_registry.py
-          git diff --exit-code runner/*/registry.py || \
-            (echo "::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
+          git diff --exit-code runner/blazeup/registry.py || \
+            (echo "::error::runner/blazeup/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
 
-      # ── Load THIS domain's URL + credentials from per-domain secrets ───────
-      # Secret values written to $GITHUB_ENV stay masked in logs. settings.py
-      # reads them from the environment (no per-domain .env needed on CI).
-      - name: Map domain secrets
+      # ── Load URLs + credentials from secrets into the environment ──────────
+      # settings.py reads these directly (no .env needed on CI). Secret values
+      # written to $GITHUB_ENV stay masked in logs. The API gateway is shared;
+      # only the UI origin + credentials differ per actor (admin vs partner).
+      - name: Map secrets to env
         run: |
-          case "${{ matrix.domain }}" in
-            blazeup_admin)
-              echo "BASE_URL=${{ secrets.ADMIN_BASE_URL }}"            >> "$GITHUB_ENV"
-              echo "API_BASE_URL=${{ secrets.ADMIN_API_BASE_URL }}"    >> "$GITHUB_ENV"
-              echo "TEST_EMAIL=${{ secrets.ADMIN_TEST_EMAIL }}"        >> "$GITHUB_ENV"
-              echo "TEST_PASSWORD=${{ secrets.ADMIN_TEST_PASSWORD }}"  >> "$GITHUB_ENV"
-              ;;
-            blazeup_partner)
-              echo "BASE_URL=${{ secrets.PARTNER_BASE_URL }}"            >> "$GITHUB_ENV"
-              echo "API_BASE_URL=${{ secrets.PARTNER_API_BASE_URL }}"    >> "$GITHUB_ENV"
-              echo "TEST_EMAIL=${{ secrets.PARTNER_TEST_EMAIL }}"        >> "$GITHUB_ENV"
-              echo "TEST_PASSWORD=${{ secrets.PARTNER_TEST_PASSWORD }}"  >> "$GITHUB_ENV"
-              ;;
-            *)
-              echo "::error::Unknown domain '${{ matrix.domain }}' — no secrets mapped."
-              exit 1
-              ;;
-          esac
+          {
+            echo "API_BASE_URL=${{ secrets.ADMIN_API_BASE_URL }}"
+            echo "ADMIN_BASE_URL=${{ secrets.ADMIN_BASE_URL }}"
+            echo "ADMIN_EMAIL=${{ secrets.ADMIN_TEST_EMAIL }}"
+            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_TEST_PASSWORD }}"
+            echo "PARTNER_BASE_URL=${{ secrets.PARTNER_BASE_URL }}"
+            echo "PARTNER_EMAIL=${{ secrets.PARTNER_TEST_EMAIL }}"
+            echo "PARTNER_PASSWORD=${{ secrets.PARTNER_TEST_PASSWORD }}"
+          } >> "$GITHUB_ENV"
 
-      # ── Run via the per-domain runner — same entry point you use locally ───
-      # `--execute` (when given) wins over `--mode` inside the runner, exactly
-      # like the CLI. Excel + AI triage follow each domain's REPORT_* defaults;
-      # the checkboxes can force either off. The runner now generates ai_triage.md
-      # itself on failure (provider/model from AI_PROVIDER/AI_MODEL below).
+      # ── Run via the merged runner — same entry point you use locally ───────
+      # `--execute` (when given) wins over `--mode`. Excel + AI triage follow the
+      # runner's REPORT_* defaults; the checkboxes can force either off. The
+      # runner writes ai_triage.md itself on failure (provider/model below).
       - name: Run tests
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          # AI triage on CI has no .env, so point it at Groq via the environment.
           AI_PROVIDER: groq
           AI_MODEL: llama-3.1-8b-instant
           HEADLESS: "true"
-          BLAZEUP_DOMAIN: ${{ matrix.domain }}
-          MODE: ${{ needs.setup.outputs.mode }}
-          EXECUTE: ${{ needs.setup.outputs.execute }}
-          EXCEL: ${{ needs.setup.outputs.excel }}
-          AITRIAGE: ${{ needs.setup.outputs.ai_triage }}
+          MODE: ${{ inputs.mode }}
+          EXECUTE: ${{ inputs.execute }}
+          EXCEL: ${{ inputs.excel }}
+          AITRIAGE: ${{ inputs.ai_triage }}
         run: |
           set +e
-          # Checkboxes: unchecked (false) → force-skip with the --no-* flag.
-          # checked (true) → pass nothing, so each domain's REPORT_* default applies.
           EXCEL_FLAG=""
           [ "$EXCEL" = "false" ] && EXCEL_FLAG="--no-excel-report"
           AI_FLAG=""
           [ "$AITRIAGE" = "false" ] && AI_FLAG="--no-ai-triage"
           if [ -n "$EXECUTE" ]; then
-            python -m runner.${{ matrix.domain }}.run_test --mode "$MODE" --execute $EXECUTE $EXCEL_FLAG $AI_FLAG
+            python -m runner.blazeup.run_test --mode "$MODE" --execute $EXECUTE $EXCEL_FLAG $AI_FLAG
           else
-            python -m runner.${{ matrix.domain }}.run_test --mode "$MODE" $EXCEL_FLAG $AI_FLAG
+            python -m runner.blazeup.run_test --mode "$MODE" $EXCEL_FLAG $AI_FLAG
           fi
           ec=$?
           set -e
-          # Runner exit 5 = "no TC matched the filters" — not a failure (a domain
-          # or suite may still be empty). Any other non-zero is a real failure.
+          # Runner exit 5 = "no TC matched the filters" — not a failure.
           if [ "$ec" -eq 5 ]; then
-            echo "::warning::No test cases matched for ${{ matrix.domain }} (mode='$MODE', execute='$EXECUTE') — nothing to run yet."
+            echo "::warning::No test cases matched (mode='$MODE', execute='$EXECUTE') — nothing to run."
             ec=0
           fi
-          # The runner writes to results/run_<timestamp>/. Capture the newest dir
-          # so the triage summary + artifact upload point at the right run.
           RUN_DIR=$(ls -dt results/run_* 2>/dev/null | head -1)
           echo "RUN_DIR=$RUN_DIR"   >> "$GITHUB_ENV"
-          # Remember the result but DON'T fail here, so artifact upload + notify
-          # still run on failure.
           echo "PYTEST_EXIT=$ec"    >> "$GITHUB_ENV"
 
-      # ── Surface the triage report (generated by the runner) on the Summary ──
-      # The runner already wrote $RUN_DIR/ai_triage.md on failure; just publish it.
       - name: Publish AI triage to job summary
         if: always()
         run: |
           if [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
             {
-              echo "## AI Failure Triage — ${{ matrix.domain }}"
+              echo "## AI Failure Triage"
               echo ""
               cat "$RUN_DIR/ai_triage.md"
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # ── Telegram notification: one message per domain, pass or fail ────────
-      # Sends a short summary + links to the run and the dashboard. On failure,
-      # also uploads the AI triage markdown as a document. Never fails the job.
-      #
-      # Per-team routing: each domain can have its OWN channel/chat via
-      # TELEGRAM_CHAT_ID_<DOMAIN> (e.g. TELEGRAM_CHAT_ID_BLAZEUP_ADMIN). If a
-      # domain has no dedicated secret, it falls back to the shared
-      # TELEGRAM_CHAT_ID. The same bot can post to every channel as long as it's
-      # an admin (with Post rights) in each. Skips silently if nothing is set.
+      # ── Telegram notification: pass or fail. On failure, attaches the AI
+      # triage markdown. Skips silently if no bot token / chat id. Never fails.
       - name: Notify via Telegram
         if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_BLAZEUP_ADMIN: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_ADMIN }}
-          TELEGRAM_CHAT_ID_BLAZEUP_PARTNER: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_PARTNER }}
-          DOMAIN: ${{ matrix.domain }}
-          MODE: ${{ needs.setup.outputs.mode }}
-          EXECUTE: ${{ needs.setup.outputs.execute }}
+          MODE: ${{ inputs.mode }}
+          EXECUTE: ${{ inputs.execute }}
           REPO_NAME: ${{ github.event.repository.name }}
           OWNER: ${{ github.repository_owner }}
           RUN_NUM: ${{ github.run_number }}
         run: |
-          # Resolve this domain's chat id (per-domain secret > shared fallback).
-          case "${{ matrix.domain }}" in
-            blazeup_admin)   CHAT_ID="${TELEGRAM_CHAT_ID_BLAZEUP_ADMIN:-$TELEGRAM_CHAT_ID}" ;;
-            blazeup_partner) CHAT_ID="${TELEGRAM_CHAT_ID_BLAZEUP_PARTNER:-$TELEGRAM_CHAT_ID}" ;;
-            *)               CHAT_ID="$TELEGRAM_CHAT_ID" ;;
-          esac
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
-            echo "::warning::No Telegram bot token / chat id for ${{ matrix.domain }} — skipping notice."
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::No Telegram bot token / chat id — skipping notice."
             exit 0
           fi
           API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
           if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then ICON="✅"; STATUS="PASSED"; else ICON="❌"; STATUS="FAILED"; fi
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          DASH_URL="https://${OWNER}.github.io/${REPO_NAME}/${DOMAIN}/"
+          DASH_URL="https://${OWNER}.github.io/${REPO_NAME}/blazeup/"
           SEL="mode=${MODE}"
           [ -n "$EXECUTE" ] && SEL="execute=${EXECUTE}"
-          # Build with REAL newlines; --data-urlencode encodes them to %0A for us.
-          MSG=$(printf '%s <b>Job run #%s</b>\n\n<b>BlazeUp CI</b> — <code>%s</code>\nResult: <b>%s</b>\nSelection: <code>%s</code>\n\n🔗 <a href="%s">View run</a>   📊 <a href="%s">Dashboard</a>' \
-            "$ICON" "$RUN_NUM" "$DOMAIN" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
+          MSG=$(printf '%s <b>Job run #%s</b>\n\n<b>BlazeUp CI</b>\nResult: <b>%s</b>\nSelection: <code>%s</code>\n\n🔗 <a href="%s">View run</a>   📊 <a href="%s">Dashboard</a>' \
+            "$ICON" "$RUN_NUM" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
           curl -s -X POST "${API}/sendMessage" \
-            -d chat_id="${CHAT_ID}" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode=HTML \
             -d disable_web_page_preview=true \
             --data-urlencode "text=${MSG}" >/dev/null \
             || echo "::warning::Telegram sendMessage failed (non-blocking)."
-          # On failure, attach the AI triage report. Locate it robustly: prefer
-          # $RUN_DIR, but fall back to scanning results/ in case RUN_DIR is unset
-          # or points elsewhere.
           TRIAGE=""
           if [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
             TRIAGE="$RUN_DIR/ai_triage.md"
@@ -262,8 +175,8 @@ jobs:
           fi
           if [ "${PYTEST_EXIT:-0}" -ne 0 ] && [ -n "$TRIAGE" ] && [ -f "$TRIAGE" ]; then
             HTTP=$(curl -s -o /tmp/tg_doc.json -w '%{http_code}' -X POST "${API}/sendDocument" \
-              -F chat_id="${CHAT_ID}" \
-              -F caption="🔍 AI triage — ${DOMAIN} (run #${RUN_NUM})" \
+              -F chat_id="${TELEGRAM_CHAT_ID}" \
+              -F caption="🔍 AI triage (run #${RUN_NUM})" \
               -F document=@"$TRIAGE")
             if [ "$HTTP" != "200" ]; then
               echo "::warning::Telegram sendDocument HTTP $HTTP — $(cat /tmp/tg_doc.json 2>/dev/null)"
@@ -274,7 +187,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-artifacts-${{ matrix.domain }}
+          name: test-artifacts
           path: |
             results
             allure-results
@@ -284,58 +197,43 @@ jobs:
         if: always()
         run: |
           if [ "${PYTEST_EXIT:-0}" -ne 0 ]; then
-            echo "::error::Tests failed for ${{ matrix.domain }} (runner exit code ${PYTEST_EXIT})."
+            echo "::error::Tests failed (runner exit code ${PYTEST_EXIT})."
             exit "${PYTEST_EXIT}"
           fi
-          echo "All selected tests passed (or none matched) for ${{ matrix.domain }}."
+          echo "All selected tests passed (or none matched)."
 
   # ── Trend dashboard: publish Allure report (with history) to GitHub Pages ──
   # Runs after `tests` regardless of pass/fail (we WANT failures in the trend).
-  # One matrix entry per domain → its own subfolder + its own history line, so
-  # the dashboards never overwrite each other:
-  #   https://<owner>.github.io/<repo>/blazeup_admin/
-  #   https://<owner>.github.io/<repo>/blazeup_partner/
+  #   https://<owner>.github.io/<repo>/blazeup/
   publish-report:
-    needs: [setup, tests]
+    needs: tests
     if: always()
     runs-on: ubuntu-latest
     permissions:
-      contents: write          # push the generated report to the gh-pages branch
-    # Serialize gh-pages pushes so the parallel domains don't race each other.
+      contents: write
     concurrency:
       group: gh-pages-deploy
       cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      max-parallel: 1          # one domain deploys at a time (no push race)
-      matrix:
-        domain: ${{ fromJSON(needs.setup.outputs.domains) }}
     steps:
-      # A domain that matched no TCs produces no artifact — don't fail the job,
-      # the Locate step below will just mark found=false and skip publishing.
-      - name: Download this domain's artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: test-artifacts-${{ matrix.domain }}
+          name: test-artifacts
           path: dl
 
-      # The runner writes allure-results inside results/run_<timestamp>/.
-      # Lift the newest one to a stable path the report action expects.
       - name: Locate allure-results
         id: loc
         run: |
           AR=$(ls -dt dl/results/run_*/allure-results 2>/dev/null | head -1)
           if [ -z "$AR" ] || [ -z "$(ls -A "$AR" 2>/dev/null)" ]; then
-            echo "::warning::No allure-results for ${{ matrix.domain }} — nothing to publish."
+            echo "::warning::No allure-results — nothing to publish."
             echo "found=false" >> "$GITHUB_OUTPUT"
           else
             cp -r "$AR" allure-results
             echo "found=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Pull the previous report (history lives here) so Allure can draw trends.
-      # First ever run has no gh-pages branch yet → don't fail.
       - name: Checkout existing gh-pages (for history)
         if: steps.loc.outputs.found == 'true'
         uses: actions/checkout@v4
@@ -351,12 +249,9 @@ jobs:
           allure_results: allure-results
           gh_pages: gh-pages
           allure_history: allure-history
-          subfolder: ${{ matrix.domain }}
-          keep_reports: 30       # how many past runs to keep in the trend
+          subfolder: blazeup
+          keep_reports: 30
 
-      # Explicit git deploy — handles the FIRST run (create orphan gh-pages) and
-      # later runs (clone existing branch first, so the OTHER domain's subfolder
-      # is preserved). --allow-empty guarantees a ref exists to push.
       - name: Deploy to gh-pages
         if: steps.loc.outputs.found == 'true'
         env:
@@ -366,19 +261,15 @@ jobs:
           REPO="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           rm -rf pages
           if git ls-remote --exit-code --heads "$REPO" gh-pages >/dev/null 2>&1; then
-            # Branch exists → clone it so we keep the other domain's subfolder.
             git clone --branch gh-pages --single-branch "$REPO" pages
           else
-            # First ever deploy → start a fresh orphan branch.
             mkdir pages
             git -C pages init -q
             git -C pages checkout -q --orphan gh-pages
           fi
-          # Overlay this run's report. Only this domain's subfolder (+ the shared
-          # index.html redirect) is touched; the other domain's folder stays.
           cp -r allure-history/. pages/
           git -C pages config user.name  "github-actions[bot]"
           git -C pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C pages add -A
-          git -C pages commit -m "Allure report: ${{ matrix.domain }} (run ${{ github.run_number }})" --allow-empty
+          git -C pages commit -m "Allure report (run ${{ github.run_number }})" --allow-empty
           git -C pages push "$REPO" HEAD:gh-pages

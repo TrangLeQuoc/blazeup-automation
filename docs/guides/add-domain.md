@@ -1,18 +1,21 @@
 # Adding a new domain to the pipeline
 
-Guide for adding a new test domain (for example `blazeup_superadmin`) to the framework +
-CI/CD. Replace `<domain>` with the new domain name (snake_case, for example `blazeup_superadmin`)
-and `<DOMAIN>` with that name in UPPERCASE (for example `BLAZEUP_SUPERADMIN`).
+> **⚠️ Historical / advanced.** The framework now runs a **single `blazeup` domain**
+> (SA + partner actors share one API gateway, one config, one test suite). You do **not**
+> add a domain to cover a new actor or feature of the Partner Platform — add a **module**
+> under `config/blazeup/config.yaml` + a test file under `tests/blazeup/` instead.
+> This guide is kept only for the rare case of onboarding a genuinely **separate product**
+> (different gateway/app) as its own domain.
 
-> Templates available to copy: `blazeup_admin` (with tests + Excel) and `blazeup_partner`
-> (empty skeleton). A consistent naming convention is what lets CI "auto-detect" the new domain
-> in most of the steps.
+Guide for adding a new test domain (for example `blazeup_superadmin`) to the framework +
+CI/CD. Replace `<domain>` with the new domain name (snake_case) and `<DOMAIN>` with that
+name in UPPERCASE. Model it on the existing `config/blazeup/` domain.
 
 ---
 
 ## A. Code in the repo
 
-1. `runner/<domain>/` — copy the **3 entry points** from `runner/blazeup_admin/`, changing
+1. `runner/<domain>/` — copy the **3 entry points** from `runner/blazeup/`, changing
    `os.environ.setdefault("BLAZEUP_DOMAIN", "<domain>")` in all 3:
    - `run_test.py` — runs the tests
    - `health.py` — health-check API service (shared engine in `utils/health_check.py`)

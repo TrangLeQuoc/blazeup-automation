@@ -1,6 +1,5 @@
 """Runtime settings loaded from environment variables and .env files."""
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -11,19 +10,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _resolve_env_file() -> Path | None:
-    """Return domain-specific .env path, or None if BLAZEUP_DOMAIN is not set.
+def _resolve_env_file() -> Path:
+    """Return the single merged-domain .env (``config/blazeup/.env``).
 
-    Set BLAZEUP_DOMAIN before running:
-        python -m runner.blazeup_admin.run_test    → loads config/blazeup_admin/.env
-        python -m runner.blazeup_partner.run_test  → loads config/blazeup_partner/.env
+    The suite used to be split per domain (blazeup_admin / blazeup_partner), but
+    the two share one API gateway, so they are merged into a single ``blazeup``
+    domain. The SA/admin actor and the partner actor are distinguished by
+    ``ADMIN_*`` / ``PARTNER_*`` keys inside this one file — not separate files.
     """
-    domain = os.getenv("BLAZEUP_DOMAIN")
-    if domain:
-        path = _PROJECT_ROOT / "config" / domain / ".env"
-        if path.exists():
-            return path
-    return None
+    return _PROJECT_ROOT / "config" / "blazeup" / ".env"
 
 
 class Settings(BaseSettings):
@@ -36,13 +31,20 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # Required — set per-domain in config/<domain>/.env (see .env.example).
-    # No default on purpose: a missing .env should fail fast, not silently
-    # point every test at a hard-coded environment.
-    base_url: AnyHttpUrl = Field(..., description="UI app root, e.g. https://stgsa.blazeup.ai")
+    # Required — set in config/blazeup/.env (see .env.example). The API gateway
+    # is shared; the UI origin + credentials differ per actor (SA vs partner).
+    # No default on purpose: a missing .env should fail fast.
     api_base_url: AnyHttpUrl = Field(..., description="API root, e.g. https://api.stg.blazeup.ai")
-    test_email: str | None = Field(default=None)
-    test_password: str | None = Field(default=None)
+    admin_base_url: AnyHttpUrl = Field(..., description="SA UI root, e.g. https://stgsa.blazeup.ai")
+    admin_email: str | None = Field(default=None)
+    admin_password: str | None = Field(default=None)
+    # Partner actor — optional (only needed for direct partner-login tests; the
+    # current partner-portal tests mint a throwaway partner from the SA side).
+    partner_base_url: AnyHttpUrl | None = Field(
+        default=None, description="Partner portal UI root, e.g. https://stgpartners.blazeup.ai"
+    )
+    partner_email: str | None = Field(default=None)
+    partner_password: str | None = Field(default=None)
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)
@@ -59,25 +61,41 @@ class Settings(BaseSettings):
     groq_api_key: str | None = Field(default=None)
     ollama_base_url: AnyHttpUrl = Field(default="http://localhost:11434")
 
+    # ── Back-compat aliases ──────────────────────────────────────────────────
+    # Most code drives the SA/admin actor, so the generic names resolve to the
+    # admin_* values. Partner-scoped code uses the partner_* fields explicitly.
+    @property
+    def base_url(self) -> AnyHttpUrl:
+        return self.admin_base_url
+
+    @property
+    def test_email(self) -> str | None:
+        return self.admin_email
+
+    @property
+    def test_password(self) -> str | None:
+        return self.admin_password
+
     @model_validator(mode="after")
     def _check_url_confusion(self) -> "Settings":
-        """Fail fast when api_base_url is accidentally identical to base_url.
+        """Fail fast when api_base_url is accidentally identical to a UI origin.
 
-        Catches the copy-paste mistake where both BASE_URL and API_BASE_URL
-        are set to the exact same value in .env, which would cause all API
-        calls to hit the UI server and return HTML instead of JSON.
-
-        Note: API and UI may legitimately share the same hostname with
-        different paths (e.g. base_url=https://app.example.com and
-        api_base_url=https://app.example.com/api/v1) — that is allowed.
-        Only an exact full-URL match is rejected.
+        Catches the copy-paste mistake where a *_BASE_URL and API_BASE_URL are
+        set to the exact same value in .env, which would cause all API calls to
+        hit the UI server and return HTML instead of JSON. API and UI may
+        legitimately share a hostname with different paths — only an exact
+        full-URL match is rejected.
         """
-        if str(self.base_url).rstrip("/") == str(self.api_base_url).rstrip("/"):
-            raise ValueError(
-                f"api_base_url is identical to base_url ({self.base_url}). "
-                "API_BASE_URL must point to the API root, not the UI root. "
-                "Example: API_BASE_URL=https://app.example.com/api/v1"
-            )
+        api = str(self.api_base_url).rstrip("/")
+        for name, url in (
+            ("admin_base_url", self.admin_base_url),
+            ("partner_base_url", self.partner_base_url),
+        ):
+            if url is not None and str(url).rstrip("/") == api:
+                raise ValueError(
+                    f"api_base_url is identical to {name} ({url}). "
+                    "API_BASE_URL must point to the API root, not a UI root."
+                )
         return self
 
 

@@ -16,9 +16,9 @@ from faker import Faker
 from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
-from api_clients.blazeup_admin.auth_client import AuthClient
-from api_clients.blazeup_admin.partner.sa_deals_client import SaDealsClient
-from api_clients.blazeup_admin.partner.sa_partners_client import SaPartnersClient
+from api_clients.blazeup.admin.auth_client import AuthClient
+from api_clients.blazeup.admin.partner.sa_deals_client import SaDealsClient
+from api_clients.blazeup.admin.partner.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
 from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui

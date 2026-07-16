@@ -737,12 +737,11 @@ def run_tc_ids(
     )
 
     # Optionally write results back to a copy of the test-plan Excel workbook.
-    # Path precedence: explicit excel_path arg > BLAZEUP_DOMAIN auto-resolve.
+    # Path precedence: explicit excel_path arg > default (docs/blazeup/).
     excel_report_path = None
     if excel_report:
         if excel_path is None:
-            domain = os.environ.get("BLAZEUP_DOMAIN", "blazeup_admin")
-            excel_path = base_dir / "docs" / domain / "Partner_Platform_Test_Plan.xlsx"
+            excel_path = base_dir / "docs" / "blazeup" / "Partner_Platform_Test_Plan.xlsx"
         excel_report_path = write_excel_report(tc_summaries, result_dir, excel_path)
 
     print_run_summary(

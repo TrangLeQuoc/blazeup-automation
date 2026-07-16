@@ -22,42 +22,28 @@ Usage in a test
                                 settings.test_email, settings.test_password)
 """
 
-import os
 import re
 
 from playwright.async_api import Page
 from playwright.async_api import expect as pw_expect
 
 from api_clients.auth_base import BaseAuthClient
-from api_clients.blazeup_admin.auth_client import AuthClient
-from api_clients.blazeup_partner.auth_client import PartnerAuthClient
+from api_clients.blazeup.admin.auth_client import AuthClient
 from pages.base_page import BasePage
-from pages.blazeup_admin.login_page import LoginPage
-from pages.blazeup_partner.login_page import PartnerLoginPage
-
-# Each domain owns its auth client (endpoints differ per domain). The shared login
-# mechanics live in BaseAuthClient. Pick the client by BLAZEUP_DOMAIN.
-AUTH_CLIENTS: dict[str, type[BaseAuthClient]] = {
-    "blazeup_admin": AuthClient,
-    "blazeup_partner": PartnerAuthClient,
-}
-
-# Each domain owns its login page object (different login flow + selectors).
-# Admin = two-step (email → proceed → password); partner = single-step.
-LOGIN_PAGES: dict[str, type[BasePage]] = {
-    "blazeup_admin": LoginPage,
-    "blazeup_partner": PartnerLoginPage,
-}
+from pages.blazeup.admin.login_page import LoginPage
 
 
+# Single merged BlazeUp domain. The default actor is SA/admin; the partner actor
+# is used explicitly — login_api(..., auth_cls=PartnerAuthClient) or the partner
+# page objects — so these resolvers just return the admin defaults.
 def _auth_client_for_domain() -> type[BaseAuthClient]:
-    """Resolve the domain's auth client class from BLAZEUP_DOMAIN (defaults to admin)."""
-    return AUTH_CLIENTS.get(os.getenv("BLAZEUP_DOMAIN", "blazeup_admin"), AuthClient)
+    """Default auth client (SA/admin). Pass auth_cls explicitly for partner login."""
+    return AuthClient
 
 
 def _login_page_for_domain() -> type[BasePage]:
-    """Resolve the domain's login page class from BLAZEUP_DOMAIN (defaults to admin)."""
-    return LOGIN_PAGES.get(os.getenv("BLAZEUP_DOMAIN", "blazeup_admin"), LoginPage)
+    """Default login page (SA/admin, two-step)."""
+    return LoginPage
 
 
 async def login_ui(
