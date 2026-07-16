@@ -125,11 +125,16 @@ jobs:
           echo "RUN_DIR=$RUN_DIR"   >> "$GITHUB_ENV"
           echo "PYTEST_EXIT=$ec"    >> "$GITHUB_ENV"
 
-      - name: Publish AI triage to job summary
+      - name: Publish links + AI triage to job summary
         if: always()
         run: |
+          {
+            echo "### 📊 Allure dashboard"
+            echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/blazeup/"
+          } >> "$GITHUB_STEP_SUMMARY"
           if [ -n "$RUN_DIR" ] && [ -f "$RUN_DIR/ai_triage.md" ]; then
             {
+              echo ""
               echo "## AI Failure Triage"
               echo ""
               cat "$RUN_DIR/ai_triage.md"
@@ -152,9 +157,9 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           RUN_NUM: ${{ github.run_number }}
         run: |
-          # Prefer the plain TELEGRAM_CHAT_ID; fall back to the legacy per-domain
-          # secret so existing setups keep working.
-          CHAT_ID="${TELEGRAM_CHAT_ID:-$TELEGRAM_CHAT_ID_BLAZEUP_ADMIN}"
+          # Prefer the dedicated admin group; fall back to the shared/common group
+          # (TELEGRAM_CHAT_ID) if the admin one isn't set.
+          CHAT_ID="${TELEGRAM_CHAT_ID_BLAZEUP_ADMIN:-$TELEGRAM_CHAT_ID}"
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
             echo "::warning::No Telegram bot token / chat id — skipping notice."
             exit 0
