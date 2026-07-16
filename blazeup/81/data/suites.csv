@@ -1,0 +1,9 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001: GET internal partners list - SA filters are applied.
+
+Read-only contract check on ``GET /sa-partners-api/v1/sa/partners``:
+returns 200 with the expected envelope (statusCode/data/total/message) and
+honours pagination (returned page size never exceeds the requested limit).
+HTTP 200 is asserted inside the client (expected_status); here we validate
+the response body contract.
+","273","test_partner_api_partner_account_management_001","tests.blazeup.api.partner","2026-07-16","passed","2026-07-16","","test_sa_partners","",""
