@@ -179,6 +179,7 @@ def make_deal(partner_id: str, plan_id: str, **overrides: Any) -> dict[str, Any]
         "prospectPhone": valid_phone(),
         "prospectCountry": "US",
         "estimatedAcvCents": _fake.random_int(min=1_000_00, max=5_000_000_00),
+        "currency": "USD",  # required by CreateDealDto (ISO 4217) — ACV/plan-budget currency
         "numberOfEmployee": _fake.random_int(min=10, max=5000),
         "billingCycle": "annual",
         "expectedCloseDate": "2026-12-31",

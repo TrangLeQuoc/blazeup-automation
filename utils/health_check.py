@@ -8,8 +8,8 @@ domain-agnostic and never needs editing when a domain is added.
 
 Run (mirrors ``run_test``)::
 
-    python -m runner.blazeup_admin.health
-    python -m runner.blazeup_partner.health
+    python -m runner.blazeup.health
+    python -m runner.blazeup.health
 
 No authentication is used — ``/health`` is a public liveness probe. A 2xx/3xx
 response means the service is up; 502/timeout means it is down or not deployed.

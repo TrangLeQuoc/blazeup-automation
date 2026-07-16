@@ -18,7 +18,7 @@ Every test is located by 3 axes, mapping directly onto the directory structure:
 
 | Axis | Question | Example |
 |------|---------|-------|
-| **Domain** | Which app? | `blazeup_admin` (SA Dashboard) · `blazeup_partner` (Partner Portal) |
+| **Domain** | Which app? | `blazeup` (one domain; SA + partner actors share it) |
 | **Layer** | Which layer? | `api` (HTTP contract) · `ui` (browser) · `e2e` (business flow) |
 | **Group** | Where does it belong? | API → by **feature/resource** · UI → by **page** |
 
@@ -105,7 +105,7 @@ Example: `test_partner_api_partner_account_management_002`
 
 **ID formula (8 digits):** `{type}{project}{module:02d}{section:02d}{seq:02d}`
 - `type`: **1 = UI**, **0 = API** — an API id starts with `0`, so it displays as 7 digits (e.g. `2060102`); a UI id keeps all 8 (e.g. `12020101`)
-- `project`: the domain's digit (e.g. `blazeup_admin` = 2) — keeps IDs distinct across projects even if module names collide
+- `project`: the domain's digit (`blazeup` = 2) — keeps IDs distinct across projects even if module names collide
 - `module` / `section`: 2 digits each, from `config.yaml` (`modules.<NAME>.number` + the `ui:`/`api:` section map)
 - `seq`: **2 digits** (`01`–`99`) — max 99 TCs per section
 
@@ -219,8 +219,8 @@ Place it next to the corresponding feature. The **Test Type** column states clea
    editing) a TC, you must update **both files** with the corresponding TC content
    (description + steps with → Expected + overall + note; if it is a gap then state "confirm
    BE" clearly):
-   - `docs/blazeup_admin/PARTNER_TEST_CASES.md` (EN)
-   - `docs/blazeup_admin/PARTNER_TEST_CASES_vi.md` (VI)
+   - `docs/blazeup/PARTNER_TEST_CASES.md` (EN)
+   - `docs/blazeup/PARTNER_TEST_CASES_vi.md` (VI)
    - NOT_STARTED just has the name; BLOCKED records the reason; PASSED/FAILED records the
      full detail. Keep the 2 files in sync with the code + the Excel test plan.
 

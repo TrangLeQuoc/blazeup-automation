@@ -5,8 +5,7 @@ Exit code 0 = clean (warnings allowed), 1 = at least one ERROR, 2 = cannot read.
 
 Usage::
 
-    python utils/validate_test_plan.py                      # default domain (blazeup_admin)
-    python utils/validate_test_plan.py --domain blazeup_partner
+    python utils/validate_test_plan.py                      # default domain (blazeup)
     python utils/validate_test_plan.py --file path/to.xlsx --sheet "Partner Platform"
     python utils/validate_test_plan.py --strict             # warnings also fail (exit 1)
 
@@ -220,7 +219,7 @@ def main() -> int:
             stream.reconfigure(encoding="utf-8")
 
     ap = argparse.ArgumentParser(description="Validate the Excel test plan against the schema.")
-    ap.add_argument("--domain", default="blazeup_admin", help="domain folder under docs/")
+    ap.add_argument("--domain", default="blazeup", help="domain folder under docs/")
     ap.add_argument("--file", help="explicit path to the .xlsx (overrides --domain)")
     ap.add_argument("--sheet", default=DEFAULT_SHEET, help="worksheet name")
     ap.add_argument("--strict", action="store_true", help="treat warnings as failures too")
@@ -229,7 +228,7 @@ def main() -> int:
     path = _resolve_path(args)
     if not path.exists():
         # An explicit --file that's missing is a user mistake (fail). A domain that
-        # simply has no plan (e.g. blazeup_partner) is "nothing to lint" — not an error.
+        # simply has no plan is "nothing to lint" — not an error.
         if args.file:
             print(f"ERROR: --file not found: {path}", file=sys.stderr)
             return 2

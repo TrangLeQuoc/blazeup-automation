@@ -28,8 +28,8 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│            runner/{domain}/run_test.py                             │
-│   Domain CLI: sets BLAZEUP_DOMAIN env var before any imports       │
+│            runner/blazeup/run_test.py                                 │
+│   Entry point: scopes the run to the blazeup registry, sets defaults  │
 └────────────────────────────┬────────────────────────────────────────┘
                              │ delegates to
 ┌────────────────────────────▼────────────────────────────────────────┐
@@ -58,12 +58,13 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
 └─────────────────────────┘        └─────────────────────────────┘
 ```
 
-**Multi-domain support:**
+**One `blazeup` domain, two actors:**
 
-Each domain (e.g. `blazeup_admin`, `blazeup_partner`) has:
-- Its own `.env` file (`config/{domain}/.env`)
-- Its own TC registry (`runner/{domain}/registry.py`)
-- Its own CLI entry point (`runner/{domain}/run_test.py`)
+SA/admin and partner are two actors inside one domain (they share one API gateway
+and one test suite). The framework has:
+- One `.env` (`config/blazeup/.env`) with `ADMIN_*` + `PARTNER_*` keys
+- One TC registry (`runner/blazeup/registry.py`)
+- One CLI entry point (`runner/blazeup/run_test.py`)
 
 The shared runner merges all domain registries at runtime.
 
@@ -75,7 +76,7 @@ The shared runner merges all domain registries at runtime.
 | UI | `Playwright` async + Page Object Model | `pages/{domain}/` + `tests/{domain}/ui/{module}/` |
 
 > **Module layer:** tests and API clients are grouped by module under the domain
-> (e.g. `tests/blazeup_admin/api/partner/`, `api_clients/blazeup_admin/partner/`).
+> (e.g. `tests/blazeup/api/partner/`, `api_clients/blazeup/admin/partner/`).
 > TC IDs come from the test **function name**, not the path — moving a test between
 > folders never changes its ID (`sync_registry` scans recursively). Only shared
 > infra stays at the domain root: `api_clients/{domain}/auth_client.py`,
@@ -140,8 +141,10 @@ python -m runner.run_test --list
 
 ## 3. Configuration Reference
 
-Each domain has its own `.env` file: `config/{domain}/.env` (never committed).  
-`config/settings.py` loads it based on the `BLAZEUP_DOMAIN` environment variable set by domain-specific run_test.py.
+One `.env` file drives everything: `config/blazeup/.env` (never committed).
+`config/settings.py` always loads it and exposes `ADMIN_*` + `PARTNER_*` fields
+(the generic `settings.base_url` / `test_email` / `test_password` aliases resolve
+to the `ADMIN_*` values).
 
 ### BlazeUp Admin (.env)
 ```env
@@ -198,16 +201,16 @@ DEFAULT_RESPONSE_TIME_MS=2000
 
 **BlazeUp Admin (HRMS):**
 ```powershell
-python -m runner.blazeup_admin.run_test
-python -m runner.blazeup_admin.run_test --execute 1 2 3
-python -m runner.blazeup_admin.run_test --mode smoke
+python -m runner.blazeup.run_test
+python -m runner.blazeup.run_test --execute 1 2 3
+python -m runner.blazeup.run_test --mode smoke
 ```
 
 **BlazeUp Partner Platform:**
 ```powershell
-python -m runner.blazeup_partner.run_test
-python -m runner.blazeup_partner.run_test --execute 1010101 1010102
-python -m runner.blazeup_partner.run_test --mode regression
+python -m runner.blazeup.run_test
+python -m runner.blazeup.run_test --execute 1010101 1010102
+python -m runner.blazeup.run_test --mode regression
 ```
 
 ### 4.2 Shared runner (all domains)
@@ -347,28 +350,21 @@ UI IDs are always ≥ 1 000 000. API IDs are always < 1 000 000. No collision po
 Run after adding, renaming, or deleting any test function:
 
 ```powershell
-python utils/sync_registry.py                          # sync ALL domains
-python utils/sync_registry.py --domain blazeup_admin   # sync only one domain's folder
-python utils/sync_registry.py --domain blazeup_partner # sync only the partner folder
-python utils/sync_registry.py --table                  # just print the TC-ID reference table
+python utils/sync_registry.py                    # sync the blazeup registry
+python utils/sync_registry.py --table            # just print the TC-ID reference table
 ```
 
-Use `--domain <name>` when you only touched your own domain's tests and don't want
-to regenerate the other domain's registry. Without the flag, every domain found
-under `tests/*/` is synced.
-
-What it does (per domain):
-1. Scans `tests/{domain}/**/*.py` for functions matching `test_partner_{ui|api}_*_NNN`.
-2. Looks up title and priority from `docs/{domain}/Partner_Platform_Test_Plan.xlsx`
+What it does:
+1. Scans `tests/blazeup/**/*.py` for functions matching `test_partner_{ui|api}_*_NNN`.
+2. Looks up title and priority from `docs/blazeup/Partner_Platform_Test_Plan.xlsx`
    (falls back to the function docstring + `P2` if no Excel file exists).
 3. Scans legacy `test_tc*` / `test_tca*` functions and assigns sequential IDs.
-4. Overwrites `runner/{domain}/registry.py`.
+4. Overwrites `runner/blazeup/registry.py`.
 
-`runner/tc_registry.py` then auto-merges every `runner/*/registry.py` into one
-central `TC_REGISTRY` at import time — so the merged total is the sum of all
-domains (e.g. 2 admin + 2 partner = 4).
+`runner/tc_registry.py` auto-merges every `runner/*/registry.py` into one central
+`TC_REGISTRY` at import time (currently just the `blazeup` registry).
 
-> CI also runs this and will fail the build if any `runner/{domain}/registry.py`
+> CI also runs this and will fail the build if any `runner/blazeup/registry.py`
 > is out of sync with the test files.
 
 ---
@@ -560,7 +556,7 @@ The reporter reads which sheets to write — and the column positions — from
 add its name to `excel.sheets`; no code change:
 
 ```yaml
-# config/blazeup_admin/config.yaml
+# config/blazeup/config.yaml
 excel:
   sheets:
     - "Partner Platform"
@@ -681,7 +677,7 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 
 | Fixture | Type | Description |
 |---------|------|-------------|
-| `settings` | `Settings` | Pydantic config loaded from `config/{domain}/.env` |
+| `settings` | `Settings` | Pydantic config loaded from `config/blazeup/.env` |
 | `result_dir` | `Path` | Timestamped run folder; configures loguru sinks |
 | `fake` | `Faker` | Faker instance for generating test data |
 | `auth_state` | `dict` | **NEW**: Playwright storage state (cookies + localStorage) cached from one login; injected into every `authenticated_page` context |
@@ -770,7 +766,7 @@ Pure selector constants — no logic. One file per page. **Naming convention:**
 file `<x>_locators.py`, class `<X>Locators` (see [page-objects.md](page-objects.md)).
 
 ```python
-# locators/blazeup_admin/login_locators.py
+# locators/blazeup/admin/login_locators.py
 class LoginLocators:
     IDENTIFIER_INPUT = "input[type='email'], input[type='text']"
     PASSWORD_INPUT   = "input[type='password']"
@@ -818,34 +814,35 @@ workflow*), which also works from the GitHub Mobile app.
 
 | Input | Options | Notes |
 |-------|---------|-------|
-| `domain` | `blazeup_admin` / `blazeup_partner` / `all` | `all` fans out to parallel per-domain jobs |
 | `mode` | `smoke` / `regression` / `normal` | Ignored when `execute` is filled in |
-| `execute` | e.g. `12010101 12010102`, `1-10` | Specific TC IDs / ranges (wins over `mode`) |
-| `excel` | checkbox | Export Excel report (per-domain `REPORT_EXCEL`) |
-| `ai_triage` | checkbox | Run AI failure triage (per-domain `REPORT_AI_TRIAGE`) |
+| `execute` | e.g. `2061001 2061002`, `2060201-2060220` | Specific TC IDs / ranges (wins over `mode`) |
+| `excel` | checkbox | Export Excel report |
+| `ai_triage` | checkbox | Run AI failure triage |
 
 ### Pipeline per run
 
 ```
-setup (resolve params) → tests[matrix: domain] → publish-report[matrix: domain]
+tests → publish-report
 ```
-Each `tests` job: maps domain secrets → runs `python -m runner.<domain>.run_test`
-→ on failure auto-generates `ai_triage.md` → uploads artifacts → sends a **Telegram**
-summary (+ triage file). `publish-report` deploys an **Allure trend dashboard** to
-GitHub Pages: `https://<owner>.github.io/<repo>/<domain>/`.
+The `tests` job maps secrets → runs `python -m runner.blazeup.run_test` → on failure
+auto-generates `ai_triage.md` → uploads artifacts → sends a **Telegram** summary
+(+ triage file). `publish-report` deploys an **Allure trend dashboard** to GitHub
+Pages: `https://<owner>.github.io/<repo>/blazeup/`.
 
 ### Required GitHub secrets
 
+CI maps these to the env vars settings reads (`API_BASE_URL` ← `ADMIN_API_BASE_URL`):
+
 | Secret | Purpose |
 |--------|---------|
-| `ADMIN_BASE_URL`, `ADMIN_API_BASE_URL`, `ADMIN_TEST_EMAIL`, `ADMIN_TEST_PASSWORD` | blazeup_admin |
-| `PARTNER_BASE_URL`, `PARTNER_API_BASE_URL`, `PARTNER_TEST_EMAIL`, `PARTNER_TEST_PASSWORD` | blazeup_partner |
+| `ADMIN_API_BASE_URL` | shared API gateway → `API_BASE_URL` |
+| `ADMIN_BASE_URL`, `ADMIN_TEST_EMAIL`, `ADMIN_TEST_PASSWORD` | SA UI origin + login |
+| `PARTNER_BASE_URL`, `PARTNER_TEST_EMAIL`, `PARTNER_TEST_PASSWORD` | Partner UI origin + login |
 | `GROQ_API_KEY` | AI triage (Groq) |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Telegram notifications (shared fallback) |
-| `TELEGRAM_CHAT_ID_BLAZEUP_<DOMAIN>` | *(optional)* per-team channel routing |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Telegram notifications |
 
 > Workflow permissions must allow **Read and write** (Settings → Actions → General)
-> for the dashboard deploy. Adding a domain → **[add-domain.md](add-domain.md)**.
+> for the dashboard deploy.
 
 ### Registry validation step
 
@@ -853,7 +850,7 @@ CI runs `python utils/sync_registry.py` and checks `runner/*/registry.py` is unc
 If a test file was added/removed without re-syncing, the build fails:
 
 ```
-::error::A runner/{domain}/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit.
+::error::A runner/blazeup/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit.
 ```
 
 **Fix:** run `python utils/sync_registry.py` locally and commit the updated registry.

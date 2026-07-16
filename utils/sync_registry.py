@@ -64,8 +64,7 @@ Legacy-style (legacy demo tests, preserved for backward-compat):
 
 Usage
 -----
-    python utils/sync_registry.py                          # sync ALL domains
-    python utils/sync_registry.py --domain blazeup_admin   # sync one domain only
+    python utils/sync_registry.py                          # sync the blazeup registry
     python utils/sync_registry.py --table                  # print ID reference table
 """
 
@@ -729,7 +728,7 @@ def sync(domain: str | None = None) -> None:
     """Regenerate runner/{domain}/registry.py for one or all domains.
 
     domain=None  → sync all domains found in tests/*/
-    domain="blazeup_admin"  → sync SA only  → runner/blazeup_admin/registry.py
+    domain="blazeup_admin"  → sync SA only  → runner/blazeup/registry.py
     """
     print("Syncing TC registry ...")
     print(f"  Tests root : {TESTS_DIR}")

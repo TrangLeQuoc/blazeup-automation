@@ -34,7 +34,7 @@ import sys
 
 from loguru import logger
 
-from api_clients.blazeup_admin.partner.sa_partners_client import SaPartnersClient
+from api_clients.blazeup.admin.partner.sa_partners_client import SaPartnersClient
 from config.settings import get_settings
 from utils.data_factory import QA_AUTO_PREFIX
 from utils.login_helpers import login_api

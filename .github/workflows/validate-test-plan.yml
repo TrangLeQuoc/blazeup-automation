@@ -53,9 +53,8 @@ jobs:
       - name: Install dependency (openpyxl only)
         run: pip install openpyxl==3.1.5
 
-      # Runs per domain. A domain with no plan (e.g. blazeup_partner) exits 0 with
-      # "nothing to validate", so this is future-proof as new domains are added.
-      - name: Validate the Excel test plan(s)
+      # Single merged domain. A domain with no plan exits 0 with "nothing to
+      # validate", so this stays future-proof if more domains are ever added.
+      - name: Validate the Excel test plan
         run: |
-          python utils/validate_test_plan.py --domain blazeup_admin
-          python utils/validate_test_plan.py --domain blazeup_partner
+          python utils/validate_test_plan.py --domain blazeup

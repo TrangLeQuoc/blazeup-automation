@@ -1,6 +1,6 @@
 # BlazeUp Automation Framework
 
-Multi-domain pytest + Playwright async automation framework for **BlazeUp Admin (HRMS)** and **BlazeUp Partner Platform**.
+pytest + Playwright async automation framework for the **BlazeUp Partner Platform** (SA/admin + partner actors under one `blazeup` domain, sharing one API gateway).
 
 Covers both **HTTP API** (httpx + Pydantic) and **Browser UI** (Playwright async + Page Object Model) automation.
 
@@ -32,57 +32,50 @@ pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
-### 3. Configure Credentials
-
-Each domain has its own `.env` file:
+One `.env` file drives everything. Copy the template and fill it in:
 
 ```bash
-# BlazeUp Admin (HRMS)
-cat > config/blazeup_admin/.env <<EOF
-BASE_URL=https://stgsa.blazeup.ai
-API_BASE_URL=https://api.stg.blazeup.ai
-TEST_EMAIL=your-email@example.com
-TEST_PASSWORD=your-password
-HEADLESS=true
-BROWSER=chromium
-SLOW_MO=0
-DEFAULT_RESPONSE_TIME_MS=2000
-EOF
-
-# BlazeUp Partner
-cat > config/blazeup_partner/.env <<EOF
-BASE_URL=https://partner.stgsa.blazeup.ai
-API_BASE_URL=https://api.stg.blazeup.ai
-TEST_EMAIL=your-email@example.com
-TEST_PASSWORD=your-password
-HEADLESS=true
-BROWSER=chromium
-SLOW_MO=0
-DEFAULT_RESPONSE_TIME_MS=2000
-EOF
+cp .env.example config/blazeup/.env
 ```
 
-> **Note:** every domain uses the **same env keys** (`TEST_EMAIL` / `TEST_PASSWORD`).
-> The login fixtures read `settings.test_email` / `settings.test_password`, so a new
-> domain needs no fixture changes — just its own `config/<domain>/.env`.
+```bash
+# config/blazeup/.env
+API_BASE_URL=https://api.stg.blazeup.ai       # shared gateway (both actors)
+
+# Admin / SuperAdmin actor (SA endpoints /v1/sa/*)
+ADMIN_BASE_URL=https://stgsa.blazeup.ai
+ADMIN_EMAIL=your-sa-user@example.com
+ADMIN_PASSWORD=your-password
+
+# Partner actor (partner endpoints /v1/partner/*) — optional
+PARTNER_BASE_URL=https://stgpartners.blazeup.ai
+PARTNER_EMAIL=your-partner-user@example.com
+PARTNER_PASSWORD=your-password
+
+HEADLESS=true
+BROWSER=chromium
+DEFAULT_RESPONSE_TIME_MS=30000
+```
+
+> **Note:** the SA/admin actor and the partner actor are distinguished by
+> `ADMIN_*` / `PARTNER_*` keys — not separate files. The generic settings aliases
+> (`settings.base_url` / `test_email` / `test_password`) resolve to the `ADMIN_*`
+> values, since most setup + SA tests run as the admin actor.
 
 **Never commit `.env` files** — they are listed in `.gitignore`.
 
 ### 4. Run Tests
 
 ```bash
-# Run BlazeUp Admin tests (smoke suite)
-python -m runner.blazeup_admin.run_test --mode smoke
+# Run the smoke suite
+python -m runner.blazeup.run_test --mode smoke
 
 # Run specific TC IDs / ranges
-python -m runner.blazeup_admin.run_test --execute 12010101 12010102
-python -m runner.blazeup_admin.run_test --execute 1-10
+python -m runner.blazeup.run_test --execute 2061001 2061002
+python -m runner.blazeup.run_test --execute 2060201-2060220
 
-# Run BlazeUp Partner tests (test plan in progress)
-python -m runner.blazeup_partner.run_test
-
-# List all registered TCs (shared runner)
-python -m runner.run_test --list
+# List all registered TCs
+python -m runner.blazeup.run_test --list
 ```
 
 ---
@@ -94,18 +87,22 @@ blazeup_automation/
 │
 ├── api_clients/                          # HTTP API clients (httpx + Pydantic)
 │   ├── base_client.py                    #   Base: retry, timing, schema validation
-│   ├── blazeup_admin/
-│   │   ├── auth_client.py                #   Login + current-user (sa-auth-api, shared)
-│   │   └── partner/                      #   Partner-module clients
-│   │       ├── sa_partners_client.py     #     Partners, users, certs, territories, audit
-│   │       └── sa_deals_client.py        #     Deal register / approve / pipeline
-│   └── blazeup_partner/
-│       └── deal_registration_client.py   #   Deal registration (SCAFFOLD)
+│   ├── auth_base.py                      #   Shared login mechanics (BaseAuthClient)
+│   └── blazeup/                          #   One domain, sub-split by actor surface
+│       ├── admin/                        #   SA clients (/v1/sa/*)
+│       │   ├── auth_client.py            #     SA login + current-user (sa-auth-api)
+│       │   └── partner/                  #     SA-side partner-module clients
+│       │       ├── sa_partners_client.py #       Partners, users, certs, territories, audit
+│       │       └── sa_deals_client.py    #       Deal register / approve / pipeline
+│       └── partner/                      #   Partner clients (/v1/partner/*)
+│           ├── auth_client.py            #     Partner login (separate JWT issuer)
+│           └── deal_registration_client.py  # Partner deal registration (SCAFFOLD)
 │
-├── config/                               # Domain-specific settings
+├── config/                               # Settings
 │   ├── settings.py                       #   Typed config from .env (Pydantic)
-│   ├── blazeup_admin/.env                #   Admin domain credentials & UI base URL
-│   └── blazeup_partner/.env              #   Partner domain credentials & UI base URL
+│   └── blazeup/
+│       ├── config.yaml                   #   Modules, TC-ID numbering, services, excel map
+│       └── .env                          #   API_BASE_URL + ADMIN_*/PARTNER_* credentials
 │
 ├── docs/
 │   ├── guides/                           #   Framework guides
@@ -114,26 +111,23 @@ blazeup_automation/
 │   │   ├── page-objects.md               #     Page object / locator / fixture conventions
 │   │   ├── test-data.md                  #     Faker factories + cleanup conventions
 │   │   └── test-organization.md          #     Test taxonomy: layers, naming, markers, e2e
-│   ├── api-snapshots/<domain>/           #   Swagger baselines + CHANGELOG (drift detector)
-│   └── blazeup_admin/                    #   Partner module reference (tested under blazeup_admin)
+│   ├── api-snapshots/blazeup/            #   Swagger baselines + CHANGELOG (drift detector)
+│   └── blazeup/                          #   Partner Platform reference + test plan
 │       ├── Partner_Platform_Test_Plan.xlsx
 │       ├── partner_product_backlog.vi.md
 │       ├── partner_requirement.xlsx
 │       └── partner-platform-prd-v1.8(.vi).md
 │
-├── locators/                             #   UI element selectors (by page/domain)
-│   ├── blazeup_admin/                    #   *Locators classes in *_locators.py
-│   │   ├── login_locators.py             #   LoginLocators
-│   │   ├── shell_locators.py             #   ShellLocators
-│   │   └── dashboard_locators.py         #   DashboardLocators
-│   └── blazeup_partner/
-│       └── partner_portal_locators.py    #   PartnerPortalLocators
+├── locators/                             #   UI element selectors (Locators classes)
+│   └── blazeup/
+│       ├── admin/                        #   login / shell / dashboard locators
+│       └── partner/                      #   partner-portal locators
 │
 ├── pages/                                #   Page Object Model
 │   ├── base_page.py                      #   Shared: goto, fill, click, wait_for_element
-│   ├── blazeup_admin/
-│   │   └── login_page.py                 #   Two-step login flow
-│   └── blazeup_partner/
+│   └── blazeup/
+│       ├── admin/                        #   SA login (two-step) + shell + dashboard
+│       └── partner/                      #   partner login + portal pages
 │
 ├── pytest_support/
 │   ├── fixtures.py                       #   All pytest fixtures
@@ -148,28 +142,20 @@ blazeup_automation/
 │   ├── run_test.py                       #   CLI entrypoint (modes, filters, repeat)
 │   ├── test_runner.py                    #   Subprocess runner, summary, Excel export
 │   ├── tc_registry.py                    #   AUTO-GENERATED: merged registry
-│   ├── blazeup_admin/                    #   Per-domain entry points
-│   │   ├── run_test.py                   #     Run tests (sets BLAZEUP_DOMAIN)
-│   │   ├── registry.py                   #     Auto-generated TC registry
-│   │   ├── health.py                     #     API service health-check
-│   │   └── swagger_check.py              #     Swagger drift detector
-│   └── blazeup_partner/                  #   (same per-domain entry points)
-│       ├── run_test.py
-│       ├── registry.py
-│       ├── health.py
-│       └── swagger_check.py
+│   └── blazeup/                          #   Domain entry points
+│       ├── run_test.py                   #     Run tests
+│       ├── registry.py                   #     Auto-generated TC registry
+│       ├── health.py                     #     API service health-check
+│       └── swagger_check.py              #     Swagger drift detector
 │
-├── tests/                                #   Test cases (domain / layer / module)
-│   ├── blazeup_admin/
-│   │   ├── api/
-│   │   │   └── partner/                  #   Partner module — one file per feature
-│   │   │       └── test_sa_*.py          #     deals, partners, territories, certs, ...
-│   │   └── ui/
-│   │       ├── dashboard/                #   Dashboard module
-│   │       └── shell/                    #   Shell module (page loads, load time)
-│   └── blazeup_partner/                  #   (same domain / layer / module pattern)
+├── tests/                                #   Test cases (layer / module)
+│   └── blazeup/
 │       ├── api/
+│       │   └── partner/                  #   Partner module — one file per feature
+│       │       └── test_sa_*.py          #     deals, partners, territories, certs, ...
 │       └── ui/
+│           ├── dashboard/                #   Dashboard module
+│           └── shell/                    #   Shell module (page loads, load time)
 │
 ├── utils/                                #   Shared utilities
 │   ├── login_helpers.py                  #   Reusable: login_ui(), login_api()
@@ -191,33 +177,29 @@ blazeup_automation/
 ├── .gitignore                            #   Git ignore rules
 ├── .gitattributes                        #   Line ending & binary file rules
 ├── README.md                             #   ← you are here
-└── .env.example                          #   Template (copy to config/{domain}/.env)
+└── .env.example                          #   Template (copy to config/blazeup/.env)
 ```
 
 ---
 
 ## Domain Architecture
 
-This framework supports multiple test domains. Each domain has:
+One `blazeup` domain covers the whole Partner Platform. SA/admin and partner are
+two **actors** inside it (not separate domains) — they share one API gateway and
+one test suite; only the UI origin + credentials differ.
 
-- **Independent test registry** (`runner/{domain}/registry.py`)
-- **Domain-specific CLI** (`runner/{domain}/run_test.py`)
-- **Domain-specific .env** (`config/{domain}/.env`)
-- **Auto-discovery** via `utils/sync_registry.py`
+- **One registry** (`runner/blazeup/registry.py`, auto-generated by `utils/sync_registry.py`)
+- **One CLI** (`python -m runner.blazeup.run_test`)
+- **One `.env`** (`config/blazeup/.env`) with `ADMIN_*` + `PARTNER_*` keys
 
-### BlazeUp Admin (HRMS)
-- **Base URL**: `https://stgsa.blazeup.ai`
-- **API Base**: `https://api.stg.blazeup.ai`
-- **Credentials**: `TEST_EMAIL`, `TEST_PASSWORD` from `config/blazeup_admin/.env`
-- **Tests**: 5 UI TCs (shell page-loads + load-time + dashboard)
-- **CLI**: `python -m runner.blazeup_admin.run_test`
+| Actor | UI origin | Endpoints | Credentials |
+|-------|-----------|-----------|-------------|
+| **Admin / SA** | `https://stgsa.blazeup.ai` | `/sa-partners-api/v1/sa/*` | `ADMIN_EMAIL` / `ADMIN_PASSWORD` |
+| **Partner** | `https://stgpartners.blazeup.ai` | `/sa-partners-api/v1/partner/*` | `PARTNER_EMAIL` / `PARTNER_PASSWORD` |
 
-### BlazeUp Partner
-- **Base URL**: `https://partner.stgsa.blazeup.ai`
-- **API Base**: `https://api.stg.blazeup.ai`
-- **Credentials**: `TEST_EMAIL`, `TEST_PASSWORD` from `config/blazeup_partner/.env`
-- **Tests**: Currently being planned
-- **CLI**: `python -m runner.blazeup_partner.run_test`
+> Partner-portal tests mint a throwaway partner from the SA side (create → approve →
+> invite → log in), so they run as one self-contained test under the shared runner.
+> Shared API gateway for both: `https://api.stg.blazeup.ai`.
 
 ---
 
@@ -246,18 +228,15 @@ test_partner_api_auth_access_control_001  →  TC   10101  (API: no leading digi
 ## Key Commands
 
 ```bash
-# Domain-specific runs
-python -m runner.blazeup_admin.run_test              # Admin tests
-python -m runner.blazeup_partner.run_test            # Partner tests
-
-# Shared runner (runs all domains)
-python -m runner.run_test --list                      # List all registered TCs
-python -m runner.run_test --dry-run                   # Show execution plan
-python -m runner.run_test --mode smoke                # Run smoke-marked TCs
-python -m runner.run_test --mode regression           # Run P1 TCs
+# Run tests
+python -m runner.blazeup.run_test --list              # List all registered TCs
+python -m runner.blazeup.run_test --dry-run           # Show execution plan
+python -m runner.blazeup.run_test --mode smoke        # Run smoke-marked TCs
+python -m runner.blazeup.run_test --mode regression   # Run P1 TCs
+python -m runner.blazeup.run_test --execute 2061001   # Run a specific TC
 
 # Direct pytest (for development)
-python -m pytest tests/blazeup_partner/ui/ -s -k test_partner_ui_partner_portal_shell_001
+python -m pytest tests/blazeup/ui/ -s -k test_partner_ui_partner_portal_shell_001
 python -m pytest tests/ --co                          # Collect tests (show discovery)
 
 # Sync TC registry (after adding new test functions)
@@ -324,7 +303,7 @@ grep "TC-" results/run_*/logs/test.log
 
 ### Add a New Test
 
-1. Write a test function in `tests/{domain}/{layer}/*.py`:
+1. Write a test function in `tests/blazeup/{layer}/*.py`:
    ```python
    async def test_partner_ui_partner_portal_shell_002(authenticated_page):
        """Description of what this test does."""
@@ -336,11 +315,11 @@ grep "TC-" results/run_*/logs/test.log
    ```bash
    python utils/sync_registry.py
    ```
-   This auto-generates `runner/{domain}/registry.py` with the new TC ID.
+   This auto-generates `runner/blazeup/registry.py` with the new TC ID.
 
 3. Run the test:
    ```bash
-   python -m runner.{domain}.run_test --execute <TC_ID>
+   python -m runner.blazeup.run_test --execute <TC_ID>
    ```
 
 ### Fixtures Available
@@ -371,15 +350,9 @@ grep "TC-" results/run_*/logs/test.log
 python -m playwright install chromium
 ```
 
-### Settings load wrong environment
-Ensure `BLAZEUP_DOMAIN` is set BEFORE imports:
-```bash
-# ✅ Correct: domain set before config load
-python -m runner.blazeup_admin.run_test
-
-# ❌ Wrong: generic pytest, may load wrong .env
-python -m pytest tests/blazeup_admin/...
-```
+### Settings fail to load
+Settings read `config/blazeup/.env`. If a required field is missing, `get_settings()`
+fails fast. Copy the template and fill it in: `cp .env.example config/blazeup/.env`.
 
 ### Tests timeout
 Increase `DEFAULT_RESPONSE_TIME_MS` in `.env`:
@@ -388,9 +361,8 @@ DEFAULT_RESPONSE_TIME_MS=30000   # 30 seconds
 ```
 
 ### Login fails
-- Verify credentials in `config/{domain}/.env`
-- Check that `BASE_URL` and `API_BASE_URL` are correct
-- Ensure `LOGIN_TIMEOUT_MS` is not too short
+- Verify `ADMIN_EMAIL` / `ADMIN_PASSWORD` (and `PARTNER_*` if used) in `config/blazeup/.env`
+- Check that `ADMIN_BASE_URL` / `API_BASE_URL` are correct
 
 ---
 
@@ -411,17 +383,16 @@ app), choosing:
 
 | Input | Options | Notes |
 |-------|---------|-------|
-| `domain` | `blazeup_admin` / `blazeup_partner` / `all` | `all` fans out into parallel per-domain jobs |
 | `mode` | `smoke` / `regression` / `normal` | Ignored when `execute` is set |
-| `execute` | e.g. `12010101 12010102` or `1-10` | Specific TC IDs / ranges |
+| `execute` | e.g. `2061001 2061002` or `2060201-2060220` | Specific TC IDs / ranges |
 | `excel` | checkbox | Export Excel report |
 | `ai_triage` | checkbox | Run AI failure triage |
 
-Each run, per domain: runs via `python -m runner.<domain>.run_test`, then on failure
-**AI-triages** the log (`ai_triage.md`), publishes an **Allure trend dashboard** to
-GitHub Pages, and sends a **Telegram** summary (+ triage file).
+Each run: `python -m runner.blazeup.run_test`, then on failure **AI-triages** the
+log (`ai_triage.md`), publishes an **Allure trend dashboard** to GitHub Pages, and
+sends a **Telegram** summary (+ triage file).
 
-**Dashboard:** `https://<owner>.github.io/<repo>/<domain>/` (e.g. `.../blazeup_admin/`).
+**Dashboard:** `https://<owner>.github.io/<repo>/blazeup/`.
 
 ### Test-plan validation — `validate-test-plan.yml` (automatic)
 
@@ -437,15 +408,16 @@ Plan"**. Run it locally the same way: `python utils/validate_test_plan.py`.
 
 > Only `test.yml` needs secrets. `validate-test-plan.yml` needs none.
 
+CI maps these secrets to the env vars `settings.py` reads (`API_BASE_URL` ←
+`ADMIN_API_BASE_URL`; `ADMIN_*`/`PARTNER_*` as named):
+
 | Secret | Purpose |
 |--------|---------|
-| `ADMIN_BASE_URL` / `ADMIN_API_BASE_URL` / `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` | blazeup_admin URLs + login |
-| `PARTNER_BASE_URL` / `PARTNER_API_BASE_URL` / `PARTNER_TEST_EMAIL` / `PARTNER_TEST_PASSWORD` | blazeup_partner URLs + login |
+| `ADMIN_API_BASE_URL` | shared API gateway → `API_BASE_URL` |
+| `ADMIN_BASE_URL` / `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` | SA UI origin + login |
+| `PARTNER_BASE_URL` / `PARTNER_TEST_EMAIL` / `PARTNER_TEST_PASSWORD` | Partner UI origin + login |
 | `GROQ_API_KEY` | AI triage (Groq provider) |
-| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram notifications (shared fallback) |
-| `TELEGRAM_CHAT_ID_BLAZEUP_<DOMAIN>` | *(optional)* per-team channel routing |
-
-Adding a new domain? See **[docs/guides/add-domain.md](docs/guides/add-domain.md)**.
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram notifications |
 
 ---
 
