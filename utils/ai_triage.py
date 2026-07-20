@@ -194,7 +194,24 @@ _RULES: list[tuple[tuple[str, ...], str]] = [
     ),
     (("exceeded limit", "did not render", "timed out", "timeout"), "flaky_slow"),
     (("dynamically imported module", "something went wrong"), "deploy_mfe"),
-    (("confirm with be", "confirm be"), "app_bug"),
+    # BE-defect signatures the be_gap tests emit — classify deterministically as
+    # app_bug so a mis-firing LLM can't relabel them env_auth (e.g. a ghost FK
+    # accepted with 2xx reads like "status 201" but is a real backend bug).
+    (
+        (
+            "confirm with be",
+            "confirm be",
+            "must not dup",
+            "must be idempotent",
+            "must stamp",
+            "not stamped",
+            "verified absent",
+            "should reject",
+            "must reject",
+            "should be rejected",
+        ),
+        "app_bug",
+    ),
 ]
 
 
@@ -569,10 +586,20 @@ def main(argv: list[str] | None = None) -> int:
         out.write_text(str(exc), encoding="utf-8")
         raise SystemExit(f"Model did not return valid JSON. Detail saved to {out}") from exc
 
-    md = render_markdown(groups, log_path, summary)
+    # Reconcile real backend defects (category app_bug) against the Bug Tracker —
+    # deterministic (keyed by Test Case ID). New bugs are appended on local runs;
+    # on CI it is propose-only (report, no file change).
+    from utils.bug_tracker import reconcile as reconcile_bugs
+    from utils.bug_tracker import render as render_bugs
+
+    recon = reconcile_bugs(groups)
+    bug_block = render_bugs(recon)
+
+    md = render_markdown(groups, log_path, summary) + "\n" + bug_block + "\n"
     out_md = log_path.parent.parent / "ai_triage.md"  # run_dir/ai_triage.md
     out_md.write_text(md, encoding="utf-8")
     _print_console(groups, summary)
+    print(bug_block)
     print(f"\nSaved: {out_md}")
     return 0
 

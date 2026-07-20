@@ -70,8 +70,8 @@ jobs:
       - name: Validate registry is up-to-date
         run: |
           python utils/sync_registry.py
-          git diff --exit-code runner/blazeup/registry.py || \
-            (echo "::error::runner/blazeup/registry.py is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
+          git diff --exit-code runner/blazeup/registry.py runner/blazeup/registry_modules/ || \
+            (echo "::error::The TC registry is out of sync. Run 'python utils/sync_registry.py' and commit." && exit 1)
 
       # ── Load URLs + credentials from secrets into the environment ──────────
       # settings.py reads these directly (no .env needed on CI). Secret values

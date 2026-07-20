@@ -144,7 +144,8 @@ blazeup_automation/
 │   ├── tc_registry.py                    #   AUTO-GENERATED: merged registry
 │   └── blazeup/                          #   Domain entry points
 │       ├── run_test.py                   #     Run tests
-│       ├── registry.py                   #     Auto-generated TC registry
+│       ├── registry.py                   #     Auto-gen: merges registry_modules/*
+│       ├── registry_modules/             #     Auto-gen: one file per module (partner.py, …)
 │       ├── health.py                     #     API service health-check
 │       └── swagger_check.py              #     Swagger drift detector
 │

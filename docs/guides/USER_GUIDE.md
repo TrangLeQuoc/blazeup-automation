@@ -359,10 +359,13 @@ What it does:
 2. Looks up title and priority from `docs/blazeup/Partner_Platform_Test_Plan.xlsx`
    (falls back to the function docstring + `P2` if no Excel file exists).
 3. Scans legacy `test_tc*` / `test_tca*` functions and assigns sequential IDs.
-4. Overwrites `runner/blazeup/registry.py`.
+4. Writes **one file per top-level module** under `runner/blazeup/registry_modules/`
+   (`partner.py`, `shell.py`, …) so per-module PRs don't collide, plus the aggregator
+   `runner/blazeup/registry.py` that globs + merges them.
 
-`runner/tc_registry.py` auto-merges every `runner/*/registry.py` into one central
-`TC_REGISTRY` at import time (currently just the `blazeup` registry).
+`runner/tc_registry.py` then auto-merges every `runner/*/registry.py` into one central
+`TC_REGISTRY` at import time. Filtering (`--module`, `--marker`, `--execute`) runs on the
+merged registry — file layout doesn't affect how you select tests.
 
 > CI also runs this and will fail the build if any `runner/blazeup/registry.py`
 > is out of sync with the test files.

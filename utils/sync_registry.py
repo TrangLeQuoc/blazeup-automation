@@ -169,26 +169,12 @@ PROJECTS, MODULES, MODULE_SECTIONS, EXCEL_SHEETS = _load_domain_configs()
 # ---------------------------------------------------------------------------
 # Registry file template
 # ---------------------------------------------------------------------------
-_TEMPLATE = '''\
-"""Central registry mapping numeric TC IDs to pytest nodes.  (AUTO-GENERATED — do not edit)
-
-TC ID Encoding
---------------
-New-style  :  {{type}}{{project}}{{module:02d}}{{section:02d}}{{seq:02d}}
-              type 1=UI / 0=API   project 1=partner 2=admin
-              module/section are per-domain. The project digit keeps IDs unique
-              across projects even when they share a module name.
-
-Legacy     :  1001-1999 = UI demo   1-99 = API demo   (legacy demo suite)
-
-Traceability
-------------
-tc_string  links each registry entry back to the TestcaseId column in
-Partner_Platform_Test_Plan.xlsx.  Empty string for legacy demo tests.
-"""
+# Shared TestCase dataclass (written once to registry_modules/_base.py). Not a
+# .format() template — braces are literal.
+_BASE_TEMPLATE = '''\
+"""Shared TestCase dataclass for the per-module registry files. (AUTO-GENERATED — do not edit)"""
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Literal
 
 
@@ -208,12 +194,48 @@ class TestCase:
 
     @property
     def node_id(self) -> str:
-        return f"{{self.test_path}}::{{self.test_func}}"
+        return f"{self.test_path}::{self.test_func}"
+'''
 
+# One file per top-level module (registry_modules/<module>.py). .format(module, domain, items).
+_MODULE_TEMPLATE = '''\
+"""TC registry — module `{module}`. (AUTO-GENERATED — do not edit.)
+
+One file per top-level module so per-module PRs don't collide. Merged into the
+domain registry by runner/{domain}/registry.py.
+"""
+
+from runner.{domain}.registry_modules._base import TestCase
 
 TC_REGISTRY: dict[int, TestCase] = {{
 {items}
 }}
+'''
+
+# Domain aggregator (registry.py) — globs + merges every registry_modules/*.py.
+# .format(domain). Stays a FILE so runner/tc_registry.py discovers it unchanged.
+_AGG_TEMPLATE = '''\
+"""Registry for the `{domain}` domain — merges runner/{domain}/registry_modules/*.py.
+(AUTO-GENERATED — do not edit. Add TCs by writing tests + running utils/sync_registry.py.)
+
+Each top-level module has its own file under registry_modules/ so per-module PRs
+don't collide; this file globs + merges them into one TC_REGISTRY.
+"""
+
+import importlib
+import pkgutil
+from pathlib import Path
+
+from runner.{domain}.registry_modules._base import TestCase
+
+TC_REGISTRY: dict[int, TestCase] = {{}}
+
+_pkg_path = Path(__file__).parent / "registry_modules"
+for _m in pkgutil.iter_modules([str(_pkg_path)]):
+    if _m.name.startswith("_"):
+        continue
+    _mod = importlib.import_module(f"runner.{domain}.registry_modules.{{_m.name}}")
+    TC_REGISTRY.update(getattr(_mod, "TC_REGISTRY", {{}}))
 
 
 def get_tc(tc_id: int) -> TestCase:
@@ -225,8 +247,7 @@ def get_tc(tc_id: int) -> TestCase:
 def validate_registry() -> None:
     """Verify that all registered test functions exist (optional utility)."""
     for tc in TC_REGISTRY.values():
-        path = Path(tc.test_path)
-        if not path.exists():
+        if not Path(tc.test_path).exists():
             print(f"Warning: Test file {{tc.test_path}} missing for TC {{tc.tc_id}}")
 
 
@@ -688,15 +709,24 @@ def _sync_domain(domain: str) -> None:
         else:
             seen[tc["id"]] = tc["func"]
 
-    # Ensure output directory exists
-    registry_file.parent.mkdir(parents=True, exist_ok=True)
-    (registry_file.parent / "__init__.py").touch(exist_ok=True)
+    # Output layout: runner/{domain}/registry.py (aggregator, a FILE so tc_registry
+    # discovers it unchanged) + runner/{domain}/registry_modules/<module>.py (one per
+    # top-level module, so per-module PRs don't collide).
+    domain_dir = RUNNER_DIR / domain
+    domain_dir.mkdir(parents=True, exist_ok=True)
+    (domain_dir / "__init__.py").touch(exist_ok=True)
+    modules_dir = domain_dir / "registry_modules"
+    modules_dir.mkdir(parents=True, exist_ok=True)
+    (modules_dir / "__init__.py").touch(exist_ok=True)
 
-    # Snapshot before overwrite
-    old_snapshot = _parse_registry_snapshot(registry_file)
+    # Snapshot before overwrite (parse every existing per-module file for the diff)
+    old_snapshot: dict[int, str] = {}
+    for f in modules_dir.glob("*.py"):
+        if not f.name.startswith("_"):
+            old_snapshot.update(_parse_registry_snapshot(f))
 
-    # Build registry content
-    items_lines: list[str] = []
+    # Build per-module buckets (all_tcs is already sorted by id → stable order)
+    buckets: dict[str, list[str]] = {}
     new_snapshot: dict[int, str] = {}
     for tc in all_tcs:
         tc_string = tc.get("tc_string", "")
@@ -712,15 +742,28 @@ def _sync_domain(domain: str) -> None:
             f'"{tc["priority"]}"'
         )
         new_snapshot[tc["id"]] = args_str
-        items_lines.append(f"    {tc['id']}: TestCase({args_str}),")
+        buckets.setdefault(tc["module"], []).append(f"    {tc['id']}: TestCase({args_str}),")
 
-    registry_file.write_text(
-        _TEMPLATE.format(items="\n".join(items_lines)),
-        encoding="utf-8",
-        newline="\n",  # force LF (matches .gitattributes) so the file is stable on Windows
+    _wr = {"encoding": "utf-8", "newline": "\n"}  # LF (matches .gitattributes)
+    (modules_dir / "_base.py").write_text(_BASE_TEMPLATE, **_wr)
+
+    wanted = {"_base.py", "__init__.py"}
+    for module, lines in sorted(buckets.items()):
+        wanted.add(f"{module}.py")
+        (modules_dir / f"{module}.py").write_text(
+            _MODULE_TEMPLATE.format(module=module, domain=domain, items="\n".join(lines)), **_wr
+        )
+    # Remove stale per-module files (a module that no longer has any TC)
+    for f in modules_dir.glob("*.py"):
+        if f.name not in wanted:
+            f.unlink()
+
+    registry_file.write_text(_AGG_TEMPLATE.format(domain=domain), **_wr)
+
+    print(
+        f"\n  Total : {len(all_tcs):4d} TCs across {len(buckets)} module file(s) "
+        f"in {modules_dir.relative_to(PROJECT_ROOT)}"
     )
-
-    print(f"\n  Total : {len(all_tcs):4d} TCs written to {registry_file.relative_to(PROJECT_ROOT)}")
     _print_diff(old_snapshot, new_snapshot, all_tcs)
 
 
