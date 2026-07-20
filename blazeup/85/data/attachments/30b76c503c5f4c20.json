@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc5853d53d0f1e0e4818c",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Orr-Jenkins",
+    "code": "PAR-933230",
+    "email": "qa.auto+susan32@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://cooper.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:49.006Z",
+    "updatedAt": "2026-07-20T06:51:49.128Z",
+    "approvedAt": "2026-07-20T06:51:49.124Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

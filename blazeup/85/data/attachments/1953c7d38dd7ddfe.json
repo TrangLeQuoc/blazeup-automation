@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "email": "qa.auto+smunoz@mailinator.com",
+    "type": "channel"
+  }
+}

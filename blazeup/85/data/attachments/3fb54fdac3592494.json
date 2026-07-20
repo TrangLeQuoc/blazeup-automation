@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Adkins, Stephenson and Parker",
+    "code": "PAR-982129",
+    "email": "qa.auto+daniel75@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://chen-mason.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc52a3d53d0f1e0e47beb",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:18.565Z",
+    "updatedAt": "2026-07-20T06:50:18.565Z"
+  },
+  "message": "Partner created successfully"
+}

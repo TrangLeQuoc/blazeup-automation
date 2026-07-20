@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc55b3d53d0f1e0e47fd4",
+    "email": "qa.auto+justinhahn@mailinator.com",
+    "firstName": "Daniel",
+    "lastName": "Garcia",
+    "role": "sales"
+  }
+}

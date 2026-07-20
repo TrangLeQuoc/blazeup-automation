@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners/6a5dc5273d53d0f1e0e47b46/deactivate",
+  "payload": {
+    "reason": "QA-AUTO decline reason for PAR-035345"
+  }
+}

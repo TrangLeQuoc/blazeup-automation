@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Cross-Vazquez",
+    "code": "PAR-434073",
+    "email": "qa.auto+katherine24@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.rice.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc55b3d53d0f1e0e47fd4",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:07.126Z",
+    "updatedAt": "2026-07-20T06:51:07.126Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,40 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc53cc07933f3919e3f61",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc53b3d53d0f1e0e47d54",
+    "partnerName": "QA-AUTO White and Sons",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Tate Group Opportunity",
+    "prospectEmail": "qa.auto+scott33@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 201346573,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Talk scientist watch home economy appear how agency.",
+    "tenantDomain": "mclean.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 72,
+    "protectionExpiresAt": "2026-10-18T06:50:36.112Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [
+      {
+        "extendedBy": "696466c7e092b1dce3ed8e95",
+        "extendedAt": "2026-07-20T06:50:36.234Z",
+        "previousExpiresAt": "2026-09-18T06:50:36.112Z",
+        "newExpiresAt": "2026-10-18T06:50:36.112Z",
+        "addedDays": 30,
+        "trigger": "manual",
+        "reasoning": "QA-AUTO manual protection extension"
+      }
+    ],
+    "createdAt": "2026-07-20T06:50:36.119Z",
+    "updatedAt": "2026-07-20T06:50:36.239Z"
+  },
+  "message": "Deal protection extended"
+}

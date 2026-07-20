@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "userId": "6a5dc57fc07933f3919e4528",
+  "partnerId": "6a5dc57ec07933f3919e4514",
+  "partnerName": "QA-AUTO Holmes LLC",
+  "email": "qa.auto+james43@mailinator.com",
+  "firstName": "Joshua",
+  "lastName": "White",
+  "role": "admin",
+  "tier": "registered",
+  "type": "channel",
+  "status": "active",
+  "lastLoginAt": "2026-07-20T06:51:44.605Z",
+  "mfaEnrolled": false,
+  "mfaMethods": []
+}

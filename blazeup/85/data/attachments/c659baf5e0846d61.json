@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc593c07933f3919e4642",
+    "email": "qa.auto+lukebrandt@mailinator.com",
+    "firstName": "Kathleen",
+    "lastName": "Mcintyre",
+    "role": "admin"
+  }
+}

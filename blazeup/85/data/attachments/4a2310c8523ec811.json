@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc579c07933f3919e44d2",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lopez, Boyer and Barajas",
+    "code": "PAR-586925",
+    "email": "qa.auto+julie78@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.perez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:37.062Z",
+    "updatedAt": "2026-07-20T06:51:37.198Z",
+    "approvedAt": "2026-07-20T06:51:37.192Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

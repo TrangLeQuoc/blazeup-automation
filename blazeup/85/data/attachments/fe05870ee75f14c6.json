@@ -1,0 +1,38 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc538c07933f3919e3ece",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc538c07933f3919e3ec2",
+    "partnerName": "QA-AUTO Leach, Robertson and Flores",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Day-Maddox Prospect",
+    "prospectEmail": "qa.auto+bryantandre@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 137497377,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Two significant him anything various particularly knowledge.",
+    "tenantDomain": "parker.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2783,
+    "protectionExpiresAt": "2026-09-18T06:50:32.539Z",
+    "conflictStatus": "resolved_for_partner",
+    "conflictingDealIds": [
+      "6a5dc5383d53d0f1e0e47d08"
+    ],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:32.555Z",
+    "updatedAt": "2026-07-20T06:50:32.679Z",
+    "conflictResolution": {
+      "resolvedBy": "696466c7e092b1dce3ed8e95",
+      "resolvedAt": "2026-07-20T06:50:32.671Z",
+      "decision": "resolved_for_partner",
+      "reasoning": "QA-AUTO original reasoning — confirmed partner wins"
+    }
+  },
+  "message": "Deal conflict resolved"
+}

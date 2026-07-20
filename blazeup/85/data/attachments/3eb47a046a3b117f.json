@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO White, Mcguire and Graham",
+    "code": "PAR-268665",
+    "email": "qa.auto+davidward@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.carter.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc540c07933f3919e3fd6",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:40.016Z",
+    "updatedAt": "2026-07-20T06:50:40.016Z"
+  },
+  "message": "Partner created successfully"
+}

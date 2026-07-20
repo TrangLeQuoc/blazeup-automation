@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc5353d53d0f1e0e47cca",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "mosley.com",
+    "prospectName": "QA-AUTO Lara, Myers and Villanueva Prospect",
+    "prospectEmail": "qa.auto+seanrivera@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 190069218,
+    "currency": "USD",
+    "numberOfEmployee": 1766,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Election paper process type argue."
+  }
+}

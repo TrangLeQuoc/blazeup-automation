@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc5733d53d0f1e0e480ef",
+    "email": "qa.auto+mirandasmith@mailinator.com",
+    "firstName": "Renee",
+    "lastName": "Ramos",
+    "role": "admin"
+  }
+}

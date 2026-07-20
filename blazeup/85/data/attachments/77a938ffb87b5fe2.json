@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc593c07933f3919e4642",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Peters, Fowler and Jones",
+    "code": "PAR-637114",
+    "email": "qa.auto+ricardosanders@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.little-long.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:52:03.217Z",
+    "updatedAt": "2026-07-20T06:52:03.335Z",
+    "approvedAt": "2026-07-20T06:52:03.331Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

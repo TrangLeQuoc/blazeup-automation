@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Stevens, Cox and Fry",
+    "code": "PAR-297487",
+    "email": "qa.auto+gregoryallison@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://owens.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc58cc07933f3919e45b6",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:56.195Z",
+    "updatedAt": "2026-07-20T06:51:56.195Z"
+  },
+  "message": "Partner created successfully"
+}

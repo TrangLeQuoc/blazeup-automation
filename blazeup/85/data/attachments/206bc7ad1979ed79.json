@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc538c07933f3919e3eb8",
+    "partnerName": "QA-AUTO Lopez, Martinez and Hudson",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Day-Maddox Prospect",
+    "prospectEmail": "qa.auto+bryantandre@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 156956778,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Wall pick maintain heart pretty.",
+    "tenantDomain": "carter.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3013,
+    "protectionExpiresAt": "2026-09-18T06:50:32.431Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc5383d53d0f1e0e47d08",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:32.439Z",
+    "updatedAt": "2026-07-20T06:50:32.439Z"
+  },
+  "message": "Deal registered successfully"
+}

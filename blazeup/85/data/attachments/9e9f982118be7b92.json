@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc54c3d53d0f1e0e47eea",
+    "partnerId": "6a5dc54b3d53d0f1e0e47ee0",
+    "email": "qa.auto+wsmith@mailinator.com",
+    "firstName": "Daniel",
+    "lastName": "West",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

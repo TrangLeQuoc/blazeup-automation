@@ -1,0 +1,626 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_DEAL_APPROVAL_QUEUE_001: SA rejects a registered deal - rejection persisted.
+
+POST /v1/sa/deals/{id}/reject (body ReviewDealDto{reviewNotes}) flips a
+``registered`` deal to ``rejected``; the status persists via a follow-up GET.
+","579","test_partner_api_deal_approval_queue_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_010: deal approved event - published (CRM sync is downstream).
+
+Approving a deal emits a ``partner.deal.approved`` event (recorded in the SA
+audit log with the before/after status). That event is the trigger the CRM
+integration consumes to update the CRM owner + stage.
+
+Scope: this asserts the API-observable signal — the deal-approved event is
+published. The actual CRM owner/stage update happens in a downstream service
+(connectors / CRM Integration) and is out of scope here (covered by the CRM
+Integration TCs).
+","835","test_partner_api_deal_registration_pipeline_010","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_AUDIT_LOG_002: SA retrieves audit-log KPI stats - 24h counts + chain integrity.
+
+Read-only contract on ``GET /sa-partners-api/v1/sa/audit-logs/stats``: returns
+HTTP 200 with the envelope ``{statusCode, data{}, message}`` where ``data``
+carries the 24h KPI counters (totalEvents24h, criticalEvents24h, warnings24h,
+uniqueActors24h) as non-negative ints plus ``chainIntegrityPct`` as a 0..100
+percentage. Counters are internally consistent (critical/warnings/uniqueActors
+never exceed the total). The endpoint takes no params, so there is no
+invalid-input negative counterpart.
+","93","test_partner_api_audit_log_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_PARTNER_PORTAL_001: partner gets its own account profile - details returned.
+
+GET /partner/portal/profile (partner JWT) returns the partner's own account
+(code/email/name/tier/status) with no sensitive field leaked. No params → no
+invalid-input negative; 401 auth belongs to Auth & Access Control. GET → no
+idempotency TC.
+","2512","test_partner_api_partner_portal_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_PARTNER_PORTAL_003: partner gets its own certifications - active certs listed.
+
+SA grants a cert to the partner user; GET /partner/portal/certifications lists the
+partner's own certs with the right schema (certificationType/status/earnedAt). GET
+→ no idempotency. Negative (invalid filter) is covered by _013.
+","2719","test_partner_api_partner_portal_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_PARTNER_PORTAL_002: partner retrieves its own deal by id - full record.
+
+The partner registers its own deal (POST /partner/portal/deals), then GET
+/partner/portal/deals/{id} returns the full record scoped to the partner.
+","2544","test_partner_api_partner_portal_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_PARTNER_PORTAL_012: get own deal with invalid id - rejected (4xx, never 5xx).
+
+Negative counterpart of _002. A ghost id and a malformed id are rejected with 4xx.
+","3287","test_partner_api_partner_portal_012","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_016: extend deal protection (SA manual action) - window pushed out + reasoning recorded.
+
+SA manually extends a registered deal's protection window via
+POST /v1/sa/deals/{id}/extend-protection (body ``addedDays`` + ``reasoning``,
+both required). The deal's ``protectionExpiresAt`` moves later, HTTP 201 / body
+statusCode 200, and the deal stays ``registered``. Persistence is confirmed via
+a follow-up GET.
+
+Note: the plan frames this as ""request queued for SA"", but the implemented
+endpoint is a DIRECT SA extension (applied immediately) — there is no separate
+partner-initiated ""request → queue"" endpoint in the spec. Confirm with BE if a
+queued partner-request flow is expected separately.
+","611","test_partner_api_deal_registration_pipeline_016","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_020: SA retrieves a single deal by id - full record returned.
+
+GET /v1/sa/deals/{id} returns the full deal record (id matches, required fields
+present, status 'registered', protection window + conflictStatus).
+","487","test_partner_api_deal_registration_pipeline_020","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_004: register deal for an existing prospect - conflict raised.
+
+Deal protection: when a SECOND partner registers a deal for a prospect that a
+FIRST partner already registered (same prospect identity — name + email), the
+second deal is still accepted (201) but flagged for the deal-conflict queue:
+``conflictStatus`` becomes ""flagged"" and ``conflictingDealIds`` includes the
+first deal. (Same partner re-registering the same prospect is a hard 400
+duplicate instead — a separate behavior, not this TC.)
+","1188","test_partner_api_deal_registration_pipeline_004","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_030: extend-protection invalid input - rejected with a clear error.
+
+Negative counterpart of _016 (extend-protection). Each invalid input must be
+rejected (4xx) with a descriptive message. The BE validates the body BEFORE the
+deal lookup, so the field-validation cases are self-proving against a ghost id
+(no real deal — hence no sa-plans dependency). Spec constraints: ``addedDays``
+is required and must be 1..180; ``reasoning`` is required + non-empty. A
+ghost/malformed deal id is rejected too. All cases run (failures collected) so
+one gap never hides the others.
+","656","test_partner_api_deal_registration_pipeline_030","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_USERS_012: invite partner-user invalid/missing fields - rejected with 400.
+
+Negative counterpart of _002. Each invalid/incomplete payload must be rejected
+with 4xx + a descriptive message. The ghost partnerId is self-proving (the
+endpoint returns ""Partner ... not found""). All cases run (failures collected).
+","750","test_partner_api_partner_users_012","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_PIPELINE_MANAGEMENT_001: partner lists deals - only its OWN deals are returned.
+
+The partner registers a deal, then GET /partner/portal/deals returns it and every
+row is scoped to the partner (partnerId == own) — no cross-partner leakage.
+","2790","test_partner_api_pipeline_management_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_pipeline_management","",""
+"PARTNER_API_TERRITORIES_015: delete territory invalid/already-removed - rejected (4xx).
+
+Negative counterpart of _004. A ghost id, a malformed id, and re-deleting an
+already-removed territory must all be rejected with 4xx + a clear message. The
+already-removed case documents delete's repeat behavior (mutating action, not a
+duplicate-create, so no separate idempotency TC).
+","581","test_partner_api_territories_015","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_PARTNER_USERS_003: SA resets a partner-portal user's password - fresh credential, repeatable.
+
+Contract on ``POST /sa-partners-api/v1/sa/partner-users/{userId}/reset-password``:
+returns HTTP 200 and issues a fresh ``tempPassword`` (different from the invite
+one). Reset is a repeatable mutating action — a second reset also succeeds.
+
+Note (TC↔BE): the plan says ""a reset LINK is sent to the user"", but the BE returns
+a new ``tempPassword`` for SA hand-off (temp-password model, same as invite).
+Confirm with BE which model is intended. Idempotency: reset is NOT a create —
+repeating it is a valid operation (each issues a fresh credential), so there is no
+duplicate-create idempotency TC.
+","2141","test_partner_api_partner_users_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_031: get deal by invalid id - rejected (4xx, never 5xx).
+
+Negative counterpart of _020. A ghost id and a malformed id are rejected with 4xx
++ a clear message (self-proving). GET → no idempotency concern.
+","176","test_partner_api_deal_registration_pipeline_031","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_AUDIT_LOG_007: get audit entry with invalid id - rejected (4xx, never 5xx).
+
+Negative counterpart of _004. A non-existent (ghost) id returns 404 ('not
+found') and a malformed id returns 400 ('Invalid id') — self-proving, no real
+entry needed. All cases run (failures collected) so one gap never hides others.
+","187","test_partner_api_audit_log_007","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_028: approve invalid/illegal-state deal - rejected with a clear error.
+
+Negative counterpart of _008 (approve). Approving a non-existent id, a
+malformed id, or a deal that is not in an approvable state (already approved)
+must be rejected (4xx) with a descriptive message — never silently succeed.
+","754","test_partner_api_deal_registration_pipeline_028","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_033: extend-protection repeat is ADDITIVE (idempotency probe).
+
+Idempotency counterpart of _016. extend-protection is a parameterized mutating
+action (+N days), NOT a resource create — a repeat may legitimately be additive
+OR capped. This probes the real behaviour: calling extend twice (+N, then +N)
+stacks the window from the then-current expiry (additive by design), it is not a
+silent no-op and does not error. If BE ever caps stacking, this test surfaces it.
+","835","test_partner_api_deal_registration_pipeline_033","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_AUTH_ACCESS_CONTROL_003: cross-partner access - a partner cannot read another's deal.
+
+Partner A registers a deal; partner B (a separate session) requests A's deal by id
+via the partner portal and is refused (4xx) — A's deal is never exposed to B. This
+is the rule-5 cross-entity (tenant-isolation) auth case.
+","4979","test_partner_api_auth_access_control_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_auth_access_control","",""
+"PARTNER_API_CERTIFICATIONS_SA_012: revoke certification invalid input/state - rejected with 4xx.
+
+Negative counterpart of _002 (revoke). Missing reason, a cert the user does not
+hold, a ghost/malformed userId, and re-revoking an already-revoked cert must all
+be rejected with 4xx + a clear message. The already-revoked case also documents
+revoke's repeat behavior (mutating action — not a duplicate-create, so no separate
+idempotency TC). All cases run (failures collected).
+","1383","test_partner_api_certifications_sa_012","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_certifications","",""
+"PARTNER_API_AUDIT_LOG_006: export with invalid format/filter - rejected (4xx, never 5xx).
+
+Negative counterpart of _003. An out-of-enum ``format`` or filter
+(severity/category/actorType/retentionClass) and a bad-format date must be
+rejected with 4xx (never 5xx) + a clear message. All cases run (failures
+collected) so one gap never hides others.
+","560","test_partner_api_audit_log_006","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001: GET internal partners list - SA filters are applied.
+
+Read-only contract check on ``GET /sa-partners-api/v1/sa/partners``:
+returns 200 with the expected envelope (statusCode/data/total/message) and
+honours pagination (returned page size never exceeds the requested limit).
+HTTP 200 is asserted inside the client (expected_status); here we validate
+the response body contract.
+","125","test_partner_api_partner_account_management_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_003: register co-sell deal - co-sell metadata is stored.
+
+Registers a deal with ``dealType=""co_sell""`` and verifies the co-sell model is
+persisted (stored ``dealType == ""co_sell""``) plus the standard register
+contract (field echo + lifecycle), mirroring _001/_002.
+
+Verified: at registration a co_sell deal stores no extra co-sell field beyond
+``dealType`` — the record shape matches a referral deal, so ``dealType ==
+""co_sell""`` IS the stored co-sell metadata. The co-sell *split* (e.g. 70/30) is
+computed downstream and is covered by _011 (Calculate — currently a blocked
+job), out of scope here.
+","646","test_partner_api_deal_registration_pipeline_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_AUTH_ACCESS_CONTROL_009: change password - new credentials work, old fail.
+
+With a valid session, a wrong currentPassword is rejected; the correct
+currentPassword updates the password (204); afterwards the NEW password logs in
+and the OLD password is rejected (401).
+","6244","test_partner_api_auth_access_control_009","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_auth_access_control","",""
+"PARTNER_API_PARTNER_USERS_001: SA lists portal users for a partner - users with roles, no secret leak.
+
+Contract on ``GET /sa-partners-api/v1/sa/partner-users?partnerId=``: returns HTTP
+200 with the envelope ``{statusCode, data[], total, message}``; the invited user
+appears carrying role + status; the list is scoped to the partner; and no
+sensitive field (password/tempPassword) is exposed.
+","943","test_partner_api_partner_users_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_002: register reseller deal - billing model 'reseller' is stored.
+
+Registers a deal with ``dealType=""reseller""`` and verifies the reseller billing
+model is persisted (stored ``dealType == ""reseller""``) plus the standard
+register contract (field echo + lifecycle), mirroring _001.
+
+Verified: a reseller deal stores no dedicated billing-model field beyond
+``dealType`` — the deal record shape matches a referral deal, so
+``dealType == ""reseller""`` IS the stored billing model.
+","674","test_partner_api_deal_registration_pipeline_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_009: resolve conflict - decision and reasoning are immutable.
+
+Resolving a flagged deal conflict (POST /v1/sa/deals/{id}/resolve-conflict)
+stamps the SA ``decision`` + ``reasoning`` (under ``conflictResolution``) and
+locks them: a second resolve is rejected (deal no longer FLAGGED), so the
+decision/reasoning cannot be changed — and a re-read confirms they are intact.
+","958","test_partner_api_deal_registration_pipeline_009","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_003: POST partner approve - activation + approval event are created.
+
+State-transition contract check on ``POST /sa-partners-api/v1/sa/partners/{id}/approve``:
+approving a *pending* partner returns HTTP 201, flips ``status`` from
+``pending`` → ``active``, and records the approval event metadata
+(``approvedAt`` + ``approvedBy``). The transition is confirmed to persist via
+a follow-up GET. A pending partner is created first as the precondition and
+registered for cleanup (DELETE) so the test is self-contained and repeatable.
+
+Note: the downstream activation-*user* provisioning is emitted as an event to
+another service (not returned by this endpoint), so it is out of scope here;
+this TC asserts the approval contract observable on sa-partners-api.
+","510","test_partner_api_partner_account_management_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_AUTH_ACCESS_CONTROL_001: valid partner JWT - a partner-scoped request succeeds.
+
+A user logged in with a valid partner JWT can call a partner-scoped endpoint
+(GET /partner/auth/me) and receives HTTP 200 with their identity.
+","2657","test_partner_api_auth_access_control_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_auth_access_control","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with a clear error.
+
+Negative counterpart of _010. Granting a certification must reject invalid
+input with 4xx + a descriptive message: an out-of-enum certificationType, a
+missing certificationType, a non-existent userId, and a malformed userId.
+","1338","test_partner_api_partner_account_management_020","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022: re-grant same certification - must not duplicate (idempotent or 409).
+
+Idempotency / duplicate counterpart of _010 (certification earned). Granting the
+SAME certificationType to the SAME user a second time must NOT create a second
+active cert of that type — it should be idempotent (renew the existing record)
+or rejected (409).
+
+GAP this test surfaces (verified 2026-06-22): the API returns 201 and creates a
+SECOND cert record (the user ends up with two active 'sales_certified' certs).
+Step [3/3] asserts a single cert of that type and therefore FAILS until the BE
+de-dupes — confirm with BE whether re-grant should renew or reject.
+","1137","test_partner_api_partner_account_management_022","tests.blazeup.api.partner","2026-07-20","failed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
+
+Negative counterpart of _004 (deactivate). A non-existent or malformed id must
+be rejected (4xx) with a clear message. Deactivating an already-suspended
+partner is observed (currently a no-op 201 — idempotent) and logged, not failed.
+","579","test_partner_api_partner_account_management_014","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_PARTNER_PORTAL_004: partner gets its own commission summary - earned/pending/paid totals.
+
+GET /partner/portal/commissions/summary returns the cents totals
+(totalEarnedCents / totalPendingCents / totalPaidCents / clawbackExposureCents)
+as non-negative ints. No params → no invalid-input negative; GET → no idempotency.
+","2282","test_partner_api_partner_portal_004","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_CERTIFICATIONS_SA_014: list SA certifications invalid filter/pagination - rejected (4xx, never 5xx).
+
+Negative counterpart of _004. Out-of-enum status/certificationType, an
+out-of-range ``expiringWithinDays`` (must be 1..365), oversized limit, and page=0
+must all be rejected with 4xx + a clear message. All cases run (failures
+collected).
+","530","test_partner_api_certifications_sa_014","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_certifications","",""
+"PARTNER_API_PARTNER_PORTAL_006: partner gets its own tier commission rates - tier rates returned.
+
+GET /partner/portal/rates returns the tier-specific commission rates as a list.
+No params → no invalid-input negative; GET → no idempotency.
+","2338","test_partner_api_partner_portal_006","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_TERRITORIES_004: SA removes a territory assignment - removed and no longer retrievable.
+
+Contract on ``DELETE /sa-partners-api/v1/sa/territories/{id}``: removing a
+territory returns HTTP 200 and the territory is no longer retrievable (GET by id
+→ 4xx not-found).
+","519","test_partner_api_territories_004","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_AUDIT_LOG_004: SA retrieves a single audit-log entry by id - full detail.
+
+Read-only contract on ``GET /sa-partners-api/v1/sa/audit-logs/{id}``: fetching a
+real entry id (taken from the list) returns HTTP 200 with the envelope and the
+FULL entry in ``data`` (id matches; action/category/severity/createdAt present;
+actor/resource objects), leaking no sensitive field.
+","200","test_partner_api_audit_log_004","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_TERRITORIES_002: SA lists territories with filters - paginated, scoped, filterable.
+
+Contract on ``GET /sa-partners-api/v1/sa/territories``: returns 200 with the
+envelope; the assigned territory appears scoped to its partner with the right
+schema; and the exclusivityType filter returns only matching rows.
+","411","test_partner_api_territories_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_CERTIFICATIONS_SA_013: list partner certifications invalid filter/pagination - graceful, never 5xx.
+
+Negative counterpart of _003. Out-of-enum filters, oversized limit, and a
+malformed partnerId are rejected with 4xx; a ghost (valid-but-nonexistent)
+partnerId returns 200 empty; page=0 is leniently defaulted (200). Never 5xx.
+","677","test_partner_api_certifications_sa_013","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_certifications","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_002: POST create internal partner - a pending account is created.
+
+CRUD (create) contract check on ``POST /sa-partners-api/v1/sa/partners``:
+creating a partner with the required fields (name/email/type) returns HTTP
+201, persists the record with a server-assigned id + ``code``, and the new
+account starts in ``status = ""pending""`` (awaiting SA activation). The
+created partner is registered for cleanup (DELETE) so the test is repeatable
+and leaves no residue on staging — pass OR fail.
+","561","test_partner_api_partner_account_management_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with a clear error.
+
+Negative counterpart of _003 (approve). Approving a non-existent id, a
+malformed id, or a partner that is not pending must be rejected (4xx) with a
+descriptive message — never silently succeed.
+","533","test_partner_api_partner_account_management_013","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_CERTIFICATIONS_SA_004: SA lists certifications expiring soon - expiringWithinDays filter.
+
+Contract on ``GET /sa-partners-api/v1/sa/certifications?expiringWithinDays=N``:
+returns HTTP 200 with the envelope ``{statusCode, data[], total, message}``;
+every returned cert expires within the requested window; and the window is
+bounded 1..365 (the max, 365, is accepted).
+
+Note (confirm BE): the SA-wide list returns total=0 on staging even when active
+certs exist (they are visible via the per-partner list, _003) — a possible
+scoping/index difference. The filter SEMANTIC is asserted on whatever is
+returned; the empty case is logged, not failed.
+","197","test_partner_api_certifications_sa_004","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_certifications","",""
+"PARTNER_API_PIPELINE_MANAGEMENT_011: deals list invalid filter/pagination - graceful, never 5xx.
+
+Negative counterpart of _001/_002. An out-of-enum status and oversized limit must
+be handled gracefully (4xx where validated, never 5xx).
+","2490","test_partner_api_pipeline_management_011","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_pipeline_management","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_029: resolve-conflict invalid input - rejected with a clear error.
+
+Negative counterpart of _009 (resolve conflict). Invalid input must be rejected
+(4xx) with a descriptive message: out-of-enum decision, missing decision,
+missing reasoning, a non-existent id, a malformed id, and resolving a deal that
+is not in a FLAGGED conflict state.
+","861","test_partner_api_deal_registration_pipeline_029","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_AUTH_ACCESS_CONTROL_008: logout - the refresh token is invalidated.
+
+After logout, the previously valid refresh token can no longer mint a new access
+token (401) — the session is invalidated.
+","2523","test_partner_api_auth_access_control_008","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_auth_access_control","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_013: resolve conflict (prospect confirmation) - confirmed partner wins.
+
+When two partners register the same prospect, resolving the FLAGGED deal FOR
+its partner (decision=resolved_for_partner, citing the prospect's confirmation)
+makes that deal the winner (conflictStatus='resolved_for_partner') AND
+automatically flips the other (conflicting) deal to 'resolved_against_partner'
+— the loser. Both deals keep status 'registered'. The decision/reasoning
+immutability is covered by _009; negative resolve inputs by _029.
+","1163","test_partner_api_deal_registration_pipeline_013","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_012: create with invalid/missing fields - 400 + field errors.
+
+Negative counterpart of _002 (create).
+
+Negative contract check on ``POST /sa-partners-api/v1/sa/partners``: every
+invalid or incomplete payload (missing name/email/type, malformed email,
+empty name, out-of-enum type) must be rejected with HTTP 400, return a
+field-level error message naming the offending field, and create NO record.
+All cases run every time (failures are collected, not short-circuited) so one
+broken rule never hides the others. No cleanup needed — nothing is persisted.
+","954","test_partner_api_partner_account_management_012","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_DASHBOARD_DATA_001: partner dashboard stats - KPI schema is returned.
+
+Contract on ``GET /sa-partners-api/v1/partner/portal/dashboard`` (partner JWT):
+returns HTTP 200 with the envelope ``{statusCode, data{}, message}`` where ``data``
+carries the dashboard KPI sections (``partner`` with tier/status/openDealsCount,
+``deals``, ``commissions``), leaking no sensitive field.
+
+Negative: the endpoint takes no params, so there is no invalid-input negative;
+the no-token / wrong-token 401 belongs to the Auth & Access Control feature.
+Idempotency: GET is read-only → N/A.
+","2494","test_partner_api_dashboard_data_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_dashboard_data","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_005: tier changed event - published so portal/analytics can refresh.
+
+Changing a partner's tier via POST /v1/sa/partners/{id}/upgrade-tier must
+update the stored ``tier`` AND emit a ``partner.tier.changed`` event recording
+the before/after tiers — the signal downstream consumers (partner portal, SA
+analytics) subscribe to in order to refresh. This test asserts the
+API-observable evidence: the tier transition + the audit-logged event. The
+actual portal/analytics refresh is a downstream Kafka consumer concern and is
+out of scope here.
+","981","test_partner_api_partner_account_management_005","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_022: duplicate deal by the SAME partner - rejected, no second deal.
+
+Idempotency / duplicate counterpart of _001 (register). When the SAME partner
+registers the SAME prospect (name + email) a second time, the API does NOT
+create a second deal — it rejects with HTTP 400 (""...already exists...""), a hard
+duplicate. This is distinct from _004 (a DIFFERENT partner registering the same
+prospect → 201 + conflictStatus 'flagged'). Verified 2026-06-22: 400, no deal id
+returned, no conflict path.
+","520","test_partner_api_deal_registration_pipeline_022","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_004: partner application decline - mandatory reason is audit logged.
+
+Security check on declining a partner. The plan calls this ""PATCH decline"";
+the BE currently exposes no dedicated decline endpoint, so the closest real
+action — POST ``/sa-partners-api/v1/sa/partners/{id}/deactivate`` (the only
+partner action that carries a ``reason``) — is exercised here.
+
+This test encodes the TC's *intent* (decline succeeds, the reason is audit
+logged, and the reason is MANDATORY). The BE now enforces a mandatory,
+non-empty reason — declining with an absent, empty, or whitespace-only reason
+is rejected with 400 (verified 2026-06-22; previously accepted with 201). Any
+step that fails now is a real BE regression.
+","1160","test_partner_api_partner_account_management_004","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_TERRITORIES_013: list territories invalid filter/pagination - rejected (4xx, never 5xx).
+
+Negative counterpart of _002. Out-of-enum exclusivityType, invalid country,
+oversized limit, page=0, and a malformed partnerId must all be rejected with 4xx
++ a clear message (this endpoint validates strictly). All cases run.
+","389","test_partner_api_territories_013","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_AUDIT_LOG_005: list audit logs with invalid pagination/filter - graceful 4xx, never 5xx.
+
+Negative counterpart of _001. Invalid pagination and out-of-enum / bad-format
+filters must be rejected with 4xx (never 5xx) + a clear message. A logically
+valid but empty range (dateFrom > dateTo) is handled gracefully (200, empty) —
+not an error. All cases run (failures collected) so one gap never hides others.
+","1162","test_partner_api_audit_log_005","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_TERRITORIES_011: assign territory invalid/missing fields - rejected with 400.
+
+Negative counterpart of _001. Each invalid/incomplete payload must be rejected
+with 4xx + a descriptive message. The ghost partnerId is self-proving (the
+endpoint returns ""Partner ... not found""). All cases run (failures collected).
+","793","test_partner_api_territories_011","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_AUTH_ACCESS_CONTROL_007: valid refresh token - a new access token is issued.
+
+Refreshing with a valid refreshToken returns a new accessToken (without re-login)
+that authorizes requests; an invalid refresh token is rejected (401).
+","3833","test_partner_api_auth_access_control_007","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_auth_access_control","",""
+"PARTNER_API_PIPELINE_MANAGEMENT_002: partner lists deals with a status filter - filter applied.
+
+Filtering the own-deals list by ``status=registered`` returns only registered
+deals (and includes the freshly-registered one).
+","2842","test_partner_api_pipeline_management_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_pipeline_management","",""
+"PARTNER_API_AUDIT_LOG_003: SA exports the audit log as JSON or CSV (within the 10k-row cap).
+
+Read-only contract on ``GET /sa-partners-api/v1/sa/audit-logs/export``: returns
+HTTP 200 with a downloadable file — ``format=json`` yields an
+``application/json`` array of audit entries, ``format=csv`` yields ``text/csv``
+with an audit-column header, and no ``format`` defaults to CSV. The export is
+capped at 10000 rows.
+","1437","test_partner_api_audit_log_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_TERRITORIES_012: exclusive territory conflict - a 2nd partner can't take a held exclusive country.
+
+Duplicate/conflict counterpart of _001 (assign). When one partner holds an
+EXCLUSIVE territory for a country, a DIFFERENT partner registering an exclusive
+territory for the same country is rejected (4xx ""Exclusive territory conflict"")
+and no territory is created. (Same-partner overlap is allowed by design.)
+","536","test_partner_api_territories_012","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_PARTNER_USERS_013: invite the same email twice - must not create a duplicate user.
+
+Idempotency/duplicate counterpart of _002. Inviting the SAME email to the SAME
+partner a second time must NOT create a second user — it should be idempotent
+(return the existing user) or rejected (409), since email is the login identity.
+
+GAP (verified 2026-06-25): the API returns 201 and creates a SECOND user with the
+same email (the partner ends up with two users sharing one login). Step [2/2]
+asserts a single user for that email and therefore FAILS until the BE de-dupes —
+confirm with BE (reject duplicate email or make invite idempotent).
+","1662","test_partner_api_partner_users_013","tests.blazeup.api.partner","2026-07-20","failed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_PARTNER_USERS_011: list partner-users invalid pagination/filter - graceful, never 5xx.
+
+Negative counterpart of _001. The server must NEVER 5xx on bad input. Validated
+cases are rejected with 4xx; a ghost (valid-but-nonexistent) partnerId returns
+200 empty.
+
+Observation (weak validation, confirm with BE): unlike the audit-log list,
+``limit=0`` / non-numeric ``page`` / unknown ``sort`` are silently defaulted
+(HTTP 200) instead of rejected — logged here, not failed (they don't 5xx).
+","698","test_partner_api_partner_users_011","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_008: internal deal approve - approved + rate/rate-table version stamped.
+
+Approving a registered deal (POST /v1/sa/deals/{id}/approve) flips status
+registered → approved and stamps the reviewer (reviewedAt + reviewedBy).
+
+GAP this test surfaces: the plan also expects the commission ``rate`` + rate
+``rateTableVersion`` to be stamped, but neither appears in the deal API
+response after approve (no rate field; no commission is created at approve
+either). Step [3/3] asserts they are present and therefore FAILS until the BE
+exposes them — confirm with BE whether the rate is stamped internally
+(not serialized), stamped at a different stage (e.g. deal win), or unimplemented.
+","647","test_partner_api_deal_registration_pipeline_008","tests.blazeup.api.partner","2026-07-20","failed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021: duplicate partner (same email) - rejected, no second account.
+
+Idempotency / duplicate counterpart of _002 (create). Creating a second partner
+with the SAME email is rejected with HTTP 400 (""...already exists""), and no
+second account is created. Verified 2026-06-22.
+","232","test_partner_api_partner_account_management_021","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_032: lose deal invalid/illegal-state - rejected (4xx).
+
+Negative counterpart of _019. Losing a deal that is not approvable-state
+(a fresh ``registered`` deal), a ghost id, and a malformed id must all be rejected
+with 4xx + a clear message.
+","636","test_partner_api_deal_registration_pipeline_032","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_TERRITORIES_014: get territory with invalid id - rejected (4xx, never 5xx).
+
+Negative counterpart of _003. A ghost id and a malformed id are rejected with 4xx
++ a clear message (self-proving).
+","169","test_partner_api_territories_014","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_PARTNER_PORTAL_005: partner gets its own assigned territories - territory list returned.
+
+SA assigns a territory to the partner; GET /partner/portal/territories returns it
+scoped to the partner. No params → no invalid-input negative; GET → no idempotency.
+","2679","test_partner_api_partner_portal_005","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011: list with invalid pagination - graceful 4xx, never 5xx.
+
+Negative counterpart of _001 (GET list). Invalid pagination params must be
+handled gracefully: the server must NEVER return 5xx on bad input. The BE now
+rejects them with 400 (verified 2026-06-22): ``page=0`` / ``page=-1`` →
+""page must not be less than 1"" (previously HTTP 500 crash), and negative /
+oversized / non-numeric ``limit`` are likewise rejected with 400 (previously
+silently defaulted). Step [1/2] hard-asserts no-5xx; step [2/2] observes the
+limit validation without asserting an exact code.
+","678","test_partner_api_partner_account_management_011","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_019: SA marks an approved deal as lost - status 'lost'.
+
+Losing requires the deal to be ``approved`` first. POST /v1/sa/deals/{id}/lose
+flips ``approved`` → ``lost`` (partner notification is downstream, out of scope).
+","869","test_partner_api_deal_registration_pipeline_019","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_DEAL_APPROVAL_QUEUE_011: reject invalid/illegal-state deal - rejected (4xx).
+
+Negative counterpart of _001. A ghost id, a malformed id, and re-rejecting an
+already-rejected deal must all be rejected with 4xx + a clear message.
+","898","test_partner_api_deal_approval_queue_011","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_TERRITORIES_003: SA retrieves a single territory by id - full detail.
+
+Contract on ``GET /sa-partners-api/v1/sa/territories/{id}``: returns 200 with the
+full territory (id matches; partnerId/label/countries/exclusivityType present).
+","317","test_partner_api_territories_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_PARTNER_PORTAL_013: own certifications with invalid filter - rejected (4xx, never 5xx).
+
+Negative counterpart of _003. Out-of-enum status / certificationType and oversized
+limit must be rejected with 4xx (never 5xx). All cases run (failures collected).
+","2625","test_partner_api_partner_portal_013","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_portal","",""
+"PARTNER_API_PARTNER_USERS_014: reset password with invalid id - rejected (4xx, never 5xx).
+
+Negative counterpart of _003. A non-existent (ghost) userId and a malformed id
+must be rejected with 4xx + a clear message — self-proving (the endpoint returns
+""not found"" / ""Invalid id""). All cases run (failures collected).
+","206","test_partner_api_partner_users_014","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_CERTIFICATIONS_SA_003: SA lists a partner team's certifications - well-formed, filterable, scoped.
+
+Contract on ``GET /sa-partners-api/v1/sa/partners/{partnerId}/certifications``:
+returns HTTP 200 with the envelope ``{statusCode, data[], total, message}``; the
+granted cert appears with the right schema (certificationType/status/userId +
+earnedAt/expiresAt); the list is scoped to the partner; and a ``status=active``
+filter returns only active certs.
+","1134","test_partner_api_certifications_sa_003","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_certifications","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_010: certification earned - granted, listed, and event published.
+
+Granting a certification to a partner user (POST /v1/sa/partner-users/{userId}/
+certifications) must create an active certification (with earnedAt/expiresAt),
+surface it in the partner's certification list, AND emit a
+``partner.certification.granted`` event — the ""certification earned"" signal
+that triggers downstream tier-qualification re-evaluation. The re-evaluation
+itself is a downstream consumer/job and is out of scope here.
+","1601","test_partner_api_partner_account_management_010","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_TERRITORIES_001: SA assigns a territory to a partner - saved with fields + effective dates.
+
+Contract on ``POST /sa-partners-api/v1/sa/territories``: a valid assignment
+(partnerId + label + countries + exclusivity + effective dates) returns HTTP 201,
+persists a server-assigned id, echoes the submitted fields (incl. the effective
+dates), and is retrievable via GET by id.
+","468","test_partner_api_territories_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_territories","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_021: register deal invalid/missing fields - rejected with 400.
+
+Negative counterpart of _001 (register). Each invalid or incomplete payload
+must be rejected with 4xx + a descriptive message and create no deal. All
+cases run (failures collected) so one gap never hides the others.
+
+Known gap this test surfaces: a non-existent ``planId`` is currently accepted
+(HTTP 201) — the API does not validate planId against the plan catalog — so
+that case fails until the BE adds the check (confirm with BE). Any deal
+accidentally created is removed via the parent-partner cleanup.
+","1517","test_partner_api_deal_registration_pipeline_021","tests.blazeup.api.partner","2026-07-20","failed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_USERS_002: SA invites a partner-portal user - user created with role + hand-off credential.
+
+Contract on ``POST /sa-partners-api/v1/sa/partner-users``: a valid invite
+(partnerId + email + firstName + lastName + role) returns HTTP 201, persists the
+user with a server-assigned userId, echoes the submitted fields, and the user is
+retrievable in the partner's list.
+
+Note (TC↔BE): the plan describes an ""email sent + PENDING user"" model, but the BE
+creates an ACTIVE user and returns a ``tempPassword`` for SA hand-off — a
+different onboarding model. This test asserts the BE's actual contract; confirm
+with BE which model is intended.
+","878","test_partner_api_partner_users_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partner_users","",""
+"PARTNER_API_AUDIT_LOG_001: SA lists audit log entries - paginated, filterable, well-formed.
+
+Read-only contract on ``GET /sa-partners-api/v1/sa/audit-logs``: returns HTTP
+200 with the envelope ``{statusCode, data[], total, message}``, honours
+pagination (page size never exceeds the requested limit), each entry carries the
+required audit fields with the right types (id/action/category/severity/createdAt
+plus actor/resource objects), leaks no sensitive field, and a ``category`` filter
+returns only matching entries.
+","181","test_partner_api_audit_log_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_audit_logs","",""
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_001: register a partner deal - deal is created (registered).
+
+Happy-path deal registration on ``POST /sa-partners-api/v1/sa/deals``: a valid
+payload (partnerId + planId + dealType + prospect + ACV + close date) returns
+HTTP 201, persists the deal with a server-assigned id, starts it in
+``status = ""registered""`` with a protection window (``protectionExpiresAt``),
+and echoes the submitted fields. The registration is confirmed to persist via
+a follow-up GET.
+","662","test_partner_api_deal_registration_pipeline_001","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_deals","",""
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with a clear error.
+
+Negative counterpart of _005 (tier change). The upgrade-tier endpoint must
+reject invalid input with 4xx + a descriptive message and emit no event:
+out-of-enum tier, missing tier (required), a non-existent id, and a malformed
+id. BE validates tier well, so all cases are expected to pass.
+","685","test_partner_api_partner_account_management_015","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_partners","",""
+"PARTNER_API_CERTIFICATIONS_SA_002: SA revokes a partner certification - cert becomes 'revoked'.
+
+Contract on ``DELETE /sa-partners-api/v1/sa/partner-users/{userId}/certifications/{type}``
+(body ``{reason}`` required): revoking an active certification returns HTTP 200
+and the cert transitions to ``status='revoked'`` (soft-revoke — the record
+remains, with the revoked status, visible in the partner's cert list).
+
+Note (TC↔BE): the plan says ""certification removed and partner notified"", but the
+BE soft-revokes (status='revoked', record kept). Confirm with BE.
+","1226","test_partner_api_certifications_sa_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_certifications","",""
+"PARTNER_API_AUTH_ACCESS_CONTROL_002: non-partner / missing token on the partner API - 401.
+
+The partner API rejects a request with no token and a request bearing a
+non-partner (SA admin) token — both with HTTP 401.
+","185","test_partner_api_auth_access_control_002","tests.blazeup.api.partner","2026-07-20","passed","2026-07-20","","test_sa_auth_access_control","",""

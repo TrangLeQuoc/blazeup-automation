@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc534c07933f3919e3e54",
+    "planId": "pro-test-v1",
+    "dealType": "co_sell",
+    "tenantDomain": "campbell-howard.com",
+    "prospectName": "QA-AUTO Downs, Haynes and Steele Opportunity",
+    "prospectEmail": "qa.auto+ili@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 63890455,
+    "currency": "USD",
+    "numberOfEmployee": 1226,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Bring from data him public institution far."
+  }
+}

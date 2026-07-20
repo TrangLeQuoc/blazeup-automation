@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Peters, Fowler and Jones",
+    "email": "qa.auto+ricardosanders@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://www.little-long.com/"
+  }
+}

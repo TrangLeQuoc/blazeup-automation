@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc58cc07933f3919e45b6",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "walker.com",
+    "prospectName": "QA-AUTO James PLC Opportunity",
+    "prospectEmail": "qa.auto+harrismichael@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 51889518,
+    "currency": "USD",
+    "numberOfEmployee": 3947,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Dream fear area international the information any say."
+  }
+}

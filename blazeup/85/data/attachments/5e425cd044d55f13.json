@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5483d53d0f1e0e47eb4",
+    "partnerName": "QA-AUTO Kelley Ltd",
+    "label": "QA-AUTO Moody Territory",
+    "countries": [
+      "IS"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "exclusive",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Growth other position respond nature step.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc5493d53d0f1e0e47ec9",
+    "createdAt": "2026-07-20T06:50:49.281Z",
+    "updatedAt": "2026-07-20T06:50:49.281Z"
+  },
+  "message": "Territory assigned successfully"
+}

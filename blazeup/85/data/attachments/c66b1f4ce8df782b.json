@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc5443d53d0f1e0e47e23",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "phelps-schneider.org",
+    "prospectName": "QA-AUTO Schneider-Brown Opportunity",
+    "prospectEmail": "qa.auto+patrick03@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 276957097,
+    "currency": "USD",
+    "numberOfEmployee": 4977,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Fire money level today high out take."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "params": {
+    "page": 1,
+    "limit": 20,
+    "partnerId": "6a5dc5463d53d0f1e0e47e63"
+  }
+}

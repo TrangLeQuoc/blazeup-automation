@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc547c07933f3919e40ef",
+    "partnerName": "QA-AUTO Richardson PLC",
+    "label": "QA-AUTO Jones Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Authority and camera edge.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc547c07933f3919e40f9",
+    "createdAt": "2026-07-20T06:50:47.461Z",
+    "updatedAt": "2026-07-20T06:50:47.461Z"
+  },
+  "message": "Territory assigned successfully"
+}

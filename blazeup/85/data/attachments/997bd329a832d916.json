@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Burns and Sons",
+    "email": "qa.auto+kalexander@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://booker.biz/"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "",
+    "email": "qa.auto+johnweaver@mailinator.com",
+    "type": "channel"
+  }
+}

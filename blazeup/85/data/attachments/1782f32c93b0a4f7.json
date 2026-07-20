@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5393d53d0f1e0e47d18",
+    "partnerName": "QA-AUTO White Inc",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Stephens, Harrison and Jordan Opportunity",
+    "prospectEmail": "qa.auto+miranda49@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 480561179,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Sound court particular perform.",
+    "tenantDomain": "webster-castillo.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2144,
+    "protectionExpiresAt": "2026-09-18T06:50:33.754Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc5393d53d0f1e0e47d24",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:33.763Z",
+    "updatedAt": "2026-07-20T06:50:33.763Z"
+  },
+  "message": "Deal registered successfully"
+}

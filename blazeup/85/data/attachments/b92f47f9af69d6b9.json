@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc57ec07933f3919e4514",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Holmes LLC",
+    "code": "PAR-699446",
+    "email": "qa.auto+beckcassandra@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://anderson-fitzgerald.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:42.479Z",
+    "updatedAt": "2026-07-20T06:51:42.577Z",
+    "approvedAt": "2026-07-20T06:51:42.573Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

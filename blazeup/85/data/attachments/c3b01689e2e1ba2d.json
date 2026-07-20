@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc537c07933f3919e3eae",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5373d53d0f1e0e47ce6",
+    "partnerName": "QA-AUTO Flores, Case and Cummings",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Arnold-Sherman Opportunity",
+    "prospectEmail": "qa.auto+jonathanbrown@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 247497108,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Quickly personal dinner bring simple phone.",
+    "tenantDomain": "rivera-caldwell.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3906,
+    "protectionExpiresAt": "2026-09-18T06:50:31.541Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:31.550Z",
+    "updatedAt": "2026-07-20T06:50:31.664Z",
+    "reviewNotes": "QA-AUTO approve",
+    "reviewedAt": "2026-07-20T06:50:31.660Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal approved successfully"
+}

@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc533c07933f3919e3e10",
+    "partnerName": "QA-AUTO Dillon LLC",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Williams Ltd Opportunity",
+    "prospectEmail": "qa.auto+kimberly15@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 304926915,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Involve letter study unit room safe under.",
+    "tenantDomain": "owens-mann.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1090,
+    "protectionExpiresAt": "2026-09-18T06:50:27.589Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc533c07933f3919e3e1c",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:27.597Z",
+    "updatedAt": "2026-07-20T06:50:27.597Z"
+  },
+  "message": "Deal registered successfully"
+}

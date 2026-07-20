@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc53ac07933f3919e3f1c",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "martin-martinez.org",
+    "prospectName": "QA-AUTO Evans, Clark and Rodriguez Prospect",
+    "prospectEmail": "qa.auto+elliottsteven@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 204094177,
+    "currency": "USD",
+    "numberOfEmployee": 1549,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Explain popular draw believe born trade."
+  }
+}

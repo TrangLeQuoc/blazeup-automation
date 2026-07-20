@@ -1,0 +1,52 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "userId": "6a5dc557c07933f3919e4319",
+      "partnerId": "6a5dc557c07933f3919e430f",
+      "email": "qa.auto+cody10@mailinator.com",
+      "firstName": "Michael",
+      "lastName": "Munoz",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5dc556c07933f3919e42f9",
+      "partnerId": "6a5dc556c07933f3919e42ef",
+      "email": "qa.auto+paulhayes@mailinator.com",
+      "firstName": "Darryl",
+      "lastName": "Irwin",
+      "role": "sales",
+      "status": "active"
+    },
+    {
+      "userId": "6a5dc555c07933f3919e42de",
+      "partnerId": "6a5dc555c07933f3919e42d4",
+      "email": "qa.auto+richard68@mailinator.com",
+      "firstName": "Jeffery",
+      "lastName": "Weaver",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5dc54ec07933f3919e41df",
+      "partnerId": "6a5dc54ec07933f3919e41d5",
+      "email": "qa.auto+jeremy02@mailinator.com",
+      "firstName": "Ryan",
+      "lastName": "Sweeney",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "userId": "6a5dc54d3d53d0f1e0e47f28",
+      "partnerId": "6a5dc54c3d53d0f1e0e47f1e",
+      "email": "qa.auto+johnsonisabella@mailinator.com",
+      "firstName": "Stacy",
+      "lastName": "Khan",
+      "role": "admin",
+      "status": "active"
+    }
+  ],
+  "total": 201,
+  "message": "Partner users retrieved successfully"
+}

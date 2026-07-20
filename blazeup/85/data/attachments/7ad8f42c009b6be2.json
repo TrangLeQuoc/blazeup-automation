@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "williams-buchanan.com",
+    "prospectName": "QA-AUTO Lloyd LLC Prospect",
+    "prospectEmail": "qa.auto+stonejoseph@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 294630478,
+    "currency": "USD",
+    "numberOfEmployee": 1578,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Decade local reality accept girl chair add."
+  }
+}

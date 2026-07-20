@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc556c07933f3919e42ef",
+    "email": "qa.auto+paulhayes@mailinator.com",
+    "firstName": "Darryl",
+    "lastName": "Irwin",
+    "role": "sales"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners/6a5dc529c07933f3919e3d33/upgrade-tier",
+  "payload": {
+    "tier": "select",
+    "reason": "QA-AUTO down select PAR-636088"
+  }
+}

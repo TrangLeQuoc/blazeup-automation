@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "name should not be empty"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:21.472Z",
+  "path": "/sa-partners-api/v1/sa/partners"
+}

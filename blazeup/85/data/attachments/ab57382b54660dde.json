@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc53ec07933f3919e3fa4",
+    "partnerName": "QA-AUTO Collins-Johnson",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Hunt, Singh and Smith Opportunity",
+    "prospectEmail": "qa.auto+morenokristina@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 468937565,
+    "planId": "no-such-plan-qa",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Old thousand wonder certainly continue despite read some.",
+    "tenantDomain": "wilson-ryan.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4971,
+    "protectionExpiresAt": "2026-09-18T06:50:39.655Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc53fc07933f3919e3fc1",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:39.664Z",
+    "updatedAt": "2026-07-20T06:50:39.664Z"
+  },
+  "message": "Deal registered successfully"
+}

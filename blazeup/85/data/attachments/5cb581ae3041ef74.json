@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Wright, Mcfarland and Watts",
+    "email": "qa.auto+jordanvincent@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://snyder-thompson.com/"
+  }
+}

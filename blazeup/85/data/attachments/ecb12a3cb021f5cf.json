@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "email must be an email"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:20.752Z",
+  "path": "/sa-partners-api/v1/sa/partners"
+}

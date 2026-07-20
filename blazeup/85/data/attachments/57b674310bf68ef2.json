@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc541c07933f3919e4030",
+    "partnerName": "QA-AUTO Oconnor and Sons",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Perez, Clark and Graves Opportunity",
+    "prospectEmail": "qa.auto+smitherin@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 480397293,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Computer city any task catch.",
+    "tenantDomain": "hull.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1259,
+    "protectionExpiresAt": "2026-09-18T06:50:41.886Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc5413d53d0f1e0e47ddd",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:41.906Z",
+    "updatedAt": "2026-07-20T06:50:41.906Z"
+  },
+  "message": "Deal registered successfully"
+}

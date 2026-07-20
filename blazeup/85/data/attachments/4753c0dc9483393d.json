@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Edwards Inc",
+    "code": "PAR-355104",
+    "email": "qa.auto+shannon87@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.hopkins-james.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc5493d53d0f1e0e47ebe",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:49.135Z",
+    "updatedAt": "2026-07-20T06:50:49.135Z"
+  },
+  "message": "Partner created successfully"
+}

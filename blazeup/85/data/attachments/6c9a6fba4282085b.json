@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "An active deal for \"QA-AUTO Lane-Salazar Prospect\" already exists. Update or close it before registering a new one.",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:40.423Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

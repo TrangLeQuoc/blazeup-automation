@@ -1,0 +1,11 @@
+{
+  "statusCode": 400,
+  "message": [
+    "reason must be shorter than or equal to 2000 characters",
+    "reason should not be empty",
+    "reason must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:16.024Z",
+  "path": "/sa-partners-api/v1/sa/partners/6a5dc5273d53d0f1e0e47b5b/deactivate"
+}

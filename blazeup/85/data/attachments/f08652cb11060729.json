@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc540c07933f3919e3fd6",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "smith-blake.biz",
+    "prospectName": "QA-AUTO Lane-Salazar Prospect",
+    "prospectEmail": "qa.auto+stefanie19@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 166767580,
+    "currency": "USD",
+    "numberOfEmployee": 4647,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Safe TV training."
+  }
+}

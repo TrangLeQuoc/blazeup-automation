@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "limit must not be less than 1"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:20.392Z",
+  "path": "/sa-partners-api/v1/sa/partners"
+}

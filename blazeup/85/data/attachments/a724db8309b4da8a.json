@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Nguyen, Hicks and Allen",
+    "email": "qa.auto+ryantaylor@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://bowman-french.org/"
+  }
+}

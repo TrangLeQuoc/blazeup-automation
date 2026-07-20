@@ -1,0 +1,5 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/000000000000000000000000/reset-password",
+  "payload": {}
+}

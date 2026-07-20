@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Bailey-Morgan",
+    "email": "qa.auto+sarah85@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.douglas.biz/"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc56ac07933f3919e4432",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Shah and Sons",
+    "code": "PAR-900861",
+    "email": "qa.auto+nguyentaylor@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.wright.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:22.443Z",
+    "updatedAt": "2026-07-20T06:51:22.566Z",
+    "approvedAt": "2026-07-20T06:51:22.562Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

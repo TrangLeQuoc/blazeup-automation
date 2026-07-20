@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc534c07933f3919e3e39",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5343d53d0f1e0e47cbf",
+    "partnerName": "QA-AUTO Montgomery-Strickland",
+    "dealType": "reseller",
+    "status": "registered",
+    "prospectName": "QA-AUTO Wong-Shaw Opportunity",
+    "prospectEmail": "qa.auto+karen11@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 266070485,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Land pull process.",
+    "tenantDomain": "turner.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 258,
+    "protectionExpiresAt": "2026-09-18T06:50:28.414Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:28.423Z",
+    "updatedAt": "2026-07-20T06:50:28.423Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "userId": "6a5dc5773d53d0f1e0e4812e",
+  "partnerId": "6a5dc5763d53d0f1e0e48119",
+  "partnerName": "QA-AUTO Pierce-Black",
+  "email": "qa.auto+whitney13@mailinator.com",
+  "firstName": "Brian",
+  "lastName": "Rogers",
+  "role": "admin",
+  "tier": "registered",
+  "type": "channel",
+  "status": "active",
+  "lastLoginAt": "2026-07-20T06:51:36.471Z",
+  "mfaEnrolled": false,
+  "mfaMethods": []
+}

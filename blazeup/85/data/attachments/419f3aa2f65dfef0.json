@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc541c07933f3919e4030",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "hull.com",
+    "prospectName": "QA-AUTO Perez, Clark and Graves Opportunity",
+    "prospectEmail": "qa.auto+smitherin@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 480397293,
+    "currency": "USD",
+    "numberOfEmployee": 1259,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Computer city any task catch."
+  }
+}

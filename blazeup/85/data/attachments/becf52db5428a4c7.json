@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lopez, Martinez and Hudson",
+    "code": "PAR-950159",
+    "email": "qa.auto+davidadams@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.wang-mckay.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc538c07933f3919e3eb8",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:32.043Z",
+    "updatedAt": "2026-07-20T06:50:32.043Z"
+  },
+  "message": "Partner created successfully"
+}

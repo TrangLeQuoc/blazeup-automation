@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid pagination: limit must not exceed 100",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:52:05.604Z",
+  "path": "/sa-partners-api/v1/partner/portal/deals"
+}

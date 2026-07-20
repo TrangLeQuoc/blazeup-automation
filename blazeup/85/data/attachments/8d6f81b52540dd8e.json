@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc58dc07933f3919e45ed",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Simpson, Elliott and Jones",
+    "code": "PAR-003631",
+    "email": "qa.auto+timothymunoz@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.conner.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:57.267Z",
+    "updatedAt": "2026-07-20T06:51:57.409Z",
+    "approvedAt": "2026-07-20T06:51:57.405Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

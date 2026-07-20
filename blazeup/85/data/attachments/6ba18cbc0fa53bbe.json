@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc5373d53d0f1e0e47ce6",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "rivera-caldwell.com",
+    "prospectName": "QA-AUTO Arnold-Sherman Opportunity",
+    "prospectEmail": "qa.auto+jonathanbrown@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 247497108,
+    "currency": "USD",
+    "numberOfEmployee": 3906,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Quickly personal dinner bring simple phone."
+  }
+}

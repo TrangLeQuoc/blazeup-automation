@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5353d53d0f1e0e47cca",
+    "partnerName": "QA-AUTO Williams-Taylor",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Lara, Myers and Villanueva Prospect",
+    "prospectEmail": "qa.auto+seanrivera@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 190069218,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Election paper process type argue.",
+    "tenantDomain": "mosley.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1766,
+    "protectionExpiresAt": "2026-09-18T06:50:30.225Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc536c07933f3919e3e88",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:30.234Z",
+    "updatedAt": "2026-07-20T06:50:30.234Z"
+  },
+  "message": "Deal registered successfully"
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc5343d53d0f1e0e47cbf",
+    "planId": "pro-test-v1",
+    "dealType": "reseller",
+    "tenantDomain": "turner.com",
+    "prospectName": "QA-AUTO Wong-Shaw Opportunity",
+    "prospectEmail": "qa.auto+karen11@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 266070485,
+    "currency": "USD",
+    "numberOfEmployee": 258,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Land pull process."
+  }
+}

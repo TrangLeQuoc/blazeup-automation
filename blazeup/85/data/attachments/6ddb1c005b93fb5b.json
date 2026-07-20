@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc540c07933f3919e3ff3",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "ward.com",
+    "prospectName": "QA-AUTO Valdez-Johnson Opportunity",
+    "prospectEmail": "qa.auto+drakebrenda@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 426136772,
+    "currency": "USD",
+    "numberOfEmployee": 217,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Safe interest last everybody role fly half."
+  }
+}

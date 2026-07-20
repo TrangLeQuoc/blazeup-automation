@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Pugh, Werner and Gonzalez",
+    "email": "qa.auto+wtodd@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://proctor.com/"
+  }
+}

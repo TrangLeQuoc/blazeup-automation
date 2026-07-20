@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc526c07933f3919e3ce9",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Lang Inc",
+    "code": "PAR-877526",
+    "email": "qa.auto+corey34@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.lopez-riley.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:14.283Z",
+    "updatedAt": "2026-07-20T06:50:14.283Z",
+    "__v": 0,
+    "openDealsCount": 0
+  },
+  "message": "Partner retrieved successfully"
+}

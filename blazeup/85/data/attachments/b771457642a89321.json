@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Kennedy-Hansen",
+    "code": "PAR-320516",
+    "email": "qa.auto+gharris@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://king.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc54ac07933f3919e4184",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:50.523Z",
+    "updatedAt": "2026-07-20T06:50:50.523Z"
+  },
+  "message": "Partner created successfully"
+}

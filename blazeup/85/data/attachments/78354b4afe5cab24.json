@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Burns and Sons",
+    "code": "PAR-877993",
+    "email": "qa.auto+kalexander@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://booker.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc58bc07933f3919e4590",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:55.445Z",
+    "updatedAt": "2026-07-20T06:51:55.445Z"
+  },
+  "message": "Partner created successfully"
+}

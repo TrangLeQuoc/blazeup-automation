@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "meyer.com",
+    "prospectName": "QA-AUTO Peterson Ltd Prospect",
+    "prospectEmail": "qa.auto+hunter01@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 46908980,
+    "currency": "USD",
+    "numberOfEmployee": 1373,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO President act old school experience."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc540c07933f3919e3ff3",
+    "partnerName": "QA-AUTO Wright, Mcfarland and Watts",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Valdez-Johnson Opportunity",
+    "prospectEmail": "qa.auto+drakebrenda@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 426136772,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Safe interest last everybody role fly half.",
+    "tenantDomain": "ward.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 217,
+    "protectionExpiresAt": "2026-09-18T06:50:40.927Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc540c07933f3919e3fff",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:40.935Z",
+    "updatedAt": "2026-07-20T06:50:40.935Z"
+  },
+  "message": "Deal registered successfully"
+}

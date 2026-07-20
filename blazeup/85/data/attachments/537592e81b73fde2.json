@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Partner undefined not found",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:38.621Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

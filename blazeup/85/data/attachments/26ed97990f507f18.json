@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Deal 6a5dc57bc07933f3919e44e7 not found",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:51:41.938Z",
+  "path": "/sa-partners-api/v1/partner/portal/deals/6a5dc57bc07933f3919e44e7"
+}

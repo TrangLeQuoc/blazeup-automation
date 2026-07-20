@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Pierce-Black",
+    "code": "PAR-744600",
+    "email": "qa.auto+joshua78@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.wilcox.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc5763d53d0f1e0e48119",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:34.063Z",
+    "updatedAt": "2026-07-20T06:51:34.063Z"
+  },
+  "message": "Partner created successfully"
+}

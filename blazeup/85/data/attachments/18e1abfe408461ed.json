@@ -1,0 +1,7 @@
+{
+  "statusCode": 404,
+  "message": "Audit log entry 000000000000000000000000 not found",
+  "error": "Not Found",
+  "timestamp": "2026-07-20T06:51:00.874Z",
+  "path": "/sa-partners-api/v1/sa/audit-logs/000000000000000000000000"
+}

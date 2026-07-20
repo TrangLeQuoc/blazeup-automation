@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Torres Inc",
+    "code": "PAR-874842",
+    "email": "qa.auto+cameron47@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.miller.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc531c07933f3919e3de8",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:25.396Z",
+    "updatedAt": "2026-07-20T06:50:25.396Z"
+  },
+  "message": "Partner created successfully"
+}

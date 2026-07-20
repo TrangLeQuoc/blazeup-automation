@@ -1,0 +1,19 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a5dc5453d53d0f1e0e47e44",
+    "label": "QA-AUTO Blair Territory",
+    "countries": [
+      "US",
+      "CA"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Defense modern card population unit."
+  }
+}

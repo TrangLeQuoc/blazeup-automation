@@ -1,0 +1,11 @@
+{
+  "statusCode": 400,
+  "message": [
+    "firstName must be shorter than or equal to 100 characters",
+    "firstName should not be empty",
+    "firstName must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:51:06.415Z",
+  "path": "/sa-partners-api/v1/sa/partner-users"
+}

@@ -1,0 +1,7 @@
+{
+  "method": "GET",
+  "endpoint": "sa-plans-api/v1/billing-plans",
+  "params": {
+    "limit": 20
+  }
+}

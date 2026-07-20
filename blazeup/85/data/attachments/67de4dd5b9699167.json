@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc5683d53d0f1e0e48092",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Smith, Simpson and Haney",
+    "code": "PAR-636919",
+    "email": "qa.auto+henry92@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.andrews.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:20.007Z",
+    "updatedAt": "2026-07-20T06:51:20.112Z",
+    "approvedAt": "2026-07-20T06:51:20.110Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

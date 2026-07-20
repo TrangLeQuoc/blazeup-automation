@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Montgomery-Strickland",
+    "code": "PAR-112039",
+    "email": "qa.auto+lawrencehernandez@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.mills.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc5343d53d0f1e0e47cbf",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:28.156Z",
+    "updatedAt": "2026-07-20T06:50:28.156Z"
+  },
+  "message": "Partner created successfully"
+}

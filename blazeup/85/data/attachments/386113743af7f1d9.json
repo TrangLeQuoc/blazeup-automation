@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Cannot transition deal from registered to lost",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:43.946Z",
+  "path": "/sa-partners-api/v1/sa/deals/6a5dc5433d53d0f1e0e47e13/lose"
+}

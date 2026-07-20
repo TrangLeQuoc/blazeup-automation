@@ -1,0 +1,7 @@
+{
+  "method": "DELETE",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/000000000000000000000000/certifications/sales_certified",
+  "payload": {
+    "reason": "QA-AUTO"
+  }
+}

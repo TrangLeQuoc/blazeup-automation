@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "email": "qa.auto+tmorales@mailinator.com",
+    "firstName": "Robert",
+    "lastName": "Salas",
+    "role": "admin"
+  }
+}

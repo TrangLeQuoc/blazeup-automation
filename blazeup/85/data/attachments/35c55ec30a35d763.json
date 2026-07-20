@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc53ac07933f3919e3f12",
+    "partnerName": "QA-AUTO Bonilla, White and Holmes",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Evans, Clark and Rodriguez Prospect",
+    "prospectEmail": "qa.auto+elliottsteven@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 210499969,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Serve for tonight half how others leave those.",
+    "tenantDomain": "house.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1001,
+    "protectionExpiresAt": "2026-09-18T06:50:34.872Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc53ac07933f3919e3f28",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:34.879Z",
+    "updatedAt": "2026-07-20T06:50:34.879Z"
+  },
+  "message": "Deal registered successfully"
+}

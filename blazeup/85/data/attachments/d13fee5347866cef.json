@@ -1,0 +1,35 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc5503d53d0f1e0e47f6f",
+    "tenantId": "blazeup-platform",
+    "correlationId": "e8d9d167-d079-4660-b2a5-3c3ce786e647",
+    "category": "SA_AUDIT_PARTNER",
+    "severity": "warning",
+    "action": "partner.account.deactivated",
+    "title": "Partner deactivated: QA-AUTO Flynn LLC",
+    "actor": {
+      "type": "sa-staff",
+      "saUserId": "system"
+    },
+    "resource": {
+      "type": "partner_account",
+      "id": "6a5dc54f3d53d0f1e0e47f57",
+      "label": "QA-AUTO Flynn LLC"
+    },
+    "before": {
+      "status": "pending"
+    },
+    "after": {
+      "status": "suspended",
+      "reason": "Deleted by SA"
+    },
+    "retentionClass": "permanent",
+    "prevHash": "148fbe1942c5489643c3da2c6e0824f14868d44e399c09685dfcc814d4d4ba0d",
+    "selfHash": "849318e1e539bbf55aaea809705a13896b83b106fe6a2a7b4b649a94809974a2",
+    "createdAt": "2026-07-20T06:50:56.399Z",
+    "updatedAt": "2026-07-20T06:50:56.399Z",
+    "__v": 0
+  },
+  "message": "SA audit log entry retrieved successfully"
+}

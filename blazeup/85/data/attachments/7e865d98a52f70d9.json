@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO White Inc",
+    "code": "PAR-643230",
+    "email": "qa.auto+lopezwanda@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://myers.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc5393d53d0f1e0e47d18",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:33.363Z",
+    "updatedAt": "2026-07-20T06:50:33.363Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Wright, Mcfarland and Watts",
+    "code": "PAR-320986",
+    "email": "qa.auto+jordanvincent@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://snyder-thompson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc540c07933f3919e3ff3",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:40.706Z",
+    "updatedAt": "2026-07-20T06:50:40.706Z"
+  },
+  "message": "Partner created successfully"
+}

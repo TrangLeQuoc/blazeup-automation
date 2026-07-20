@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO White and Sons",
+    "code": "PAR-714875",
+    "email": "qa.auto+morenogary@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.hunter.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc53b3d53d0f1e0e47d54",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:35.877Z",
+    "updatedAt": "2026-07-20T06:50:35.877Z"
+  },
+  "message": "Partner created successfully"
+}

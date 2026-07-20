@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Mercado-Hull",
+    "email": "qa.auto+elizabethdavis@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://morgan-powell.info/"
+  }
+}

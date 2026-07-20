@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc5683d53d0f1e0e48092",
+    "email": "qa.auto+petersoncharles@mailinator.com",
+    "firstName": "Stacy",
+    "lastName": "Hensley",
+    "role": "admin"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Pierce-Black",
+    "email": "qa.auto+joshua78@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.wilcox.info/"
+  }
+}

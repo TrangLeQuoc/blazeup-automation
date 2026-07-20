@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc590c07933f3919e4618",
+    "partnerName": "QA-AUTO Soto, Ritter and Jimenez",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Lloyd LLC Prospect",
+    "prospectEmail": "qa.auto+stonejoseph@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 294630478,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Decade local reality accept girl chair add.",
+    "tenantDomain": "williams-buchanan.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1578,
+    "protectionExpiresAt": "2026-09-18T06:52:02.876Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc592c07933f3919e4636",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:52:02.885Z",
+    "updatedAt": "2026-07-20T06:52:02.885Z"
+  },
+  "message": "Deal registered"
+}

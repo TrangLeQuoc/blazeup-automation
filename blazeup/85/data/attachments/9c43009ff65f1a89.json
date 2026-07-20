@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid id: 'not-an-id'",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:55.234Z",
+  "path": "/sa-partners-api/v1/sa/partner-users/not-an-id/certifications/sales_certified"
+}

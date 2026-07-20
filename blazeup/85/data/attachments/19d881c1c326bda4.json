@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Flynn LLC",
+    "code": "PAR-303809",
+    "email": "qa.auto+mossbenjamin@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.hickman.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc54f3d53d0f1e0e47f57",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:55.709Z",
+    "updatedAt": "2026-07-20T06:50:55.709Z"
+  },
+  "message": "Partner created successfully"
+}

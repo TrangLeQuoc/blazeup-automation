@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Evans Ltd",
+    "code": "PAR-330752",
+    "email": "qa.auto+masseywhitney@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.beltran.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc5313d53d0f1e0e47c8b",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:25.794Z",
+    "updatedAt": "2026-07-20T06:50:25.794Z"
+  },
+  "message": "Partner created successfully"
+}

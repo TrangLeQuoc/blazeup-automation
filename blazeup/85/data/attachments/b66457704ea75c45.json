@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc53d3d53d0f1e0e47d90",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc53d3d53d0f1e0e47d84",
+    "partnerName": "QA-AUTO Pugh, Werner and Gonzalez",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Acosta-Shields Opportunity",
+    "prospectEmail": "qa.auto+kimsherry@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 72499951,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Reveal stay institution strategy through maybe material.",
+    "tenantDomain": "clark-lambert.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2994,
+    "protectionExpiresAt": "2026-09-18T06:50:37.913Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:37.922Z",
+    "updatedAt": "2026-07-20T06:50:37.922Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

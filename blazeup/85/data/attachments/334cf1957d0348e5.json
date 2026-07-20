@@ -1,0 +1,19 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5313d53d0f1e0e47c8b",
+    "userId": "6a5dc5323d53d0f1e0e47c96",
+    "certificationType": "sales_certified",
+    "status": "active",
+    "earnedAt": "2026-07-20T06:50:26.587Z",
+    "expiresAt": "2027-07-20T06:50:26.587Z",
+    "score": 90,
+    "grantedBy": "system",
+    "schemaVersion": 1,
+    "_id": "6a5dc532c07933f3919e3e04",
+    "createdAt": "2026-07-20T06:50:26.592Z",
+    "updatedAt": "2026-07-20T06:50:26.592Z"
+  },
+  "message": "Certification granted successfully"
+}

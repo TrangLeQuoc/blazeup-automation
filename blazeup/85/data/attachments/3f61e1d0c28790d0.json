@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Nguyen, Hicks and Allen",
+    "code": "PAR-261025",
+    "email": "qa.auto+ryantaylor@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://bowman-french.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc5733d53d0f1e0e480ef",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:31.276Z",
+    "updatedAt": "2026-07-20T06:51:31.276Z"
+  },
+  "message": "Partner created successfully"
+}

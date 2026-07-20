@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Richardson PLC",
+    "code": "PAR-577149",
+    "email": "qa.auto+angela86@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.chapman.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc547c07933f3919e40ef",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:47.323Z",
+    "updatedAt": "2026-07-20T06:50:47.323Z"
+  },
+  "message": "Partner created successfully"
+}

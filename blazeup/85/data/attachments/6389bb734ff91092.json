@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "porter.com",
+    "prospectName": "QA-AUTO Hughes-Powell Prospect",
+    "prospectEmail": "qa.auto+christopherward@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 121382458,
+    "currency": "USD",
+    "numberOfEmployee": 2559,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Behind leg story know foreign sound."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc590c07933f3919e4618",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Soto, Ritter and Jimenez",
+    "code": "PAR-444207",
+    "email": "qa.auto+rebeccaharvey@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.neal-richardson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:52:00.235Z",
+    "updatedAt": "2026-07-20T06:52:00.526Z",
+    "approvedAt": "2026-07-20T06:52:00.523Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

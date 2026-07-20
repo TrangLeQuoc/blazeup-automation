@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5443d53d0f1e0e47e23",
+    "partnerName": "QA-AUTO Curtis, Powell and Reyes",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Schneider-Brown Opportunity",
+    "prospectEmail": "qa.auto+patrick03@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 276957097,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Fire money level today high out take.",
+    "tenantDomain": "phelps-schneider.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4977,
+    "protectionExpiresAt": "2026-09-18T06:50:44.655Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc5443d53d0f1e0e47e2f",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:44.664Z",
+    "updatedAt": "2026-07-20T06:50:44.664Z"
+  },
+  "message": "Deal registered successfully"
+}

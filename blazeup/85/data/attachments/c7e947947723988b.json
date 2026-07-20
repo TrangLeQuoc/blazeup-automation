@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc57b3d53d0f1e0e48159",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Marks Group",
+    "code": "PAR-863795",
+    "email": "qa.auto+lramirez@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.perry.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:39.707Z",
+    "updatedAt": "2026-07-20T06:51:39.811Z",
+    "approvedAt": "2026-07-20T06:51:39.808Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc53d3d53d0f1e0e47d84",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "clark-lambert.net",
+    "prospectName": "QA-AUTO Acosta-Shields Opportunity",
+    "prospectEmail": "qa.auto+kimsherry@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 72499951,
+    "currency": "USD",
+    "numberOfEmployee": 2994,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Reveal stay institution strategy through maybe material."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc582c07933f3919e454f",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Collins LLC",
+    "code": "PAR-707448",
+    "email": "qa.auto+williamskathleen@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.allen-wilson.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:46.300Z",
+    "updatedAt": "2026-07-20T06:51:46.421Z",
+    "approvedAt": "2026-07-20T06:51:46.417Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

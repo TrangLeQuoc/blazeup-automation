@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a5dc58cc07933f3919e45c2/reject",
+  "payload": {
+    "reviewNotes": "QA-AUTO first reject"
+  }
+}

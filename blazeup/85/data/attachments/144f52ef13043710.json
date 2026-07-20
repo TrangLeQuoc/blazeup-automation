@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a5dc5473d53d0f1e0e47e9a",
+    "label": "QA-AUTO Wells Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "31-12-2026",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Else ahead ahead avoid physical."
+  }
+}

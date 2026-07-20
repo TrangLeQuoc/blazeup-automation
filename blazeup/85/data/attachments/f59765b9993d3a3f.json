@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "robinson.com",
+    "prospectName": "QA-AUTO Booth Group Prospect",
+    "prospectEmail": "qa.auto+leroyshaw@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 360618313,
+    "currency": "USD",
+    "numberOfEmployee": 796,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Focus thus possible past."
+  }
+}

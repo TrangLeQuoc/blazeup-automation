@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Humphrey, Thomas and Patrick",
+    "email": "qa.auto+emiranda@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://jones-williams.org/"
+  }
+}

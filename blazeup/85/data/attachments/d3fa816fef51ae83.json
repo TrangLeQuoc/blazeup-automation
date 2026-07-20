@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "userId": "6a5dc556c07933f3919e42f9",
+      "partnerId": "6a5dc556c07933f3919e42ef",
+      "email": "qa.auto+paulhayes@mailinator.com",
+      "firstName": "Darryl",
+      "lastName": "Irwin",
+      "role": "sales",
+      "status": "active"
+    }
+  ],
+  "total": 1,
+  "message": "Partner users retrieved successfully"
+}

@@ -1,0 +1,7 @@
+{
+  "statusCode": 401,
+  "message": "Invalid or expired refresh token",
+  "error": "Unauthorized",
+  "timestamp": "2026-07-20T06:51:46.045Z",
+  "path": "/sa-partners-api/v1/partner/auth/refresh"
+}

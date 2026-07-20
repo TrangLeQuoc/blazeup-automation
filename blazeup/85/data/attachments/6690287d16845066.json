@@ -1,0 +1,38 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc53b3d53d0f1e0e47d42",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc53ac07933f3919e3f1c",
+    "partnerName": "QA-AUTO Mercado-Hull",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Evans, Clark and Rodriguez Prospect",
+    "prospectEmail": "qa.auto+elliottsteven@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 204094177,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Explain popular draw believe born trade.",
+    "tenantDomain": "martin-martinez.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1549,
+    "protectionExpiresAt": "2026-09-18T06:50:35.013Z",
+    "conflictStatus": "resolved_for_partner",
+    "conflictingDealIds": [
+      "6a5dc53ac07933f3919e3f28"
+    ],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:35.019Z",
+    "updatedAt": "2026-07-20T06:50:35.176Z",
+    "conflictResolution": {
+      "resolvedBy": "696466c7e092b1dce3ed8e95",
+      "resolvedAt": "2026-07-20T06:50:35.170Z",
+      "decision": "resolved_for_partner",
+      "reasoning": "Prospect confirmed this partner is the engaged reseller"
+    }
+  },
+  "message": "Deal conflict resolved"
+}

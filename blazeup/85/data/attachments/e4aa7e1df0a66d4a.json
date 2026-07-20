@@ -1,0 +1,11 @@
+{
+  "statusCode": 200,
+  "data": {
+    "totalEvents24h": 472,
+    "criticalEvents24h": 0,
+    "warnings24h": 150,
+    "uniqueActors24h": 3,
+    "chainIntegrityPct": 100
+  },
+  "message": "SA audit stats retrieved successfully"
+}

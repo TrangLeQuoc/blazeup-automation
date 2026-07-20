@@ -1,0 +1,50 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc5443d53d0f1e0e47e2f",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc5443d53d0f1e0e47e23",
+    "partnerName": "QA-AUTO Curtis, Powell and Reyes",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Schneider-Brown Opportunity",
+    "prospectEmail": "qa.auto+patrick03@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 276957097,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Fire money level today high out take.",
+    "tenantDomain": "phelps-schneider.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4977,
+    "protectionExpiresAt": "2026-11-17T06:50:44.655Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [
+      {
+        "extendedBy": "696466c7e092b1dce3ed8e95",
+        "extendedAt": "2026-07-20T06:50:44.784Z",
+        "previousExpiresAt": "2026-09-18T06:50:44.655Z",
+        "newExpiresAt": "2026-10-18T06:50:44.655Z",
+        "addedDays": 30,
+        "trigger": "manual",
+        "reasoning": "QA-AUTO extend #1"
+      },
+      {
+        "extendedBy": "696466c7e092b1dce3ed8e95",
+        "extendedAt": "2026-07-20T06:50:44.956Z",
+        "previousExpiresAt": "2026-10-18T06:50:44.655Z",
+        "newExpiresAt": "2026-11-17T06:50:44.655Z",
+        "addedDays": 30,
+        "trigger": "manual",
+        "reasoning": "QA-AUTO extend #2"
+      }
+    ],
+    "createdAt": "2026-07-20T06:50:44.664Z",
+    "updatedAt": "2026-07-20T06:50:44.960Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

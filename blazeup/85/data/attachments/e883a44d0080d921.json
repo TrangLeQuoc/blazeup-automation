@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc57c3d53d0f1e0e48163",
+    "partnerId": "6a5dc57b3d53d0f1e0e48159",
+    "email": "qa.auto+castrojulie@mailinator.com",
+    "firstName": "Jessica",
+    "lastName": "Anthony",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

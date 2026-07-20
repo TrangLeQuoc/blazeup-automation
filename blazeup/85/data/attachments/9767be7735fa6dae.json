@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc54ac07933f3919e4184",
+    "partnerName": "QA-AUTO Kennedy-Hansen",
+    "label": "QA-AUTO Marsh Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Environmental think site meet radio stay amount base.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc54ac07933f3919e418e",
+    "createdAt": "2026-07-20T06:50:50.622Z",
+    "updatedAt": "2026-07-20T06:50:50.622Z"
+  },
+  "message": "Territory assigned successfully"
+}

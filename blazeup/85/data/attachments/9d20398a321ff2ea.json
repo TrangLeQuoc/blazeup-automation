@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Cortez-Winters",
+    "email": "qa.auto+mendezjonathan@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://howard.info/"
+  }
+}

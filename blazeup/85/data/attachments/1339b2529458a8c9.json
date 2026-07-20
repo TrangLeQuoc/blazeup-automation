@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Richards-Cowan",
+    "code": "PAR-709531",
+    "email": "qa.auto+williamsjessica@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://lyons.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc56dc07933f3919e4468",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:25.392Z",
+    "updatedAt": "2026-07-20T06:51:25.392Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Smith, Smith and Cook",
+    "code": "PAR-699848",
+    "email": "qa.auto+robertmorton@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://brown.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc55ac07933f3919e4363",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:51:06.215Z",
+    "updatedAt": "2026-07-20T06:51:06.215Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc533c07933f3919e3e10",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "owens-mann.com",
+    "prospectName": "QA-AUTO Williams Ltd Opportunity",
+    "prospectEmail": "qa.auto+kimberly15@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 304926915,
+    "currency": "USD",
+    "numberOfEmployee": 1090,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Involve letter study unit room safe under."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc535c07933f3919e3e61",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc534c07933f3919e3e54",
+    "partnerName": "QA-AUTO Jackson PLC",
+    "dealType": "co_sell",
+    "status": "registered",
+    "prospectName": "QA-AUTO Downs, Haynes and Steele Opportunity",
+    "prospectEmail": "qa.auto+ili@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 63890455,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Bring from data him public institution far.",
+    "tenantDomain": "campbell-howard.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1226,
+    "protectionExpiresAt": "2026-09-18T06:50:29.249Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:29.258Z",
+    "updatedAt": "2026-07-20T06:50:29.258Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

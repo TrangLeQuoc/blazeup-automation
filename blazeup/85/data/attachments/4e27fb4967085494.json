@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc58cc07933f3919e45c2",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc58cc07933f3919e45b6",
+    "partnerName": "QA-AUTO Stevens, Cox and Fry",
+    "dealType": "referral",
+    "status": "rejected",
+    "prospectName": "QA-AUTO James PLC Opportunity",
+    "prospectEmail": "qa.auto+harrismichael@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 51889518,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Dream fear area international the information any say.",
+    "tenantDomain": "walker.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3947,
+    "protectionExpiresAt": "2026-09-18T06:51:56.464Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:51:56.474Z",
+    "updatedAt": "2026-07-20T06:51:56.608Z",
+    "reviewNotes": "QA-AUTO first reject",
+    "reviewedAt": "2026-07-20T06:51:56.604Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal rejected"
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Montgomery-Strickland",
+    "email": "qa.auto+lawrencehernandez@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.mills.com/"
+  }
+}

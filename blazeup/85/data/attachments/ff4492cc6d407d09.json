@@ -1,0 +1,7 @@
+{
+  "statusCode": 401,
+  "message": "Current password is incorrect",
+  "error": "Unauthorized",
+  "timestamp": "2026-07-20T06:51:51.776Z",
+  "path": "/sa-partners-api/v1/partner/auth/change-password"
+}

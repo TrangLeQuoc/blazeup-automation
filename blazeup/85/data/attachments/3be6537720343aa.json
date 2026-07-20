@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a5dc58b3d53d0f1e0e481ce/reject",
+  "payload": {
+    "reviewNotes": "QA-AUTO reject — duplicate prospect"
+  }
+}

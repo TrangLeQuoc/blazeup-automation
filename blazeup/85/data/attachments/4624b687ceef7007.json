@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc540c07933f3919e3fd6",
+    "partnerName": "QA-AUTO White, Mcguire and Graham",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Lane-Salazar Prospect",
+    "prospectEmail": "qa.auto+stefanie19@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 63699808,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Expect seat pick reduce.",
+    "tenantDomain": "hunter-hill.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4185,
+    "protectionExpiresAt": "2026-09-18T06:50:40.269Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc540c07933f3919e3fe2",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:40.280Z",
+    "updatedAt": "2026-07-20T06:50:40.280Z"
+  },
+  "message": "Deal registered successfully"
+}

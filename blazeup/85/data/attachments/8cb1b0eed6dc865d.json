@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc5313d53d0f1e0e47c8b",
+    "email": "qa.auto+lewisbrianna@mailinator.com",
+    "firstName": "Ariel",
+    "lastName": "Thompson",
+    "role": "admin"
+  }
+}

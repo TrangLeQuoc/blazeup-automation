@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Kent Group",
+    "code": "PAR-019256",
+    "email": "qa.auto+jeremy52@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://tucker.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc54b3d53d0f1e0e47ee0",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:51.277Z",
+    "updatedAt": "2026-07-20T06:50:51.277Z"
+  },
+  "message": "Partner created successfully"
+}

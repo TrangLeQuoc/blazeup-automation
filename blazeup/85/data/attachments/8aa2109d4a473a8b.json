@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Bryant, Salinas and Bender",
+    "code": "PAR-594864",
+    "email": "qa.auto+thomascrawford@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://jackson.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc52f3d53d0f1e0e47c2d",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:23.090Z",
+    "updatedAt": "2026-07-20T06:50:23.090Z"
+  },
+  "message": "Partner created successfully"
+}

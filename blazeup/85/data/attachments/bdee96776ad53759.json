@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/auth/change-password",
+  "payload": {
+    "currentPassword": "***",
+    "newPassword": "***"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc538c07933f3919e3ec2",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "parker.com",
+    "prospectName": "QA-AUTO Day-Maddox Prospect",
+    "prospectEmail": "qa.auto+bryantandre@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 137497377,
+    "currency": "USD",
+    "numberOfEmployee": 2783,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Two significant him anything various particularly knowledge."
+  }
+}

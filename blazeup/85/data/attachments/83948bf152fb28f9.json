@@ -1,0 +1,22 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc54ec07933f3919e41ea",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc54ec07933f3919e41d5",
+    "userId": "6a5dc54ec07933f3919e41df",
+    "certificationType": "sales_certified",
+    "status": "revoked",
+    "earnedAt": "2026-07-20T06:50:54.880Z",
+    "expiresAt": "2027-07-20T06:50:54.880Z",
+    "score": 90,
+    "grantedBy": "system",
+    "schemaVersion": 1,
+    "createdAt": "2026-07-20T06:50:54.885Z",
+    "updatedAt": "2026-07-20T06:50:55.316Z",
+    "revokeReason": "QA-AUTO first",
+    "revokedAt": "2026-07-20T06:50:55.312Z",
+    "revokedBy": "system"
+  },
+  "message": "Certification revoked successfully"
+}

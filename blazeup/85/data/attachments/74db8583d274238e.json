@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "userId": "6a5dc555c07933f3919e42de",
+      "partnerId": "6a5dc555c07933f3919e42d4",
+      "email": "qa.auto+richard68@mailinator.com",
+      "firstName": "Jeffery",
+      "lastName": "Weaver",
+      "role": "admin",
+      "status": "active"
+    }
+  ],
+  "total": 1,
+  "message": "Partner users retrieved successfully"
+}

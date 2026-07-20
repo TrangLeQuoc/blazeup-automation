@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc529c07933f3919e3d33",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Callahan, Williams and Smith",
+    "code": "PAR-636088",
+    "email": "qa.auto+amber46@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://cordova-ward.com/",
+    "tier": "select",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:17.111Z",
+    "updatedAt": "2026-07-20T06:50:17.246Z"
+  },
+  "message": "Partner tier updated successfully"
+}

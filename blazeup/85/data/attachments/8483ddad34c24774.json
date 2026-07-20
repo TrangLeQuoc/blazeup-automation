@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Calderon-Brooks",
+    "code": "PAR-613910",
+    "email": "qa.auto+martinezmisty@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.adams-willis.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc52dc07933f3919e3d85",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:21.683Z",
+    "updatedAt": "2026-07-20T06:50:21.683Z"
+  },
+  "message": "Partner created successfully"
+}

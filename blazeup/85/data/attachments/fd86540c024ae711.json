@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Oconnor and Sons",
+    "code": "PAR-021475",
+    "email": "qa.auto+jasonperez@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://graham-wallace.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc541c07933f3919e4030",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:41.637Z",
+    "updatedAt": "2026-07-20T06:50:41.637Z"
+  },
+  "message": "Partner created successfully"
+}

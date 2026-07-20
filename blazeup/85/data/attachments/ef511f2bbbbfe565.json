@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc568c07933f3919e441a",
+    "partnerId": "6a5dc5683d53d0f1e0e48092",
+    "email": "qa.auto+petersoncharles@mailinator.com",
+    "firstName": "Stacy",
+    "lastName": "Hensley",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

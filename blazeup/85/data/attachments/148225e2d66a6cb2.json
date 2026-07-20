@@ -1,0 +1,10 @@
+{
+  "statusCode": 400,
+  "message": [
+    "reason should not be empty",
+    "reason must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:55.001Z",
+  "path": "/sa-partners-api/v1/sa/partner-users/6a5dc54ec07933f3919e41df/certifications/sales_certified"
+}

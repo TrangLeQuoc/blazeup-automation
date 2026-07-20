@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc535c07933f3919e3e7c",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "rodriguez-henson.info",
+    "prospectName": "QA-AUTO Lara, Myers and Villanueva Prospect",
+    "prospectEmail": "qa.auto+seanrivera@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 136222032,
+    "currency": "USD",
+    "numberOfEmployee": 3002,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Teach our ability week onto."
+  }
+}

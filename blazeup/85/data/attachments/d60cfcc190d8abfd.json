@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/000000000000000000000000/resolve-conflict",
+  "payload": {
+    "decision": "resolved_for_partner",
+    "reasoning": "QA"
+  }
+}

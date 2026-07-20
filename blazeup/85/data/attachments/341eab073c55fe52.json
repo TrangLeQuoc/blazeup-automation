@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "A partner with email qa.auto+cameron47@mailinator.com already exists",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T06:50:25.525Z",
+  "path": "/sa-partners-api/v1/sa/partners"
+}

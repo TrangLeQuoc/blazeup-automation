@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc579c07933f3919e44d2",
+    "partnerName": "QA-AUTO Lopez, Boyer and Barajas",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Peterson Ltd Prospect",
+    "prospectEmail": "qa.auto+hunter01@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 46908980,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO President act old school experience.",
+    "tenantDomain": "meyer.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1373,
+    "protectionExpiresAt": "2026-09-18T06:51:39.549Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc57bc07933f3919e44e7",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:51:39.558Z",
+    "updatedAt": "2026-07-20T06:51:39.558Z"
+  },
+  "message": "Deal registered"
+}

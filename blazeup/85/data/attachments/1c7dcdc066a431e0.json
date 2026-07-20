@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc53cc07933f3919e3f88",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc53cc07933f3919e3f7c",
+    "partnerName": "QA-AUTO Owens PLC",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Lopez, Mccoy and Glass Opportunity",
+    "prospectEmail": "qa.auto+leewheeler@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 47186062,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Such wonder floor care character policy.",
+    "tenantDomain": "campbell-weaver.biz",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1293,
+    "protectionExpiresAt": "2026-09-18T06:50:36.975Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:50:36.985Z",
+    "updatedAt": "2026-07-20T06:50:37.117Z",
+    "reviewedAt": "2026-07-20T06:50:37.112Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal approved successfully"
+}

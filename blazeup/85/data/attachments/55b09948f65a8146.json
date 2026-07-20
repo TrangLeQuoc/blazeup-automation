@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc54ec07933f3919e41d5",
+    "email": "qa.auto+jeremy02@mailinator.com",
+    "firstName": "Ryan",
+    "lastName": "Sweeney",
+    "role": "admin"
+  }
+}

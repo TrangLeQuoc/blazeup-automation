@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Pierce Ltd",
+    "code": "PAR-462466",
+    "email": "qa.auto+hoffmangerald@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://cain-mack.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc54c3d53d0f1e0e47f1e",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:52.659Z",
+    "updatedAt": "2026-07-20T06:50:52.659Z"
+  },
+  "message": "Partner created successfully"
+}

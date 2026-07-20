@@ -1,0 +1,26 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc5273d53d0f1e0e47b46",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Young-Allen",
+    "code": "PAR-035345",
+    "email": "qa.auto+mwright@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://anthony.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "suspended",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T06:50:15.414Z",
+    "updatedAt": "2026-07-20T06:50:15.519Z",
+    "internalNotes": "QA-AUTO decline reason for PAR-035345"
+  },
+  "message": "Partner deactivated successfully"
+}

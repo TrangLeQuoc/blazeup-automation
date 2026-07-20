@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc55ac07933f3919e4363",
+    "email": "not-an-email",
+    "firstName": "Robert",
+    "lastName": "Salas",
+    "role": "admin"
+  }
+}

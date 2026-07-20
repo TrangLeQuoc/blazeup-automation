@@ -1,0 +1,19 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc53ec07933f3919e3fa4",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "wilson-ryan.com",
+    "prospectEmail": "qa.auto+morenokristina@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 468937565,
+    "currency": "USD",
+    "numberOfEmployee": 4971,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Old thousand wonder certainly continue despite read some."
+  }
+}

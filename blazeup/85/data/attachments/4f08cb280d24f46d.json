@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc583c07933f3919e4563",
+    "partnerId": "6a5dc582c07933f3919e454f",
+    "email": "qa.auto+cheryl20@mailinator.com",
+    "firstName": "Jackson",
+    "lastName": "Rodriguez",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

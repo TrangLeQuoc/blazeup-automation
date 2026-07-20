@@ -1,0 +1,7 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/audit-logs",
+  "params": {
+    "limit": 0
+  }
+}

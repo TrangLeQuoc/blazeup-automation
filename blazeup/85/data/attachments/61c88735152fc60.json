@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc58dc07933f3919e45ed",
+    "partnerName": "QA-AUTO Simpson, Elliott and Jones",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Hughes-Powell Prospect",
+    "prospectEmail": "qa.auto+christopherward@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 121382458,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Behind leg story know foreign sound.",
+    "tenantDomain": "porter.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2559,
+    "protectionExpiresAt": "2026-09-18T06:51:59.833Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc58f3d53d0f1e0e481e8",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T06:51:59.844Z",
+    "updatedAt": "2026-07-20T06:51:59.844Z"
+  },
+  "message": "Deal registered"
+}
