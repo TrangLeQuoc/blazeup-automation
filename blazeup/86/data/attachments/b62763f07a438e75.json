@@ -1,0 +1,38 @@
+{
+  "statusCode": 200,
+  "data": {
+    "partner": {
+      "_id": "6a5dc8ff3411347af9ad031e",
+      "tenantId": "blazeup-platform",
+      "name": "QA-AUTO Daniels, Alexander and Miller",
+      "code": "PAR-110248",
+      "email": "qa.auto+nray@mailinator.com",
+      "phone": "+14155552671",
+      "website": "http://hart-lee.biz/",
+      "tier": "registered",
+      "type": "channel",
+      "status": "active",
+      "regions": [],
+      "address": null,
+      "contacts": [],
+      "certifications": [],
+      "totalArrCents": 0,
+      "schemaVersion": 1,
+      "payoutAccounts": [],
+      "createdAt": "2026-07-20T07:06:39.013Z",
+      "updatedAt": "2026-07-20T07:06:39.162Z",
+      "__v": 0,
+      "approvedAt": "2026-07-20T07:06:39.156Z",
+      "approvedBy": "system",
+      "openDealsCount": 0
+    },
+    "deals": {},
+    "commissions": {
+      "totalEarnedCents": 0,
+      "totalPendingCents": 0,
+      "totalPaidCents": 0,
+      "clawbackExposureCents": 0
+    }
+  },
+  "message": "Dashboard retrieved"
+}

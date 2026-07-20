@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d93411347af9acfe03",
+    "partnerName": "QA-AUTO King-Cooley",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Barrett, Davis and Rodriguez Opportunity",
+    "prospectEmail": "qa.auto+browntara@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 368405077,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Power daughter go yet subject.",
+    "tenantDomain": "francis.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1240,
+    "protectionExpiresAt": "2026-09-18T07:06:01.318Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc8d93411347af9acfe0f",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:01.330Z",
+    "updatedAt": "2026-07-20T07:06:01.330Z"
+  },
+  "message": "Deal registered successfully"
+}

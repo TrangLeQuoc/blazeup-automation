@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Shaw-Christensen",
+    "code": "PAR-359515",
+    "email": "qa.auto+dadams@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.hill-burke.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e73d53d0f1e0e4864d",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:15.269Z",
+    "updatedAt": "2026-07-20T07:06:15.269Z"
+  },
+  "message": "Partner created successfully"
+}

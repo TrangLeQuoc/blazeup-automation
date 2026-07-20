@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d53d53d0f1e0e484db",
+    "partnerName": "QA-AUTO Miles-Freeman",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Bowen, Scott and Franco Prospect",
+    "prospectEmail": "qa.auto+kevin05@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 353974991,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Name fact forget majority suggest safe.",
+    "tenantDomain": "lee.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4550,
+    "protectionExpiresAt": "2026-09-18T07:05:57.696Z",
+    "conflictStatus": "flagged",
+    "conflictingDealIds": [
+      "6a5dc8d53411347af9acfd90"
+    ],
+    "schemaVersion": 1,
+    "_id": "6a5dc8d53411347af9acfd9c",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:05:57.703Z",
+    "updatedAt": "2026-07-20T07:05:57.703Z"
+  },
+  "message": "Deal registered successfully"
+}

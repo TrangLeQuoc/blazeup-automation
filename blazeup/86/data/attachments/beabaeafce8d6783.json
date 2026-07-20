@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8e33d53d0f1e0e4861b",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "kelly.biz",
+    "prospectName": "QA-AUTO Berry-Davis Opportunity",
+    "prospectEmail": "qa.auto+dana93@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 493961817,
+    "currency": "USD",
+    "numberOfEmployee": 2460,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Share very quite machine way five window star."
+  }
+}

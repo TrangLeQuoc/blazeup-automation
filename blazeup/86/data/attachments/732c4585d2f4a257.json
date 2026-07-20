@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc8ed3411347af9ad0118",
+    "email": "qa.auto+woodslori@mailinator.com",
+    "firstName": "Molly",
+    "lastName": "Perez",
+    "role": "admin"
+  }
+}

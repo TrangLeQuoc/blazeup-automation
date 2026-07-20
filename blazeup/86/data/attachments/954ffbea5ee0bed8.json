@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e73411347af9ad0031",
+    "partnerName": "QA-AUTO Contreras-Vaughn",
+    "label": "QA-AUTO Smith Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Learn enjoy begin performance.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc8e73d53d0f1e0e48672",
+    "createdAt": "2026-07-20T07:06:15.929Z",
+    "updatedAt": "2026-07-20T07:06:15.929Z"
+  },
+  "message": "Territory assigned successfully"
+}

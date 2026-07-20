@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jones-Barker",
+    "code": "PAR-114183",
+    "email": "qa.auto+brian70@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.bond.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e83d53d0f1e0e48687",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:16.392Z",
+    "updatedAt": "2026-07-20T07:06:16.392Z"
+  },
+  "message": "Partner created successfully"
+}

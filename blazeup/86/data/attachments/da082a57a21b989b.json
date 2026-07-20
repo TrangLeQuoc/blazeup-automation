@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/territories",
+  "payload": {
+    "partnerId": "6a5dc90d3411347af9ad03cd",
+    "label": "QA-AUTO Brown Territory",
+    "countries": [
+      "DE"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01",
+    "exclusivityEndDate": "2026-12-31",
+    "notes": "QA-AUTO Policy success sing interview."
+  }
+}

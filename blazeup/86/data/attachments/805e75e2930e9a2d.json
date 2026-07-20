@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners/6a5dc8c93d53d0f1e0e483bc/upgrade-tier",
+  "payload": {
+    "tier": "premier",
+    "reason": "QA-AUTO up premier PAR-247070"
+  }
+}

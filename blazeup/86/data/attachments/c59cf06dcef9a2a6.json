@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8d43411347af9acfd73",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d33d53d0f1e0e484c6",
+    "partnerName": "QA-AUTO Richards and Sons",
+    "dealType": "co_sell",
+    "status": "registered",
+    "prospectName": "QA-AUTO Stephens-Flores Opportunity",
+    "prospectEmail": "qa.auto+skelly@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 119152001,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Reality old factor ready within.",
+    "tenantDomain": "booker.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3244,
+    "protectionExpiresAt": "2026-09-18T07:05:56.164Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:05:56.171Z",
+    "updatedAt": "2026-07-20T07:05:56.171Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

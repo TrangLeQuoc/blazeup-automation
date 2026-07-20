@@ -1,0 +1,5 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a5dc8e03411347af9acff14/approve",
+  "payload": {}
+}

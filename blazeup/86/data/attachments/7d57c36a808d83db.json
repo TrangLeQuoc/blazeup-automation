@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a5dc8e13411347af9acff31/resolve-conflict",
+  "payload": {
+    "decision": "resolved_for_partner"
+  }
+}

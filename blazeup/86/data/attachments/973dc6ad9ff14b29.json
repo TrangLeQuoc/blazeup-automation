@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Sosa, Fuller and Saunders",
+    "code": "PAR-108914",
+    "email": "qa.auto+hillchristine@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.conner.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc9053411347af9ad0386",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:45.101Z",
+    "updatedAt": "2026-07-20T07:06:45.101Z"
+  },
+  "message": "Partner created successfully"
+}

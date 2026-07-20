@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "category must be one of the following values: SA_AUDIT_AUTH, SA_AUDIT_TENANT, SA_AUDIT_BILLING, SA_AUDIT_PAYROLL, SA_AUDIT_SUPPORT, SA_AUDIT_RBAC, SA_AUDIT_CONTENT, SA_AUDIT_SYSTEM, SA_AUDIT_COMPLIANCE, SA_AUDIT_IMPERSONATION, SA_AUDIT_PARTNER"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:28.879Z",
+  "path": "/sa-partners-api/v1/sa/audit-logs"
+}

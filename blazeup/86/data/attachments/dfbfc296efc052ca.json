@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Adams, Mendoza and Jacobs",
+    "email": "qa.auto+jeffrey54@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://www.marshall.com/"
+  }
+}

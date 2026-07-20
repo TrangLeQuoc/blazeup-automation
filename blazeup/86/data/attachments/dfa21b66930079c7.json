@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8d73d53d0f1e0e484fb",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "castro-leon.org",
+    "prospectName": "QA-AUTO Lewis Inc Prospect",
+    "prospectEmail": "qa.auto+joseferguson@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 209779376,
+    "currency": "USD",
+    "numberOfEmployee": 645,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Week blue scene our."
+  }
+}

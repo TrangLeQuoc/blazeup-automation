@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Galloway PLC",
+    "code": "PAR-360026",
+    "email": "qa.auto+davisamanda@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://ramos-buck.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc92f3411347af9ad0519",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:27.363Z",
+    "updatedAt": "2026-07-20T07:07:27.363Z"
+  },
+  "message": "Partner created successfully"
+}

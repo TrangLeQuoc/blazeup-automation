@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a5dc8d83d53d0f1e0e48507/resolve-conflict",
+  "payload": {
+    "decision": "resolved_against_partner",
+    "reasoning": "QA-AUTO CHANGED"
+  }
+}

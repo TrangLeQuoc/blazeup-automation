@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "moss.com",
+    "prospectName": "QA-AUTO Murray, Hartman and Ho Prospect",
+    "prospectEmail": "qa.auto+kennedyanne@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 118500696,
+    "currency": "USD",
+    "numberOfEmployee": 4019,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO That too I college which what issue."
+  }
+}

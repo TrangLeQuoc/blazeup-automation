@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Rodriguez, Mcintyre and Perez",
+    "email": "qa.auto+pwilliamson@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://www.moyer-guzman.com/"
+  }
+}

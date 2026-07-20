@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8df3411347af9acfee6",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "white-chaney.net",
+    "prospectName": "QA-AUTO Hayes-Washington Prospect",
+    "prospectEmail": "qa.auto+donna05@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 366749218,
+    "currency": "USD",
+    "numberOfEmployee": 46,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Raise by wrong role why whom good."
+  }
+}

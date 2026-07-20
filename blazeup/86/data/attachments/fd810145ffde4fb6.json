@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/auth/login",
+  "payload": {
+    "email": "qa.auto+uward@mailinator.com",
+    "password": "***"
+  }
+}

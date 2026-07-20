@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8dd3d53d0f1e0e48592",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8dd3411347af9acfeab",
+    "partnerName": "QA-AUTO Jones-Rivas",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Rocha LLC Opportunity",
+    "prospectEmail": "qa.auto+cwall@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 19230023,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Film difference along imagine customer far response.",
+    "tenantDomain": "gonzalez.biz",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2053,
+    "protectionExpiresAt": "2026-09-18T07:06:05.948Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:05.957Z",
+    "updatedAt": "2026-07-20T07:06:05.957Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

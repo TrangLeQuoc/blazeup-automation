@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Partner is already at tier registered",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:05:50.849Z",
+  "path": "/sa-partners-api/v1/sa/partners/6a5dc8ce3d53d0f1e0e4843b/upgrade-tier"
+}

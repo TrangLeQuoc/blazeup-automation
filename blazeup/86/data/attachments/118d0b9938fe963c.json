@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc9333411347af9ad052c",
+    "partnerName": "QA-AUTO George-Morales",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Barry Ltd Prospect",
+    "prospectEmail": "qa.auto+ejohnson@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 306244396,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Say wall provide prevent him.",
+    "tenantDomain": "hernandez.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 76,
+    "protectionExpiresAt": "2026-09-18T07:07:34.176Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc9363411347af9ad0548",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:07:34.186Z",
+    "updatedAt": "2026-07-20T07:07:34.186Z"
+  },
+  "message": "Deal registered"
+}

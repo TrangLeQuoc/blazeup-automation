@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc8ed3411347af9ad0122",
+    "partnerId": "6a5dc8ed3411347af9ad0118",
+    "email": "qa.auto+woodslori@mailinator.com",
+    "firstName": "Molly",
+    "lastName": "Perez",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

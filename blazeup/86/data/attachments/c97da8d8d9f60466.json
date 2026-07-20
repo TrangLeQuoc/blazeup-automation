@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jacobs-Pruitt",
+    "code": "PAR-808436",
+    "email": "qa.auto+michael91@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.johnson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8cf3411347af9acfce5",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:05:51.277Z",
+    "updatedAt": "2026-07-20T07:05:51.277Z"
+  },
+  "message": "Partner created successfully"
+}

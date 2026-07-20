@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Rogers, Kemp and Hunter",
+    "code": "PAR-176745",
+    "email": "qa.auto+autumnhines@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.gross-drake.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8de3d53d0f1e0e485a2",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:06.348Z",
+    "updatedAt": "2026-07-20T07:06:06.348Z"
+  },
+  "message": "Partner created successfully"
+}

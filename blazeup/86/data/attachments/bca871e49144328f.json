@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Collier, Ross and Conner",
+    "code": "PAR-699430",
+    "email": "qa.auto+grimesryan@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.thomas-hanson.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8c83411347af9acfbfc",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:05:44.318Z",
+    "updatedAt": "2026-07-20T07:05:44.318Z"
+  },
+  "message": "Partner created successfully"
+}

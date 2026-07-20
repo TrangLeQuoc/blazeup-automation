@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8ea3411347af9ad00d1",
+    "partnerName": "QA-AUTO Burns-Robinson",
+    "label": "QA-AUTO Butler Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Alone office let business success thing.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc8eb3411347af9ad00db",
+    "createdAt": "2026-07-20T07:06:19.126Z",
+    "updatedAt": "2026-07-20T07:06:19.126Z"
+  },
+  "message": "Territory assigned successfully"
+}

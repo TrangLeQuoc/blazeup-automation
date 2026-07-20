@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Glenn, Chung and David",
+    "email": "qa.auto+ryanfrancis@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://www.evans-johnson.net/"
+  }
+}

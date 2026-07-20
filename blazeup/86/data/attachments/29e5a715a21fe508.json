@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e13d53d0f1e0e485f5",
+    "partnerName": "QA-AUTO Woods and Sons",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Clark, Davenport and Holt Opportunity",
+    "prospectEmail": "qa.auto+patriciagarza@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 224623320,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Your another listen.",
+    "tenantDomain": "sandoval.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1229,
+    "protectionExpiresAt": "2026-09-18T07:06:09.912Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc8e13411347af9acff31",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:09.920Z",
+    "updatedAt": "2026-07-20T07:06:09.920Z"
+  },
+  "message": "Deal registered successfully"
+}

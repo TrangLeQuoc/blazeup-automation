@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/6a5dc8cb3411347af9acfc76/certifications",
+  "payload": {
+    "certificationType": "sales_certified",
+    "score": 95
+  }
+}

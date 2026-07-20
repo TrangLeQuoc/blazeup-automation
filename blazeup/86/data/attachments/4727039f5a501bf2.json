@@ -1,0 +1,32 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8da3411347af9acfe36",
+    "partnerName": "QA-AUTO Preston, Orozco and Hill",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Parker, Bailey and Lee Prospect",
+    "prospectEmail": "qa.auto+mking@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 59119412,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Blue road visit.",
+    "tenantDomain": "anderson.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1710,
+    "protectionExpiresAt": "2026-09-18T07:06:02.575Z",
+    "conflictStatus": "flagged",
+    "conflictingDealIds": [
+      "6a5dc8da3d53d0f1e0e48541"
+    ],
+    "schemaVersion": 1,
+    "_id": "6a5dc8da3411347af9acfe42",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:02.587Z",
+    "updatedAt": "2026-07-20T07:06:02.587Z"
+  },
+  "message": "Deal registered successfully"
+}

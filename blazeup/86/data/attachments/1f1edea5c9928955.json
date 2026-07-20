@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc8d13d53d0f1e0e48486",
+    "partnerId": "6a5dc8d13d53d0f1e0e4847c",
+    "email": "qa.auto+isaacnoble@mailinator.com",
+    "firstName": "Timothy",
+    "lastName": "Garner",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

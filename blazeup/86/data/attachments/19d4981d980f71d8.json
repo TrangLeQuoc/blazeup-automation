@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Price, Weaver and Torres",
+    "code": "PAR-019192",
+    "email": "qa.auto+orogers@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.morrison-lin.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc91b3d53d0f1e0e4886f",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:07.375Z",
+    "updatedAt": "2026-07-20T07:07:07.375Z"
+  },
+  "message": "Partner created successfully"
+}

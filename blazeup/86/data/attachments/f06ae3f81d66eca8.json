@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jones-Rivas",
+    "code": "PAR-914044",
+    "email": "qa.auto+penalisa@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.horton.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8dd3411347af9acfeab",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:05.662Z",
+    "updatedAt": "2026-07-20T07:06:05.662Z"
+  },
+  "message": "Partner created successfully"
+}

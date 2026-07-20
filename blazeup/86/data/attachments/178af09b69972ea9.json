@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d73d53d0f1e0e484fb",
+    "partnerName": "QA-AUTO Green Inc",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Lewis Inc Prospect",
+    "prospectEmail": "qa.auto+joseferguson@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 209779376,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Week blue scene our.",
+    "tenantDomain": "castro-leon.org",
+    "billingCycle": "annual",
+    "numberOfEmployee": 645,
+    "protectionExpiresAt": "2026-09-18T07:06:00.064Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc8d83411347af9acfde8",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:00.070Z",
+    "updatedAt": "2026-07-20T07:06:00.070Z"
+  },
+  "message": "Deal registered successfully"
+}

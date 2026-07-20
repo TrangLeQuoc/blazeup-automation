@@ -1,0 +1,11 @@
+{
+  "statusCode": 400,
+  "message": [
+    "prospectName must be shorter than or equal to 200 characters",
+    "prospectName should not be empty",
+    "prospectName must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:06.972Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

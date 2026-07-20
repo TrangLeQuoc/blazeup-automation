@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Burns-Robinson",
+    "email": "qa.auto+matthew42@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://dean.org/"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8e53411347af9acffab",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e43d53d0f1e0e48625",
+    "partnerName": "QA-AUTO Parker LLC",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Campos-Terry Opportunity",
+    "prospectEmail": "qa.auto+mariahwilson@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 14504558,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Suffer sell action stand poor leader year moment.",
+    "tenantDomain": "burton.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2527,
+    "protectionExpiresAt": "2026-10-18T07:06:13.286Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [
+      {
+        "extendedBy": "696466c7e092b1dce3ed8e95",
+        "extendedAt": "2026-07-20T07:06:13.428Z",
+        "previousExpiresAt": "2026-09-18T07:06:13.286Z",
+        "newExpiresAt": "2026-10-18T07:06:13.286Z",
+        "addedDays": 30,
+        "trigger": "manual",
+        "reasoning": "QA-AUTO extend #1"
+      }
+    ],
+    "createdAt": "2026-07-20T07:06:13.295Z",
+    "updatedAt": "2026-07-20T07:06:13.432Z"
+  },
+  "message": "Deal protection extended"
+}

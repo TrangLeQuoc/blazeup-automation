@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Cannot transition deal from approved to approved",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:09.385Z",
+  "path": "/sa-partners-api/v1/sa/deals/6a5dc8e03411347af9acff14/approve"
+}

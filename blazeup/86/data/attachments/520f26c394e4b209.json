@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Ortiz, Jimenez and Rodgers",
+    "code": "PAR-450235",
+    "email": "qa.auto+jennifer60@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://wilson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e93411347af9ad0070",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:17.483Z",
+    "updatedAt": "2026-07-20T07:06:17.483Z"
+  },
+  "message": "Partner created successfully"
+}

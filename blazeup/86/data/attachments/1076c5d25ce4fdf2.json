@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc90d3411347af9ad03cd",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Horton, Edwards and Ferrell",
+    "code": "PAR-333695",
+    "email": "qa.auto+jenniferhubbard@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://manning-hoover.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:53.766Z",
+    "updatedAt": "2026-07-20T07:06:53.893Z",
+    "approvedAt": "2026-07-20T07:06:53.888Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

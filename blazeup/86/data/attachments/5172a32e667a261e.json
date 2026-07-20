@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Rodriguez-Johnson",
+    "email": "qa.auto+kimberly53@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.bernard.com/"
+  }
+}

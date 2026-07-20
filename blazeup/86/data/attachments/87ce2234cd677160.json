@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8e03411347af9acff08",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "zimmerman-sutton.com",
+    "prospectName": "QA-AUTO Malone-Hernandez Opportunity",
+    "prospectEmail": "qa.auto+parksusan@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 52519511,
+    "currency": "USD",
+    "numberOfEmployee": 2413,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Art life cause huge when science high."
+  }
+}

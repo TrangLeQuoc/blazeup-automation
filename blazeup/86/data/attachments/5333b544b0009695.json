@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9153d53d0f1e0e4884e",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Adams, Mendoza and Jacobs",
+    "code": "PAR-470209",
+    "email": "qa.auto+jeffrey54@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.marshall.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:01.783Z",
+    "updatedAt": "2026-07-20T07:07:01.894Z",
+    "approvedAt": "2026-07-20T07:07:01.890Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

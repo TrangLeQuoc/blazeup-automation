@@ -1,0 +1,38 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8d83d53d0f1e0e48507",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d73411347af9acfddb",
+    "partnerName": "QA-AUTO Kelley PLC",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Lewis Inc Prospect",
+    "prospectEmail": "qa.auto+joseferguson@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 325259550,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Show they film hour family by.",
+    "tenantDomain": "malone.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4912,
+    "protectionExpiresAt": "2026-09-18T07:06:00.192Z",
+    "conflictStatus": "resolved_for_partner",
+    "conflictingDealIds": [
+      "6a5dc8d83411347af9acfde8"
+    ],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:00.200Z",
+    "updatedAt": "2026-07-20T07:06:00.337Z",
+    "conflictResolution": {
+      "resolvedBy": "696466c7e092b1dce3ed8e95",
+      "resolvedAt": "2026-07-20T07:06:00.331Z",
+      "decision": "resolved_for_partner",
+      "reasoning": "QA-AUTO original reasoning — confirmed partner wins"
+    }
+  },
+  "message": "Deal conflict resolved"
+}

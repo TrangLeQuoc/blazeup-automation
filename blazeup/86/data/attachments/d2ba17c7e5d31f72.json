@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Parker LLC",
+    "code": "PAR-904502",
+    "email": "qa.auto+scollins@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.stafford-stephens.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e43d53d0f1e0e48625",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:12.856Z",
+    "updatedAt": "2026-07-20T07:06:12.856Z"
+  },
+  "message": "Partner created successfully"
+}

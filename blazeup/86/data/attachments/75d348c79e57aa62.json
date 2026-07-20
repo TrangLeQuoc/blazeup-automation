@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Delgado, Sanders and Stewart",
+    "code": "PAR-593130",
+    "email": "qa.auto+donnaallen@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.baker-gilmore.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e03411347af9acff08",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:08.569Z",
+    "updatedAt": "2026-07-20T07:06:08.569Z"
+  },
+  "message": "Partner created successfully"
+}

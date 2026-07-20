@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8d73411347af9acfdc6",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d63411347af9acfdba",
+    "partnerName": "QA-AUTO Glenn, Chung and David",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Norman, Sanders and Smith Opportunity",
+    "prospectEmail": "qa.auto+brianrobbins@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 49844230,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Must would edge player.",
+    "tenantDomain": "carlson.info",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3477,
+    "protectionExpiresAt": "2026-09-18T07:05:59.029Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:05:59.037Z",
+    "updatedAt": "2026-07-20T07:05:59.377Z",
+    "reviewNotes": "QA-AUTO approve",
+    "reviewedAt": "2026-07-20T07:05:59.373Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal approved successfully"
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc8fc3d53d0f1e0e4877f",
+    "email": "qa.auto+dduran@mailinator.com",
+    "firstName": "Luke",
+    "lastName": "Cole",
+    "role": "bogus"
+  }
+}

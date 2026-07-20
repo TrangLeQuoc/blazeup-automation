@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Rivera and Sons",
+    "code": "PAR-172905",
+    "email": "qa.auto+erik52@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.kirby-pitts.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e63411347af9acfff0",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:14.546Z",
+    "updatedAt": "2026-07-20T07:06:14.546Z"
+  },
+  "message": "Partner created successfully"
+}

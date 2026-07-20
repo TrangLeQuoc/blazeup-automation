@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Gibson-Hughes",
+    "code": "PAR-846682",
+    "email": "qa.auto+robert00@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://soto.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8da3d53d0f1e0e48535",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:02.006Z",
+    "updatedAt": "2026-07-20T07:06:02.006Z"
+  },
+  "message": "Partner created successfully"
+}

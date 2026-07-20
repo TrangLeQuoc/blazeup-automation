@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "prospectCountry must be a valid ISO31661 Alpha2 code"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:07.053Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

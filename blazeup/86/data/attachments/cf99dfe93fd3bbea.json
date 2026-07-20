@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc91b3d53d0f1e0e4886f",
+    "partnerName": "QA-AUTO Price, Weaver and Torres",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Murray, Hartman and Ho Prospect",
+    "prospectEmail": "qa.auto+kennedyanne@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 118500696,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO That too I college which what issue.",
+    "tenantDomain": "moss.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4019,
+    "protectionExpiresAt": "2026-09-18T07:07:10.012Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc91e3411347af9ad04b3",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:07:10.021Z",
+    "updatedAt": "2026-07-20T07:07:10.021Z"
+  },
+  "message": "Deal registered"
+}

@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO NoType",
+    "email": "qa.auto+cannonchase@mailinator.com"
+  }
+}

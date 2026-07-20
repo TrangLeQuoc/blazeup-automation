@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Baker and Sons",
+    "code": "PAR-022208",
+    "email": "qa.auto+harrisontaylor@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://rosales.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8fd3411347af9ad02e2",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:37.050Z",
+    "updatedAt": "2026-07-20T07:06:37.050Z"
+  },
+  "message": "Partner created successfully"
+}

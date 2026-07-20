@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8dc3411347af9acfe82",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "nelson.com",
+    "prospectName": "QA-AUTO Nelson-Curtis Opportunity",
+    "prospectEmail": "qa.auto+jmay@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 180661304,
+    "currency": "USD",
+    "numberOfEmployee": 4585,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Natural yes hospital scene indeed forward table."
+  }
+}

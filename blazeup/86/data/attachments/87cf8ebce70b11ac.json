@@ -1,0 +1,29 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a5dc9103d53d0f1e0e48827",
+      "tenantId": "blazeup-platform",
+      "partnerId": "6a5dc90d3411347af9ad03cd",
+      "partnerName": "QA-AUTO Horton, Edwards and Ferrell",
+      "label": "QA-AUTO Brown Territory",
+      "countries": [
+        "DE"
+      ],
+      "verticals": [
+        "technology"
+      ],
+      "exclusivityType": "preferred",
+      "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+      "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+      "notes": "QA-AUTO Policy success sing interview.",
+      "assignedBy": "696466c7e092b1dce3ed8e95",
+      "schemaVersion": 1,
+      "createdAt": "2026-07-20T07:06:56.022Z",
+      "updatedAt": "2026-07-20T07:06:56.022Z",
+      "__v": 0
+    }
+  ],
+  "total": 1,
+  "message": "Territories retrieved"
+}

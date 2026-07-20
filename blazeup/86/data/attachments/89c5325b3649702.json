@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc90b3d53d0f1e0e487fa",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Henderson, Nelson and Martin",
+    "code": "PAR-012541",
+    "email": "qa.auto+catherine02@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.tanner.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:51.130Z",
+    "updatedAt": "2026-07-20T07:06:51.249Z",
+    "approvedAt": "2026-07-20T07:06:51.245Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

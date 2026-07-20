@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9073d53d0f1e0e487af",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc9053411347af9ad0386",
+    "partnerName": "QA-AUTO Sosa, Fuller and Saunders",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Moore, Bell and Hall Prospect",
+    "prospectEmail": "qa.auto+marthamccoy@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 235858427,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Major street on true.",
+    "tenantDomain": "reyes.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2787,
+    "protectionExpiresAt": "2026-09-18T07:06:47.631Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:47.641Z",
+    "updatedAt": "2026-07-20T07:06:47.641Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved"
+}

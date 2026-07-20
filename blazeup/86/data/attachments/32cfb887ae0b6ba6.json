@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8da3d53d0f1e0e48535",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "torres.com",
+    "prospectName": "QA-AUTO Parker, Bailey and Lee Prospect",
+    "prospectEmail": "qa.auto+mking@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 146439282,
+    "currency": "USD",
+    "numberOfEmployee": 2715,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Four push stage performance point break."
+  }
+}

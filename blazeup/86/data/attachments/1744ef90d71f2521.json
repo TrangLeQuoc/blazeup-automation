@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Gordon, Collins and Fletcher",
+    "email": "qa.auto+alexjohnson@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://spencer.com/"
+  }
+}

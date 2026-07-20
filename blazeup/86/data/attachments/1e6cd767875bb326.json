@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8d23411347af9acfd33",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "bell.net",
+    "prospectName": "QA-AUTO Long, Briggs and Patton Opportunity",
+    "prospectEmail": "qa.auto+zacharylee@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 130538166,
+    "currency": "USD",
+    "numberOfEmployee": 3341,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Better yard small."
+  }
+}

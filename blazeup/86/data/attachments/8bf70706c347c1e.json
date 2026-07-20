@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d43d53d0f1e0e484d0",
+    "partnerName": "QA-AUTO Owens, Nelson and Smith",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Bowen, Scott and Franco Prospect",
+    "prospectEmail": "qa.auto+kevin05@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 383017441,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Must quality later drive politics public same more.",
+    "tenantDomain": "sanders-mcdaniel.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3998,
+    "protectionExpiresAt": "2026-09-18T07:05:57.540Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc8d53411347af9acfd90",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:05:57.551Z",
+    "updatedAt": "2026-07-20T07:05:57.551Z"
+  },
+  "message": "Deal registered successfully"
+}

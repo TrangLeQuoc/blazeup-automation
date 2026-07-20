@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc9113411347af9ad0417",
+    "partnerId": "6a5dc9103411347af9ad0403",
+    "email": "qa.auto+cmcdonald@mailinator.com",
+    "firstName": "Steven",
+    "lastName": "Juarez",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

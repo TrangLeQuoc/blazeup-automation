@@ -1,0 +1,314 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a5dc8f03411347af9ad01b4",
+      "tenantId": "blazeup-platform",
+      "correlationId": "54bb8159-c3cf-409b-89b7-801b1b114b38",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Silva PLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a5dc8f03411347af9ad0187",
+        "label": "QA-AUTO Silva PLC"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "8883895d04a8da0ccf259dd78230f403cd721e7aea73bbc2703ec5b1e920aeda",
+      "selfHash": "c2c68875dd1b16fd18d95d5f60e224b3f4d35e4bb1100c33586a5840d3145342",
+      "createdAt": "2026-07-20T07:06:24.931Z",
+      "updatedAt": "2026-07-20T07:06:24.931Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8f03411347af9ad0189",
+      "tenantId": "blazeup-platform",
+      "correlationId": "a4101d53-0f5c-46de-8f92-24dada5e9eef",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Silva PLC",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a5dc8f03411347af9ad0187",
+        "label": "QA-AUTO Silva PLC"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Silva PLC",
+        "email": "qa.auto+davidhardy@mailinator.com",
+        "type": "channel",
+        "code": "PAR-950660"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-20T07:06:24.287Z",
+      "updatedAt": "2026-07-20T07:06:24.287Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8f03411347af9ad017f",
+      "tenantId": "blazeup-platform",
+      "correlationId": "97251d00-1513-4517-aee6-e46bd96845d1",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Lowe-White",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a5dc8ee3d53d0f1e0e486e6",
+        "label": "QA-AUTO Lowe-White"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "c8658d5c9699cf800d6666ff6033abf04a710ac182c2bfb9d46d07ff505924e5",
+      "selfHash": "8883895d04a8da0ccf259dd78230f403cd721e7aea73bbc2703ec5b1e920aeda",
+      "createdAt": "2026-07-20T07:06:24.097Z",
+      "updatedAt": "2026-07-20T07:06:24.097Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ef3411347af9ad0173",
+      "tenantId": "blazeup-platform",
+      "correlationId": "f3f5dbde-c05b-4f9f-b85a-b843e5a97fc0",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.certification.revoked",
+      "title": "Partner certification revoked: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a5dc8ef3d53d0f1e0e486fb",
+        "label": "sales_certified"
+      },
+      "before": {
+        "status": "active"
+      },
+      "after": {
+        "status": "revoked",
+        "partnerId": "6a5dc8ee3d53d0f1e0e486e6",
+        "userId": "6a5dc8ef3d53d0f1e0e486f0",
+        "certificationType": "sales_certified",
+        "revokeReason": "QA-AUTO first"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "e6412c1ec0a1299a79b75d746d8c8407b8a8d47fbc932597e956d43e06fc1c8e",
+      "selfHash": "c8658d5c9699cf800d6666ff6033abf04a710ac182c2bfb9d46d07ff505924e5",
+      "createdAt": "2026-07-20T07:06:23.887Z",
+      "updatedAt": "2026-07-20T07:06:23.887Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ef3d53d0f1e0e486fe",
+      "tenantId": "blazeup-platform",
+      "correlationId": "bcec2eee-08be-4ef2-bf74-2516ce46ac64",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.certification.granted",
+      "title": "Partner certification granted: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a5dc8ef3d53d0f1e0e486fb",
+        "label": "sales_certified"
+      },
+      "before": null,
+      "after": {
+        "partnerId": "6a5dc8ee3d53d0f1e0e486e6",
+        "userId": "6a5dc8ef3d53d0f1e0e486f0",
+        "certificationType": "sales_certified",
+        "expiresAt": "2027-07-20T07:06:23.426Z",
+        "score": 90
+      },
+      "retentionClass": "permanent",
+      "prevHash": "934786f295a009e349ad36f52865cd027fde61b40f6cfe542b20bb7255132555",
+      "selfHash": "e6412c1ec0a1299a79b75d746d8c8407b8a8d47fbc932597e956d43e06fc1c8e",
+      "createdAt": "2026-07-20T07:06:23.456Z",
+      "updatedAt": "2026-07-20T07:06:23.456Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ef3d53d0f1e0e486f2",
+      "tenantId": "blazeup-platform",
+      "correlationId": "38dda4d0-6e9e-468c-8998-fa8bf29ab1f5",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+kcooper@mailinator.com to QA-AUTO Lowe-White",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a5dc8ef3d53d0f1e0e486f0",
+        "label": "qa.auto+kcooper@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-20T07:06:23.347Z",
+      "updatedAt": "2026-07-20T07:06:23.347Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ee3d53d0f1e0e486e8",
+      "tenantId": "blazeup-platform",
+      "correlationId": "b111bdf2-2eaa-49c6-8021-f8b96084db3d",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.account.created",
+      "title": "Partner account created: QA-AUTO Lowe-White",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a5dc8ee3d53d0f1e0e486e6",
+        "label": "QA-AUTO Lowe-White"
+      },
+      "before": null,
+      "after": {
+        "name": "QA-AUTO Lowe-White",
+        "email": "qa.auto+katelyn12@mailinator.com",
+        "type": "channel",
+        "code": "PAR-833624"
+      },
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-20T07:06:22.639Z",
+      "updatedAt": "2026-07-20T07:06:22.639Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ee3411347af9ad014a",
+      "tenantId": "blazeup-platform",
+      "correlationId": "1d6b28e9-6cf1-440b-8fdd-18e8bb8c22c2",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "warning",
+      "action": "partner.account.deactivated",
+      "title": "Partner deactivated: QA-AUTO Rodriguez, Mcintyre and Perez",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_account",
+        "id": "6a5dc8ed3411347af9ad0118",
+        "label": "QA-AUTO Rodriguez, Mcintyre and Perez"
+      },
+      "before": {
+        "status": "pending"
+      },
+      "after": {
+        "status": "suspended",
+        "reason": "Deleted by SA"
+      },
+      "retentionClass": "permanent",
+      "prevHash": "d60e6f2935d879f0785fb68ab063bcd5c1bb070a87fc3b4dcf582b148b3247ba",
+      "selfHash": "934786f295a009e349ad36f52865cd027fde61b40f6cfe542b20bb7255132555",
+      "createdAt": "2026-07-20T07:06:22.231Z",
+      "updatedAt": "2026-07-20T07:06:22.231Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ed3411347af9ad0130",
+      "tenantId": "blazeup-platform",
+      "correlationId": "9c6ae85c-d7c4-4797-bba6-b1a8f21cb8a3",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.certification.granted",
+      "title": "Partner certification granted: sales_certified",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_certification",
+        "id": "6a5dc8ed3411347af9ad012d",
+        "label": "sales_certified"
+      },
+      "before": null,
+      "after": {
+        "partnerId": "6a5dc8ed3411347af9ad0118",
+        "userId": "6a5dc8ed3411347af9ad0122",
+        "certificationType": "sales_certified",
+        "expiresAt": "2027-07-20T07:06:21.909Z",
+        "score": 90
+      },
+      "retentionClass": "permanent",
+      "prevHash": "6415d78bf379875de6827ab9df8f9a92fc554a296c82ee1d47b61b2d488f64fa",
+      "selfHash": "d60e6f2935d879f0785fb68ab063bcd5c1bb070a87fc3b4dcf582b148b3247ba",
+      "createdAt": "2026-07-20T07:06:21.936Z",
+      "updatedAt": "2026-07-20T07:06:21.936Z",
+      "__v": 0
+    },
+    {
+      "_id": "6a5dc8ed3411347af9ad0124",
+      "tenantId": "blazeup-platform",
+      "correlationId": "4a5059fb-2176-4797-91a2-134d3d41be44",
+      "category": "SA_AUDIT_PARTNER",
+      "severity": "info",
+      "action": "partner.user.invited",
+      "title": "Partner user invited: qa.auto+woodslori@mailinator.com to QA-AUTO Rodriguez, Mcintyre and Perez",
+      "actor": {
+        "type": "sa-staff",
+        "saUserId": "system"
+      },
+      "resource": {
+        "type": "partner_user",
+        "id": "6a5dc8ed3411347af9ad0122",
+        "label": "qa.auto+woodslori@mailinator.com"
+      },
+      "before": null,
+      "after": null,
+      "retentionClass": "extended",
+      "prevHash": null,
+      "selfHash": null,
+      "createdAt": "2026-07-20T07:06:21.830Z",
+      "updatedAt": "2026-07-20T07:06:21.830Z",
+      "__v": 0
+    }
+  ],
+  "total": 2317,
+  "page": 1,
+  "limit": 10,
+  "message": "SA audit log retrieved successfully"
+}

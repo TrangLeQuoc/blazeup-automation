@@ -1,0 +1,8 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6a5dc8db3411347af9acfe66/extend-protection",
+  "payload": {
+    "addedDays": 30,
+    "reasoning": "QA-AUTO manual protection extension"
+  }
+}

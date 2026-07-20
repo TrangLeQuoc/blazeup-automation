@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc92f3d53d0f1e0e48986",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc92f3411347af9ad0519",
+    "partnerName": "QA-AUTO Galloway PLC",
+    "dealType": "referral",
+    "status": "rejected",
+    "prospectName": "QA-AUTO Greene, Oneal and Stevenson Opportunity",
+    "prospectEmail": "qa.auto+jeremymurphy@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 108665633,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Consumer off feeling usually involve unit over.",
+    "tenantDomain": "newman.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 395,
+    "protectionExpiresAt": "2026-09-18T07:07:27.616Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:07:27.630Z",
+    "updatedAt": "2026-07-20T07:07:27.773Z",
+    "reviewNotes": "QA-AUTO first reject",
+    "reviewedAt": "2026-07-20T07:07:27.766Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95"
+  },
+  "message": "Deal rejected"
+}

@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "userId": "6a5dc9213d53d0f1e0e488db",
+  "partnerId": "6a5dc9203d53d0f1e0e488c6",
+  "partnerName": "QA-AUTO Meyer PLC",
+  "email": "qa.auto+dbradford@mailinator.com",
+  "firstName": "Heather",
+  "lastName": "Wells",
+  "role": "admin",
+  "tier": "registered",
+  "type": "channel",
+  "status": "active",
+  "lastLoginAt": "2026-07-20T07:07:14.951Z",
+  "mfaEnrolled": false,
+  "mfaMethods": []
+}

@@ -1,0 +1,7 @@
+{
+  "method": "DELETE",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/6a5dc8ec3d53d0f1e0e486b7/certifications/sales_certified",
+  "payload": {
+    "reason": "QA-AUTO revoke test"
+  }
+}

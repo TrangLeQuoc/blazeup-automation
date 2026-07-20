@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8dc3d53d0f1e0e48580",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8dc3411347af9acfe82",
+    "partnerName": "QA-AUTO Ford, Torres and Watson",
+    "dealType": "referral",
+    "status": "lost",
+    "prospectName": "QA-AUTO Nelson-Curtis Opportunity",
+    "prospectEmail": "qa.auto+jmay@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 180661304,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO lost — prospect chose a competitor",
+    "tenantDomain": "nelson.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 4585,
+    "protectionExpiresAt": "2026-09-18T07:06:04.960Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:04.967Z",
+    "updatedAt": "2026-07-20T07:06:05.239Z",
+    "reviewedAt": "2026-07-20T07:06:05.100Z",
+    "reviewedBy": "696466c7e092b1dce3ed8e95",
+    "closedAt": "2026-07-20T07:06:05.235Z"
+  },
+  "message": "Deal marked as lost"
+}

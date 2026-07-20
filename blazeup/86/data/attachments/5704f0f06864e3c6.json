@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9183411347af9ad047d",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Campbell-Hernandez",
+    "code": "PAR-794208",
+    "email": "qa.auto+thomasmoody@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://pierce.info/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:04.409Z",
+    "updatedAt": "2026-07-20T07:07:04.548Z",
+    "approvedAt": "2026-07-20T07:07:04.545Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

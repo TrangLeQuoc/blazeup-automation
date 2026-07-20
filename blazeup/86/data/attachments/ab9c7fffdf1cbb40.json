@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8df3411347af9acfee6",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "arnold-carter.com",
+    "prospectName": "QA-AUTO Hayes-Washington Prospect",
+    "prospectEmail": "qa.auto+donna05@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 64208870,
+    "currency": "USD",
+    "numberOfEmployee": 2125,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Occur tend imagine artist look economic."
+  }
+}

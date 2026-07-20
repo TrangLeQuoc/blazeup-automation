@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Ford, Torres and Watson",
+    "code": "PAR-205873",
+    "email": "qa.auto+carolwebb@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.guerra-erickson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8dc3411347af9acfe82",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:04.519Z",
+    "updatedAt": "2026-07-20T07:06:04.519Z"
+  },
+  "message": "Partner created successfully"
+}

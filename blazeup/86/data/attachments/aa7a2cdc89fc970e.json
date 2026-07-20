@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8dd3411347af9acfeab",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "gonzalez.biz",
+    "prospectName": "QA-AUTO Rocha LLC Opportunity",
+    "prospectEmail": "qa.auto+cwall@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 19230023,
+    "currency": "USD",
+    "numberOfEmployee": 2053,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Film difference along imagine customer far response."
+  }
+}

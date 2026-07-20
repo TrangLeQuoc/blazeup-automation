@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8d93411347af9acfe03",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "francis.org",
+    "prospectName": "QA-AUTO Barrett, Davis and Rodriguez Opportunity",
+    "prospectEmail": "qa.auto+browntara@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 368405077,
+    "currency": "USD",
+    "numberOfEmployee": 1240,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Power daughter go yet subject."
+  }
+}

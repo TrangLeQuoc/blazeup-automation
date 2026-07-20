@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Collier, Ross and Conner",
+    "email": "qa.auto+grimesryan@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.thomas-hanson.biz/"
+  }
+}

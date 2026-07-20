@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e93411347af9ad0066",
+    "partnerName": "QA-AUTO Foster and Sons",
+    "label": "QA-AUTO Howard Territory",
+    "countries": [
+      "IS"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "exclusive",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Good involve easy use position wall.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc8e93411347af9ad007b",
+    "createdAt": "2026-07-20T07:06:17.605Z",
+    "updatedAt": "2026-07-20T07:06:17.605Z"
+  },
+  "message": "Territory assigned successfully"
+}

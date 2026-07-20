@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Burns-Robinson",
+    "code": "PAR-878190",
+    "email": "qa.auto+matthew42@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://dean.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8ea3411347af9ad00d1",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:18.984Z",
+    "updatedAt": "2026-07-20T07:06:18.984Z"
+  },
+  "message": "Partner created successfully"
+}

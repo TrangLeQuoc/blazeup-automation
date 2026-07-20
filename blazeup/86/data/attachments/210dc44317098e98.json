@@ -1,0 +1,35 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8f03411347af9ad01b4",
+    "tenantId": "blazeup-platform",
+    "correlationId": "54bb8159-c3cf-409b-89b7-801b1b114b38",
+    "category": "SA_AUDIT_PARTNER",
+    "severity": "warning",
+    "action": "partner.account.deactivated",
+    "title": "Partner deactivated: QA-AUTO Silva PLC",
+    "actor": {
+      "type": "sa-staff",
+      "saUserId": "system"
+    },
+    "resource": {
+      "type": "partner_account",
+      "id": "6a5dc8f03411347af9ad0187",
+      "label": "QA-AUTO Silva PLC"
+    },
+    "before": {
+      "status": "pending"
+    },
+    "after": {
+      "status": "suspended",
+      "reason": "Deleted by SA"
+    },
+    "retentionClass": "permanent",
+    "prevHash": "8883895d04a8da0ccf259dd78230f403cd721e7aea73bbc2703ec5b1e920aeda",
+    "selfHash": "c2c68875dd1b16fd18d95d5f60e224b3f4d35e4bb1100c33586a5840d3145342",
+    "createdAt": "2026-07-20T07:06:24.931Z",
+    "updatedAt": "2026-07-20T07:06:24.931Z",
+    "__v": 0
+  },
+  "message": "SA audit log entry retrieved successfully"
+}

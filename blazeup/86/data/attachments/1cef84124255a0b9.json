@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "each value in countries must be a valid ISO31661 Alpha2 code"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:16.838Z",
+  "path": "/sa-partners-api/v1/sa/territories"
+}

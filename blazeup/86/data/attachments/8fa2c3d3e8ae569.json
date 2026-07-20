@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc8f63411347af9ad022c",
+    "email": "qa.auto+anthonyferguson@mailinator.com",
+    "firstName": "Heather",
+    "lastName": "Dalton",
+    "role": "admin"
+  }
+}

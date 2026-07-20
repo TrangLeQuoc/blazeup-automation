@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8e43d53d0f1e0e48625",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "burton.info",
+    "prospectName": "QA-AUTO Campos-Terry Opportunity",
+    "prospectEmail": "qa.auto+mariahwilson@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 14504558,
+    "currency": "USD",
+    "numberOfEmployee": 2527,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Suffer sell action stand poor leader year moment."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8da3d53d0f1e0e48535",
+    "partnerName": "QA-AUTO Gibson-Hughes",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Parker, Bailey and Lee Prospect",
+    "prospectEmail": "qa.auto+mking@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 146439282,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Four push stage performance point break.",
+    "tenantDomain": "torres.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2715,
+    "protectionExpiresAt": "2026-09-18T07:06:02.448Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc8da3d53d0f1e0e48541",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:02.457Z",
+    "updatedAt": "2026-07-20T07:06:02.457Z"
+  },
+  "message": "Deal registered successfully"
+}

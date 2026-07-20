@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8da3411347af9acfe36",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "anderson.com",
+    "prospectName": "QA-AUTO Parker, Bailey and Lee Prospect",
+    "prospectEmail": "qa.auto+mking@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 59119412,
+    "currency": "USD",
+    "numberOfEmployee": 1710,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Blue road visit."
+  }
+}

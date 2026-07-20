@@ -1,0 +1,11 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc8f93411347af9ad0283",
+    "email": "qa.auto+jacksonkaren@mailinator.com",
+    "firstName": "Jason",
+    "lastName": "Meadows",
+    "tempPassword": "***"
+  },
+  "message": "Password reset successfully"
+}

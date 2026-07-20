@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc8eb3d53d0f1e0e486ad",
+    "email": "qa.auto+jacobssierra@mailinator.com",
+    "firstName": "Thomas",
+    "lastName": "Wood",
+    "role": "admin"
+  }
+}

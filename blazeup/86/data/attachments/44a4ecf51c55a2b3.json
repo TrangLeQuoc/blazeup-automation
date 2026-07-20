@@ -1,0 +1,9 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/audit-logs",
+  "params": {
+    "limit": 5,
+    "dateFrom": "2026-12-31",
+    "dateTo": "2026-01-01"
+  }
+}

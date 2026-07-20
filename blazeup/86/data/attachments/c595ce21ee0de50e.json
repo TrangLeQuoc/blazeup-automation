@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6a5dc9023411347af9ad0362",
+    "partnerId": "6a5dc9013411347af9ad0357",
+    "email": "qa.auto+jenniferwhite@mailinator.com",
+    "firstName": "Michele",
+    "lastName": "Nguyen",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

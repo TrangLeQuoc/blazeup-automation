@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8d23411347af9acfd3f",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8d23411347af9acfd33",
+    "partnerName": "QA-AUTO Gordon, Collins and Fletcher",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Long, Briggs and Patton Opportunity",
+    "prospectEmail": "qa.auto+zacharylee@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 130538166,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Better yard small.",
+    "tenantDomain": "bell.net",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3341,
+    "protectionExpiresAt": "2026-09-18T07:05:54.712Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:05:54.725Z",
+    "updatedAt": "2026-07-20T07:05:54.725Z",
+    "__v": 0
+  },
+  "message": "Deal retrieved successfully"
+}

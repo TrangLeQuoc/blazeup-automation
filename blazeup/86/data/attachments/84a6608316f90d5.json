@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users/6a5dc8cf3411347af9acfcef/certifications",
+  "payload": {
+    "certificationType": "ninja"
+  }
+}

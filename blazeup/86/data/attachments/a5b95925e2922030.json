@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9083d53d0f1e0e487b9",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Anderson Inc",
+    "code": "PAR-094145",
+    "email": "qa.auto+jason56@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.patton-perez.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:48.029Z",
+    "updatedAt": "2026-07-20T07:06:48.142Z",
+    "approvedAt": "2026-07-20T07:06:48.137Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc9333411347af9ad052c",
+    "email": "qa.auto+uward@mailinator.com",
+    "firstName": "Chelsea",
+    "lastName": "Golden",
+    "role": "admin"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9273d53d0f1e0e48922",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Miller-Rodriguez",
+    "code": "PAR-429892",
+    "email": "qa.auto+qwilcox@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.williams.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:19.764Z",
+    "updatedAt": "2026-07-20T07:07:19.904Z",
+    "approvedAt": "2026-07-20T07:07:19.900Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

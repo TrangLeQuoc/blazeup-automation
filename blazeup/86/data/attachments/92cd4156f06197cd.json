@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Preston, Orozco and Hill",
+    "code": "PAR-567449",
+    "email": "qa.auto+alexandrabartlett@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.roth-aguilar.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8da3411347af9acfe36",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:02.122Z",
+    "updatedAt": "2026-07-20T07:06:02.122Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,11 @@
+{
+  "statusCode": 400,
+  "message": [
+    "label must be shorter than or equal to 200 characters",
+    "label should not be empty",
+    "label must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:16.596Z",
+  "path": "/sa-partners-api/v1/sa/territories"
+}

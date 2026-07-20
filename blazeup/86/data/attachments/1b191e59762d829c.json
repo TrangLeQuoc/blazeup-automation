@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Deal 000000000000000000000000 not found",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:09.223Z",
+  "path": "/sa-partners-api/v1/sa/deals/000000000000000000000000/approve"
+}

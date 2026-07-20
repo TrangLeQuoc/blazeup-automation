@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8c63411347af9acfb9b",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Rios-Crane",
+    "code": "PAR-715051",
+    "email": "qa.auto+hinesamy@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.wallace.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:05:42.775Z",
+    "updatedAt": "2026-07-20T07:05:42.907Z",
+    "approvedAt": "2026-07-20T07:05:42.899Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

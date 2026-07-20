@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO King-Cooley",
+    "code": "PAR-751488",
+    "email": "qa.auto+samantha76@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://hale.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8d93411347af9acfe03",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:01.060Z",
+    "updatedAt": "2026-07-20T07:06:01.060Z"
+  },
+  "message": "Partner created successfully"
+}

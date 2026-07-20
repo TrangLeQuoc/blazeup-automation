@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e03411347af9acff08",
+    "partnerName": "QA-AUTO Delgado, Sanders and Stewart",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Malone-Hernandez Opportunity",
+    "prospectEmail": "qa.auto+parksusan@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 52519511,
+    "planId": "pro-test-v1",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Art life cause huge when science high.",
+    "tenantDomain": "zimmerman-sutton.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2413,
+    "protectionExpiresAt": "2026-09-18T07:06:08.973Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6a5dc8e03411347af9acff14",
+    "protectionExtensions": [],
+    "createdAt": "2026-07-20T07:06:08.983Z",
+    "updatedAt": "2026-07-20T07:06:08.983Z"
+  },
+  "message": "Deal registered successfully"
+}

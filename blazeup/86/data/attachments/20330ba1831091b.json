@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Alvarez and Sons",
+    "code": "PAR-367934",
+    "email": "qa.auto+fspencer@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://tanner-conner.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8ce3d53d0f1e0e4843b",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:05:50.490Z",
+    "updatedAt": "2026-07-20T07:05:50.490Z"
+  },
+  "message": "Partner created successfully"
+}

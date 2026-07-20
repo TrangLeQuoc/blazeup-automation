@@ -1,0 +1,10 @@
+{
+  "statusCode": 200,
+  "data": {
+    "totalEarnedCents": 0,
+    "totalPendingCents": 0,
+    "totalPaidCents": 0,
+    "clawbackExposureCents": 0
+  },
+  "message": "Commission summary retrieved"
+}

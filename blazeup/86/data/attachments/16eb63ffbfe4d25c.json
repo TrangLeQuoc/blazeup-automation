@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "addedDays must not be less than 1"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:11.217Z",
+  "path": "/sa-partners-api/v1/sa/deals/000000000000000000000000/extend-protection"
+}

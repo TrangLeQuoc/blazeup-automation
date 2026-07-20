@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8e63411347af9acffcb",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e53411347af9acffc0",
+    "partnerName": "QA-AUTO Evans-Vazquez",
+    "label": "QA-AUTO Ramirez Territory",
+    "countries": [
+      "US",
+      "CA"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Make assume yet hair.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "createdAt": "2026-07-20T07:06:14.054Z",
+    "updatedAt": "2026-07-20T07:06:14.054Z",
+    "__v": 0
+  },
+  "message": "Territory retrieved successfully"
+}

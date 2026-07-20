@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8d33d53d0f1e0e484c6",
+    "planId": "pro-test-v1",
+    "dealType": "co_sell",
+    "tenantDomain": "booker.net",
+    "prospectName": "QA-AUTO Stephens-Flores Opportunity",
+    "prospectEmail": "qa.auto+skelly@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 119152001,
+    "currency": "USD",
+    "numberOfEmployee": 3244,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Reality old factor ready within."
+  }
+}

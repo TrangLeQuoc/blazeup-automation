@@ -1,0 +1,42 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6a5dc8d13d53d0f1e0e48491",
+      "tenantId": "blazeup-platform",
+      "partnerId": "6a5dc8d13d53d0f1e0e4847c",
+      "userId": "6a5dc8d13d53d0f1e0e48486",
+      "certificationType": "sales_certified",
+      "status": "revoked",
+      "earnedAt": "2026-07-20T07:05:53.848Z",
+      "expiresAt": "2027-07-20T07:05:53.848Z",
+      "score": 90,
+      "grantedBy": "system",
+      "schemaVersion": 1,
+      "createdAt": "2026-07-20T07:05:53.856Z",
+      "updatedAt": "2026-07-20T07:05:53.966Z",
+      "__v": 0,
+      "revokeReason": "superseded_by_renewal",
+      "revokedAt": "2026-07-20T07:05:53.961Z",
+      "revokedBy": "system"
+    },
+    {
+      "_id": "6a5dc8d13d53d0f1e0e4849e",
+      "tenantId": "blazeup-platform",
+      "partnerId": "6a5dc8d13d53d0f1e0e4847c",
+      "userId": "6a5dc8d13d53d0f1e0e48486",
+      "certificationType": "sales_certified",
+      "status": "active",
+      "earnedAt": "2026-07-20T07:05:53.961Z",
+      "expiresAt": "2027-07-20T07:05:53.961Z",
+      "score": 95,
+      "grantedBy": "system",
+      "schemaVersion": 1,
+      "createdAt": "2026-07-20T07:05:53.979Z",
+      "updatedAt": "2026-07-20T07:05:53.979Z",
+      "__v": 0
+    }
+  ],
+  "total": 2,
+  "message": "Certifications retrieved successfully"
+}

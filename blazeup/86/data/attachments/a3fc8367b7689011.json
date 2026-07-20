@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8db3d53d0f1e0e48568",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "briggs-jones.com",
+    "prospectName": "QA-AUTO Johnson, Valenzuela and Copeland Opportunity",
+    "prospectEmail": "qa.auto+kknight@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 13328467,
+    "currency": "USD",
+    "numberOfEmployee": 1322,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Model although up product."
+  }
+}

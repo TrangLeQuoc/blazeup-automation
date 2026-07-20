@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6a5dc8e63411347af9acfff0",
+    "partnerName": "QA-AUTO Rivera and Sons",
+    "label": "QA-AUTO Walker Territory",
+    "countries": [
+      "US"
+    ],
+    "verticals": [
+      "technology"
+    ],
+    "exclusivityType": "preferred",
+    "exclusivityStartDate": "2026-01-01T00:00:00.000Z",
+    "exclusivityEndDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Action office office admit left edge.",
+    "assignedBy": "696466c7e092b1dce3ed8e95",
+    "schemaVersion": 1,
+    "_id": "6a5dc8e63411347af9acfffa",
+    "createdAt": "2026-07-20T07:06:14.677Z",
+    "updatedAt": "2026-07-20T07:06:14.677Z"
+  },
+  "message": "Territory assigned successfully"
+}

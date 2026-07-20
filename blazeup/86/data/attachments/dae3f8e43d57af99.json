@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc9153d53d0f1e0e4884e",
+    "email": "qa.auto+lindabrown@mailinator.com",
+    "firstName": "Sierra",
+    "lastName": "Payne",
+    "role": "admin"
+  }
+}

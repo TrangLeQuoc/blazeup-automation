@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "endpoint": "sa-partners-api/v1/sa/audit-logs/export",
+  "params": {
+    "format": "json",
+    "severity": "bogus"
+  }
+}

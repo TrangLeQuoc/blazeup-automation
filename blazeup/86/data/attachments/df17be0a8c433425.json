@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Active sales_certified certification not found for user 6a5dc8ef3d53d0f1e0e486f0",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:23.991Z",
+  "path": "/sa-partners-api/v1/sa/partner-users/6a5dc8ef3d53d0f1e0e486f0/certifications/sales_certified"
+}

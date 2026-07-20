@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Burke, Cameron and Moore",
+    "email": "qa.auto+andreaconrad@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "http://www.clark.com/"
+  }
+}

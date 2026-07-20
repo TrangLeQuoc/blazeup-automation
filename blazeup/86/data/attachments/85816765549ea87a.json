@@ -1,0 +1,29 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9013411347af9ad0357",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Reed Group",
+    "code": "PAR-503372",
+    "email": "qa.auto+ngates@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://stephenson.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:41.680Z",
+    "updatedAt": "2026-07-20T07:06:41.834Z",
+    "__v": 0,
+    "approvedAt": "2026-07-20T07:06:41.831Z",
+    "approvedBy": "system",
+    "openDealsCount": 0
+  },
+  "message": "Profile retrieved"
+}

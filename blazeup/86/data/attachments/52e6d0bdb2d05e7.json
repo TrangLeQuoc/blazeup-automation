@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "certificationType must be one of the following values: sales_certified, hr_specialist, crm_specialist, implementation_certified"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:07:04.046Z",
+  "path": "/sa-partners-api/v1/partner/portal/certifications"
+}

@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "An active deal for \"QA-AUTO Hayes-Washington Prospect\" already exists. Update or close it before registering a new one.",
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:08.296Z",
+  "path": "/sa-partners-api/v1/sa/deals"
+}

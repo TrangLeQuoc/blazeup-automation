@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Miles-Freeman",
+    "code": "PAR-966200",
+    "email": "qa.auto+kayla00@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.murray.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8d53d53d0f1e0e484db",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:05:57.201Z",
+    "updatedAt": "2026-07-20T07:05:57.201Z"
+  },
+  "message": "Partner created successfully"
+}

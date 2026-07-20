@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Houston, Williams and Thompson",
+    "code": "PAR-888204",
+    "email": "qa.auto+derek92@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.powell-patterson.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc92e3d53d0f1e0e4895c",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:26.451Z",
+    "updatedAt": "2026-07-20T07:07:26.451Z"
+  },
+  "message": "Partner created successfully"
+}

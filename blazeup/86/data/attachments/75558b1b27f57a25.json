@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc8c93d53d0f1e0e483bc",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Medina and Sons",
+    "code": "PAR-247070",
+    "email": "qa.auto+christopherobrien@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://glover.com/",
+    "tier": "select",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:05:45.271Z",
+    "updatedAt": "2026-07-20T07:05:45.460Z"
+  },
+  "message": "Partner tier updated successfully"
+}

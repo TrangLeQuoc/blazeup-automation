@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "reyes.com",
+    "prospectName": "QA-AUTO Moore, Bell and Hall Prospect",
+    "prospectEmail": "qa.auto+marthamccoy@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 235858427,
+    "currency": "USD",
+    "numberOfEmployee": 2787,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Major street on true."
+  }
+}

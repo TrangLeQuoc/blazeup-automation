@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc9253d53d0f1e0e488f7",
+    "email": "qa.auto+johnnelson@mailinator.com",
+    "firstName": "Kenneth",
+    "lastName": "Mcclure",
+    "role": "admin"
+  }
+}

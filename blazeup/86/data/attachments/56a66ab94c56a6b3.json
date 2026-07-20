@@ -1,0 +1,27 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6a5dc9333411347af9ad052c",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO George-Morales",
+    "code": "PAR-447272",
+    "email": "qa.auto+ylynch@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://www.allen-walsh.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:07:31.695Z",
+    "updatedAt": "2026-07-20T07:07:31.831Z",
+    "approvedAt": "2026-07-20T07:07:31.828Z",
+    "approvedBy": "system"
+  },
+  "message": "Partner approved successfully"
+}

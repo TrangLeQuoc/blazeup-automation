@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "userId": "6a5dc9193411347af9ad0491",
+  "partnerId": "6a5dc9183411347af9ad047d",
+  "partnerName": "QA-AUTO Campbell-Hernandez",
+  "email": "qa.auto+davisthomas@mailinator.com",
+  "firstName": "Mike",
+  "lastName": "Turner",
+  "role": "admin",
+  "tier": "registered",
+  "type": "channel",
+  "status": "active",
+  "lastLoginAt": "2026-07-20T07:07:06.678Z",
+  "mfaEnrolled": false,
+  "mfaMethods": []
+}

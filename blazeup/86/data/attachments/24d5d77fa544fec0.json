@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "dateTo must be a valid ISO 8601 date string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-07-20T07:06:30.029Z",
+  "path": "/sa-partners-api/v1/sa/audit-logs/export"
+}

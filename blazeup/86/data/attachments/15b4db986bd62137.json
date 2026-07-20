@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Contreras-Vaughn",
+    "code": "PAR-736548",
+    "email": "qa.auto+scottjessica@mailinator.com",
+    "phone": "+14155552671",
+    "website": "https://parker.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8e73411347af9ad0031",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:15.833Z",
+    "updatedAt": "2026-07-20T07:06:15.833Z"
+  },
+  "message": "Partner created successfully"
+}

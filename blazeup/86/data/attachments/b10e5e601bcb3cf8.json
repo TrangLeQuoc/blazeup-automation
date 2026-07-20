@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6a5dc8fd3411347af9ad02e2",
+    "email": "qa.auto+jamessmith@mailinator.com",
+    "firstName": "Johnny",
+    "lastName": "Gray",
+    "role": "sales"
+  }
+}

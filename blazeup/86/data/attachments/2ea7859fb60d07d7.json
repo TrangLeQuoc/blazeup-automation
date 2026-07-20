@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Rogers, Kemp and Hunter",
+    "email": "qa.auto+autumnhines@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://www.gross-drake.org/"
+  }
+}

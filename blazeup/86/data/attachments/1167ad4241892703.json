@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8de3d53d0f1e0e485a2",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "griffin.org",
+    "prospectName": "QA-AUTO Marshall-House Opportunity",
+    "prospectEmail": "qa.auto+veronica79@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": -100,
+    "currency": "USD",
+    "numberOfEmployee": 1085,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Outside some watch board song example."
+  }
+}

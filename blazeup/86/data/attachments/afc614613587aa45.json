@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Rodriguez, Mcintyre and Perez",
+    "code": "PAR-851520",
+    "email": "qa.auto+pwilliamson@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.moyer-guzman.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8ed3411347af9ad0118",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:21.188Z",
+    "updatedAt": "2026-07-20T07:06:21.188Z"
+  },
+  "message": "Partner created successfully"
+}

@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6a5dc8d43d53d0f1e0e484d0",
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "sanders-mcdaniel.net",
+    "prospectName": "QA-AUTO Bowen, Scott and Franco Prospect",
+    "prospectEmail": "qa.auto+kevin05@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 383017441,
+    "currency": "USD",
+    "numberOfEmployee": 3998,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Must quality later drive politics public same more."
+  }
+}

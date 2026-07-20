@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Medina and Sons",
+    "email": "qa.auto+christopherobrien@mailinator.com",
+    "type": "channel",
+    "phone": "+14155552671",
+    "website": "https://glover.com/"
+  }
+}

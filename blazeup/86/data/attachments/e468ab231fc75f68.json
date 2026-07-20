@@ -1,0 +1,25 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Strickland Inc",
+    "code": "PAR-657426",
+    "email": "qa.auto+aguilarbeth@mailinator.com",
+    "phone": "+14155552671",
+    "website": "http://www.gilbert.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6a5dc8db3d53d0f1e0e48568",
+    "payoutAccounts": [],
+    "createdAt": "2026-07-20T07:06:03.710Z",
+    "updatedAt": "2026-07-20T07:06:03.710Z"
+  },
+  "message": "Partner created successfully"
+}

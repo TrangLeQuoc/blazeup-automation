@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/portal/deals",
+  "payload": {
+    "partnerId": null,
+    "planId": "pro-test-v1",
+    "dealType": "referral",
+    "tenantDomain": "green.com",
+    "prospectName": "QA-AUTO Jones, Cowan and Brown Prospect",
+    "prospectEmail": "qa.auto+smithjane@mailinator.com",
+    "prospectPhone": "+14155552671",
+    "prospectCountry": "US",
+    "estimatedAcvCents": 125758676,
+    "currency": "USD",
+    "numberOfEmployee": 3614,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Tonight tend artist."
+  }
+}
