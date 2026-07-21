@@ -1,6 +1,9 @@
 {
     "python.defaultInterpreterPath": "${workspaceFolder}/../.venv/Scripts/python.exe",
     "python.terminal.activateEnvironment": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": ["tests"],
     "cSpell.words": ["BlazeUp", "blazeup", "Partner", "automation", "pydantic", "httpx", "ruff", "Allure", "msisdn"],
     "cSpell.enableFiletypes": ["markdown"]
 }

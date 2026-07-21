@@ -72,14 +72,23 @@ async def test_partner_api_certifications_sa_002(sa_partners_client, created_res
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # not-found targets (ghost user / cert-not-held / already-revoked) return 400, should be 404
 async def test_partner_api_certifications_sa_012(sa_partners_client, created_resources):
-    """PARTNER_API_CERTIFICATIONS_SA_012: revoke certification invalid input/state - rejected with 4xx.
+    """PARTNER_API_CERTIFICATIONS_SA_012: revoke certification invalid input/state - rejected with the correct code.
 
-    Negative counterpart of _002 (revoke). Missing reason, a cert the user does not
-    hold, a ghost/malformed userId, and re-revoking an already-revoked cert must all
-    be rejected with 4xx + a clear message. The already-revoked case also documents
-    revoke's repeat behavior (mutating action — not a duplicate-create, so no separate
-    idempotency TC). All cases run (failures collected).
+    Negative counterpart of _002 (revoke). Each case has its own code + a clear message:
+
+    * a missing reason → 400 'reason should not be empty';
+    * a MALFORMED userId → 400 'invalid id';
+    * a not-found target — a cert the user does not hold, a GHOST userId, or an
+      already-revoked cert (no active cert to revoke) → 404 'not found'.
+
+    The already-revoked case also documents revoke's repeat behavior (mutating action —
+    not a duplicate-create, so no separate idempotency TC). All cases run (collected).
+
+    GAP this test surfaces: the not-found targets return 400 (not 404) — the status
+    contradicts the "not found" message. Those cases assert 404 and FAIL until the BE
+    returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: partner + user + an active sales_certified cert"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -95,28 +104,43 @@ async def test_partner_api_certifications_sa_012(sa_partners_client, created_res
         )
         logger.info("SETUP: user {} holds an active 'sales_certified' cert", uid)
 
-    # (label, userId, certificationType, reason, expected message hint)
+    # (label, userId, certificationType, reason, expected_status, expected message hint)
     cases = [
-        ("missing reason", uid, "sales_certified", None, "reason should not be empty"),
-        ("cert not held", uid, "hr_specialist", "QA-AUTO", "not found"),
-        ("ghost user", _GHOST_ID, "sales_certified", "QA-AUTO", "not found"),
-        ("malformed user", "not-an-id", "sales_certified", "QA-AUTO", "invalid id"),
+        ("missing reason", uid, "sales_certified", None, 400, "reason should not be empty"),
+        ("cert not held (not found)", uid, "hr_specialist", "QA-AUTO", 404, "not found"),
+        (
+            "ghost user (well-formed, absent)",
+            _GHOST_ID,
+            "sales_certified",
+            "QA-AUTO",
+            404,
+            "not found",
+        ),
+        ("malformed user", "not-an-id", "sales_certified", "QA-AUTO", 400, "invalid id"),
     ]
     n_steps = len(cases) + 1
     gaps: list[str] = []
-    for idx, (label, u, ct, reason, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{n_steps}] Reject revoke: {label}"):
+    for idx, (label, u, ct, reason, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{n_steps}] Reject revoke: {label} → {want_status}"):
             r = await sa_partners_client.raw_revoke_certification(
                 u, ct, reason=reason, expected_status=None
             )
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    async with async_step(f"[{n_steps}/{n_steps}] Re-revoke an already-revoked cert is rejected"):
+    async with async_step(
+        f"[{n_steps}/{n_steps}] Re-revoke an already-revoked cert → 404 not found"
+    ):
         await sa_partners_client.revoke_certification(
             uid, "sales_certified", reason="QA-AUTO first"
         )
@@ -124,14 +148,20 @@ async def test_partner_api_certifications_sa_012(sa_partners_client, created_res
             uid, "sales_certified", reason="QA-AUTO again", expected_status=None
         )
         msg = str(r.json().get("message") or "")
-        if 400 <= r.status_code < 500 and "not found" in msg.lower():
-            logger.info("CHECK already-revoked → OK ({}, no active cert to revoke)", r.status_code)
+        if r.status_code == 404 and "not found" in msg.lower():
+            logger.info("CHECK already-revoked → OK (404, no active cert to revoke)")
         else:
-            gaps.append(f"already-revoked: status={r.status_code}, msg={msg!r}")
-            logger.error("CHECK already-revoked → FAIL (status={}, msg={!r})", r.status_code, msg)
+            gaps.append(f"already-revoked: expected 404, got {r.status_code}, msg={msg!r}")
+            logger.error(
+                "CHECK already-revoked → FAIL (expected 404, got {}, msg={!r})", r.status_code, msg
+            )
 
-    assert not gaps, "revoke-cert negative gaps:\n  - " + "\n  - ".join(gaps)
-    logger.info("RESULT: all invalid/illegal revoke attempts rejected (4xx)")
+    assert not gaps, (
+        "revoke-cert negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a not-found target should be 404 Not Found, not 400 — confirm with BE)"
+    )
+    logger.info("RESULT: all invalid/illegal revoke attempts rejected")
 
 
 @pytest.mark.api

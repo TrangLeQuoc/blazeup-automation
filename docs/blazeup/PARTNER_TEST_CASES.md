@@ -132,8 +132,13 @@
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_001
 **Test Description:** Valid partner JWT authorizes a partner-scoped request.
+**Setup (precondition):**
+1. SA creates a partner.
+2. SA approves the partner (pending → active).
+3. SA invites a partner user (returns email + tempPassword).
+4. Log in as that user → obtain a partner JWT.
 **Test Steps:**
-1. Provision + log in a partner user; GET /partner/auth/me with the JWT.
+1. GET /partner/auth/me with the partner JWT.
    → Expected: 200, identity (userId + email) returned.
 **Expected (overall):** A valid partner JWT authorizes partner-scoped requests.
 **Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
@@ -148,12 +153,14 @@
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_003
 **Test Description:** Cross-partner access — a partner JWT cannot read another partner's deal (tenant isolation).
+**Setup (precondition):**
+1. Mint partner A (SA create → approve → invite → login) and register a deal for A; capture its id.
+2. Mint partner B (separate partner, same SA-mint flow).
 **Test Steps:**
-1. Partner A (own session) registers a deal; capture its id.
-2. Partner B (a separate session) GET /partner/portal/deals/{A_deal_id}.
-   → Expected: refused (4xx — BE returns 400), and A's deal is NOT returned in the body.
+1. Partner B calls GET /partner/portal/deals/{A_deal_id}.
+   → Expected: refused with **404** (preferred — hides existence) or **403** — never 400 — and A's deal is NOT in the body.
 **Expected (overall):** A partner cannot access another partner's deal — refused, no data leak.
-**Note:** PASSED — verified 2026-06-30 (sa-plans-api back UP). Rule-5 cross-entity case. BE returns 400 (not 403/404) when a partner requests another partner's deal id; access still refused, no data leak.
+**Note:** FAILED (by design / be_gap). Rule-5 cross-entity case. BE returns **400** for cross-partner access, but it should be **404** (preferred, to hide the resource's existence) or **403** — 400 mislabels a valid request as malformed. Test tightened to assert 403/404 + marked `be_gap` until BE fixes. Tenant isolation itself holds (no data leak).
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
 **Note (NOT_STARTED):** Admin MFA policy enforcement — needs an MFA enrollment/challenge flow. Not yet automated (assess MFA endpoints: /partner/auth/mfa/*).
@@ -166,91 +173,107 @@
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_007
 **Test Description:** Valid refresh token issues a new access token (no re-login).
+**Setup (precondition):** SA create → approve → invite → login a partner user; capture the access + refresh tokens.
 **Test Steps:**
-1. Log in (capture refresh token); POST /partner/auth/refresh with it.
+1. POST /partner/auth/refresh with the captured refresh token.
    → Expected: 200, a new accessToken (different from the original).
-2. The new access token authorizes GET /me.
+2. The new access token authorizes GET /partner/auth/me.
    → Expected: 200.
-3. An invalid refresh token.
+3. POST /partner/auth/refresh with an invalid refresh token.
    → Expected: 401.
 **Expected (overall):** Refresh mints a working new access token; invalid refresh rejected.
 **Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_008
 **Test Description:** Logout invalidates the refresh token.
+**Setup (precondition):** SA create → approve → invite → login a partner user; capture the access + refresh tokens (session active).
 **Test Steps:**
-1. Log in; POST /partner/auth/logout (with the access token) → 204.
-2. POST /partner/auth/refresh with the now-invalidated refresh token → 401.
+1. POST /partner/auth/logout with the access token.
+   → Expected: 200/204.
+2. POST /partner/auth/refresh with the (now-invalidated) refresh token.
+   → Expected: 401.
 **Expected (overall):** After logout the refresh token can no longer mint an access token.
 **Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_009
 **Test Description:** Change password updates credentials (new works, old fails).
+**Setup (precondition):** SA create → approve → invite → login a partner user; capture the access token (session active).
 **Test Steps:**
-1. Change-password with a WRONG currentPassword → 401 ("Current password is incorrect").
-2. Change-password with the correct currentPassword → 204.
-3. Log in with the NEW password → 200.
-4. Log in with the OLD password → 401.
+1. POST /partner/auth/change-password with a WRONG currentPassword.
+   → Expected: 401 ("Current password is incorrect").
+2. POST /partner/auth/change-password with the correct currentPassword.
+   → Expected: 200/204.
+3. Log in with the NEW password.
+   → Expected: 200/201 + accessToken.
+4. Log in with the OLD password.
+   → Expected: 401.
 **Expected (overall):** Password change rejects a wrong current; new credentials work, old are rejected.
 **Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
 ### API · DEAL_REGISTRATION_PIPELINE
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_001
 **Test Description:** Happy-path deal registration on POST /v1/sa/deals — valid payload creates a 'registered' deal with a protection window.
+**Setup (precondition):** SA creates a partner; pick a published billing plan; build the deal payload (all fields).
 **Test Steps:**
-1. Auth as SA; create a partner; pick a published billing plan.
-   → Expected: partner created; a published planId obtained.
-2. POST /v1/sa/deals with all fields (partnerId, planId, dealType='referral', prospect*, ACV, closeDate, notes).
-   → Expected: HTTP 201 + server-assigned _id.
-3. Assert every submitted field stored unchanged.
-   → Expected: all 10 fields echoed; expectedCloseDate preserves the date.
-4. Assert lifecycle.
+1. POST /v1/sa/deals with all fields (partnerId, planId, dealType='referral', prospect*, ACV, closeDate, notes) → register the deal.
+   → Expected: request sent.
+2. Verify the deal is accepted + persisted.
+   → Expected: HTTP 201 (envelope statusCode 200); success message; server-assigned _id.
+3. Verify EVERY submitted field is stored (no silent mutation).
+   → Expected: all fields echoed; expectedCloseDate preserves the requested date.
+4. Verify lifecycle.
    → Expected: status 'registered', protectionExpiresAt set, conflictStatus 'none'.
-5. GET /v1/sa/deals/{id}.
+5. GET /v1/sa/deals/{id} (persistence).
    → Expected: same deal returned, status 'registered'.
-6. Teardown: delete the parent partner.
-   → Expected: cleanup OK (deals have no delete endpoint).
+**Teardown:** delete the parent partner (deals have no delete endpoint).
 **Expected (overall):** Deal registered with all fields persisted exactly, protection window opened, retrievable.
-**Note:** —
+**Note:** PASSED — full-param echo-check + lifecycle + persistence (rule-6).
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_002
 **Test Description:** Register a reseller deal — billing model 'reseller' is stored.
+**Setup (precondition):** SA creates a partner; pick a published billing plan; build a deal payload with dealType='reseller'.
 **Test Steps:**
-1. Create partner; pick a published plan; register a deal with dealType='reseller'.
-   → Expected: HTTP 201 + _id.
-2. Assert billing model + echo.
-   → Expected: dealType stored == 'reseller'; all fields echoed.
-3. Assert lifecycle + GET by id.
-   → Expected: status 'registered', protection set, dealType 'reseller' persisted.
+1. POST /v1/sa/deals (register the reseller deal).
+   → Expected: accepted (HTTP 201, envelope statusCode 200) + server-assigned _id.
+2. Verify billing model stored + fields echoed.
+   → Expected: stored dealType == 'reseller'; all other fields echoed unchanged; expectedCloseDate date preserved.
+3. Verify lifecycle + retrievable (GET /v1/sa/deals/{id}).
+   → Expected: status 'registered', protectionExpiresAt set; fetched deal keeps dealType 'reseller'.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Reseller deal registered; dealType='reseller' IS the stored billing model (no separate field).
-**Note:** —
+**Note:** PASSED.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_003
 **Test Description:** Register a co-sell deal — co-sell metadata is stored.
+**Setup (precondition):** SA creates a partner; pick a published billing plan; build a deal payload with dealType='co_sell'.
 **Test Steps:**
-1. Create partner; pick a published plan; register a deal with dealType='co_sell'.
-   → Expected: HTTP 201 + _id.
-2. Assert co-sell + echo.
-   → Expected: dealType stored == 'co_sell'; all fields echoed.
-3. Assert lifecycle + GET by id.
-   → Expected: status 'registered', protection set, dealType 'co_sell' persisted.
-**Expected (overall):** Co-sell deal registered; dealType='co_sell' IS the stored metadata. The 70/30 split is downstream (_011, blocked).
-**Note:** —
+1. POST /v1/sa/deals (register the co-sell deal).
+   → Expected: accepted (HTTP 201, envelope statusCode 200) + server-assigned _id.
+2. Verify co-sell metadata stored + fields echoed.
+   → Expected: stored dealType == 'co_sell'; all other fields echoed unchanged; expectedCloseDate date preserved.
+3. Verify lifecycle + retrievable (GET /v1/sa/deals/{id}).
+   → Expected: status 'registered', protectionExpiresAt set; fetched deal keeps dealType 'co_sell'.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Co-sell deal registered; dealType='co_sell' IS the stored metadata. The 70/30 split is computed downstream (_011, blocked) — out of scope here.
+**Note:** PASSED.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_004
 **Test Description:** Deal protection: a second partner registering the same prospect is flagged as a conflict.
+**Setup (precondition):** SA creates two partners; pick a published billing plan; build one shared prospect identity (name + email) used by both.
 **Test Steps:**
-1. Create two partners + one shared prospect (name+email); partner 1 registers the deal.
-   → Expected: deal A conflictStatus 'none'.
+1. Partner 1 registers the deal first.
+   → Expected: deal A accepted, conflictStatus 'none' (no prior deal).
 2. Partner 2 registers the SAME prospect.
-   → Expected: HTTP 201 but conflictStatus 'flagged'; conflictingDealId == deal A id.
+   → Expected: HTTP 201 (deal B still created, not rejected); conflictStatus 'flagged'; conflictingDealIds includes deal A's id.
 3. GET /v1/sa/deals/{id} on deal B.
-   → Expected: conflictStatus still 'flagged'.
-**Expected (overall):** Cross-partner same-prospect deal is created but flagged against the first deal.
-**Note:** Same partner re-registering the same prospect is a hard 400 duplicate (separate behavior).
+   → Expected: conflictStatus still 'flagged' (persisted).
+**Teardown:** delete both partners.
+**Expected (overall):** Cross-partner same-prospect deal is created but flagged against the first deal (queued for conflict resolution).
+**Note:** PASSED. Distinct from the SAME partner re-registering the same prospect → hard 400 duplicate (_022).
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_005
-**Note (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
+**Intent:** CRON — protection expiry with recent activity → auto-extend the protection window once.
+**Note (BLOCKED):** No API surface. This is a scheduled background job (CRON) — protection auto-extension fires on the server's timer when a deal shows recent activity near expiry. There is no endpoint to trigger it on demand and no deterministic way to fast-forward the clock from a test, so the effect cannot be observed within a test run. Revisit if BE exposes a manual "run job" / time-travel hook. (P1 / Critical in the plan.)
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_006
 **Note (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
@@ -259,44 +282,44 @@
 **Note (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_008
-**Test Description:** Approve a registered deal (POST /v1/sa/deals/{id}/approve): status -> approved, reviewer stamped; rate + rate table version expected.
+**Test Description:** Approve a registered deal (POST /v1/sa/deals/{id}/approve): status → approved, reviewer stamped; rate + rate-table version expected.
+**Setup (precondition):** SA creates a partner; register a deal; confirm status 'registered'.
 **Test Steps:**
-1. Create partner; register a deal (registered).
-   → Expected: deal 'registered'.
-2. Approve (reviewNotes).
-   → Expected: HTTP 201; status 'approved'.
-3. Assert reviewer stamped.
+1. Approve the registered deal (reviewNotes='QA-AUTO approve').
+   → Expected: accepted (HTTP 201, envelope statusCode 200); status 'approved'.
+2. Verify the reviewer is stamped.
    → Expected: reviewedAt + reviewedBy present.
-4. Assert rate + rateTableVersion stamped.
-   → Expected: rate + rateTableVersion present in the response.
-**Expected (overall):** Deal approved + reviewer stamped; rate/rate-table-version stamping pending BE.
-**Note:** FAILED (by design) — gap: rate/rateTableVersion are NOT in the deal API response (and no commission is created at approve). Confirm with BE: stamped internally / different stage (win) / unimplemented.
+3. Verify rate + rate-table version are stamped (per plan).
+   → Expected: rate + rateTableVersion present in the response. **Currently FAILS** — neither is exposed.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Deal approved + reviewer stamped; rate / rate-table-version stamping pending BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap: rate/rateTableVersion are NOT in the deal API response and no commission is created at approve. Confirm with BE: stamped internally (not serialized) / different stage (deal win) / unimplemented.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_009
 **Test Description:** Resolve a flagged deal conflict (POST /v1/sa/deals/{id}/resolve-conflict): decision + reasoning are stamped and immutable.
+**Setup (precondition):** SA creates two partners; both register the SAME prospect so the second deal (deal B) is 'flagged'.
 **Test Steps:**
-1. Create a flagged conflict (two partners, same prospect).
-   → Expected: deal B 'flagged'.
-2. Resolve (decision='resolved_for_partner', reasoning).
-   → Expected: HTTP 201; conflictStatus='resolved_for_partner'; conflictResolution{decision,reasoning,resolvedBy,resolvedAt} matches sent.
-3. Resolve again with different decision/reasoning.
-   → Expected: 4xx ('not in FLAGGED conflict state') — immutable.
-4. GET /v1/sa/deals/{id}.
-   → Expected: decision + reasoning unchanged (original).
+1. Resolve the conflict (decision='resolved_for_partner', reasoning) — decision + reasoning are stamped.
+   → Expected: HTTP 201 (envelope statusCode 200); conflictStatus='resolved_for_partner'; conflictResolution{decision, reasoning, resolvedBy, resolvedAt} stamped and matches what was sent.
+2. Immutability: a second resolve with a different decision/reasoning.
+   → Expected: rejected (4xx); message explains the deal is no longer in FLAGGED conflict state.
+3. Re-read GET /v1/sa/deals/{id}.
+   → Expected: decision + reasoning are still the original (unchanged) — immutable.
+**Teardown:** delete both partners.
 **Expected (overall):** Conflict resolved once; decision + reasoning are immutable.
-**Note:** —
+**Note:** PASSED.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_010
 **Test Description:** Approving a deal emits a partner.deal.approved event (the CRM-sync trigger).
+**Setup (precondition):** SA creates a partner; register a deal (status 'registered').
 **Test Steps:**
-1. Create partner; register a deal.
-   → Expected: deal 'registered'.
-2. Approve the deal.
+1. Approve the deal.
    → Expected: status 'approved'.
-3. GET /v1/sa/audit-logs.
-   → Expected: a partner.deal.approved event records the registered->approved transition.
+2. Verify a 'deal approved' event is published to the audit log (GET /v1/sa/audit-logs, retry up to 3× for eventual consistency).
+   → Expected: an event whose action mentions deal + approve references this deal id, and its `after.status == 'approved'` (records the registered→approved transition).
+**Teardown:** delete the parent partner.
 **Expected (overall):** Deal-approved event is published. CRM owner/stage update is a downstream service (connectors/CRM Integration), out of scope.
-**Note:** —
+**Note:** PASSED.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_011
 **Note (BLOCKED):** Not automated — was mislabeled PASSED/Auto=YES (false-green), corrected to BLOCKED. The co-sell 70/30 split is computed DOWNSTREAM; at register time the deal record carries no split field (verified via _003) and there is no API to read the computed split, so the 70/30 default cannot be asserted. Same dependency family as _012. Unblock when BE exposes the computed split (or a split-calc API).
@@ -306,20 +329,17 @@
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_013
 **Test Description:** Resolving the FLAGGED deal FOR its partner (decision=resolved_for_partner, citing the prospect's confirmation) makes that deal the winner and automatically flips the conflicting deal to the loser; both keep status 'registered'.
+**Setup (precondition):** SA creates two partners; both register the SAME prospect (name+email) → deal A (first) + deal B (second, flagged).
 **Test Steps:**
-1. Two partners register the SAME prospect (name+email); deal B (second) becomes flagged.
-   → Expected: deal B conflictStatus='flagged'.
-2. Resolve the flagged deal B FOR its partner (decision='resolved_for_partner', reasoning cites prospect confirmation).
-   → Expected: HTTP 201; deal B conflictStatus='resolved_for_partner'; conflictResolution recorded.
-3. Check the conflicting deal A.
-   → Expected: deal A auto-flipped to conflictStatus='resolved_against_partner' (loser).
-4. GET both deals.
-   → Expected: B 'resolved_for_partner' + status 'registered'; A 'resolved_against_partner' (persisted).
-5. Teardown: delete both partners.
-   → Expected: cleanup OK.
-
+1. Resolve the flagged deal B FOR its partner (decision='resolved_for_partner', reasoning cites prospect confirmation).
+   → Expected: HTTP 201 (envelope statusCode 200); deal B conflictStatus='resolved_for_partner'; conflictResolution recorded.
+2. Check the conflicting deal A (GET by id) — auto-flipped to the loser.
+   → Expected: deal A conflictStatus='resolved_against_partner'.
+3. Re-read the winner deal B (GET by id) — outcome persists.
+   → Expected: deal B still 'resolved_for_partner' and status 'registered'.
+**Teardown:** delete both partners.
 **Expected (overall):** the confirmed partner wins the conflict and the other deal is flipped to the loser.
-**Note:** Decision/reasoning immutability is covered by _009; negative resolve inputs by _029.
+**Note:** PASSED. Decision/reasoning immutability is covered by _009; negative resolve inputs by _029.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_014
 **Note (BLOCKED):** No distinct API surface. resolve-conflict (POST /v1/sa/deals/{id}/resolve-conflict) is an SA-manual decision (enum resolved_for_partner|resolved_against_partner); it accepts no "prospect unreachable" signal and applies no automatic "first-registered-wins" tiebreaker. The only executable path (SA manually resolving for the earlier deal) is mechanically identical to _013 → nothing distinct to assert. Unblock if BE implements an automatic tiebreaker; otherwise covered by _013.
@@ -329,17 +349,17 @@
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_016
 **Test Description:** SA manually extends a registered deal's protection window (POST /v1/sa/deals/{id}/extend-protection, body addedDays + reasoning).
+**Setup (precondition):** SA creates a partner; pick a published plan; register a deal and capture its current protectionExpiresAt (old expiry).
 **Test Steps:**
-1. Create a partner + pick a published plan + register a deal (captures protectionExpiresAt).
-   → Expected: registered deal has a protection window.
-2. POST extend-protection with addedDays=30 + reasoning.
-   → Expected: HTTP 201 / body statusCode 200; message confirms.
-3. Compare the new protectionExpiresAt vs the old.
-   → Expected: window moved later by 30 days; deal stays 'registered'.
-4. GET /v1/sa/deals/{id}.
-   → Expected: extended protectionExpiresAt persisted.
-**Expected (overall):** SA manual extension pushes the protection window out by the requested days.
-**Note:** PASSED — verified 2026-06-30. Window extends by exactly addedDays from the OLD expiry (e.g. +30d: 2026-08-29 → 2026-09-28). Plan frames this as a queued partner request, but the implemented endpoint is a DIRECT SA extension (HTTP 201) — confirm with BE if a queued partner-request flow is also expected. (CreateDealDto now also requires tenantDomain / numberOfEmployee / billingCycle — make_deal updated.)
+1. SA extends the protection window (addedDays=30 + reasoning).
+   → Expected: accepted (HTTP 201, envelope statusCode 200); message confirms the extension.
+2. Verify the window moved later by the requested days.
+   → Expected: new protectionExpiresAt > old; delta is EXACTLY 30 days; deal stays 'registered'.
+3. Verify the new window persists (GET /v1/sa/deals/{id}).
+   → Expected: persisted protectionExpiresAt == the extended value.
+**Teardown:** delete the parent partner.
+**Expected (overall):** SA manual extension pushes the protection window out by exactly the requested days.
+**Note:** PASSED. Window extends by exactly addedDays from the OLD expiry (e.g. +30d: 2026-08-29 → 2026-09-28). Plan frames this as a queued partner request, but the implemented endpoint is a DIRECT SA extension (applied immediately) — confirm with BE whether a separate queued partner-request flow is also expected.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_017
 **Note (BLOCKED):** Needs a 90-day clock staging can't provide. "Re-registering a conflict-lost prospect is accepted after 90 days (when no close exists)" requires a conflict-lost deal whose loss is 90+ days old; createdAt/lostAt are server-assigned and cannot be backdated, and there is no test clock/fast-forward. The negative companion ("reject re-registration BEFORE 90 days") IS buildable now as a separate TC. Unblock when BE provides a test clock or backdating.
@@ -348,124 +368,160 @@
 **Note (DEFERRED):** Win a deal (POST /v1/sa/deals/{id}/win). The WinDealDto carries a payment card + billing details + tenant provisioning — calling it has heavy side effects (provisions a tenant, may touch billing). Deferred to avoid polluting staging; build with a dedicated teardown / a BE-provided sandbox flag.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_019
-**Test Description:** SA marks an approved deal as lost (POST /v1/sa/deals/{id}/lose).
+**Test Description:** SA marks an approved deal as lost (POST /v1/sa/deals/{id}/lose). Losing requires the deal to be 'approved' first.
+**Setup (precondition):** SA creates a partner; pick a plan; register a deal and approve it (status 'approved').
 **Test Steps:**
-1. Register a deal, then approve it (precondition: lose requires an approved deal).
-   → Expected: deal is 'approved'.
-2. POST /lose.
-   → Expected: HTTP 201 / body statusCode 200; status becomes 'lost'.
-3. GET /v1/sa/deals/{id}.
-   → Expected: 'lost' persisted.
-**Expected (overall):** An approved deal transitions to 'lost'.
-**Note:** PASSED — verified 2026-06-30.
+1. Mark the deal as lost (notes).
+   → Expected: accepted (HTTP 201, envelope statusCode 200); status becomes 'lost'.
+2. Verify the lost status persists (GET /v1/sa/deals/{id}).
+   → Expected: fetched deal status still 'lost'.
+**Teardown:** delete the parent partner.
+**Expected (overall):** An approved deal transitions to 'lost' (partner notification is downstream, out of scope).
+**Note:** PASSED. Negative/illegal-state counterpart is _032.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_020
 **Test Description:** SA retrieves a single deal by id (GET /v1/sa/deals/{id}) — full record.
+**Setup (precondition):** SA creates a partner; pick a plan; register a deal and capture its id.
 **Test Steps:**
-1. Register a deal; capture its id.
-2. GET /v1/sa/deals/{id}.
-   → Expected: HTTP 200; the record matches (id, partnerId, dealType, status, prospect fields) and no sensitive field leaks.
-**Expected (overall):** Get-by-id returns the full, correct deal record.
-**Note:** PASSED — verified 2026-06-30.
-
-#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_031
-**Test Description:** Negative of _020 (get-by-id): a ghost / malformed deal id is rejected.
-**Test Steps:**
-1. GET /v1/sa/deals/{ghost-but-well-formed-id} → 404 (not found).
-2. GET /v1/sa/deals/{malformed-id} → 400 ('Invalid id').
-**Expected (overall):** Illegal get-by-id targets are rejected (4xx), never 5xx, no record returned.
-**Note:** PASSED — verified 2026-06-30.
-
-#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_032
-**Test Description:** Negative of _019 (lose): illegal lose targets are rejected.
-**Test Steps:**
-1. lose a non-existent id / a malformed id / a deal not in an approved state (e.g. just-registered).
-   → Expected: each 4xx ('not found' / 'Invalid id' / 'cannot transition...').
-**Expected (overall):** Every illegal lose attempt is rejected (4xx).
-**Note:** PASSED — verified 2026-06-30.
+1. GET the deal by id.
+   → Expected: HTTP 200 (envelope statusCode 200); the returned id matches the requested deal.
+2. Verify the full record.
+   → Expected: required fields present (partnerId, dealType, prospectName, prospectCountry, estimatedAcvCents, status, protectionExpiresAt, conflictStatus); status 'registered'; no sensitive field (password/token/secret) is leaked.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Get-by-id returns the full, correct deal record with no sensitive leak.
+**Note:** PASSED. Negative (ghost/malformed id) counterpart is _031.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_021
-**Test Description:** Negative of register: invalid/missing fields must be rejected with 400.
-**Test Steps:**
-1. Verify the ghost planId 'no-such-plan-qa' is absent (GET sa-plans).
-   → Expected: GET billing-plans/{ghost} returns 4xx (absent confirmed).
-2. POST register with: missing partnerId/dealType/prospectName/prospectCountry/ACV/closeDate, invalid dealType, invalid email, negative ACV, bad date, ghost partnerId.
-   → Expected: each 400 with a field/clear message.
-3. POST register with a non-existent planId.
-   → Expected: should be 4xx.
-**Expected (overall):** Every invalid register payload rejected; planId should be validated.
-**Note:** FAILED (by design) — gap: a non-existent planId is accepted (201). sa-plans returns 400 for it, but the deals endpoint does not validate planId cross-service. Confirm with BE.
+**Test Description:** Negative counterpart of register (_001): every invalid/incomplete payload must be rejected with 4xx + a descriptive message and create no deal. All cases run (failures collected) so one gap never hides the others.
+**Setup (precondition):** SA creates a partner; pick a published plan (valid baseline payload). FK-absence proof (rule 3): GET the ghost planId 'no-such-plan-qa' and assert it returns 4xx (genuinely absent) before using it below.
+**Test Steps:** (each case = one POST /v1/sa/deals with the baseline payload mutated; expected 4xx + message hint)
+1. Missing partnerId → 4xx, message mentions "partner".
+2. Missing dealType → "dealtype must be one of".
+3. Invalid dealType ('wholesale') → "dealtype must be one of".
+4. Missing prospectName → "prospectname".
+5. Missing prospectCountry → "prospectcountry".
+6. Invalid prospectEmail ('not-an-email') → "must be an email".
+7. Missing estimatedAcvCents → "estimatedacvcents".
+8. Negative ACV (-100) → "must not be less than".
+9. Missing expectedCloseDate → "iso 8601".
+10. Bad date format ('31-12-2026') → "iso 8601".
+11. Ghost partnerId (000000000000000000000000) → "not found".
+12. Ghost planId ('no-such-plan-qa', verified absent above) → expected "plan" rejection. **Currently FAILS** — accepted (HTTP 201).
+**Teardown:** delete the parent partner (removes any deal accidentally created by the planId gap).
+**Expected (overall):** Every invalid register payload is rejected with a clear message and no deal is created; planId should be validated against the catalog.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate). Gap (case 12): a non-existent planId is accepted (201). sa-plans returns 4xx for that id, but the deals endpoint does not validate planId cross-service. Confirm with BE.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
-**Test Description:** Idempotency/duplicate: the SAME partner registering the SAME prospect twice is rejected (no second deal).
+**Test Description:** Idempotency/duplicate counterpart of _001: the SAME partner registering the SAME prospect twice is rejected (no second deal).
+**Setup (precondition):** SA creates one partner; pick a published plan; build a unique prospect identity reused for both register calls.
 **Test Steps:**
-1. One partner + a published plan + a unique prospect identity; the partner registers the deal once.
-   → Expected: HTTP 201, conflictStatus 'none'.
+1. First registration by the partner succeeds.
+   → Expected: HTTP 201, server-assigned id, conflictStatus 'none'.
 2. The SAME partner re-registers the SAME prospect (name+email).
-   → Expected: HTTP 400, message '...already exists...'.
-3. Inspect the rejected response body.
-   → Expected: no second deal id (no deal was created).
-**Expected (overall):** Same-partner duplicate is a hard 400 reject; distinct from _004 (a different partner → 201 + flagged).
-**Note:** PASSED — verified 2026-06-22.
+   → Expected: HTTP 400, message contains "already exists".
+3. Verify no second deal was created (inspect the rejected response body).
+   → Expected: no deal id (_id/id) in the body — hard reject, not the flagged path.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Same-partner duplicate is a hard 400 reject; distinct from _004 (a DIFFERENT partner → 201 + conflictStatus 'flagged').
+**Note:** PASSED.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_028
-**Test Description:** Negative of approve: illegal targets rejected.
-**Test Steps:**
-1. approve a non-existent id / malformed id / an already-approved deal.
-   → Expected: each 4xx ('not found' / 'Invalid id' / 'cannot transition...').
-**Expected (overall):** All illegal approve attempts rejected.
-**Note:** —
+**Test Description:** Negative counterpart of _008 (approve): three illegal approve targets, each rejected with its own code + a clear message (never silently succeed). All cases run (failures collected).
+**Setup (precondition):** SA creates a partner; register a deal and approve it (status 'approved') so the illegal-transition case has a target.
+**Test Steps:** (each case = one POST /v1/sa/deals/{id}/approve)
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+3. Already-approved deal (illegal transition) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted).
+**Teardown:** delete the parent partner.
+**Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 2 & 3 are correct. Confirm with BE.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_029
-**Test Description:** Negative of resolve-conflict: invalid input rejected.
-**Test Steps:**
-1. resolve-conflict with invalid decision / missing decision / missing reasoning / non-existent id / malformed id / a non-flagged deal.
-   → Expected: each 4xx with a clear message ('decision must be one of' / 'reasoning...' / 'not found' / 'Invalid id' / 'not in FLAGGED conflict state').
-**Expected (overall):** Every invalid resolve-conflict attempt rejected.
-**Note:** —
+**Test Description:** Negative counterpart of _009 (resolve-conflict): six invalid inputs, each rejected with its own code + a clear message. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner; register a deal (status 'registered', conflictStatus 'none' — a non-flagged target).
+**Test Steps:** (each case = one POST /v1/sa/deals/{id}/resolve-conflict)
+1. Invalid decision enum ('whatever') → **400** 'decision must be one of'.
+2. Missing decision → **400** 'decision must be one of'.
+3. Missing reasoning → **400** message mentions "reasoning".
+4. Malformed id ('not-an-id') → **400** 'invalid id'.
+5. Non-flagged deal (illegal state) → **400** message mentions "flagged" (409 Conflict would be more precise, but 400 is accepted).
+6. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Validation/format/state errors → 400; non-existent id → 404. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 6): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 1–5 are correct. Confirm with BE.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_030
-**Test Description:** Negative of _016 (extend-protection): invalid input rejected with a clear error.
-**Test Steps:**
-1. extend-protection with: missing addedDays / missing reasoning / addedDays 0 / negative / over max (181) / non-numeric / ghost deal id (valid body) / malformed id.
-   → Expected: each 400 with a clear message ('addedDays must be 1..180' / 'reasoning should not be empty' / 'must not be less than 1' / 'must not be greater than 180' / 'not found' / 'Invalid id').
-**Expected (overall):** Every invalid extend-protection attempt rejected. BE validates the body before the deal lookup, so field cases are self-proving on a ghost id (no real deal needed).
-**Note:** PASSED — verified 2026-06-25. Spec constraint discovered: addedDays ∈ 1..180; reasoning required + non-empty.
+**Test Description:** Negative counterpart of _016 (extend-protection): eight invalid inputs, each rejected with its own code + a clear message. BE validates the body BEFORE the deal lookup, so field cases are self-proving on a ghost id (no real deal needed). All cases run (failures collected).
+**Setup (precondition):** none — cases target a ghost/malformed id directly (body validation fires first; no sa-plans dependency).
+**Test Steps:** (each case = one POST /v1/sa/deals/{id}/extend-protection)
+1. Missing addedDays → **400** message "addeddays".
+2. Missing reasoning → **400** message "reasoning".
+3. addedDays = 0 → **400** "less than 1".
+4. Negative addedDays → **400** "less than 1".
+5. addedDays over max (181) → **400** "greater than 180".
+6. Non-numeric addedDays ('abc') → **400** message "addeddays".
+7. Malformed id ('not-an-id') → **400** "invalid id".
+8. Ghost deal id (valid body, well-formed but non-existent) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+**Expected (overall):** Body-validation / boundary / format / malformed → 400; non-existent id → 404. Never 5xx. Spec constraint: addedDays ∈ 1..180; reasoning required + non-empty.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 8): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 1–7 are correct. Confirm with BE.
+
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_031
+**Test Description:** Negative counterpart of _020 (get-by-id): two distinct rejection semantics — a malformed id is a bad request (400), a ghost id is a missing resource (404). Self-proving; GET → no idempotency concern. All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/deals/{id}; expected code + message hint, never 5xx)
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message mentions "not found". **Currently FAILS** — BE returns 400.
+2. Malformed id ('not-an-id') → **400** Bad Request, message mentions "invalid id".
+**Expected (overall):** A malformed id → 400; a well-formed but non-existent id → 404. Never 5xx, no record returned.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** with message "not found" — status contradicts the message; correct REST is **404 Not Found**. The malformed-id case (400) is correct. Confirm with BE.
+
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_032
+**Test Description:** Negative counterpart of _019 (lose): three illegal lose targets, each rejected with its own code + a clear message (never 5xx). All cases run (failures collected).
+**Setup (precondition):** SA creates a partner; register a deal (status 'registered', NOT approved — lose requires 'approved').
+**Test Steps:** (each case = one POST /v1/sa/deals/{id}/lose)
+1. Registered deal (illegal transition — not approved) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted here).
+2. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+3. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+**Teardown:** delete the parent partner.
+**Expected (overall):** Illegal transition → 400/409; malformed id → 400; non-existent id → 404. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 2): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 1 & 3 are correct. Confirm with BE.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
-**Test Description:** Idempotency of _016 (extend-protection): a repeat extension is ADDITIVE, not a no-op or a cap.
+**Test Description:** Idempotency counterpart of _016 (extend-protection): a repeat extension is ADDITIVE, not a no-op or a cap.
+**Setup (precondition):** SA creates a partner; pick a plan; register a deal and capture its protectionExpiresAt (exp0).
 **Test Steps:**
-1. Register a deal (capture protectionExpiresAt = exp0).
-   → Expected: registered deal has a protection window.
-2. Extend +30 days.
+1. First extend (+30 days).
    → Expected: exp1 == exp0 + 30d.
-3. Extend +30 days again.
-   → Expected: 200; exp2 == exp1 + 30d (stacks from the current expiry); deal stays 'registered'.
-4. GET /v1/sa/deals/{id}.
-   → Expected: persisted window == exp0 + 60d.
-**Expected (overall):** extend-protection is a parameterized mutating action — repeats are additive by design (not idempotent no-op, not capped). Each call is also recorded in protectionExtensions[].
-**Note:** PASSED — verified 2026-07-01. Probed per rule 8 (mutating action ≠ POST-create): behaviour is additive (exp0 +30 → +30 = +60). BE stamps each extension in protectionExtensions[] (extendedBy/at, previous/newExpiresAt, addedDays, trigger, reasoning).
+2. Second extend (+30 days) — repeat behaviour.
+   → Expected: HTTP 200; exp2 == exp1 + 30d (stacks from the current expiry); deal stays 'registered'.
+3. Verify the total window persists (GET /v1/sa/deals/{id}).
+   → Expected: persisted window == exp0 + 60d (2×addedDays).
+**Teardown:** delete the parent partner.
+**Expected (overall):** extend-protection is a parameterized mutating action — repeats are additive by design (not an idempotent no-op, not capped). Each call is also recorded in protectionExtensions[].
+**Note:** PASSED. Probed per rule 8 (mutating action ≠ POST-create): behaviour is additive (exp0 +30 → +30 = +60). BE stamps each extension in protectionExtensions[] (extendedBy/at, previous/newExpiresAt, addedDays, trigger, reasoning).
 
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001
 **Test Description:** SA rejects a queued (registered) deal from the approval queue (POST /v1/sa/deals/{id}/reject, body reviewNotes).
+**Setup (precondition):** SA creates a partner; pick a plan; register a deal (status 'registered' = queued for review).
 **Test Steps:**
-1. Register a deal (precondition: 'registered', i.e. queued for review).
-2. POST /reject with reviewNotes.
-   → Expected: HTTP 201 / body statusCode 200; status becomes 'rejected'.
-3. GET /v1/sa/deals/{id}.
-   → Expected: 'rejected' persisted.
+1. Reject the deal with a reason (reviewNotes).
+   → Expected: accepted (HTTP 201, envelope statusCode 200); status becomes 'rejected'.
+2. Verify the rejection persists (GET /v1/sa/deals/{id}).
+   → Expected: fetched deal status still 'rejected'.
+**Teardown:** delete the parent partner.
 **Expected (overall):** A registered deal is rejected and stays rejected.
-**Note:** PASSED — verified 2026-06-30.
+**Note:** PASSED. Negative/illegal-state counterpart is _011.
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_011
-**Test Description:** Negative of _001 (reject): illegal reject targets are rejected.
-**Test Steps:**
-1. reject a non-existent id / a malformed id / an already-rejected (or non-registered) deal.
-   → Expected: each 4xx ('not found' / 'Invalid id' / 'cannot transition...').
-**Expected (overall):** Every illegal reject attempt is rejected (4xx).
-**Note:** PASSED — verified 2026-06-30.
+**Test Description:** Negative counterpart of _001 (reject): three illegal reject targets, each rejected with its own code + a clear message. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner; register a deal and reject it (status 'rejected') so the illegal-transition case has a target.
+**Test Steps:** (each case = one POST /v1/sa/deals/{id}/reject)
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+3. Already-rejected deal (illegal transition) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted).
+**Teardown:** delete the parent partner.
+**Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 2 & 3 are correct. Confirm with BE.
 
 ### API · DEAL_COLLABORATION
 
@@ -479,29 +535,35 @@
 
 #### PARTNER_API_PIPELINE_MANAGEMENT_001
 **Test Description:** A partner lists its deals (GET /partner/portal/deals) — only its OWN deals are returned (scoped).
+**Setup (precondition):** Mint a partner-portal session (SA creates → approves → invites the partner user → logs in for a partner JWT); the partner registers one deal via the portal.
 **Test Steps:**
-1. Mint a partner session; the partner registers a deal.
-2. GET /partner/portal/deals.
-   → Expected: HTTP 200; the registered deal appears AND every row's partnerId == the caller's partner (no cross-partner leakage).
+1. GET the partner's own deals list (GET /partner/portal/deals?limit=20).
+   → Expected: HTTP 200; `data` is a non-empty list.
+2. Verify the registered deal appears AND the list is scoped to the caller.
+   → Expected: the registered deal id is in the list AND every row's partnerId == the caller's partner (no cross-partner leakage).
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** The own-deals list is correctly scoped to the authenticated partner.
-**Note:** PASSED — verified 2026-06-30.
+**Note:** PASSED. Negative (invalid filter/pagination) counterpart is _011.
 
 #### PARTNER_API_PIPELINE_MANAGEMENT_002
 **Test Description:** A partner filters its deals list by status (GET /partner/portal/deals?status=registered).
+**Setup (precondition):** Mint a partner-portal session; the partner registers one deal (status 'registered').
 **Test Steps:**
-1. Mint a partner session; register a deal (status 'registered').
-2. GET /partner/portal/deals?status=registered.
-   → Expected: HTTP 200; every returned deal has status 'registered' AND the registered deal is included.
+1. Filter the own-deals list by status=registered (GET /partner/portal/deals?limit=20&status=registered).
+   → Expected: HTTP 200; non-empty; every returned deal has status 'registered' AND the freshly-registered deal is included.
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** The status filter is applied correctly.
-**Note:** PASSED — verified 2026-06-30. Valid deal-status enum: registered, approved, in_progress, won, lost, expired, rejected.
+**Note:** PASSED. Valid deal-status enum: registered, approved, in_progress, won, lost, expired, rejected.
 
 #### PARTNER_API_PIPELINE_MANAGEMENT_011
-**Test Description:** Negative of _001/_002: an invalid filter / oversized pagination is handled gracefully.
-**Test Steps:**
-1. GET /partner/portal/deals?status=bogus → 400 (status must be one of the enum).
-2. GET /partner/portal/deals?limit=999999 → 400 ('limit must not exceed 100').
+**Test Description:** Negative counterpart of _001/_002: an invalid filter / oversized pagination is validated by the BE and rejected with 4xx + a clear message (never 5xx). All cases run (failures collected).
+**Setup (precondition):** Mint a partner-portal session.
+**Test Steps:** (each case = one GET /partner/portal/deals with an invalid query)
+1. status=bogus (out-of-enum) → **400**, message mentions "status".
+2. limit=999999 (over max) → **400**, message mentions "limit".
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Invalid filter/pagination is rejected (4xx), never 5xx.
-**Note:** PASSED — verified 2026-06-30.
+**Note:** PASSED. BE validates both (returns 400) — not lenient.
 ### API · TENANT_PROVISIONING_ATTRIBUTION
 
 > Note: this section's TC ids group several features (close→provision→commission→attribution). Per the user's decision the grouping is kept as-is for now; some rows really belong to co-sell / commissions / CRM.
@@ -637,77 +699,82 @@
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001
 **Test Description:** Read-only contract check on GET /v1/sa/partners: returns 200 with the envelope (statusCode/data/total/message) and honours pagination.
+**Setup (precondition):** authenticated SA client; request the first page with limit=5.
 **Test Steps:**
-1. Auth as SA. GET /v1/sa/partners?page=1&limit=5.
-   → Expected: HTTP 200.
-2. Assert the envelope.
-   → Expected: data is a list, total >= 0, message present.
-3. Assert pagination.
-   → Expected: returned page size <= requested limit (5).
-4. Data integrity + SA filtering (data-dependent).
-   → Expected: each partner is a non-empty object with unique id; WARN-skips if staging has 0 partners.
-5. SA isolation / no cross-partner leakage.
-   → Expected: SA-scoped directory only; WARN-skips when no data.
-**Expected (overall):** Partner list returns a valid paginated envelope.
-**Note:** —
+1. GET /v1/sa/partners?page=1&limit=5.
+   → Expected: request sent (HTTP 200 asserted in the client).
+2. Verify the partner-list API contract.
+   → Expected: statusCode 200; `data` is a list; `total` ≥ 0; `message` present; returned page size ≤ requested limit (5).
+3. Verify data integrity + SA filtering (data-dependent).
+   → Expected: each partner is a non-empty object with a unique id; WARN-skips if staging has 0 partners.
+4. Verify SA isolation / no cross-partner leakage.
+   → Expected: SA-scoped directory only; WARN-skips when no data (deep cross-partner audit applies once multi-partner data exists).
+**Expected (overall):** Partner list returns a valid paginated envelope, SA-scoped.
+**Note:** PASSED. Steps 3–4 are data-dependent (staging often has 0 seeded partners → WARN-skip); negative pagination counterpart is _011.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_002
 **Test Description:** CRUD create on POST /v1/sa/partners with required name/email/type.
+**Setup (precondition):** build a unique partner payload (name/email/type='channel'); cleanup (DELETE) is registered right after creation.
 **Test Steps:**
-1. Build a unique partner payload (name/email/type=channel).
-   → Expected: payload ready.
-2. POST /v1/sa/partners.
-   → Expected: HTTP 201; body statusCode 200; success message; register cleanup.
-3. Assert persisted.
-   → Expected: server-assigned _id and code (PAR-xxxxxx) present.
-4. Assert echo.
-   → Expected: stored name/email/type == sent.
-5. Assert lifecycle.
+1. POST /v1/sa/partners (create the partner).
+   → Expected: request sent.
+2. Verify the create-partner contract (accepted + persisted).
+   → Expected: HTTP 201 (envelope statusCode 200); success message; server-assigned _id and a generated `code` (PAR-xxxxxx).
+3. Verify the created record matches the request.
+   → Expected: stored name/email/type == sent (no silent mutation).
+4. Verify the new partner starts in 'pending' status.
    → Expected: status == 'pending' (awaits SA activation).
-6. GET /v1/sa/partners/{id}.
+5. Verify the partner is retrievable (GET /v1/sa/partners/{id}).
    → Expected: same partner returned, still 'pending'.
+**Teardown:** delete the created partner.
 **Expected (overall):** Pending partner created, persisted, retrievable.
-**Note:** —
+**Note:** PASSED. Negative (invalid fields) counterpart is _012; duplicate (same email) is _021.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_003
 **Test Description:** State transition on POST /v1/sa/partners/{id}/approve: pending -> active with approval event.
+**Setup (precondition):** SA creates a PENDING partner (assert it starts 'pending').
 **Test Steps:**
-1. Create a pending partner (precondition).
-   → Expected: partner is 'pending'.
-2. POST /v1/sa/partners/{id}/approve.
-   → Expected: HTTP 201; success message; same partner id.
-3. Assert transition + event.
+1. POST /v1/sa/partners/{id}/approve.
+   → Expected: request sent.
+2. Verify the approve call is accepted.
+   → Expected: HTTP 201 (envelope statusCode 200); success message; acts on the same partner id.
+3. Verify status flipped to 'active' and the approval event is recorded.
    → Expected: status 'active'; approvedAt set; approvedBy present.
-4. GET /v1/sa/partners/{id}.
-   → Expected: status 'active' persisted.
-**Expected (overall):** Pending partner approved to active with approval metadata; downstream activation-user is event-driven (out of scope).
-**Note:** —
+4. Verify the active status persisted (GET /v1/sa/partners/{id}).
+   → Expected: fetched partner status 'active'.
+**Teardown:** delete the partner.
+**Expected (overall):** Pending partner approved to active with approval metadata; downstream activation-user is event-driven (out of scope). Negative/illegal-state counterpart is _013.
+**Note:** PASSED.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_004
-**Test Description:** Decline/suspend a partner via POST /v1/sa/partners/{id}/deactivate; reason should be mandatory and audit-logged.
+**Test Description:** Decline/suspend a partner via POST /v1/sa/partners/{id}/deactivate (the only partner action carrying a reason); reason is mandatory and audit-logged.
+**Setup (precondition):** SA creates a PENDING partner; build a unique decline reason (findable in the audit log).
 **Test Steps:**
-1. Create a pending partner; decline WITH a reason.
-   → Expected: HTTP 201; status -> 'suspended'.
-2. GET /v1/sa/audit-logs.
-   → Expected: an entry records the decline action with the reason.
-3. Enforce mandatory reason: decline with no / empty / whitespace reason.
-   → Expected: should be 400 each.
-**Expected (overall):** Decline works and the reason is audit-logged; mandatory-reason should be enforced.
-**Note:** PASSED — verified 2026-06-29. BE now enforces a mandatory, non-empty decline reason (absent/empty/whitespace → 400). Was a known gap; fixed by BE.
+1. Decline the partner WITH a reason.
+   → Expected: accepted; status leaves pending/active (→ 'suspended').
+2. Verify the decline reason is recorded in the audit log (GET /v1/sa/audit-logs, retry up to 3× for eventual consistency).
+   → Expected: an audit entry contains the unique reason.
+3. Enforce mandatory reason: decline three fresh partners with an absent / empty / whitespace-only reason.
+   → Expected: each rejected with 400/422 (reason mandatory + non-empty).
+**Teardown:** delete the created partners.
+**Expected (overall):** Decline works, the reason is audit-logged, and a mandatory non-empty reason is enforced.
+**Note:** PASSED. The plan calls this "PATCH decline"; BE exposes no dedicated decline endpoint, so POST /deactivate (carries the reason) is exercised. BE enforces the mandatory non-empty reason (was a known gap, fixed by BE). Negative-id counterpart is _014.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_005
-**Test Description:** Tier change on POST /v1/sa/partners/{id}/upgrade-tier emits a partner.tier.changed event (portal/analytics refresh signal).
+**Test Description:** Tier change on POST /v1/sa/partners/{id}/upgrade-tier updates the stored tier AND emits a partner.tier.changed event (before/after) — the portal/analytics refresh signal. Covers both upgrade and downgrade.
+**Setup (precondition):** SA creates a partner (assert tier defaults to 'registered').
 **Test Steps:**
-1. Create a partner (tier defaults to 'registered').
-   → Expected: tier == 'registered'.
-2. upgrade-tier to 'select' (+reason).
-   → Expected: HTTP 201; tier == 'select'.
-3. GET /v1/sa/audit-logs.
-   → Expected: partner.tier.changed event records before='registered', after='select'.
-4. GET /v1/sa/partners/{id}.
-   → Expected: tier 'select' persisted.
-**Expected (overall):** Tier changes and the change event is published; portal/analytics refresh is a downstream consumer (out of scope).
-**Note:** —
+1. Upgrade through all tiers: registered→select→advanced→premier (three upgrade-tier calls, each with a reason).
+   → Expected: each HTTP 200; stored tier becomes select, then advanced, then premier.
+2. Verify the upgrade event is recorded with before/after + reason.
+   → Expected: a partner.tier.changed event for advanced→premier (before='advanced', after='premier') carrying the change reason.
+3. Downgrade premier→select emits an event.
+   → Expected: HTTP 200, tier 'select'; a partner.tier.changed event records before='premier', after='select'.
+4. Verify the final tier persisted (GET /v1/sa/partners/{id}).
+   → Expected: fetched tier == 'select'.
+**Teardown:** delete the partner.
+**Expected (overall):** Tier changes (up and down) update the stored tier and publish a before/after event; portal/analytics refresh is a downstream consumer (out of scope).
+**Note:** PASSED. Negative (invalid tier / same tier / bad id) counterpart is _015.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_006
 **Note (BLOCKED):** [BLOCKED — NO API 2026-06-17] Searched OpenAPI specs of all 11 platform services (admin-api, compliance-api, connectors, helpplatform-api, sa-auth-api, sa-governance-api, sa-partners-api, sa-plans-api, sa-tenants-api, setting-api, workflow-api): 0 fields for reseller/end-client price (only basePrice/totalPrice in plan/billing, unrelated). No endpoint or field to send/store an end-client price → the data-model this TC describes is not implemented in any current API. Confirm with product/BE: which service owns this, or is it a future PRD feature (§2.2/§7.2/§11)? Not automatable until the model exists.
@@ -723,61 +790,76 @@
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_010
 **Test Description:** Grant a certification (POST /v1/sa/partner-users/{userId}/certifications) = certification earned; emits partner.certification.granted.
+**Setup (precondition):** SA creates a partner + invites a portal user (capture userId).
 **Test Steps:**
-1. Create a partner + invite a portal user (capture userId).
-   → Expected: partner + user ready.
-2. Grant certification (sales_certified, score=95).
-   → Expected: HTTP 201; status 'active'; earnedAt + expiresAt set; type echoed.
-3. GET /v1/sa/partners/{partnerId}/certifications.
-   → Expected: the granted cert appears for the user.
-4. GET /v1/sa/audit-logs.
-   → Expected: partner.certification.granted event records the cert type.
+1. Grant the certification (sales_certified, score=95) — certification earned.
+   → Expected: HTTP 200 (envelope statusCode 200); status 'active'; earnedAt + expiresAt set; certificationType echoed.
+2. Verify the cert appears in the partner's certification list (GET /v1/sa/partners/{partnerId}/certifications).
+   → Expected: the granted cert appears and belongs to the invited user.
+3. Verify a 'partner.certification.granted' event is recorded (GET /v1/sa/audit-logs, retry up to 3×).
+   → Expected: an event records the cert type for that user.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Certification earned, listed, and event published; tier re-evaluation is downstream (out of scope).
-**Note:** —
+**Note:** PASSED. Negative (invalid input) counterpart is _020; re-grant duplicate is _022.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011
-**Test Description:** Negative of list: invalid pagination must be handled gracefully (never 5xx).
-**Test Steps:**
-1. GET list with page=0 and page=-1.
-   → Expected: must be < 500 (graceful).
-2. Observe limit=-5 / 999999 / page='abc'.
-   → Expected: logged (currently defaulted, no 400).
-**Expected (overall):** Invalid pagination must not crash the endpoint.
-**Note:** PASSED — verified 2026-06-29. BE now returns 400 for invalid pagination (page=0/-1 → "page must not be less than 1"); no longer HTTP 500. Was a known gap; fixed by BE.
+**Test Description:** Negative counterpart of _001 (GET list): invalid pagination is validated by the BE and rejected with 4xx (never 5xx). All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/partners with invalid pagination)
+1. page=0 → **4xx** (rejected), never 5xx.
+2. page=-1 → **4xx** (rejected), never 5xx.
+3. limit=-5 → **4xx** (rejected), never 5xx.
+4. limit=999999 (over max) → **4xx** (rejected), never 5xx.
+5. page=abc (non-numeric) → **4xx** (rejected), never 5xx.
+**Expected (overall):** Every invalid pagination param is rejected with 4xx and never crashes the endpoint (5xx).
+**Note:** PASSED. BE returns 400 for all (page=0/-1 was previously an HTTP 500 crash — fixed by BE). Tightened from "never-5xx only" to assert 4xx now that BE validates.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_012
-**Test Description:** Negative of create: invalid/missing fields must be rejected with 400 + field errors, no record created.
-**Test Steps:**
-1. POST create with: missing name / missing email / missing type / malformed email / empty name / invalid type enum.
-   → Expected: each 400 with a field-level message; no record persisted.
-**Expected (overall):** Every invalid create payload rejected with 400.
-**Note:** —
+**Test Description:** Negative counterpart of _002 (create): every invalid/incomplete payload is rejected with 400 + a field-level error naming the offending field, and creates NO record. All cases run (failures collected).
+**Test Steps:** (each case = one POST /v1/sa/partners with the field under test broken)
+1. Missing name → **400**, error mentions "name", no record.
+2. Missing email → **400**, error mentions "email", no record.
+3. Missing type → **400**, error mentions "type", no record.
+4. Malformed email ('not-an-email') → **400**, error mentions "email", no record.
+5. Empty name ('') → **400**, error mentions "name", no record.
+6. Invalid type enum ('foobar') → **400**, error mentions "type", no record.
+**Expected (overall):** Every invalid create payload is rejected with 400, a field-level message, and no record persisted.
+**Note:** PASSED.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013
-**Test Description:** Negative of approve: illegal targets rejected.
-**Test Steps:**
-1. approve a non-existent id / malformed id / already-active partner.
-   → Expected: each 4xx with a clear message ('not found' / 'Invalid id' / 'cannot be approved from status active').
-**Expected (overall):** All illegal approve attempts rejected.
-**Note:** —
+**Test Description:** Negative counterpart of _003 (approve): three illegal approve targets, each rejected with its own code + a clear message. All cases run (failures collected).
+**Setup (precondition):** SA creates + approves a partner so it is already 'active' (target for the illegal-transition case).
+**Test Steps:** (each case = one POST /v1/sa/partners/{id}/approve)
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+3. Already-active partner (illegal transition) → **400** 'cannot be approved' (409 Conflict would be more precise, but 400 is accepted).
+**Teardown:** delete the partner.
+**Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 2 & 3 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014
-**Test Description:** Negative of deactivate: invalid id rejected; repeat is idempotent.
-**Test Steps:**
-1. deactivate a non-existent id / malformed id.
-   → Expected: each 4xx ('not found' / 'Invalid id').
-2. deactivate an already-suspended partner again.
-   → Expected: no 5xx; stays 'suspended' (idempotent no-op).
-**Expected (overall):** Invalid-id deactivate rejected; repeat deactivate is idempotent.
-**Note:** —
+**Test Description:** Negative counterpart of _004 (deactivate): invalid id rejected with the correct code; a repeat deactivate is idempotent. All invalid-id cases run (failures collected).
+**Test Steps:** (cases 1–2 = POST /v1/sa/partners/{id}/deactivate on a bad id)
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+3. Idempotency: create a partner, deactivate it, then deactivate again.
+   → Expected: never 5xx; stays 'suspended' (idempotent no-op, currently 201).
+**Teardown:** delete the created partners.
+**Expected (overall):** Non-existent id → 404; malformed id → 400; repeat deactivate is an idempotent no-op (never 5xx).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 and the idempotency observation are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015
-**Test Description:** Negative of tier change: invalid input rejected.
-**Test Steps:**
-1. upgrade-tier with invalid enum / missing tier / non-existent id / malformed id.
-   → Expected: each 4xx with a clear message.
-**Expected (overall):** All invalid tier-change attempts rejected.
-**Note:** —
+**Test Description:** Negative counterpart of _005 (tier change): six invalid inputs, each rejected with its own code + a clear message (no event emitted). All cases run (failures collected).
+**Setup (precondition):** SA creates a partner (tier 'registered') as the valid-id target.
+**Test Steps:** (each case = one POST /v1/sa/partners/{id}/upgrade-tier)
+1. Invalid tier enum ('silver') → **400** 'tier must be one of'.
+2. Empty tier ('') → **400** 'tier must be one of'.
+3. Missing tier (no field) → **400** 'tier must be one of'.
+4. Same tier (already at 'registered') → **400** 'already at tier'.
+5. Malformed id ('not-an-id') → **400** 'invalid id'.
+6. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+**Teardown:** delete the partner.
+**Expected (overall):** Validation / same-tier / malformed → 400; non-existent id → 404. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 6): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–5 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016
 **Note (BLOCKED):** [BLOCKED — NO API 2026-06-17] Searched OpenAPI specs of all 11 platform services (admin-api, compliance-api, connectors, helpplatform-api, sa-auth-api, sa-governance-api, sa-partners-api, sa-plans-api, sa-tenants-api, setting-api, workflow-api): 0 fields for reseller/end-client price (only basePrice/totalPrice in plan/billing, unrelated). No endpoint or field to send/store an end-client price → the data-model this TC describes is not implemented in any current API. Confirm with product/BE: which service owns this, or is it a future PRD feature (§2.2/§7.2/§11)? Not automatable until the model exists.
@@ -792,209 +874,247 @@
 **Note (BLOCKED):** [BLOCKED — NO API 2026-06-17] No endpoint or field for PSM (Partner Success Manager) allocation or ARR thresholds in any of the 11 service specs (only unrelated carryForwardPolicy in setting-api). The "$1.5M ARR → dedicated PSM" rule is a calculation not exposed via API → not automatable now. Confirm with product/BE where this logic lives (likely a job/internal calc).
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020
-**Test Description:** Negative of grant certification: invalid input rejected.
-**Test Steps:**
-1. grant cert with invalid certificationType / missing type / non-existent userId / malformed userId.
-   → Expected: each 4xx with a clear message.
-**Expected (overall):** All invalid grant-cert attempts rejected.
-**Note:** —
+**Test Description:** Negative counterpart of _010 (grant certification): four invalid inputs, each rejected with its own code + a clear message. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner + invites a portal user (capture the valid userId).
+**Test Steps:** (each case = one POST /v1/sa/partner-users/{userId}/certifications)
+1. Invalid cert type ('ninja') → **400** 'certificationType must be one of'.
+2. Missing cert type → **400** 'certificationType must be one of'.
+3. Malformed userId ('not-an-id') → **400** 'invalid id'.
+4. Ghost userId (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400 ("User 000… not found").
+**Teardown:** delete the parent partner.
+**Expected (overall):** Validation / malformed → 400; non-existent userId → 404. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 4): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–3 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021
-**Test Description:** Idempotency/duplicate: creating a partner with the same email twice is rejected (no second account).
+**Test Description:** Idempotency/duplicate counterpart of _002 (create): creating a partner with the same email twice is rejected (no second account).
+**Setup (precondition):** SA creates a partner with a unique email (the payload is reused for the duplicate attempt).
 **Test Steps:**
-1. Create a partner with a unique email.
-   → Expected: HTTP 201, account created.
-2. Re-create with the SAME email.
-   → Expected: HTTP 400, message '...already exists'.
-3. Inspect the rejected response body.
-   → Expected: no second account created.
+1. Re-create with the SAME email → 400 duplicate.
+   → Expected: HTTP 400, message contains "already exists".
+2. Verify no second account was created (inspect the rejected response body).
+   → Expected: no new partner id (or same id) — no duplicate account.
+**Teardown:** delete the created partner.
 **Expected (overall):** Same-email duplicate is a hard 400 reject; no duplicate partner account.
-**Note:** PASSED — verified 2026-06-23.
+**Note:** PASSED.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022
-**Test Description:** Idempotency/duplicate: re-granting the same certification type to the same user must not create a duplicate (renew or 409).
+**Test Description:** Idempotency/duplicate counterpart of _010 (certification earned): re-granting the same certification type to the same user must not create a duplicate (renew or 409).
+**Setup (precondition):** SA creates a partner + invites a portal user (capture userId).
 **Test Steps:**
-1. Create a partner + invite a user.
-   → Expected: user created.
-2. Grant 'sales_certified' (first time).
-   → Expected: cert active.
-3. Re-grant the SAME type, then list the partner's certifications.
-   → Expected: exactly 1 'sales_certified' cert (idempotent renew) OR a 409 on re-grant.
+1. Grant 'sales_certified' (first time).
+   → Expected: cert 'active'.
+2. Re-grant the SAME certification type.
+   → Expected: a defined outcome — renew (2xx) or reject (409).
+3. Verify the user does NOT end up with a duplicate active cert (list the partner's certifications).
+   → Expected: exactly 1 'sales_certified' cert. **Currently FAILS** — the list shows 2.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Re-grant must not duplicate an active cert of the same type.
-**Note:** FAILED (by design) — gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-001). Gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject (409). Confirm with BE.
 
 ### API · PARTNER_USERS
 
 #### PARTNER_API_PARTNER_USERS_001
 **Test Description:** SA lists portal users for a partner: GET /sa-partners-api/v1/sa/partner-users?partnerId= returns the user list with roles.
+**Setup (precondition):** SA creates a partner + invites a portal user (capture userId).
 **Test Steps:**
-1. Create a partner + invite a portal user.
-   → Expected: user created with a userId.
-2. GET partner-users filtered by partnerId.
-   → Expected: 200, envelope {statusCode, data[], total, message}.
-3. Verify the invited user appears + list scoping.
-   → Expected: user present with role + status + email; every row's partnerId == the requested partner.
-4. Verify no sensitive leak.
-   → Expected: no password/tempPassword key in any list row (invite carries tempPassword; the list must not).
+1. GET partner-users filtered by partnerId (limit=20).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}.
+2. Verify the invited user appears with role + status, and the list is scoped.
+   → Expected: the user is present with role + status + email; every row's partnerId == the requested partner.
+3. Verify no sensitive field is leaked.
+   → Expected: no password/token/secret/tempPassword key in any list row (invite carries tempPassword; the list must not).
+**Teardown:** delete the parent partner.
 **Expected (overall):** Partner-scoped user list with roles/status, no credential leak.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
-
-#### PARTNER_API_PARTNER_USERS_011
-**Test Description:** Negative of _001 (list partner-users): invalid pagination/filter handled gracefully (never 5xx).
-**Test Steps:**
-1. Validated cases: page=0 / page=-1 (skip non-negative), limit over max (>100), malformed partnerId.
-   → Expected: each 400 ('skip must be a non-negative integer' / 'limit must not exceed 100' / 'partnerId must be a mongodb id').
-2. Ghost (valid-but-nonexistent) partnerId.
-   → Expected: 200 with an empty list.
-3. Lenient params: limit=0 / non-numeric page / unknown sort.
-   → Expected: not rejected (silently defaulted, HTTP 200) — must still never 5xx.
-**Expected (overall):** Validated invalid input → 4xx; lenient params default gracefully; never 5xx.
-**Note:** PASSED — verified 2026-06-25. WEAK-VALIDATION gap to confirm with BE: unlike the audit-log list (which 400s these), limit=0 / non-numeric page / unknown sort are silently defaulted (200) instead of rejected.
+**Note:** PASSED. Negative (invalid pagination/filter) counterpart is _011.
 
 #### PARTNER_API_PARTNER_USERS_002
 **Test Description:** SA invites a partner-portal user: POST /sa-partners-api/v1/sa/partner-users creates the user with a role.
+**Setup (precondition):** SA creates a partner; build an invite payload (partnerId + email + firstName + lastName + role='sales').
 **Test Steps:**
-1. Create a partner; POST invite (partnerId + email + firstName + lastName + role).
-   → Expected: HTTP 201, server-assigned userId.
-2. Verify every submitted field is stored.
+1. Invite the portal user.
+   → Expected: HTTP 201 (envelope statusCode 200); server-assigned userId.
+2. Verify every submitted field is stored (no silent mutation).
    → Expected: partnerId/email/firstName/lastName/role echoed as sent.
-3. Verify the user is usable.
-   → Expected: status 'active' + a tempPassword issued for SA hand-off.
-4. Verify retrievable in the list.
+3. Verify the user is usable (active + temp credential for hand-off).
+   → Expected: status 'active' + a tempPassword issued.
+4. Verify the user is retrievable in the partner's list.
    → Expected: the user appears in GET partner-users?partnerId.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Invite creates a usable partner-portal user with the chosen role.
-**Note:** PASSED — verified 2026-06-25. TC↔BE: plan says "email sent + PENDING user", but BE creates an ACTIVE user + returns tempPassword (temp-password onboarding). Confirm with BE which model is intended. No sa-plans dependency.
-
-#### PARTNER_API_PARTNER_USERS_012
-**Test Description:** Negative of _002 (invite): invalid/missing fields rejected with 400.
-**Test Steps:**
-1. Invite with missing email / firstName / lastName / partnerId, invalid role enum, invalid email, ghost partnerId, malformed partnerId.
-   → Expected: each 400 with a field/clear message ('email must be an email' / 'firstName...' / 'partnerId must be a mongodb id' / 'role must be one of' / 'Partner ... not found').
-**Expected (overall):** Every invalid invite payload rejected with 4xx. Ghost partnerId is self-proving (endpoint returns not-found).
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
-
-#### PARTNER_API_PARTNER_USERS_013
-**Test Description:** Idempotency/duplicate of _002: inviting the same email twice must not create a duplicate user.
-**Test Steps:**
-1. Create a partner + invite a user (email E).
-   → Expected: user created.
-2. Re-invite the SAME email E.
-   → Expected: 409 reject OR idempotent (no new user).
-3. List the partner's users.
-   → Expected: exactly 1 user for email E.
-**Expected (overall):** Re-invite must not create a duplicate-email user (email is the login identity).
-**Note:** FAILED (by design) — gap: re-invite returns 201 and creates a SECOND user with the same email (list shows 2). BE should reject (409) or be idempotent. Confirm with BE.
+**Note:** PASSED. TC↔BE: plan says "email sent + PENDING user", but BE creates an ACTIVE user + returns tempPassword (temp-password onboarding) — confirm with BE which model is intended. Negative (invalid fields) counterpart is _012; duplicate (same email) is _013.
 
 #### PARTNER_API_PARTNER_USERS_003
 **Test Description:** SA resets a partner-portal user's password: POST /sa-partners-api/v1/sa/partner-users/{userId}/reset-password issues a fresh credential.
+**Setup (precondition):** SA creates a partner + invites a user (capture the invite tempPassword as the baseline).
 **Test Steps:**
-1. Create partner + invite a user (capture the invite tempPassword).
-   → Expected: user created.
-2. Reset the user's password.
-   → Expected: 200 'Password reset successfully', response references the same userId.
-3. A fresh credential is issued.
+1. Reset the user's password.
+   → Expected: HTTP 200; confirm message; response references the same userId.
+2. Verify a fresh credential is issued.
    → Expected: a new tempPassword, different from the invite one.
-4. Reset is repeatable.
+3. Verify reset is repeatable (mutating action, not one-shot).
    → Expected: a second reset also returns 200.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Reset issues a fresh hand-off credential and is a repeatable mutating action.
-**Note:** PASSED — verified 2026-06-25. TC↔BE: plan says "reset LINK sent", but BE returns a new tempPassword (temp-password model). Confirm with BE. Idempotency: reset is not a create — repeating it is valid, so no duplicate-create TC.
+**Note:** PASSED. TC↔BE: plan says "reset LINK sent", but BE returns a new tempPassword (temp-password model) — confirm with BE. Idempotency: reset is not a create — repeating it is valid, so no duplicate-create TC. Negative (invalid id) counterpart is _014.
+
+#### PARTNER_API_PARTNER_USERS_011
+**Test Description:** Negative counterpart of _001 (list partner-users): invalid pagination/filter handled with the correct code — validated cases 4xx, a ghost filter 200-empty, lenient params default gracefully — never 5xx. All cases run (failures collected).
+**Test Steps:** (each = one GET /v1/sa/partner-users with the param under test)
+1. page=0 → **400** 'skip must be a non-negative integer'.
+2. page=-1 → **400** 'skip must be a non-negative integer'.
+3. limit over max (999999) → **400** 'limit must not exceed 100'.
+4. Malformed partnerId ('not-an-id') → **400** 'partnerId must be a mongodb id'.
+5. Ghost partnerId (well-formed but non-existent, used as a FILTER) → **200** with an empty list (a filter that matches nothing, not a 404).
+6. Lenient params (limit=0 / non-numeric page / unknown sort) → **200** (silently defaulted), must still never 5xx.
+**Expected (overall):** Validated invalid input → 4xx; a ghost filter → 200-empty; lenient params default gracefully; never 5xx.
+**Note:** PASSED. WEAK-VALIDATION note to confirm with BE: unlike the audit-log list (which 400s these), limit=0 / non-numeric page / unknown sort are silently defaulted (200) instead of rejected. (Ghost partnerId here is a query FILTER → 200-empty is correct, distinct from a ghost PATH id → 404.)
+
+#### PARTNER_API_PARTNER_USERS_012
+**Test Description:** Negative counterpart of _002 (invite): eight invalid/incomplete payloads, each rejected with 400 + a descriptive message. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner (valid baseline invite payload, role='admin').
+**Test Steps:** (each case = one POST /v1/sa/partner-users with the field under test broken)
+1. Missing email → **400** 'email must be an email'.
+2. Missing firstName → **400** message mentions "firstname".
+3. Missing lastName → **400** message mentions "lastname".
+4. Missing partnerId → **400** 'partnerId must be a mongodb id'.
+5. Invalid role enum ('bogus') → **400** 'role must be one of'.
+6. Invalid email ('not-an-email') → **400** 'email must be an email'.
+7. Ghost partnerId (well-formed but non-existent, sent as a BODY FK) → **400** 'Partner … not found'.
+8. Malformed partnerId ('not-an-id') → **400** 'mongodb id'.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Every invalid invite payload is rejected with 400 + a field/clear message; no user created.
+**Note:** PASSED. Case 7 (ghost partnerId) is a BODY foreign-key reference, so 400 is accepted (unlike a ghost PATH id → 404); it is self-proving (endpoint returns "Partner … not found").
+
+#### PARTNER_API_PARTNER_USERS_013
+**Test Description:** Idempotency/duplicate counterpart of _002 (invite): inviting the same email twice must not create a duplicate user.
+**Setup (precondition):** SA creates a partner + invites a user (email E); the same payload is reused for the re-invite.
+**Test Steps:**
+1. Re-invite the SAME email E.
+   → Expected: a defined outcome — reject (409) OR idempotent (no new user).
+2. Verify the partner does NOT end up with a duplicate-email user (list the partner's users).
+   → Expected: exactly 1 user for email E. **Currently FAILS** — the list shows 2.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Re-invite must not create a duplicate-email user (email is the login identity).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-004). Gap: re-invite returns 201 and creates a SECOND user with the same email (list shows 2). BE should reject (409) or be idempotent. Confirm with BE.
 
 #### PARTNER_API_PARTNER_USERS_014
-**Test Description:** Negative of _003 (reset password): invalid id is rejected (4xx, never 5xx).
-**Test Steps:**
-1. Reset with a ghost userId.
-   → Expected: 4xx 'User ... not found'.
-2. Reset with a malformed userId.
-   → Expected: 4xx 'Invalid id'.
-**Expected (overall):** Non-existent/malformed userId rejected with 4xx; never 5xx.
-**Note:** PASSED — verified 2026-06-25. Self-proving (endpoint returns not-found). No sa-plans dependency.
+**Test Description:** Negative counterpart of _003 (reset password): invalid id is rejected with the correct code (never 5xx). Self-proving; all cases run (failures collected).
+**Test Steps:** (each case = one POST /v1/sa/partner-users/{userId}/reset-password)
+1. Ghost userId (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400 ("User 000… not found").
+2. Malformed userId ('not-an-id') → **400** Bad Request, message "invalid id".
+**Expected (overall):** Non-existent userId → 404; malformed userId → 400; never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
 ### API · TERRITORIES
 
 #### PARTNER_API_TERRITORIES_001
 **Test Description:** SA assigns a territory to a partner: POST /sa-partners-api/v1/sa/territories saves it with effective dates.
+**Setup (precondition):** SA creates a partner; build a territory payload (partnerId + label + countries=[US,CA] + exclusivityType='preferred' + effective dates).
 **Test Steps:**
-1. Create a partner; assign a territory (partnerId + label + countries + exclusivityType + effective dates).
-   → Expected: HTTP 201, server-assigned id.
-2. Verify stored fields.
+1. Assign the territory.
+   → Expected: HTTP 201 (envelope statusCode 200/201); server-assigned id; confirm message.
+2. Verify every submitted field is stored (incl. effective dates).
    → Expected: partnerId/label/countries/exclusivityType echoed; exclusivityStartDate/EndDate preserved.
-3. GET by id.
+3. Verify retrievable via GET by id.
    → Expected: same territory returned.
+**Teardown:** delete the territory + the parent partner.
 **Expected (overall):** Territory assignment persisted with fields + effective dates, retrievable by id.
-**Note:** PASSED — verified 2026-06-25. exclusivityType ∈ exclusive/preferred/open; countries are ISO 3166-1 alpha-2. No sa-plans dependency.
-
-#### PARTNER_API_TERRITORIES_011
-**Test Description:** Negative of _001 (assign): invalid/missing fields rejected with 400.
-**Test Steps:**
-1. Assign with missing partnerId/label/countries, invalid exclusivityType, invalid country code, bad date, ghost/malformed partnerId.
-   → Expected: each 400 with a field/clear message ('mongodb id' / 'label' / 'countries...ISO31661' / 'exclusivityType must be one of' / 'ISO 8601' / 'Partner ... not found').
-**Expected (overall):** Every invalid assign rejected with 4xx. Ghost partnerId self-proving.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
-
-#### PARTNER_API_TERRITORIES_012
-**Test Description:** Exclusive territory conflict: a 2nd partner cannot take a country already held exclusively.
-**Test Steps:**
-1. Two partners; partner 1 takes an EXCLUSIVE territory on a country.
-   → Expected: 201.
-2. Partner 2 assigns an EXCLUSIVE territory on the SAME country.
-   → Expected: 4xx 'Exclusive territory conflict'.
-3. Inspect the rejected response.
-   → Expected: no territory created for partner 2.
-**Expected (overall):** Cross-partner exclusive overlap is rejected; same-partner overlap is allowed by design.
-**Note:** PASSED — verified 2026-06-25. The duplicate/conflict counterpart of _001 (BE enforces exclusive cross-partner conflict). No sa-plans dependency.
+**Note:** PASSED. exclusivityType ∈ exclusive/preferred/open; countries are ISO 3166-1 alpha-2. Negative (invalid fields) counterpart is _011; exclusive-conflict is _012.
 
 #### PARTNER_API_TERRITORIES_002
 **Test Description:** SA lists territories with filters: GET /sa-partners-api/v1/sa/territories (paginated, scoped, filterable).
+**Setup (precondition):** SA creates a partner + assigns one territory (countries=[US], exclusivityType='preferred').
 **Test Steps:**
-1. Create partner + assign a territory; GET territories?partnerId.
-   → Expected: 200, envelope {statusCode, data[], total} (no message field).
-2. Verify the territory appears, scoped, with schema.
+1. GET territories filtered by partnerId (limit=20).
+   → Expected: HTTP 200; envelope {statusCode, data[], total} (no message field for this list).
+2. Verify the assigned territory appears, scoped, with schema.
    → Expected: present with label/countries/exclusivityType; every row's partnerId == the requested partner.
-3. Filter by exclusivityType.
-   → Expected: only matching rows.
+3. Filter by exclusivityType=preferred.
+   → Expected: only 'preferred' rows returned.
+**Teardown:** delete the territory + the parent partner.
 **Expected (overall):** Partner-scoped territory list, well-formed and filterable.
-**Note:** PASSED — verified 2026-06-25. Territory list envelope has no `message` field (unlike other lists). No sa-plans dependency.
-
-#### PARTNER_API_TERRITORIES_013
-**Test Description:** Negative of _002 (list): invalid filter/pagination rejected (4xx, never 5xx).
-**Test Steps:**
-1. List with bad exclusivityType / bad country / limit>max / page=0 / malformed partnerId.
-   → Expected: each 400 (this endpoint validates strictly — no lenient defaulting).
-**Expected (overall):** Every invalid filter/pagination rejected with 4xx; never 5xx.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED. Territory list envelope has no `message` field (unlike other lists). Negative (invalid filter/pagination) counterpart is _013.
 
 #### PARTNER_API_TERRITORIES_003
 **Test Description:** SA retrieves a single territory by id: GET /sa-partners-api/v1/sa/territories/{id}.
+**Setup (precondition):** SA creates a partner + assigns one territory (countries=[US]); capture its id.
 **Test Steps:**
-1. Create partner + assign a territory; GET by id.
-   → Expected: 200, id matches; partnerId/label/countries/exclusivityType present.
+1. GET the territory by id.
+   → Expected: HTTP 200; id matches; partnerId/label/countries/exclusivityType present.
+**Teardown:** delete the territory + the parent partner.
 **Expected (overall):** Get-by-id returns the full territory.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
-
-#### PARTNER_API_TERRITORIES_014
-**Test Description:** Negative of _003 (get by id): invalid id rejected (4xx).
-**Test Steps:**
-1. GET with a ghost id / malformed id.
-   → Expected: 4xx ('Territory ... not found' / 'Invalid id').
-**Expected (overall):** Non-existent/malformed id rejected with 4xx; never 5xx.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED. Negative (invalid id) counterpart is _014.
 
 #### PARTNER_API_TERRITORIES_004
 **Test Description:** SA removes a territory assignment: DELETE /sa-partners-api/v1/sa/territories/{id}.
+**Setup (precondition):** SA creates a partner + assigns one territory (countries=[US]); capture its id.
 **Test Steps:**
-1. Create partner + assign a territory; DELETE it.
-   → Expected: 200 'Territory removed successfully'.
-2. GET the territory by id.
-   → Expected: 4xx not-found (no longer retrievable).
+1. Delete the territory.
+   → Expected: HTTP 200/204 (delete succeeds).
+2. Verify the territory is no longer retrievable (GET by id).
+   → Expected: GET returns 4xx not-found.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Delete removes the territory; it is no longer retrievable.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED. Negative (invalid/already-removed) counterpart is _015.
+
+#### PARTNER_API_TERRITORIES_011
+**Test Description:** Negative counterpart of _001 (assign): eight invalid/incomplete payloads, each rejected with 400 + a descriptive message. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner (valid baseline territory payload).
+**Test Steps:** (each case = one POST /v1/sa/territories with the field under test broken)
+1. Missing partnerId → **400** 'partnerId must be a mongodb id'.
+2. Missing label → **400** message mentions "label".
+3. Missing countries → **400** message mentions "countries".
+4. Invalid exclusivityType ('bogus') → **400** 'exclusivityType must be one of'.
+5. Invalid country code ('ZZ') → **400** message mentions "iso31661".
+6. Bad start date ('31-12-2026') → **400** 'iso 8601'.
+7. Ghost partnerId (well-formed but non-existent, sent as a BODY FK) → **400** 'Partner … not found'.
+8. Malformed partnerId ('not-an-id') → **400** 'mongodb id'.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Every invalid assign is rejected with 400 + a field/clear message; no territory created.
+**Note:** PASSED. Case 7 (ghost partnerId) is a BODY foreign-key reference, so 400 is accepted (unlike a ghost PATH id → 404); self-proving.
+
+#### PARTNER_API_TERRITORIES_012
+**Test Description:** Exclusive territory conflict (duplicate/conflict counterpart of _001): a 2nd partner cannot take a country already held exclusively.
+**Setup (precondition):** SA creates two partners (p1, p2); pick an uncommon country code (IS) to minimise collisions.
+**Test Steps:**
+1. Partner 1 takes an EXCLUSIVE territory on the country.
+   → Expected: HTTP 201, territory created (country was free).
+2. Partner 2 assigns an EXCLUSIVE territory on the SAME country.
+   → Expected: 4xx; message contains "exclusive" + "conflict".
+3. Verify no territory was created for partner 2 (inspect the rejected response).
+   → Expected: no territory id in the body.
+**Teardown:** delete the territory + both partners.
+**Expected (overall):** Cross-partner exclusive overlap is rejected; same-partner overlap is allowed by design.
+**Note:** PASSED. BE enforces exclusive cross-partner conflict.
+
+#### PARTNER_API_TERRITORIES_013
+**Test Description:** Negative counterpart of _002 (list): five invalid filter/pagination inputs, each rejected with 400 + a clear message (this endpoint validates strictly — no lenient defaulting; never 5xx). All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/territories with an invalid query)
+1. Bad exclusivityType ('bogus') → **400** 'exclusivityType must be one of'.
+2. Bad country ('ZZ') → **400** message mentions "iso31661".
+3. limit over max (999999) → **400** 'must not exceed'.
+4. page=0 → **400** 'non-negative'.
+5. Malformed partnerId ('not-an-id') → **400** 'mongodb id'.
+**Expected (overall):** Every invalid filter/pagination rejected with 400; never 5xx.
+**Note:** PASSED. This endpoint validates strictly (no lenient defaulting, unlike partner-users list _011).
+
+#### PARTNER_API_TERRITORIES_014
+**Test Description:** Negative counterpart of _003 (get by id): invalid id rejected with the correct code (never 5xx). Self-proving; all cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/territories/{id})
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400 ("Territory 000… not found").
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+**Expected (overall):** Non-existent id → 404; malformed id → 400; never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
 
 #### PARTNER_API_TERRITORIES_015
-**Test Description:** Negative of _004 (delete): invalid/already-removed rejected (4xx).
-**Test Steps:**
-1. DELETE with a ghost id / malformed id / an already-removed territory.
-   → Expected: each 4xx ('Territory ... not found' / 'Invalid id').
-**Expected (overall):** Every invalid/illegal delete rejected with 4xx. (Already-removed documents delete's repeat behavior; mutating action, not a duplicate-create.)
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Test Description:** Negative counterpart of _004 (delete): invalid/already-removed rejected with the correct code. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner + assigns one territory (target for the already-removed case).
+**Test Steps:** (each case = one DELETE /v1/sa/territories/{id})
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+3. Already-removed territory (delete it, then delete again) → expected **404** Not Found (target no longer exists). **Currently FAILS** — BE returns 400 ("Territory … not found").
+**Teardown:** delete the parent partner.
+**Expected (overall):** Non-existent / already-removed target → 404; malformed id → 400. (Already-removed documents delete's repeat behavior; mutating action, not a duplicate-create.)
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (cases 1 & 3): a not-found target returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 (malformed) is correct. Confirm with BE.
 ### API · CERTIFICATIONS_SA
 
 #### PARTNER_API_CERTIFICATIONS_SA_001
@@ -1002,69 +1122,78 @@
 
 #### PARTNER_API_CERTIFICATIONS_SA_002
 **Test Description:** SA revokes a partner certification: DELETE /sa-partners-api/v1/sa/partner-users/{userId}/certifications/{type} (body reason) soft-revokes it.
+**Setup (precondition):** SA creates a partner + invites a user + grants an active sales_certified cert.
 **Test Steps:**
-1. Create partner + invite user + grant an active sales_certified cert.
-   → Expected: cert active.
-2. Revoke the cert with a reason.
-   → Expected: 200 'Certification revoked successfully', status='revoked'.
-3. List the partner's certifications.
-   → Expected: the cert remains with status='revoked' (soft-revoke).
+1. Revoke the certification (with a reason).
+   → Expected: HTTP 200; confirm message; status='revoked'.
+2. Verify the cert shows as revoked in the partner's cert list (soft-revoke).
+   → Expected: the cert record remains with status='revoked' (not hard-removed).
+**Teardown:** delete the parent partner.
 **Expected (overall):** Revoke soft-removes the cert (status='revoked'), kept in the list.
-**Note:** PASSED — verified 2026-06-25. TC↔BE: plan says "certification removed", BE soft-revokes (status='revoked', record kept) — confirm BE. No sa-plans dependency.
-
-#### PARTNER_API_CERTIFICATIONS_SA_012
-**Test Description:** Negative of _002 (revoke): invalid input/state rejected with 4xx.
-**Test Steps:**
-1. Revoke with: missing reason / a cert not held / ghost userId / malformed userId / an already-revoked cert.
-   → Expected: each 400 ('reason should not be empty' / 'Active ... not found' / 'User ... not found' / 'Invalid id').
-**Expected (overall):** Every invalid/illegal revoke rejected with 4xx. (Already-revoked also documents revoke's repeat behavior; mutating action, not a duplicate-create.)
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED. TC↔BE: plan says "certification removed", BE soft-revokes (status='revoked', record kept) — confirm BE. Negative (invalid input/state) counterpart is _012.
 
 #### PARTNER_API_CERTIFICATIONS_SA_003
 **Test Description:** SA lists a partner team's certifications: GET /sa-partners-api/v1/sa/partners/{partnerId}/certifications.
+**Setup (precondition):** SA creates a partner + invites a user + grants a sales_certified cert.
 **Test Steps:**
-1. Create partner + invite user + grant a sales_certified cert.
-   → Expected: cert active.
-2. GET partner certifications.
-   → Expected: 200, envelope {statusCode, data[], total, message}.
-3. Verify the granted cert + schema + scoping.
+1. GET partner certifications (limit=20).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}.
+2. Verify the granted cert appears with schema, scoped to the partner.
    → Expected: cert present with certificationType/status/userId/earnedAt/expiresAt; every row's partnerId == the requested partner.
-4. Filter status=active.
+3. Filter by status=active.
    → Expected: only active certs returned.
+**Teardown:** delete the parent partner.
 **Expected (overall):** Partner-scoped cert list, well-formed and filterable.
-**Note:** PASSED — verified 2026-06-25. Filters: status ∈ active/expired/revoked; certificationType enum; expiringWithinDays. No sa-plans dependency.
-
-#### PARTNER_API_CERTIFICATIONS_SA_013
-**Test Description:** Negative of _003 (list certs by partner): invalid filter/pagination handled gracefully (never 5xx).
-**Test Steps:**
-1. Out-of-enum status / certificationType, oversized limit (>100).
-   → Expected: each 400 ('must be one of' / 'limit must not exceed 100').
-2. Malformed partnerId.
-   → Expected: 400 'Invalid id'.
-3. Ghost partnerId.
-   → Expected: 200 empty list.
-4. page=0.
-   → Expected: handled gracefully (4xx or default), never 5xx.
-**Expected (overall):** Validated invalid filter/pagination → 4xx; ghost partner → 200 empty; never 5xx.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED. Filters: status ∈ active/expired/revoked; certificationType enum; expiringWithinDays. Negative (invalid filter/pagination) counterpart is _013.
 
 #### PARTNER_API_CERTIFICATIONS_SA_004
 **Test Description:** SA lists certifications expiring soon: GET /sa-partners-api/v1/sa/certifications?expiringWithinDays=N.
 **Test Steps:**
 1. GET /sa/certifications?expiringWithinDays=30.
-   → Expected: 200, envelope {statusCode, data[], total, message}; every returned cert expires within 30 days (empty is acceptable).
-2. expiringWithinDays max boundary (365).
-   → Expected: 200 (accepted).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; every returned cert expires within 30 days (an empty result is acceptable — WARN-skip).
+2. expiringWithinDays max boundary (365) is accepted.
+   → Expected: HTTP 200.
 **Expected (overall):** Expiring-cert list returns a well-formed envelope; the expiringWithinDays window is bounded 1..365.
-**Note:** PASSED — verified 2026-06-25. Confirm BE: the SA-wide list returns total=0 even when active certs exist (visible via the per-partner list _003) — possible scoping/index difference. Filter semantic asserted on whatever is returned; empty logged, not failed. No sa-plans dependency.
+**Note:** PASSED. Confirm BE: the SA-wide list returns total=0 even when active certs exist (visible via the per-partner list _003) — possible scoping/index difference; the filter semantic is asserted on whatever is returned, the empty case is WARN-skipped. Negative (invalid filter/pagination) counterpart is _014.
+
+#### PARTNER_API_CERTIFICATIONS_SA_012
+**Test Description:** Negative counterpart of _002 (revoke): five invalid input/state cases, each rejected with its own code + a clear message. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner + invites a user + grants an active sales_certified cert.
+**Test Steps:** (each case = one DELETE /v1/sa/partner-users/{userId}/certifications/{type})
+1. Missing reason → **400** 'reason should not be empty'.
+2. Cert not held ('hr_specialist', valid user without it) → expected **404** Not Found ('Active … not found'). **Currently FAILS** — BE returns 400.
+3. Ghost userId (well-formed but non-existent) → expected **404** Not Found ('User … not found'). **Currently FAILS** — BE returns 400.
+4. Malformed userId ('not-an-id') → **400** 'invalid id'.
+5. Already-revoked cert (revoke, then revoke again) → expected **404** Not Found (no active cert). **Currently FAILS** — BE returns 400.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Missing reason / malformed id → 400; every not-found target → 404. Never 5xx.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (cases 2, 3, 5): a not-found target returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1 & 4 are correct. Confirm with BE.
+
+#### PARTNER_API_CERTIFICATIONS_SA_013
+**Test Description:** Negative counterpart of _003 (list certs by partner): invalid filter/pagination handled with the correct code — validated cases 4xx, a ghost partner scope 200-empty — never 5xx. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner (baseline).
+**Test Steps:** (each = one GET /v1/sa/partners/{partnerId}/certifications with the param under test)
+1. Bad status enum ('bogus') → **400** 'status must be one of'.
+2. Bad certificationType enum ('bogus') → **400** 'certificationType must be one of'.
+3. limit over max (999999) → **400** 'must not exceed 100'.
+4. Malformed partnerId ('not-an-id') → **400** 'invalid id'.
+5. Ghost partnerId (well-formed but non-existent, used as the list SCOPE) → **200** with an empty list (a scope that matches nothing, not a 404).
+6. page=0 → **400** 'non-negative' (rejected; never 5xx).
+**Expected (overall):** Validated invalid filter/pagination → 4xx; a ghost partner scope → 200-empty; never 5xx.
+**Note:** PASSED. Ghost partnerId here is the list SCOPE → 200-empty is accepted (distinct from a ghost PATH id in a get/revoke → 404). page=0 is rejected (400), not lenient.
 
 #### PARTNER_API_CERTIFICATIONS_SA_014
-**Test Description:** Negative of _004 (SA cert list): invalid filter/pagination rejected (4xx, never 5xx).
-**Test Steps:**
-1. Out-of-enum status / certificationType; expiringWithinDays out of range (0 / negative / >365); limit over max; page=0.
-   → Expected: each 400 ('must be one of' / 'expiringWithinDays must not be less than 1' / 'must not be greater than 365' / 'limit must not exceed 100' / 'skip must be a non-negative integer').
-**Expected (overall):** Every invalid filter/pagination rejected with 4xx; never 5xx.
-**Note:** PASSED — verified 2026-06-25. expiringWithinDays bounded 1..365. No sa-plans dependency.
+**Test Description:** Negative counterpart of _004 (SA cert list): seven invalid filter/pagination inputs, each rejected with 400 + a clear message (never 5xx). All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/certifications with an invalid query)
+1. Bad status enum ('bogus') → **400** 'status must be one of'.
+2. Bad certificationType enum ('bogus') → **400** 'certificationType must be one of'.
+3. expiringWithinDays = 0 → **400** 'must not be less than 1'.
+4. expiringWithinDays negative → **400** 'must not be less than 1'.
+5. expiringWithinDays > 365 (366) → **400** 'must not be greater than 365'.
+6. limit over max (999999) → **400** 'limit must not exceed 100'.
+7. page=0 → **400** 'non-negative'.
+**Expected (overall):** Every invalid filter/pagination rejected with 400; never 5xx. expiringWithinDays bounded 1..365.
+**Note:** PASSED.
 ### API · TEAM_REFERRAL_LINKS
 
 #### PARTNER_API_TEAM_REFERRAL_LINKS_001
@@ -1087,15 +1216,15 @@
 
 #### PARTNER_API_DASHBOARD_DATA_001
 **Test Description:** Partner dashboard stats: GET /sa-partners-api/v1/partner/portal/dashboard returns the KPI schema (partner JWT).
+**Setup (precondition):** Mint a partner-portal session (SA creates + approves a partner, invites a user, logs in as that user → partner JWT).
 **Test Steps:**
-1. Mint a partner-portal session (SA creates + approves a partner, invites a user, logs in as that user → partner JWT).
-   → Expected: a partner-authed session.
-2. GET the partner dashboard.
-   → Expected: HTTP 200, envelope {statusCode, data{}, message}.
-3. Verify the KPI schema + no sensitive leak.
-   → Expected: data has 'partner' (tier/status/openDealsCount), 'deals', 'commissions' sections; no password/token/secret key.
+1. GET the partner dashboard.
+   → Expected: HTTP 200; envelope {statusCode, data{}, message}; `data` is a non-empty object.
+2. Verify the KPI schema + no sensitive leak.
+   → Expected: `data` has 'partner' (tier/status/openDealsCount), 'deals', 'commissions' sections; no password/token/secret/credential key.
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Partner dashboard returns the well-formed KPI schema with no credential leak.
-**Note:** PASSED — verified 2026-06-25. PARTNER-PORTAL endpoint (needs a partner JWT, not the SA token; SA token → 401). Session minted self-contained from the SA side. No invalid-input negative (no params; 401 auth belongs to Auth & Access Control). No sa-plans dependency.
+**Note:** PASSED. PARTNER-PORTAL endpoint (needs a partner JWT, not the SA token; SA token → 401). No invalid-input negative (no params); 401 auth belongs to Auth & Access Control. Idempotency: GET read-only → N/A.
 ### API · CRM_INTEGRATION
 
 > All BLOCKED — downstream CRM connector (events are consumed by the connectors/CRM service, not reachable from this domain). The API-observable events are covered by DEAL_010 / AUDIT_LOG_*; the CRM-side effects are out of scope here. Unblock when CRM verification is exposed to QA.
@@ -1128,68 +1257,86 @@
 
 #### PARTNER_API_PARTNER_PORTAL_001
 **Test Description:** Partner retrieves its own account profile: GET /partner/portal/profile.
+**Setup (precondition):** Mint a partner-portal session (partner JWT).
 **Test Steps:**
-1. Mint a partner-portal session; GET own profile.
-   → Expected: 200; data is the logged-in partner's account (code/email/tier/status); no sensitive key.
+1. GET own profile.
+   → Expected: HTTP 200; `data` is the logged-in partner's account (id==own, code/email/tier/status present); no password/token/secret/credential key.
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Own profile returned, no credential leak.
-**Note:** PASSED — verified 2026-06-25. No params (no input-negative; 401 → Auth feature). No sa-plans dependency.
+**Note:** PASSED. No params (no input-negative; 401 → Auth feature). GET → idempotency N/A.
 
 #### PARTNER_API_PARTNER_PORTAL_002
 **Test Description:** Partner retrieves its own deal by id: GET /partner/portal/deals/{id} — full record.
+**Setup (precondition):** Mint a partner-portal session; the partner registers a deal via POST /partner/portal/deals; capture its id.
 **Test Steps:**
-1. Mint a partner-portal session; the partner registers a deal via /partner/portal/deals; capture its id.
-2. GET /partner/portal/deals/{id}.
-   → Expected: 200; the deal record matches (id, partnerId == own) and no sensitive key leaks.
+1. GET the own deal by id.
+   → Expected: HTTP 200; the returned id matches; partnerId == the logged-in partner; dealType/prospectName/status present.
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** A partner can read the full record of its own deal.
-**Note:** PASSED — verified 2026-06-30 (sa-plans-api back UP). Negative covered by _012.
-
-#### PARTNER_API_PARTNER_PORTAL_012
-**Test Description:** Negative of _002 (own deal by id): a ghost / malformed deal id is rejected.
-**Test Steps:**
-1. Mint a session; GET /partner/portal/deals/{ghost-well-formed-id} → 404 (not found).
-2. GET /partner/portal/deals/{malformed-id} → 400 ('Invalid id').
-**Expected (overall):** Illegal deal-detail targets are rejected (4xx), never 5xx, no record returned.
-**Note:** PASSED — verified 2026-06-30.
+**Note:** PASSED. Negative (invalid id) counterpart is _012.
 
 #### PARTNER_API_PARTNER_PORTAL_003
 **Test Description:** Partner retrieves its own certifications: GET /partner/portal/certifications.
+**Setup (precondition):** Mint a partner-portal session; SA grants a sales_certified cert to the partner user.
 **Test Steps:**
-1. Mint a session; SA grants a cert to the partner user; GET own certs.
-   → Expected: 200, list; the granted cert appears with status + earnedAt/expiresAt.
+1. GET own certifications.
+   → Expected: HTTP 200; `data` is a non-empty list.
+2. Verify the granted cert appears with the right schema.
+   → Expected: the granted cert is present with status + earnedAt + expiresAt.
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Own certs listed with the right schema.
-**Note:** PASSED — verified 2026-06-25. Negative (invalid filter) covered by _013. No sa-plans dependency.
-
-#### PARTNER_API_PARTNER_PORTAL_013
-**Test Description:** Negative of _003 (own certs): invalid filter rejected (4xx, never 5xx).
-**Test Steps:**
-1. GET own certs with bad status / certificationType enum, oversized limit.
-   → Expected: each 400 ('must be one of' / 'must not exceed').
-**Expected (overall):** Invalid cert filter rejected with 4xx; never 5xx.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED. Negative (invalid filter) counterpart is _013.
 
 #### PARTNER_API_PARTNER_PORTAL_004
 **Test Description:** Partner retrieves its own commission summary: GET /partner/portal/commissions/summary.
+**Setup (precondition):** Mint a partner-portal session.
 **Test Steps:**
-1. Mint a session; GET own commission summary.
-   → Expected: 200; totalEarnedCents/totalPendingCents/totalPaidCents are non-negative ints (+ clawbackExposureCents).
+1. GET own commission summary.
+   → Expected: HTTP 200; totalEarnedCents/totalPendingCents/totalPaidCents are non-negative ints (+ clawbackExposureCents).
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Earned/pending/paid totals returned.
-**Note:** PASSED — verified 2026-06-25. No params (no input-negative). No sa-plans dependency.
+**Note:** PASSED. No params (no input-negative); GET → idempotency N/A.
 
 #### PARTNER_API_PARTNER_PORTAL_005
 **Test Description:** Partner retrieves its own assigned territories: GET /partner/portal/territories.
+**Setup (precondition):** Mint a partner-portal session; SA assigns a territory (countries=[DE]) to the partner.
 **Test Steps:**
-1. Mint a session; SA assigns a territory to the partner; GET own territories.
-   → Expected: 200, list; the assigned territory appears, scoped to the partner.
+1. GET own territories.
+   → Expected: HTTP 200; `data` is a non-empty list; the assigned territory appears and every row is scoped to the partner (partnerId == own).
+**Teardown:** close the portal session; delete the territory + partner.
 **Expected (overall):** Own territories returned, scoped.
-**Note:** PASSED — verified 2026-06-25. No params (no input-negative). No sa-plans dependency.
+**Note:** PASSED. No params (no input-negative); GET → idempotency N/A.
 
 #### PARTNER_API_PARTNER_PORTAL_006
 **Test Description:** Partner retrieves its own tier commission rates: GET /partner/portal/rates.
+**Setup (precondition):** Mint a partner-portal session.
 **Test Steps:**
-1. Mint a session; GET own rates.
-   → Expected: 200, a well-formed list of tier rates (may be empty for the registered tier).
+1. GET own commission rates.
+   → Expected: HTTP 200; `data` is a well-formed list of tier rates (may be empty for the registered tier — WARN-skip).
+**Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Tier-specific rates returned as a list.
-**Note:** PASSED — verified 2026-06-25. Rates list empty for a registered-tier partner on staging (well-formed list). No params (no input-negative). No sa-plans dependency.
+**Note:** PASSED. Rates list is empty for a registered-tier partner on staging (still a well-formed list). No params (no input-negative); GET → idempotency N/A.
+#### PARTNER_API_PARTNER_PORTAL_012
+**Test Description:** Negative counterpart of _002 (own deal by id): a ghost / malformed deal id is rejected with the correct code. All cases run (failures collected).
+**Setup (precondition):** Mint a partner-portal session.
+**Test Steps:** (each case = one GET /partner/portal/deals/{id})
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message "not found".
+2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
+**Teardown:** close the portal session; delete the partner.
+**Expected (overall):** Non-existent id → 404; malformed id → 400; never 5xx.
+**Note:** PASSED. Notable: this partner-portal endpoint correctly returns **404** for a ghost id — unlike the SA-side get-by-id endpoints which return 400 (the systemic gap tracked in Bug_Tracker BUG-006…019). The test pins the correct 404 so a regression would be caught.
+
+#### PARTNER_API_PARTNER_PORTAL_013
+**Test Description:** Negative counterpart of _003 (own certs): three invalid filters, each rejected with 400 + a clear message (never 5xx). All cases run (failures collected).
+**Setup (precondition):** Mint a partner-portal session.
+**Test Steps:** (each case = one GET /partner/portal/certifications with an invalid filter)
+1. Bad status enum ('bogus') → **400** 'status must be one of'.
+2. Bad certificationType enum ('bogus') → **400** 'certificationType must be one of'.
+3. limit over max (999999) → **400** 'must not exceed'.
+**Teardown:** close the portal session; delete the partner.
+**Expected (overall):** Invalid cert filter rejected with 400; never 5xx.
+**Note:** PASSED.
+
 ### API · SECURITY_COMPLIANCE
 
 #### PARTNER_API_SECURITY_COMPLIANCE_001
@@ -1250,6 +1397,36 @@
 **Expected (overall):** Get-by-id returns the full, well-formed entry with no sensitive leak.
 **Note:** PASSED — verified 2026-06-25. Read-only, no sa-plans dependency.
 
+#### PARTNER_API_AUDIT_LOG_005
+**Test Description:** Negative counterpart of _001 (audit-log list): eleven invalid pagination/filter inputs each rejected with 400 (never 5xx), plus a logically-empty-but-valid range handled gracefully. All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/audit-logs with the param under test)
+1. page=0 → **400** 'page must not be less than 1'.
+2. page=-1 → **400** 'page must not be less than 1'.
+3. limit=0 → **400** 'limit must not be less than 1'.
+4. limit=-5 → **400** 'limit must not be less than 1'.
+5. limit over max (999999) → **400** 'limit must not be greater than 100'.
+6. page non-numeric ('abc') → **400** 'page must be an integer'.
+7. Invalid severity ('bogus') → **400** 'severity must be one of'.
+8. Invalid category ('bogus') → **400** 'category must be one of'.
+9. Invalid actorType ('bogus') → **400** 'actorType must be one of'.
+10. Bad dateFrom ('31-12-2026') → **400** 'dateFrom must be a valid ISO…'.
+11. Bad dateTo ('not-a-date') → **400** 'dateTo must be a valid ISO…'.
+12. Empty-but-valid range (dateFrom > dateTo) → handled gracefully (< 500; 200 empty, not an error).
+**Expected (overall):** Every invalid pagination/filter → 400 (never 5xx); a valid empty range returns gracefully.
+**Note:** PASSED. Enums: severity ∈ info/warning/critical; category ∈ SA_AUDIT_*; actorType ∈ sa-staff/impersonation/…
+
+#### PARTNER_API_AUDIT_LOG_006
+**Test Description:** Negative counterpart of _003 (audit-log export): seven invalid format/filter inputs, each rejected with 400 + a clear message (never 5xx). All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/audit-logs/export with the param under test)
+1. Bogus format ('bogus') → **400** 'format must be one of'.
+2. Invalid severity ('bogus') → **400** 'severity must be one of'.
+3. Invalid category ('bogus') → **400** 'category must be one of'.
+4. Invalid actorType ('bogus') → **400** 'actorType must be one of'.
+5. Invalid retentionClass ('bogus') → **400** 'retentionClass must be one of'.
+6. Bad dateFrom ('31-12-2026') → **400** 'dateFrom must be a valid ISO…'.
+7. Bad dateTo ('not-a-date') → **400** 'dateTo must be a valid ISO…'.
+**Expected (overall):** Every invalid export format/filter is rejected with 400 (never 5xx).
+**Note:** PASSED. retentionClass enum ∈ standard/extended/permanent; format enum ∈ csv/json.
 #### PARTNER_API_AUDIT_LOG_007
 **Test Description:** Negative of _004 (get audit entry by id): invalid id is rejected (4xx, never 5xx).
 **Test Steps:**
@@ -1260,26 +1437,3 @@
 **Expected (overall):** Non-existent id → 404, malformed id → 400; never 5xx.
 **Note:** PASSED — verified 2026-06-25. Self-proving (endpoint returns not-found), no setup needed, no sa-plans dependency.
 
-#### PARTNER_API_AUDIT_LOG_005
-**Test Description:** Negative of _001 (audit-log list): invalid pagination / filter is rejected gracefully (4xx, never 5xx).
-**Test Steps:**
-1. List with invalid pagination: page=0 / page=-1 / limit=0 / limit=-5 / limit over max (999999) / page non-numeric.
-   → Expected: each 400 ('page/limit must not be less than 1', 'must not be greater than 100', 'must be an integer').
-2. List with invalid filters: severity / category / actorType out of enum, dateFrom / dateTo bad format.
-   → Expected: each 400 ('must be one of ...', 'must be a valid ISO 8601 date string').
-3. List with an empty-but-valid range (dateFrom > dateTo).
-   → Expected: handled gracefully (200, empty list — not a 5xx).
-**Expected (overall):** Every invalid pagination/filter is rejected with 4xx (never 5xx); a valid empty range returns 200 empty.
-**Note:** PASSED — verified 2026-06-25. BE validates all params (no sa-plans dependency). Enums: severity ∈ info/warning/critical; category ∈ SA_AUDIT_*; actorType ∈ sa-staff/impersonation/…
-
-#### PARTNER_API_AUDIT_LOG_006
-**Test Description:** Negative of _003 (audit-log export): invalid format/filter is rejected (4xx, never 5xx).
-**Test Steps:**
-1. Export with an out-of-enum format=bogus.
-   → Expected: 400 'format must be one of'.
-2. Export with invalid severity / category / actorType / retentionClass.
-   → Expected: each 400 'must be one of ...'.
-3. Export with a bad-format dateFrom / dateTo.
-   → Expected: each 400 'must be a valid ISO 8601 date string'.
-**Expected (overall):** Every invalid export format/filter is rejected with 4xx (never 5xx).
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency. retentionClass enum ∈ standard/extended/permanent.

@@ -102,26 +102,32 @@ async def test_partner_api_pipeline_management_002(
 @pytest.mark.api
 @pytest.mark.regression
 async def test_partner_api_pipeline_management_011(sa_partners_client, settings, created_resources):
-    """PARTNER_API_PIPELINE_MANAGEMENT_011: deals list invalid filter/pagination - graceful, never 5xx.
+    """PARTNER_API_PIPELINE_MANAGEMENT_011: deals list invalid filter/pagination - rejected (4xx, never 5xx).
 
-    Negative counterpart of _001/_002. An out-of-enum status and oversized limit must
-    be handled gracefully (4xx where validated, never 5xx).
+    Negative counterpart of _001/_002. An out-of-enum status and an oversized limit
+    are both validated by the BE and rejected with 4xx + a clear message (never 5xx).
+    All cases run (failures collected) so one gap never hides the others.
     """
     async with async_step("Setup: mint a partner-portal session"):
         portal, pid, _uid = await mint_partner_session(sa_partners_client, settings)
         created_resources.add(lambda: portal.close())
         created_resources.add(lambda: sa_partners_client.delete_partner(pid))
 
+    # (label, query params, expected message hint) — invalid filters must be REJECTED (4xx), never 5xx.
+    cases = [
+        ("bad status enum", {"status": "bogus"}, "status"),
+        ("limit over max", {"limit": 999999}, "limit"),
+    ]
     gaps: list[str] = []
-    for idx, (label, params) in enumerate(
-        [("bad status enum", {"status": "bogus"}), ("limit over max", {"limit": 999999})], start=1
-    ):
-        async with async_step(f"[{idx}/2] Invalid list: {label}"):
+    for idx, (label, params, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}"):
             r = await portal.get(f"{_BASE}/deals", params=params, expected_status=None)
-            assert r.status_code < 500, f"{label} must not 5xx, got {r.status_code}"
-            logger.info("CHECK {} → status {} (no 5xx)", label, r.status_code)
-            if not (400 <= r.status_code < 500):
-                logger.warning("OBSERVE {} → {} (not rejected — lenient)", label, r.status_code)
+            msg = str(r.json().get("message") or "")
+            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+                logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
+            else:
+                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
+                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
 
-    assert not gaps
-    logger.info("RESULT: partner deals invalid filter/pagination handled gracefully (never 5xx)")
+    assert not gaps, "deals-list invalid filter/pagination gaps:\n  - " + "\n  - ".join(gaps)
+    logger.info("RESULT: partner deals invalid filter/pagination rejected (4xx, never 5xx)")

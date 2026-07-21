@@ -28,8 +28,12 @@ _NEW_PASSWORD = "QA-Auto-New-9!xZ"
 async def test_partner_api_auth_access_control_001(sa_partners_client, settings, created_resources):
     """PARTNER_API_AUTH_ACCESS_CONTROL_001: valid partner JWT - a partner-scoped request succeeds.
 
-    A user logged in with a valid partner JWT can call a partner-scoped endpoint
-    (GET /partner/auth/me) and receives HTTP 200 with their identity.
+    Setup (precondition): SA creates a partner → approves it → invites a user →
+    that user logs in to obtain a partner JWT.
+    Steps:
+      1. GET /partner/auth/me with the partner JWT.
+         → Expected: 200 + the user's identity (userId, email).
+    Expected: a valid partner JWT authorizes partner-scoped requests.
     """
     async with async_step("Setup: provision a partner user + log in"):
         creds = await provision_partner_user(sa_partners_client)
@@ -105,6 +109,10 @@ async def test_partner_api_auth_access_control_007(sa_partners_client, settings,
         body = login.json()
         access, refresh = body.get("accessToken"), body.get("refreshToken")
         assert access and refresh, "login must return access + refresh tokens"
+        logger.info(
+            "SETUP: [4] partner user logged in → access + refresh tokens captured (partner {})",
+            creds["partner_id"],
+        )
 
     async with async_step("[1/3] Refresh → a new access token (different from the original)"):
         r = await anon.post(f"{_AUTH}/refresh", json={"refreshToken": refresh}, expected_status=200)
@@ -155,6 +163,10 @@ async def test_partner_api_auth_access_control_008(sa_partners_client, settings,
         assert access and refresh, "login must return access + refresh tokens"
         portal = portal_client(settings, access)
         created_resources.add(lambda: portal.close())
+        logger.info(
+            "SETUP: [4] partner user logged in → session active (partner {})",
+            creds["partner_id"],
+        )
 
     async with async_step("[1/2] Logout the active session"):
         r = await portal.post(f"{_AUTH}/logout", json={}, expected_status=(200, 204))
@@ -193,6 +205,10 @@ async def test_partner_api_auth_access_control_009(sa_partners_client, settings,
         )
         portal = portal_client(settings, login.json().get("accessToken"))
         created_resources.add(lambda: portal.close())
+        logger.info(
+            "SETUP: [4] partner user logged in → session active (partner {})",
+            creds["partner_id"],
+        )
 
     async with async_step("[1/4] Wrong currentPassword is rejected"):
         r = await portal.post(
@@ -200,8 +216,8 @@ async def test_partner_api_auth_access_control_009(sa_partners_client, settings,
             json={"currentPassword": "WrongPass-0!xZ", "newPassword": _NEW_PASSWORD},
             expected_status=None,
         )
-        assert 400 <= r.status_code < 500, f"wrong currentPassword must be 4xx, got {r.status_code}"
-        logger.info("CHECK wrong-current → OK ({})", r.status_code)
+        assert r.status_code == 401, f"wrong currentPassword must be 401, got {r.status_code}"
+        logger.info("CHECK wrong-current → OK (401)")
 
     async with async_step("[2/4] Correct currentPassword updates the password (204)"):
         r = await portal.post(
@@ -236,16 +252,24 @@ async def test_partner_api_auth_access_control_009(sa_partners_client, settings,
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # BE returns 400 for cross-partner access; should be 404 (preferred) or 403
 async def test_partner_api_auth_access_control_003(
     sa_partners_client, sa_deals_client, settings, created_resources
 ):
     """PARTNER_API_AUTH_ACCESS_CONTROL_003: cross-partner access - a partner cannot read another's deal.
 
-    Partner A registers a deal; partner B (a separate session) requests A's deal by id
-    via the partner portal and is refused (4xx) — A's deal is never exposed to B. This
-    is the rule-5 cross-entity (tenant-isolation) auth case.
+    Setup (precondition): mint partner A (SA create→approve→invite→login) and register a
+    deal for A; mint partner B in a separate session.
+    Steps:
+      1. Partner B requests A's deal by id (GET /partner/portal/deals/{A_deal_id}).
+         → Expected: refused with 404 (preferred — hides existence) or 403 — never 400 —
+           and A's deal is NOT in the body.
+    Expected: a partner cannot access another partner's deal (tenant-isolated).
+    Note: BE currently returns 400 (wrong — the request is valid, not malformed). Marked
+    be_gap until BE returns 404/403; tenant isolation itself holds (no data leak).
     """
     async with async_step("Setup: partner A registers a deal; partner B in a separate session"):
+        logger.info("SETUP: minting partner A (the deal owner) ...")
         portal_a, pid_a, _ = await mint_partner_session(sa_partners_client, settings)
         created_resources.add(lambda: portal_a.close())
         created_resources.add(lambda: sa_partners_client.delete_partner(pid_a))
@@ -257,16 +281,19 @@ async def test_partner_api_auth_access_control_003(
         )
         a_deal_id = (created_a.json().get("data") or {}).get("_id")
         assert a_deal_id, "precondition: partner A must have a deal"
+        logger.info("SETUP: partner A ({}) registered deal {}", pid_a, a_deal_id)
 
+        logger.info("SETUP: minting partner B (separate session, the intruder) ...")
         portal_b, pid_b, _ = await mint_partner_session(sa_partners_client, settings)
         created_resources.add(lambda: portal_b.close())
         created_resources.add(lambda: sa_partners_client.delete_partner(pid_b))
-        logger.info("SETUP: A={} deal={} ; B={}", pid_a, a_deal_id, pid_b)
+        logger.info("SETUP: ready — A={} deal={} ; B={}", pid_a, a_deal_id, pid_b)
 
     async with async_step("[1/1] Partner B requests partner A's deal → refused, no leak"):
         r = await portal_b.get(f"{_PORTAL}/deals/{a_deal_id}", expected_status=None)
-        assert 400 <= r.status_code < 500, (
-            f"cross-partner deal access must be refused (4xx), got {r.status_code}"
+        assert r.status_code in (403, 404), (
+            f"cross-partner access should be 404 (preferred) or 403, got {r.status_code} "
+            "— BE returns 400 (a valid request, not a bad one); confirm with BE"
         )
         data = r.json().get("data") or {}
         assert (data.get("_id") or data.get("id")) != a_deal_id, (

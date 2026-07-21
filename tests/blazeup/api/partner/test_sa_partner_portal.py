@@ -258,25 +258,40 @@ async def test_partner_api_partner_portal_002(
 @pytest.mark.api
 @pytest.mark.regression
 async def test_partner_api_partner_portal_012(sa_partners_client, settings, created_resources):
-    """PARTNER_API_PARTNER_PORTAL_012: get own deal with invalid id - rejected (4xx, never 5xx).
+    """PARTNER_API_PARTNER_PORTAL_012: get own deal with invalid id - rejected with the correct code.
 
-    Negative counterpart of _002. A ghost id and a malformed id are rejected with 4xx.
+    Negative counterpart of _002. A GHOST id (well-formed but non-existent) → 404
+    'not found'; a MALFORMED id → 400 'invalid id'. All cases run (failures collected).
+
+    Note: unlike the SA-side get-by-id endpoints (which return 400 for a ghost id — a
+    known gap), THIS partner-portal endpoint correctly returns 404. This test pins that
+    correct behavior so a regression toward 400 would be caught.
     """
     async with async_step("Setup: mint a partner-portal session"):
         portal, pid, _uid = await mint_partner_session(sa_partners_client, settings)
         created_resources.add(lambda: portal.close())
         created_resources.add(lambda: sa_partners_client.delete_partner(pid))
 
-    cases = [("ghost id", _GHOST_ID, "not found"), ("malformed id", "not-an-id", "invalid id")]
+    # (label, id, expected_status, message hint)
+    cases = [
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
+    ]
     gaps: list[str] = []
-    for idx, (label, did, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get own deal: {label}"):
+    for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject get own deal: {label} → {want_status}"):
             r = await portal.get(f"{_BASE}/deals/{did}", expected_status=None)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
     assert not gaps, "portal deal-detail negative gaps:\n  - " + "\n  - ".join(gaps)
-    logger.info("RESULT: invalid own-deal-by-id rejected (ghost/malformed)")
+    logger.info("RESULT: invalid own-deal-by-id rejected (ghost 404 / malformed 400)")

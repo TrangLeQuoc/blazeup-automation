@@ -702,14 +702,23 @@ async def test_partner_api_deal_registration_pipeline_021(
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_028(
     sa_partners_client, sa_deals_client, created_resources
 ):
-    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_028: approve invalid/illegal-state deal - rejected with a clear error.
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_028: approve invalid/illegal-state deal - rejected with the correct code.
 
-    Negative counterpart of _008 (approve). Approving a non-existent id, a
-    malformed id, or a deal that is not in an approvable state (already approved)
-    must be rejected (4xx) with a descriptive message — never silently succeed.
+    Negative counterpart of _008 (approve). Three distinct rejections, each with its
+    own code + a descriptive message (never silently succeed):
+
+    * a GHOST id (well-formed but non-existent) → 404 'not found';
+    * a MALFORMED id → 400 'invalid id';
+    * an already-approved deal (illegal transition) → 400 'cannot transition'
+      (409 Conflict would be more precise, but 400 is accepted).
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: create partner + register + approve a deal (now 'approved')"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -722,37 +731,58 @@ async def test_partner_api_deal_registration_pipeline_028(
         await sa_deals_client.approve_deal(approved.deal_id)
         logger.info("SETUP: deal {} is now approved", approved.deal_id)
 
+    # (label, id, expected_status, message hint)
     cases = [
-        ("non-existent id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
-        ("already-approved deal", approved.deal_id, "cannot transition"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
+        ("already-approved deal (illegal transition)", approved.deal_id, 400, "cannot transition"),
     ]
     gaps: list[str] = []
-    for idx, (label, deal_id, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject approve: {label}"):
+    for idx, (label, deal_id, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject approve: {label} → {want_status}"):
             r = await sa_deals_client.raw_approve_deal(deal_id)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "deal-approve negative gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "deal-approve negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} illegal approve attempts rejected", len(cases))
 
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_029(
     sa_partners_client, sa_deals_client, created_resources
 ):
-    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_029: resolve-conflict invalid input - rejected with a clear error.
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_029: resolve-conflict invalid input - rejected with the correct code.
 
-    Negative counterpart of _009 (resolve conflict). Invalid input must be rejected
-    (4xx) with a descriptive message: out-of-enum decision, missing decision,
-    missing reasoning, a non-existent id, a malformed id, and resolving a deal that
-    is not in a FLAGGED conflict state.
+    Negative counterpart of _009 (resolve conflict). Each invalid input is rejected
+    with its own code + a descriptive message:
+
+    * validation errors (out-of-enum decision, missing decision, missing reasoning)
+      → 400;
+    * a MALFORMED id → 400 'invalid id';
+    * a non-FLAGGED deal (illegal state) → 400 'flagged' (409 Conflict would be more
+      precise, but 400 is accepted);
+    * a GHOST id (well-formed but non-existent) → 404 'not found'.
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: create a registered (non-flagged) deal as the target"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -766,29 +796,48 @@ async def test_partner_api_deal_registration_pipeline_029(
         assert deal.data.get("conflictStatus") == "none", "precondition: deal must be non-flagged"
         logger.info("SETUP: non-flagged deal {} ready", did)
 
-    # (label, target id, decision, reasoning, expected message hint)
+    # (label, target id, decision, reasoning, expected_status, expected message hint)
     cases = [
-        ("invalid decision enum", did, "whatever", "QA", "decision must be one of"),
-        ("missing decision", did, None, "QA", "decision must be one of"),
-        ("missing reasoning", did, "resolved_for_partner", None, "reasoning"),
-        ("non-existent id", _GHOST_ID, "resolved_for_partner", "QA", "not found"),
-        ("malformed id", "not-an-id", "resolved_for_partner", "QA", "invalid id"),
-        ("non-flagged deal", did, "resolved_for_partner", "QA", "flagged"),
+        ("invalid decision enum", did, "whatever", "QA", 400, "decision must be one of"),
+        ("missing decision", did, None, "QA", 400, "decision must be one of"),
+        ("missing reasoning", did, "resolved_for_partner", None, 400, "reasoning"),
+        ("malformed id", "not-an-id", "resolved_for_partner", "QA", 400, "invalid id"),
+        ("non-flagged deal (illegal state)", did, "resolved_for_partner", "QA", 400, "flagged"),
+        (
+            "ghost id (well-formed, absent)",
+            _GHOST_ID,
+            "resolved_for_partner",
+            "QA",
+            404,
+            "not found",
+        ),
     ]
     gaps: list[str] = []
-    for idx, (label, target, decision, reasoning, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject resolve-conflict: {label}"):
+    for idx, (label, target, decision, reasoning, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject resolve-conflict: {label} → {want_status}"
+        ):
             r = await sa_deals_client.raw_resolve_conflict(
                 target, decision=decision, reasoning=reasoning
             )
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "resolve-conflict negative gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "resolve-conflict negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} invalid resolve-conflict attempts rejected", len(cases))
 
 
@@ -863,60 +912,89 @@ async def test_partner_api_deal_registration_pipeline_016(
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_030(sa_deals_client):
-    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_030: extend-protection invalid input - rejected with a clear error.
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_030: extend-protection invalid input - rejected with the correct code.
 
-    Negative counterpart of _016 (extend-protection). Each invalid input must be
-    rejected (4xx) with a descriptive message. The BE validates the body BEFORE the
+    Negative counterpart of _016 (extend-protection). Each invalid input is rejected
+    with its own code + a descriptive message. The BE validates the body BEFORE the
     deal lookup, so the field-validation cases are self-proving against a ghost id
     (no real deal — hence no sa-plans dependency). Spec constraints: ``addedDays``
-    is required and must be 1..180; ``reasoning`` is required + non-empty. A
-    ghost/malformed deal id is rejected too. All cases run (failures collected) so
-    one gap never hides the others.
+    is required and must be 1..180; ``reasoning`` is required + non-empty.
+
+    Codes: body-validation / boundary / format errors → 400; a MALFORMED id → 400
+    'invalid id'; a GHOST id with a valid body (reaches the lookup) → 404 'not found'.
+    All cases run (failures collected) so one gap never hides the others.
+
+    GAP this test surfaces: the ghost id (valid body) returns 400 (not 404) — the
+    status contradicts its own "not found" message. That case asserts 404 and FAILS
+    until the BE returns the correct code. Same root cause as the get-by-id gap (_031).
     """
-    # (label, deal id, raw_extend_protection kwargs, expected message hint)
+    # (label, deal id, raw_extend_protection kwargs, expected_status, expected message hint)
     cases = [
-        ("missing addedDays", _GHOST_ID, {"reasoning": "QA-AUTO"}, "addeddays"),
-        ("missing reasoning", _GHOST_ID, {"added_days": 30}, "reasoning"),
-        ("addedDays = 0", _GHOST_ID, {"added_days": 0, "reasoning": "QA-AUTO"}, "less than 1"),
+        ("missing addedDays", _GHOST_ID, {"reasoning": "QA-AUTO"}, 400, "addeddays"),
+        ("missing reasoning", _GHOST_ID, {"added_days": 30}, 400, "reasoning"),
+        ("addedDays = 0", _GHOST_ID, {"added_days": 0, "reasoning": "QA-AUTO"}, 400, "less than 1"),
         (
             "negative addedDays",
             _GHOST_ID,
             {"added_days": -5, "reasoning": "QA-AUTO"},
+            400,
             "less than 1",
         ),
         (
             "addedDays over max (181)",
             _GHOST_ID,
             {"added_days": 181, "reasoning": "QA-AUTO"},
+            400,
             "greater than 180",
         ),
         (
             "non-numeric addedDays",
             _GHOST_ID,
             {"added_days": "abc", "reasoning": "QA-AUTO"},
+            400,
             "addeddays",
+        ),
+        (
+            "malformed id",
+            "not-an-id",
+            {"added_days": 30, "reasoning": "QA-AUTO"},
+            400,
+            "invalid id",
         ),
         (
             "ghost deal id (valid body)",
             _GHOST_ID,
             {"added_days": 30, "reasoning": "QA-AUTO"},
+            404,
             "not found",
         ),
-        ("malformed id", "not-an-id", {"added_days": 30, "reasoning": "QA-AUTO"}, "invalid id"),
     ]
     gaps: list[str] = []
-    for idx, (label, did, kwargs, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject extend-protection: {label}"):
+    for idx, (label, did, kwargs, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject extend-protection: {label} → {want_status}"
+        ):
             r = await sa_deals_client.raw_extend_protection(did, expected_status=None, **kwargs)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "extend-protection negative gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "extend-protection negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} invalid extend-protection attempts rejected", len(cases))
 
 
@@ -1030,31 +1108,57 @@ async def test_partner_api_deal_registration_pipeline_020(
         assert d.get("status") == "registered", (
             f"deal must be 'registered', got {d.get('status')!r}"
         )
-        logger.info("CHECK record → OK (status='registered', full fields present)")
+        leaked = [k for k in d if any(s in k.lower() for s in ("password", "token", "secret"))]
+        assert not leaked, f"deal record must not leak sensitive fields, found {leaked}"
+        logger.info(
+            "CHECK record → OK (status='registered', full fields present, no secret leaked)"
+        )
 
     logger.info("RESULT: deal {} retrieved by id (full record)", deal_id)
 
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_031(sa_deals_client):
-    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_031: get deal by invalid id - rejected (4xx, never 5xx).
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_031: get deal by invalid id - rejected (correct 4xx, never 5xx).
 
-    Negative counterpart of _020. A ghost id and a malformed id are rejected with 4xx
-    + a clear message (self-proving). GET → no idempotency concern.
+    Negative counterpart of _020. Two distinct rejection semantics (self-proving,
+    GET → no idempotency concern):
+
+    * a MALFORMED id (bad ObjectId format) is a bad request → 400 'invalid id';
+    * a GHOST id (well-formed but non-existent) is a missing resource → 404 'not found'.
+
+    GAP this test surfaces: the ghost id currently returns 400 (not 404) — the status
+    contradicts its own "not found" message. Step [1/2] asserts 404 and therefore
+    FAILS until the BE returns the correct code (confirm with BE).
     """
-    cases = [("ghost id", _GHOST_ID, "not found"), ("malformed id", "not-an-id", "invalid id")]
+    # (label, id, expected_status, message hint)
+    cases = [
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
+    ]
     gaps: list[str] = []
-    for idx, (label, did, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get deal: {label}"):
+    for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject get deal: {label} → {want_status}"):
             r = await sa_deals_client.get_deal(did, expected_status=None)
             msg = str(r.message or "")
-            if 400 <= (r.status_code or 0) < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
-    assert not gaps, "get-deal negative gaps:\n  - " + "\n  - ".join(gaps)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
+    assert not gaps, (
+        "get-deal negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: invalid get-deal-by-id rejected (ghost/malformed)")
 
 
@@ -1100,14 +1204,22 @@ async def test_partner_api_deal_registration_pipeline_019(
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_032(
     sa_partners_client, sa_deals_client, created_resources
 ):
-    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_032: lose deal invalid/illegal-state - rejected (4xx).
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_032: lose deal invalid/illegal-state - rejected (correct 4xx).
 
-    Negative counterpart of _019. Losing a deal that is not approvable-state
-    (a fresh ``registered`` deal), a ghost id, and a malformed id must all be rejected
-    with 4xx + a clear message.
+    Negative counterpart of _019. Three distinct rejections, each with its own code:
+
+    * an illegal transition (a fresh ``registered`` deal, lose requires ``approved``)
+      → 400 'cannot transition' (409 Conflict would be more precise, but 400 is accepted);
+    * a MALFORMED id → 400 'invalid id';
+    * a GHOST id (well-formed but non-existent) → 404 'not found'.
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and therefore FAILS until the BE
+    returns the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: a registered (not approved) deal"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -1119,22 +1231,33 @@ async def test_partner_api_deal_registration_pipeline_032(
         did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
         logger.info("SETUP: registered (non-approved) deal {}", did)
 
+    # (label, id, expected_status, message hint)
     cases = [
-        ("registered deal (illegal transition)", did, "cannot transition"),
-        ("ghost id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
+        ("registered deal (illegal transition)", did, 400, "cannot transition"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
     ]
     gaps: list[str] = []
-    for idx, (label, target, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject lose: {label}"):
+    for idx, (label, target, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject lose: {label} → {want_status}"):
             r = await sa_deals_client.raw_lose_deal(target, notes="QA", expected_status=None)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
-    assert not gaps, "lose-deal negative gaps:\n  - " + "\n  - ".join(gaps)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
+    assert not gaps, (
+        "lose-deal negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} invalid/illegal lose attempts rejected", len(cases))
 
 
@@ -1178,13 +1301,22 @@ async def test_partner_api_deal_approval_queue_001(
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_approval_queue_011(
     sa_partners_client, sa_deals_client, created_resources
 ):
-    """PARTNER_API_DEAL_APPROVAL_QUEUE_011: reject invalid/illegal-state deal - rejected (4xx).
+    """PARTNER_API_DEAL_APPROVAL_QUEUE_011: reject invalid/illegal-state deal - rejected with the correct code.
 
-    Negative counterpart of _001. A ghost id, a malformed id, and re-rejecting an
-    already-rejected deal must all be rejected with 4xx + a clear message.
+    Negative counterpart of _001. Three distinct rejections, each with its own code:
+
+    * a GHOST id (well-formed but non-existent) → 404 'not found';
+    * a MALFORMED id → 400 'invalid id';
+    * re-rejecting an already-rejected deal (illegal transition) → 400 'cannot
+      transition' (409 Conflict would be more precise, but 400 is accepted).
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: register + reject a deal (now 'rejected')"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -1197,22 +1329,33 @@ async def test_partner_api_deal_approval_queue_011(
         await sa_deals_client.reject_deal(did, review_notes="QA-AUTO first reject")
         logger.info("SETUP: deal {} is now rejected", did)
 
+    # (label, id, expected_status, message hint)
     cases = [
-        ("ghost id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
-        ("already-rejected deal", did, "cannot transition"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
+        ("already-rejected deal (illegal transition)", did, 400, "cannot transition"),
     ]
     gaps: list[str] = []
-    for idx, (label, target, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject reject: {label}"):
+    for idx, (label, target, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject reject: {label} → {want_status}"):
             r = await sa_deals_client.raw_reject_deal(
                 target, review_notes="QA", expected_status=None
             )
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
-    assert not gaps, "reject-deal negative gaps:\n  - " + "\n  - ".join(gaps)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
+    assert not gaps, (
+        "reject-deal negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} invalid/illegal reject attempts rejected", len(cases))

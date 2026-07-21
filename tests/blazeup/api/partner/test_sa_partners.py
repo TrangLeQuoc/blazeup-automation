@@ -448,60 +448,56 @@ async def test_partner_api_partner_account_management_012(sa_partners_client):
 @pytest.mark.api
 @pytest.mark.regression
 async def test_partner_api_partner_account_management_011(sa_partners_client):
-    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011: list with invalid pagination - graceful 4xx, never 5xx.
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_011: list with invalid pagination - rejected (4xx, never 5xx).
 
-    Negative counterpart of _001 (GET list). Invalid pagination params must be
-    handled gracefully: the server must NEVER return 5xx on bad input. The BE now
-    rejects them with 400 (verified 2026-06-22): ``page=0`` / ``page=-1`` →
-    "page must not be less than 1" (previously HTTP 500 crash), and negative /
-    oversized / non-numeric ``limit`` are likewise rejected with 400 (previously
-    silently defaulted). Step [1/2] hard-asserts no-5xx; step [2/2] observes the
-    limit validation without asserting an exact code.
+    Negative counterpart of _001 (GET list). Invalid pagination params are validated
+    by the BE and rejected with 4xx (never 5xx): ``page=0`` / ``page=-1`` (previously
+    an HTTP 500 crash), and negative / oversized / non-numeric ``limit`` (previously
+    silently defaulted). All cases run (failures collected) so one gap never hides
+    the others.
     """
-    robustness = [("page=0", {"page": 0, "limit": 5}), ("page=-1", {"page": -1, "limit": 5})]
-    observations = [
+    cases = [
+        ("page=0", {"page": 0, "limit": 5}),
+        ("page=-1", {"page": -1, "limit": 5}),
         ("limit=-5", {"page": 1, "limit": -5}),
         ("limit=999999", {"page": 1, "limit": 999999}),
         ("page=abc", {"page": "abc", "limit": 5}),
     ]
-
-    async with async_step("[1/2] Server must not 5xx on invalid pagination (page=0 / page=-1)"):
-        gaps: list[str] = []
-        for label, params in robustness:
+    gaps: list[str] = []
+    for idx, (label, params) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid pagination: {label}"):
             r = await sa_partners_client.raw_list_partners(**params)
-            if r.status_code < 500:
-                logger.info("CHECK {} → OK (handled gracefully, {})", label, r.status_code)
+            if 400 <= r.status_code < 500:
+                logger.info("CHECK {} → OK (rejected {}, no 5xx)", label, r.status_code)
             else:
                 gaps.append(f"{label}: got {r.status_code}")
-                logger.error("CHECK {} → FAIL (server error {}, must be 4xx)", label, r.status_code)
-        assert not gaps, (
-            "server returned 5xx on invalid pagination: "
-            + "; ".join(gaps)
-            + " — bad input must not crash the endpoint (confirm with BE)"
-        )
+                logger.error(
+                    "CHECK {} → FAIL (got {}, expected 4xx, must never 5xx)", label, r.status_code
+                )
 
-    async with async_step("[2/2] Observe validation of negative/oversized/non-numeric limit"):
-        for label, params in observations:
-            r = await sa_partners_client.raw_list_partners(**params)
-            n = len(r.json().get("data", [])) if r.status_code == 200 else "-"
-            logger.info(
-                "CHECK {} → status {} (data={})",
-                label,
-                r.status_code,
-                n,
-            )
-
-    logger.info("RESULT: pagination robustness checked (page=0/-1 must not 5xx)")
+    assert not gaps, (
+        "invalid pagination not rejected (must be 4xx, never 5xx):\n  - " + "\n  - ".join(gaps)
+    )
+    logger.info("RESULT: all {} invalid pagination params rejected (4xx, never 5xx)", len(cases))
 
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_013(sa_partners_client, created_resources):
-    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with a clear error.
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with the correct code.
 
-    Negative counterpart of _003 (approve). Approving a non-existent id, a
-    malformed id, or a partner that is not pending must be rejected (4xx) with a
-    descriptive message — never silently succeed.
+    Negative counterpart of _003 (approve). Three distinct rejections, each with its
+    own code + a descriptive message (never silently succeed):
+
+    * a GHOST id (well-formed but non-existent) → 404 'not found';
+    * a MALFORMED id → 400 'invalid id';
+    * an already-active partner (illegal transition) → 400 'cannot be approved'
+      (409 Conflict would be more precise, but 400 is accepted).
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: create + approve a partner so it is already 'active'"):
         active = await sa_partners_client.create_partner(make_partner())
@@ -510,51 +506,78 @@ async def test_partner_api_partner_account_management_013(sa_partners_client, cr
         await sa_partners_client.approve_partner(active.partner_id)
         logger.info("SETUP: partner {} is now active", active.data.get("code"))
 
+    # (label, id, expected_status, message hint)
     illegal = [
-        ("non-existent id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
-        ("already-active partner", active.partner_id, "cannot be approved"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
+        (
+            "already-active partner (illegal transition)",
+            active.partner_id,
+            400,
+            "cannot be approved",
+        ),
     ]
     gaps: list[str] = []
-    for idx, (label, pid, hint) in enumerate(illegal, start=1):
-        async with async_step(f"[{idx}/{len(illegal)}] Reject approve: {label}"):
+    for idx, (label, pid, want_status, hint) in enumerate(illegal, start=1):
+        async with async_step(f"[{idx}/{len(illegal)}] Reject approve: {label} → {want_status}"):
             r = await sa_partners_client.raw_approve_partner(pid)
             msg = str(r.json().get("message") or "")
-            ok_status = 400 <= r.status_code < 500
-            ok_msg = hint.lower() in msg.lower()
-            if ok_status and ok_msg:
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "approve negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "approve negative-case gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} illegal approve attempts rejected", len(illegal))
 
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_014(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
 
-    Negative counterpart of _004 (deactivate). A non-existent or malformed id must
-    be rejected (4xx) with a clear message. Deactivating an already-suspended
-    partner is observed (currently a no-op 201 — idempotent) and logged, not failed.
+    Negative counterpart of _004 (deactivate). A GHOST id (well-formed but
+    non-existent) → 404 'not found'; a MALFORMED id → 400 'invalid id'. Deactivating
+    an already-suspended partner is observed (currently a no-op 201 — idempotent) and
+    logged, not failed.
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
+    # (label, id, expected_status, message hint)
     illegal = [
-        ("non-existent id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
     ]
     gaps: list[str] = []
-    for idx, (label, pid, hint) in enumerate(illegal, start=1):
-        async with async_step(f"[{idx}/3] Reject deactivate: {label}"):
+    for idx, (label, pid, want_status, hint) in enumerate(illegal, start=1):
+        async with async_step(f"[{idx}/3] Reject deactivate: {label} → {want_status}"):
             r = await sa_partners_client.deactivate_partner(pid, reason="x", expected_status=None)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
     async with async_step(
         "[3/3] Deactivating an already-suspended partner (idempotency observation)"
@@ -574,19 +597,31 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, cr
             status,
         )
 
-    assert not gaps, "deactivate negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "deactivate negative-case gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: invalid-id deactivate rejected; repeat deactivate is idempotent")
 
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_015(sa_partners_client, created_resources):
-    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with a clear error.
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with the correct code.
 
-    Negative counterpart of _005 (tier change). The upgrade-tier endpoint must
-    reject invalid input with 4xx + a descriptive message and emit no event:
-    out-of-enum tier, missing tier (required), a non-existent id, and a malformed
-    id. BE validates tier well, so all cases are expected to pass.
+    Negative counterpart of _005 (tier change). The upgrade-tier endpoint must reject
+    invalid input with the correct code + a descriptive message and emit no event:
+
+    * validation errors (out-of-enum tier, empty tier, missing tier) → 400;
+    * same tier (already at that tier) → 400 'already at tier';
+    * a MALFORMED id → 400 'invalid id';
+    * a GHOST id (well-formed but non-existent) → 404 'not found'.
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: create a partner to target with valid id"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -596,27 +631,37 @@ async def test_partner_api_partner_account_management_015(sa_partners_client, cr
         assert pid, "precondition: partner must be created"
         logger.info("SETUP: partner {} ready (tier 'registered')", partner.data.get("code"))
 
-    # (label, partner_id, tier-to-send, expected message hint)
+    # (label, partner_id, tier-to-send, expected_status, expected message hint)
     cases = [
-        ("invalid tier enum 'silver'", pid, "silver", "tier must be one of"),
-        ("empty tier ''", pid, "", "tier must be one of"),
-        ("missing tier (no tier field)", pid, None, "tier must be one of"),
-        ("same tier (already at 'registered')", pid, "registered", "already at tier"),
-        ("non-existent id", _GHOST_ID, "select", "not found"),
-        ("malformed id", "not-an-id", "select", "invalid id"),
+        ("invalid tier enum 'silver'", pid, "silver", 400, "tier must be one of"),
+        ("empty tier ''", pid, "", 400, "tier must be one of"),
+        ("missing tier (no tier field)", pid, None, 400, "tier must be one of"),
+        ("same tier (already at 'registered')", pid, "registered", 400, "already at tier"),
+        ("malformed id", "not-an-id", "select", 400, "invalid id"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, "select", 404, "not found"),
     ]
     gaps: list[str] = []
-    for idx, (label, target, tier, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject change-tier: {label}"):
+    for idx, (label, target, tier, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject change-tier: {label} → {want_status}"):
             r = await sa_partners_client.raw_change_tier(target, tier=tier)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "change-tier negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "change-tier negative-case gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} invalid tier-change attempts rejected", len(cases))
 
 
@@ -693,12 +738,20 @@ async def test_partner_api_partner_account_management_010(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) userId returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_020(sa_partners_client, created_resources):
-    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with a clear error.
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with the correct code.
 
-    Negative counterpart of _010. Granting a certification must reject invalid
-    input with 4xx + a descriptive message: an out-of-enum certificationType, a
-    missing certificationType, a non-existent userId, and a malformed userId.
+    Negative counterpart of _010. Granting a certification must reject invalid input
+    with the correct code + a descriptive message:
+
+    * validation errors (out-of-enum certificationType, missing certificationType) → 400;
+    * a MALFORMED userId → 400 'invalid id';
+    * a GHOST userId (well-formed but non-existent) → 404 'not found'.
+
+    GAP this test surfaces: the ghost userId returns 400 (not 404) — the status
+    contradicts its own "not found" message. That case asserts 404 and FAILS until the
+    BE returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: create a partner + invite a portal user (valid userId)"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -710,25 +763,35 @@ async def test_partner_api_partner_account_management_020(sa_partners_client, cr
         assert user_id, "precondition: partner user must be invited"
         logger.info("SETUP: user {} ready", user_id)
 
-    # (label, target userId, certificationType to send, expected message hint)
+    # (label, target userId, certificationType to send, expected_status, expected message hint)
     cases = [
-        ("invalid cert type 'ninja'", user_id, "ninja", "certificationtype must be one of"),
-        ("missing cert type", user_id, None, "certificationtype must be one of"),
-        ("non-existent userId", _GHOST_ID, "sales_certified", "not found"),
-        ("malformed userId", "not-an-id", "sales_certified", "invalid id"),
+        ("invalid cert type 'ninja'", user_id, "ninja", 400, "certificationtype must be one of"),
+        ("missing cert type", user_id, None, 400, "certificationtype must be one of"),
+        ("malformed userId", "not-an-id", "sales_certified", 400, "invalid id"),
+        ("ghost userId (well-formed, absent)", _GHOST_ID, "sales_certified", 404, "not found"),
     ]
     gaps: list[str] = []
-    for idx, (label, target, ctype, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject grant-cert: {label}"):
+    for idx, (label, target, ctype, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject grant-cert: {label} → {want_status}"):
             r = await sa_partners_client.raw_grant_certification(target, certification_type=ctype)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "grant-cert negative-case gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "grant-cert negative-case gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: all {} invalid grant-cert attempts rejected", len(cases))
 
 

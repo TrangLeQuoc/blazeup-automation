@@ -362,30 +362,48 @@ async def test_partner_api_partner_users_003(sa_partners_client, created_resourc
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) userId returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_users_014(sa_partners_client):
-    """PARTNER_API_PARTNER_USERS_014: reset password with invalid id - rejected (4xx, never 5xx).
+    """PARTNER_API_PARTNER_USERS_014: reset password with invalid id - rejected with the correct code.
 
-    Negative counterpart of _003. A non-existent (ghost) userId and a malformed id
-    must be rejected with 4xx + a clear message — self-proving (the endpoint returns
-    "not found" / "Invalid id"). All cases run (failures collected).
+    Negative counterpart of _003. Self-proving (the endpoint returns "not found" /
+    "invalid id"):
+
+    * a GHOST userId (well-formed but non-existent) → 404 'not found';
+    * a MALFORMED userId → 400 'invalid id'.
+
+    GAP this test surfaces: the ghost userId returns 400 (not 404) — the status
+    contradicts its own "not found" message. That case asserts 404 and FAILS until the
+    BE returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
+    # (label, userId, expected_status, message hint)
     cases = [
-        ("ghost userId", _GHOST_ID, "not found"),
-        ("malformed userId", "not-an-id", "invalid id"),
+        ("ghost userId (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed userId", "not-an-id", 400, "invalid id"),
     ]
     gaps: list[str] = []
-    for idx, (label, uid, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject reset: {label}"):
+    for idx, (label, uid, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject reset: {label} → {want_status}"):
             r = await sa_partners_client.raw_reset_partner_user_password(uid)
             try:
                 msg = str(r.json().get("message") or "")
             except ValueError:
                 msg = r.text[:120]
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "reset-password negative gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "reset-password negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: invalid reset-password attempts rejected (ghost/malformed id)")

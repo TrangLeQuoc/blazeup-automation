@@ -302,28 +302,46 @@ async def test_partner_api_territories_003(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_territories_014(sa_partners_client):
-    """PARTNER_API_TERRITORIES_014: get territory with invalid id - rejected (4xx, never 5xx).
+    """PARTNER_API_TERRITORIES_014: get territory with invalid id - rejected with the correct code.
 
-    Negative counterpart of _003. A ghost id and a malformed id are rejected with 4xx
-    + a clear message (self-proving).
+    Negative counterpart of _003. Self-proving:
+
+    * a GHOST id (well-formed but non-existent) → 404 'not found';
+    * a MALFORMED id → 400 'invalid id'.
+
+    GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+    its own "not found" message. That case asserts 404 and FAILS until the BE returns
+    the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
+    # (label, id, expected_status, message hint)
     cases = [
-        ("ghost id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
     ]
     gaps: list[str] = []
-    for idx, (label, tid, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get-by-id: {label}"):
+    for idx, (label, tid, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{len(cases)}] Reject get-by-id: {label} → {want_status}"):
             r = await sa_partners_client.raw_get_territory(tid)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
-    assert not gaps, "territory get-by-id negative gaps:\n  - " + "\n  - ".join(gaps)
+    assert not gaps, (
+        "territory get-by-id negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
     logger.info("RESULT: invalid territory get-by-id rejected (ghost/malformed)")
 
 
@@ -364,13 +382,19 @@ async def test_partner_api_territories_004(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # ghost / already-removed (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_territories_015(sa_partners_client, created_resources):
-    """PARTNER_API_TERRITORIES_015: delete territory invalid/already-removed - rejected (4xx).
+    """PARTNER_API_TERRITORIES_015: delete territory invalid/already-removed - rejected with the correct code.
 
-    Negative counterpart of _004. A ghost id, a malformed id, and re-deleting an
-    already-removed territory must all be rejected with 4xx + a clear message. The
-    already-removed case documents delete's repeat behavior (mutating action, not a
-    duplicate-create, so no separate idempotency TC).
+    Negative counterpart of _004. A GHOST id (well-formed but non-existent) and an
+    already-removed territory both target a resource that does not exist → 404
+    'not found'; a MALFORMED id → 400 'invalid id'. The already-removed case documents
+    delete's repeat behavior (mutating action, not a duplicate-create, so no separate
+    idempotency TC).
+
+    GAP this test surfaces: the not-found targets return 400 (not 404) — the status
+    contradicts the "not found" message. Those cases assert 404 and FAIL until the BE
+    returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: partner + a territory to delete"):
         partner = await sa_partners_client.create_partner(make_partner())
@@ -382,33 +406,46 @@ async def test_partner_api_territories_015(sa_partners_client, created_resources
         tid = terr.data.get("_id") or terr.data.get("id")
         assert tid, "precondition: territory must be created"
 
+    # (label, id, expected_status, message hint)
     cases = [
-        ("ghost id", _GHOST_ID, "not found"),
-        ("malformed id", "not-an-id", "invalid id"),
+        ("ghost id (well-formed, absent)", _GHOST_ID, 404, "not found"),
+        ("malformed id", "not-an-id", 400, "invalid id"),
     ]
     n_steps = len(cases) + 1
     gaps: list[str] = []
-    for idx, (label, did, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{n_steps}] Reject delete: {label}"):
+    for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
+        async with async_step(f"[{idx}/{n_steps}] Reject delete: {label} → {want_status}"):
             r = await sa_partners_client.delete_territory(did, expected_status=None)
             msg = str(r.json().get("message") or "")
-            if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
+            if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
             else:
-                gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
-                logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
+                gaps.append(f"{label}: expected {want_status}, got {r.status_code}, msg={msg!r}")
+                logger.error(
+                    "CHECK {} → FAIL (expected {}, got {}, msg={!r})",
+                    label,
+                    want_status,
+                    r.status_code,
+                    msg,
+                )
 
     async with async_step(
-        f"[{n_steps}/{n_steps}] Re-delete an already-removed territory is rejected"
+        f"[{n_steps}/{n_steps}] Re-delete an already-removed territory → 404 not found"
     ):
         await sa_partners_client.delete_territory(tid)
         r = await sa_partners_client.delete_territory(tid, expected_status=None)
         msg = str(r.json().get("message") or "")
-        if 400 <= r.status_code < 500 and "not found" in msg.lower():
-            logger.info("CHECK already-removed → OK ({}, no territory to delete)", r.status_code)
+        if r.status_code == 404 and "not found" in msg.lower():
+            logger.info("CHECK already-removed → OK (404, no territory to delete)")
         else:
-            gaps.append(f"already-removed: status={r.status_code}, msg={msg!r}")
-            logger.error("CHECK already-removed → FAIL (status={}, msg={!r})", r.status_code, msg)
+            gaps.append(f"already-removed: expected 404, got {r.status_code}, msg={msg!r}")
+            logger.error(
+                "CHECK already-removed → FAIL (expected 404, got {}, msg={!r})", r.status_code, msg
+            )
 
-    assert not gaps, "territory-delete negative gaps:\n  - " + "\n  - ".join(gaps)
-    logger.info("RESULT: all invalid/illegal territory-delete attempts rejected (4xx)")
+    assert not gaps, (
+        "territory-delete negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
+    )
+    logger.info("RESULT: all invalid/illegal territory-delete attempts rejected")

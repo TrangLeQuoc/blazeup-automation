@@ -45,6 +45,25 @@ def _tc_int(tc: str) -> int | None:
     return int(m.group()) if m else None
 
 
+def _registry_lookup() -> dict[int, object]:
+    """Best-effort {tc_id: TestCase} from the code registry (empty on any failure)."""
+    try:
+        from runner.tc_registry import TC_REGISTRY
+
+        return dict(TC_REGISTRY)
+    except Exception:  # noqa: BLE001 — enrichment is optional; a stub row still works
+        return {}
+
+
+def _feature_from_tc_string(tc_string: str) -> str:
+    """Derive the functional feature from a TC string.
+
+    ``PARTNER_API_AUTH_ACCESS_CONTROL_003`` -> ``AUTH_ACCESS_CONTROL``.
+    """
+    m = re.match(r"^[A-Z0-9]+_(?:API|UI)_(.+)_\d+$", tc_string or "")
+    return m.group(1) if m else ""
+
+
 def load_tracker(path: Path) -> dict[int, BugRow]:
     """Return ``{tc_id: BugRow}`` keyed by Test Case ID (empty if no file/sheet)."""
     if not path.exists():
@@ -115,20 +134,28 @@ def reconcile(groups, *, tracker_path: Path = DEFAULT_TRACKER, allow_write: bool
                 seen.add(n)
                 candidates.append((n, g))
 
+    reg = _registry_lookup()
     next_n = _next_bug_seq(existing)
     to_append: list[dict] = []
     for tc_id, g in sorted(candidates):
         row = existing.get(tc_id)
         if row is None:
+            tc = reg.get(tc_id)  # enrich from the code registry when available
+            name = getattr(tc, "tc_string", "") if tc else ""
+            evidence = (getattr(g, "evidence", "") or "")[:300]
             entry = {
                 "Bug ID": f"BUG-{next_n:03d}",
                 "Test Case ID": tc_id,
-                "Status": "Open",
+                "Test Case Name": name,
+                "Module": getattr(tc, "module", "").capitalize() if tc else "",
+                "Feature": _feature_from_tc_string(name),
                 "Severity": "Major",
-                "Priority": "P2",
+                "Priority": getattr(tc, "priority", "P2") if tc else "P2",
+                "Status": "Open",
                 "Reported By": "AI Triage",
                 "Date Opened": datetime.date.today().isoformat(),
-                "Summary": (getattr(g, "evidence", "") or "")[:200],
+                "Summary": (getattr(tc, "title", "") if tc else "") or evidence[:200],
+                "Evidence / Assertion": evidence,
                 "Notes": "auto-added by AI triage",
             }
             next_n += 1
