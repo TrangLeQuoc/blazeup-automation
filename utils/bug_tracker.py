@@ -73,6 +73,21 @@ def _sig(text: str) -> str:
     return s.lower()[:120]
 
 
+# Most assertions read "Expected <X>, got <Y>" / "Expected <X> got <Y>" — split that
+# into the tracker's Expected/Actual columns. When there is no such pattern (e.g. a UI
+# content-load banner), Actual = the observed evidence and Expected is left blank for a
+# human to fill (never fabricated).
+_EXP_GOT_RE = re.compile(r"[Ee]xpected\s+(.+?)[,;]?\s+got\s+(.+)", re.DOTALL)
+
+
+def _expected_actual(evidence: str) -> tuple[str, str]:
+    ev = (evidence or "").strip()
+    m = _EXP_GOT_RE.search(ev)
+    if m:
+        return m.group(1).strip()[:250], m.group(2).strip()[:250]
+    return "", ev[:250]
+
+
 def _registry_lookup() -> dict[int, object]:
     """Best-effort {tc_id: TestCase} from the code registry (empty on any failure)."""
     try:
@@ -183,6 +198,7 @@ def reconcile(
         tc = reg.get(tc_id)  # enrich from the code registry when available
         name = getattr(tc, "tc_string", "") if tc else ""
         evidence = (getattr(g, "evidence", "") or "")[:300]
+        expected, actual = _expected_actual(evidence)
         return {
             "Bug ID": f"BUG-{bug_n:03d}",
             "Test Case ID": tc_id,
@@ -195,6 +211,8 @@ def reconcile(
             "Reported By": "AI Triage",
             "Date Opened": datetime.date.today().isoformat(),
             "Summary": (getattr(tc, "title", "") if tc else "") or evidence[:200],
+            "Expected": expected,
+            "Actual": actual,
             "Evidence / Assertion": evidence,
             "Notes": note,
         }

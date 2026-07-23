@@ -83,14 +83,14 @@
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
 **Mô tả test:** Mở tất cả route nav chính của shell partner portal và xác nhận mỗi trang render đúng nội dung (đúng page content, không có lỗi micro-frontend). Một test lặp đi qua tất cả trang bằng URL trực tiếp và thu thập failure → một verdict duy nhất nêu trang nào lỗi.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập một lần bằng user channel-partner đã cấu hình (login UI partner cache theo session). Warm up SPA (mở Dashboard một lần) để trang đầu trong vòng lặp không bị tính chi phí bootstrap một lần.
-**Các bước:** (mỗi trang = một `page.goto(route)` rồi chờ READY_MARKER trong `<main>`, fast-fail nếu hiện panel "Something went wrong") — nav chính đã verify live 2026-07-23:
-1. Dashboard → `/dashboard` → Expected: page title **"Tier & Performance"** hiện trong `<main>`, không có error panel.
-2. Deals → `/deals` → Expected: **"Deal Pipeline"** hiện.
-3. Commissions → `/commissions` → Expected: **"Commissions"** hiện.
-4. Resources → `/resources` → Expected: **"Resources"** hiện.
-5. My Apps → `/apps` → Expected: **"My Apps"** hiện.
-**Expected (tổng):** Cả 5 trang chính render được content module (không có MFE error panel); trang lỗi sẽ fast-fail nêu rõ trang nào.
-**Ghi chú:** PASSED — verified 2026-07-23 (TC 12060101). Test UI partner-portal đầu tiên; tạo bản đồ route live (Dashboard/Deals/Commissions/Resources/My Apps) để các content-test sau dùng lại. **Mapping plan-vs-live:** step text trong plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế của portal là Deals / Resources / My Apps — "My Pipeline" chính là trang **Deals** (title "Deal Pipeline"); "My Clients"/"Training" không phải nav cấp cao (sub-section / tương lai). Negative: N/A — smoke page-load không có bề mặt input sai; case trang lỗi đã built-in (wait_ready fast-fail trên MFE error panel). Idempotency: N/A — điều hướng read-only, không tạo gì. Điều hướng bằng click nav (thay vì URL) là _002 tương lai.
+**Các bước:** (mỗi trang = một `page.goto(route)`; chờ READY_MARKER trong `<main>` — fast-fail nếu hiện panel "Something went wrong" — **rồi** kiểm tra content đã load: không có banner "Failed to load"/"Please refresh and try again" trong `<main>`) — nav chính đã verify live 2026-07-23:
+1. Dashboard → `/dashboard` → Expected: title **"Tier & Performance"** hiện + không banner lỗi. → **PASS**
+2. Deals → `/deals` → Expected: **"Deal Pipeline"** hiện + không banner lỗi. → **PASS**
+3. Commissions → `/commissions` → Expected: **"Commissions"** hiện + không banner lỗi. → **PASS**
+4. Resources → `/resources` → Expected: **"Resources"** hiện + không banner lỗi. → **PASS**
+5. My Apps → `/apps` → Expected: **"My Apps"** hiện + không banner lỗi. → **FAIL** — shell render được (title "My Apps" + tabs + nút Submit) nhưng data-fetch danh sách apps lỗi, hiện banner đỏ **"Failed to load your apps. Please refresh and try again."**
+**Expected (tổng):** Cả 5 trang chính render được module VÀ content (không MFE panel, không banner lỗi content); trang lỗi sẽ fast-fail nêu rõ trang nào.
+**Ghi chú:** FAILED (by design) — verified 2026-07-23 (TC 12060101). 4/5 trang pass; **`/apps` (My Apps) FAIL**: shell render được nhưng data-fetch danh sách apps lỗi → banner "Failed to load your apps. Please refresh and try again." (lỗi backend/data-load của trang này — **confirm với BE**). Đã reproduce live, không phải flap một lần. **TC này cũng siết lại readiness check:** chỉ dựa marker (title) cho FALSE PASS vì tiêu đề vẫn render dù data lỗi — đã thêm assertion bắt banner lỗi content sau marker, nhờ đó `/apps` đúng là đỏ. **Mapping plan-vs-live:** plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế là Deals / Resources / My Apps ("My Pipeline" = trang Deals, title "Deal Pipeline"). Test UI partner-portal đầu tiên — tạo bản đồ route live để các content-test sau dùng lại. Negative: N/A (smoke page-load không có bề mặt input sai; case trang lỗi/content-error đã built-in). Idempotency: N/A (điều hướng read-only).
 - PARTNER_UI_PARTNER_PORTAL_SHELL_002
 - PARTNER_UI_PARTNER_PORTAL_SHELL_003
 ### UI · PARTNER_TEAM

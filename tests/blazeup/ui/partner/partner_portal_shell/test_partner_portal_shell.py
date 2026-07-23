@@ -51,7 +51,8 @@ async def test_partner_ui_partner_portal_shell_001(make_partner_page, request):
         logger.info("Check page {}: {} loads (URL)", ordinal(idx), page_name)
         try:
             await shell.open(section)  # navigate by URL (page.goto)
-            await shell.wait_ready(section)  # READY_MARKER in <main>; fast-fail on error panel
+            await shell.wait_ready(section)  # READY_MARKER in <main>; fast-fail on MFE panel
+            await shell.assert_content_loaded(section)  # data loaded, no "Failed to load" banner
         except Exception as exc:  # noqa: BLE001 - soft-collect so all pages are checked
             logger.error("Page [{}] FAILED - {}", section, exc)
             failures.append(section)

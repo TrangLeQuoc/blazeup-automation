@@ -83,14 +83,14 @@
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
 **Test Description:** Open every primary nav route of the partner portal shell and confirm each page's content module renders (correct page content shown, no micro-frontend error). One looping test walks all pages via direct URL and soft-collects failures → a single verdict naming any bad page.
 **Setup (precondition):** Log in once as the configured channel-partner user (session-cached partner UI login). Warm up the SPA (open Dashboard once) so the first page in the loop isn't charged the one-off bootstrap.
-**Test Steps:** (each page = one `page.goto(route)` then wait for its READY_MARKER in `<main>`, fast-fail on the "Something went wrong" MFE panel) — primary nav verified live 2026-07-23:
-1. Dashboard → `/dashboard` → Expected: page title **"Tier & Performance"** visible in `<main>`, no error panel.
-2. Deals → `/deals` → Expected: **"Deal Pipeline"** visible.
-3. Commissions → `/commissions` → Expected: **"Commissions"** visible.
-4. Resources → `/resources` → Expected: **"Resources"** visible.
-5. My Apps → `/apps` → Expected: **"My Apps"** visible.
-**Expected (overall):** All 5 primary pages render their content module (no MFE error panel); a broken page fast-fails naming which one.
-**Note:** PASSED — verified 2026-07-23 (TC 12060101). First partner-portal UI test; establishes the live route map (Dashboard/Deals/Commissions/Resources/My Apps) reused by later content tests. **Plan-vs-live mapping:** the plan's step text named "My Pipeline / My Clients / Training", but the live portal's primary nav is Deals / Resources / My Apps — "My Pipeline" is the **Deals** page (title "Deal Pipeline"); "My Clients"/"Training" are not top-level nav (sub-sections / future). Negative counterpart: N/A — a page-load smoke has no invalid-input surface; the broken-page case is built in (wait_ready fast-fails on the MFE error panel). Idempotency: N/A — read-only navigation, creates nothing. Nav-click navigation (vs URL) is a natural future _002.
+**Test Steps:** (each page = one `page.goto(route)`; wait for its READY_MARKER in `<main>` — fast-fail on the "Something went wrong" MFE panel — **then** assert the content loaded: no "Failed to load"/"Please refresh and try again" banner in `<main>`) — primary nav verified live 2026-07-23:
+1. Dashboard → `/dashboard` → Expected: title **"Tier & Performance"** visible + no error banner. → **PASS**
+2. Deals → `/deals` → Expected: **"Deal Pipeline"** visible + no error banner. → **PASS**
+3. Commissions → `/commissions` → Expected: **"Commissions"** visible + no error banner. → **PASS**
+4. Resources → `/resources` → Expected: **"Resources"** visible + no error banner. → **PASS**
+5. My Apps → `/apps` → Expected: **"My Apps"** visible + no error banner. → **FAILS** — the shell renders (title "My Apps" + tabs + Submit button) but the app list data-fetch fails, showing the red banner **"Failed to load your apps. Please refresh and try again."**
+**Expected (overall):** All 5 primary pages render their module AND their content (no MFE panel, no content-load error banner); a broken page fast-fails naming which one.
+**Note:** FAILED (by design) — verified 2026-07-23 (TC 12060101). 4/5 pages pass; **`/apps` (My Apps) FAILS**: the section shell renders but the app-list data-fetch fails → persistent banner "Failed to load your apps. Please refresh and try again." (a backend/data-load defect for this page — **confirm with BE**). Reproduced live; not a one-off flap. **This TC also hardened the readiness check:** marker-only (page title) gave a FALSE PASS because the heading renders even when data fails — added a content-error-banner assertion after the marker, which correctly turns `/apps` red. **Plan-vs-live mapping:** the plan named "My Pipeline / My Clients / Training", but the live primary nav is Deals / Resources / My Apps ("My Pipeline" = the Deals page, title "Deal Pipeline"). First partner-portal UI test — establishes the live route map reused by later content tests. Negative counterpart: N/A (page-load smoke has no invalid-input surface; broken-page/content-error cases are built in). Idempotency: N/A (read-only navigation).
 - PARTNER_UI_PARTNER_PORTAL_SHELL_002
 - PARTNER_UI_PARTNER_PORTAL_SHELL_003
 ### UI · PARTNER_TEAM

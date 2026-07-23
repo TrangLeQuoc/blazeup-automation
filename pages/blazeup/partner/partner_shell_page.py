@@ -16,9 +16,11 @@ Usage::
         await shell.wait_ready("deals")
 """
 
+import contextlib
 import time
 
 from loguru import logger
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import expect
 
 from locators.blazeup.partner.partner_shell_locators import PartnerShellLocators
@@ -119,3 +121,25 @@ class PartnerShellPage(BasePage):
                     f"its page title '{marker}' never became visible in <main>."
                 )
             await self.page.wait_for_timeout(poll_ms)
+
+    async def assert_content_loaded(self, section: str, settle_timeout: int = 8_000) -> None:
+        """After the shell is READY, assert the page's CONTENT loaded (no error banner).
+
+        The READY_MARKER (page title) renders even when the section's data fetch
+        fails, showing a banner like "Failed to load your apps." — so wait_ready
+        (marker + no MFE panel) can pass on a page whose content is actually broken.
+        This waits for the fetches to settle (network idle), then fails if any
+        CONTENT_ERROR_TEXTS phrase is visible in <main>.
+        """
+        # a page that keeps polling never idles — check the banner anyway on timeout
+        with contextlib.suppress(PlaywrightTimeoutError):
+            await self.page.wait_for_load_state("networkidle", timeout=settle_timeout)
+        text = (await self.page.locator(PartnerShellLocators.MAIN).inner_text()).lower()
+        for phrase in PartnerShellLocators.CONTENT_ERROR_TEXTS:
+            if phrase.lower() in text:
+                raise AssertionError(
+                    f"Partner Portal section '{section}' rendered its shell but the CONTENT "
+                    f"failed to load: banner '{phrase}' is visible in <main>. Data-fetch/backend "
+                    f"issue for this page — confirm with BE."
+                )
+        logger.log("STEP", "Content OK [{}] (no error banner)", section)

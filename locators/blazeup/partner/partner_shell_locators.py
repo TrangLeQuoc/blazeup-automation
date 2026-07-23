@@ -20,6 +20,19 @@ class PartnerShellLocators:
     ERROR_PANEL = ":text('Something went wrong')"
     ERROR_DETAIL = ":text('Failed to fetch dynamically imported module')"
 
+    # ── Content-level load error (data fetch failed) ──────────────────────────
+    # DISTINCT from the MFE ERROR_PANEL: the section heading (READY_MARKER) still
+    # renders while the page's DATA fails to load, showing a red banner like
+    # "Failed to load your apps. Please refresh and try again." So marker-readiness
+    # alone is NOT enough — a healthy page must ALSO show none of these phrases in
+    # <main>. Kept to explicit failure phrasing (not the bare word "error") so a
+    # valid empty-state (e.g. "0 apps submitted") is never mis-flagged.
+    CONTENT_ERROR_TEXTS = (
+        "Failed to load",
+        "Please refresh and try again",
+        "Something went wrong",
+    )
+
     # ── Main content region ───────────────────────────────────────────────────
     # The sidebar/top bar always render; to prove a *section* rendered we look for
     # its title text scoped to <main>, never the always-present chrome.
