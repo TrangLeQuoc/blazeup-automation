@@ -1359,3 +1359,239 @@ async def test_partner_api_deal_approval_queue_011(
         + "\n(a well-formed but non-existent id should be 404 Not Found, not 400 — confirm with BE)"
     )
     logger.info("RESULT: all {} invalid/illegal reject attempts rejected", len(cases))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_deal_registration_pipeline_018(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_018: SA marks an approved deal as won - status 'won' + provisioning/commission events emitted.
+
+    Winning requires the deal to be ``approved`` first. POST /v1/sa/deals/{id}/win
+    (WinDealDto: tenant-provisioning intake) flips ``approved`` -> ``won``, stores
+    ``actualAcvCents`` + the intake fields, and kicks off tenant provisioning. The
+    API-observable signal that provisioning + commission are triggered is the
+    ``partner.deal.won`` audit event; the actual tenant provisioning and the commission
+    record are DOWNSTREAM (async - the commission does not appear synchronously in
+    /v1/sa/commissions), out of scope here (cf. DEAL_010 pattern).
+    """
+    async with async_step("Setup: partner + plan + register + approve a deal (status 'approved')"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
+        deal_id = deal.deal_id
+        approved = await sa_deals_client.approve_deal(deal_id, plan_id=plan_id)
+        assert approved.data.get("status") == "approved", "precondition: deal must be approved"
+        win_intake = {
+            "companyWebsite": "https://qa-auto-win.example.com",
+            "industry": "Technology",
+            "adminFirstName": "QA",
+            "adminLastName": "AutoWin",
+            "adminEmail": "qa.auto+win@mailinator.com",
+            "companyName": "QA-AUTO Won Co",
+            "tenantDomain": "qa-auto-won.example.com",
+            "planId": plan_id,
+            "billingCycle": "annual",
+            "numberOfEmployee": 42,
+            "region": "asia-southeast1",
+            "country": "US",
+            "actualAcvCents": 7_500_000,
+            "notes": "QA-AUTO win",
+        }
+        logger.info("SETUP: deal {} approved; winning with actualAcvCents={}", deal_id, 7_500_000)
+
+    async with async_step(
+        "[1/4] Mark the approved deal as won (capture tenant-provisioning intake)"
+    ):
+        resp = await sa_deals_client.win_deal(deal_id, win_intake=win_intake)
+        assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+        assert resp.data.get("status") == "won", (
+            f"deal must become 'won', got {resp.data.get('status')!r}"
+        )
+        assert resp.message, "`message` should confirm the win"
+        logger.info("CHECK won → OK (HTTP 201, status='won', message='{}')", resp.message)
+
+    async with async_step("[2/4] Won deal stores actualAcvCents + the submitted intake fields"):
+        d = resp.data
+        assert d.get("actualAcvCents") == win_intake["actualAcvCents"], (
+            f"actualAcvCents must be stored, got {d.get('actualAcvCents')!r}"
+        )
+        for field in (
+            "companyWebsite",
+            "industry",
+            "adminFirstName",
+            "adminLastName",
+            "tenantDomain",
+        ):
+            assert d.get(field) == win_intake[field], (
+                f"stored {field}={d.get(field)!r} must match sent {win_intake[field]!r}"
+            )
+        logger.info(
+            "CHECK intake → OK (actualAcvCents + companyWebsite/industry/admin*/tenantDomain stored)"
+        )
+
+    async with async_step("[3/4] A 'partner.deal.won' audit event is emitted (approved → won)"):
+        found = None
+        for attempt in range(1, 4):
+            logs = await sa_partners_client.list_audit_logs(limit=50)
+            found = next(
+                (
+                    e
+                    for e in logs.data
+                    if "deal" in str(e.get("action", "")).lower()
+                    and "won" in str(e.get("action", "")).lower()
+                    and deal_id in str(e)
+                ),
+                None,
+            )
+            if found:
+                break
+            logger.info("deal-won event not visible yet (attempt {}/3), retrying…", attempt)
+            await asyncio.sleep(1)
+        assert found, "no 'partner.deal.won' event found in the audit log for this deal"
+        assert (found.get("after") or {}).get("status") == "won", (
+            "the won event must record the → won transition"
+        )
+        logger.info(
+            "CHECK event → OK (action='{}', → won). Tenant provisioning + commission are downstream (async).",
+            found.get("action"),
+        )
+
+    async with async_step("[4/4] Verify the won status persists (GET by id)"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert fetched.data.get("status") == "won", "fetched deal must stay 'won'"
+        assert fetched.data.get("actualAcvCents") == win_intake["actualAcvCents"], (
+            "persisted actualAcvCents must match"
+        )
+        logger.info("CHECK persisted → OK (GET returns status='won', actualAcvCents stored)")
+
+    logger.info(
+        "RESULT: deal {} won (actualAcvCents stored, won-event emitted; provisioning/commission downstream)",
+        deal_id,
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@pytest.mark.be_gap  # WinDealDto required fields (companyWebsite/industry/adminFirstName/adminLastName) not enforced — confirm with BE
+async def test_partner_api_deal_registration_pipeline_034(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_DEAL_REGISTRATION_PIPELINE_034: win invalid/illegal-state - rejected with the correct code.
+
+    Negative counterpart of _018 (win). Illegal transitions and bad ids are rejected
+    correctly; the DTO's required fields SHOULD be enforced too. All cases run
+    (failures collected).
+
+    GAP this test surfaces (verified 2026-07-22): WinDealDto declares companyWebsite,
+    industry, adminFirstName, adminLastName as required, but the BE accepts a win with
+    any/all of them missing (even an empty body -> 201, deal won). Cases 1-4 assert a
+    400 and therefore FAIL until the BE enforces the required intake - confirm with BE.
+    The id/state cases (5-8) are correct: winning a non-approved deal -> 400 'cannot
+    transition'; a ghost id -> 404; a malformed id -> 400; re-winning a won deal -> 400
+    (mutating action, repeat rejected - not a create).
+    """
+    async with async_step("Setup: partner + plan (fresh approved deals are built per case)"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        full = {
+            "companyWebsite": "https://qa-auto.example.com",
+            "industry": "Technology",
+            "adminFirstName": "QA",
+            "adminLastName": "Auto",
+            "actualAcvCents": 100_000,
+            "region": "asia-southeast1",
+            "billingCycle": "annual",
+        }
+        logger.info("SETUP: partner {} + plan '{}'", partner.data.get("code"), plan_id)
+
+    async def _approved_deal() -> str:
+        did = (
+            await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
+        ).deal_id
+        await sa_deals_client.approve_deal(did, plan_id=plan_id)
+        return did
+
+    def without(field: str) -> dict:
+        return {k: v for k, v in full.items() if k != field}
+
+    gaps: list[str] = []
+
+    # Cases 1-4: required-field validation (SHOULD reject; BE currently accepts -> be_gap).
+    for idx, field in enumerate(
+        ("companyWebsite", "industry", "adminFirstName", "adminLastName"), start=1
+    ):
+        async with async_step(f"[{idx}/8] Win with missing {field} → expect 400 (required)"):
+            did = await _approved_deal()
+            r = await sa_deals_client.raw_win_deal(
+                did, win_intake=without(field), expected_status=None
+            )
+            if 400 <= r.status_code < 500:
+                logger.info("CHECK missing {} → OK (rejected {})", field, r.status_code)
+            else:
+                gaps.append(
+                    f"missing {field}: expected 400, got {r.status_code} "
+                    "(BE accepted a win without a required field)"
+                )
+                logger.error(
+                    "CHECK missing {} → FAIL (got {}, required not enforced)", field, r.status_code
+                )
+
+    async with async_step("[5/8] Win a non-approved (registered) deal → 400 illegal transition"):
+        did_reg = (
+            await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
+        ).deal_id
+        r = await sa_deals_client.raw_win_deal(did_reg, win_intake=full, expected_status=None)
+        msg = str(r.json().get("message") or "")
+        if r.status_code == 400 and "cannot transition" in msg.lower():
+            logger.info("CHECK non-approved → OK (400 'cannot transition')")
+        else:
+            gaps.append(f"non-approved: status={r.status_code}, msg={msg!r}")
+            logger.error("CHECK non-approved → FAIL (status={}, msg={!r})", r.status_code, msg)
+
+    async with async_step("[6/8] Win a ghost deal id → 404 not found"):
+        r = await sa_deals_client.raw_win_deal(_GHOST_ID, win_intake=full, expected_status=None)
+        msg = str(r.json().get("message") or "")
+        if r.status_code == 404 and "not found" in msg.lower():
+            logger.info("CHECK ghost id → OK (404 'not found')")
+        else:
+            gaps.append(f"ghost id: expected 404, got {r.status_code}, msg={msg!r}")
+            logger.error("CHECK ghost id → FAIL (status={}, msg={!r})", r.status_code, msg)
+
+    async with async_step("[7/8] Win a malformed deal id → 400 invalid id"):
+        r = await sa_deals_client.raw_win_deal("not-an-id", win_intake=full, expected_status=None)
+        msg = str(r.json().get("message") or "")
+        if r.status_code == 400 and "invalid id" in msg.lower():
+            logger.info("CHECK malformed id → OK (400 'invalid id')")
+        else:
+            gaps.append(f"malformed id: status={r.status_code}, msg={msg!r}")
+            logger.error("CHECK malformed id → FAIL (status={}, msg={!r})", r.status_code, msg)
+
+    async with async_step(
+        "[8/8] Re-win an already-won deal → 400 illegal transition (repeat rejected)"
+    ):
+        did_won = await _approved_deal()
+        await sa_deals_client.win_deal(did_won, win_intake=full)
+        r = await sa_deals_client.raw_win_deal(did_won, win_intake=full, expected_status=None)
+        msg = str(r.json().get("message") or "")
+        if r.status_code == 400 and "cannot transition" in msg.lower():
+            logger.info("CHECK already-won → OK (400 'cannot transition from won to won')")
+        else:
+            gaps.append(f"already-won: status={r.status_code}, msg={msg!r}")
+            logger.error("CHECK already-won → FAIL (status={}, msg={!r})", r.status_code, msg)
+
+    assert not gaps, (
+        "win negative gaps:\n  - "
+        + "\n  - ".join(gaps)
+        + "\n(WinDealDto required fields are not enforced by the BE — confirm with BE)"
+    )
+    logger.info("RESULT: all win invalid/illegal-state attempts rejected")

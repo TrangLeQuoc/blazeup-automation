@@ -104,15 +104,23 @@ class SaDealsClient(BaseClient):
         self,
         deal_id: str,
         *,
+        plan_id: str | None = None,
         review_notes: str | None = None,
         expected_status: int | tuple[int, ...] = 201,
     ) -> DealWriteResponse:
-        """POST approve a registered deal (body ``ReviewDealDto{reviewNotes}``, optional).
+        """POST approve a registered deal (body ``ApproveDealDto``: ``planId`` required, ``reviewNotes`` optional).
 
-        On success the deal transitions ``registered`` → ``approved`` and stamps
-        ``reviewedAt`` + ``reviewedBy``. HTTP 201 / body statusCode 200.
+        The BE now requires ``planId`` at approval (locks the plan/rate). When
+        ``plan_id`` is not supplied it is auto-resolved from the deal's own record
+        (a GET), so existing callers keep working. On success the deal transitions
+        ``registered`` → ``approved`` and stamps ``reviewedAt`` + ``reviewedBy``.
+        HTTP 201 / body statusCode 200.
         """
-        body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
+        if plan_id is None:
+            plan_id = (await self.get_deal(deal_id)).data.get("planId")
+        body: dict[str, Any] = {"planId": plan_id}
+        if review_notes is not None:
+            body["reviewNotes"] = review_notes
         response = await self.post(
             f"{_DEALS_PATH}/{deal_id}/approve", json=body, expected_status=expected_status
         )
@@ -122,11 +130,18 @@ class SaDealsClient(BaseClient):
         self,
         deal_id: str,
         *,
+        plan_id: str | None = None,
         review_notes: str | None = None,
         expected_status: int | tuple[int, ...] | None = None,
     ) -> httpx.Response:
-        """Raw POST approve for negative tests — returns the response unvalidated."""
-        body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
+        """Raw POST approve for negative tests — returns the response unvalidated.
+
+        Sends a placeholder ``planId`` by default so an id-level negative (ghost /
+        malformed / illegal-state) is what the endpoint rejects, not a missing planId.
+        """
+        body: dict[str, Any] = {"planId": plan_id or "start-today2"}
+        if review_notes is not None:
+            body["reviewNotes"] = review_notes
         return await self.post(
             f"{_DEALS_PATH}/{deal_id}/approve", json=body, expected_status=expected_status
         )
@@ -198,6 +213,43 @@ class SaDealsClient(BaseClient):
         body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
         return await self.post(
             f"{_DEALS_PATH}/{deal_id}/reject", json=body, expected_status=expected_status
+        )
+
+    async def win_deal(
+        self,
+        deal_id: str,
+        *,
+        win_intake: dict[str, Any],
+        expected_status: int | tuple[int, ...] = 201,
+    ) -> DealWriteResponse:
+        """POST mark an APPROVED deal as won + capture tenant-provisioning intake.
+
+        Body is ``WinDealDto`` — required: ``companyWebsite``, ``industry``,
+        ``adminFirstName``, ``adminLastName``; optional: ``actualAcvCents``, ``notes``,
+        ``companyName``, ``tenantDomain``, ``planId``, ``billingCycle`` (monthly/annual),
+        ``numberOfEmployee``, ``region`` (us-west1/asia-south1/me-west1/asia-southeast1),
+        ``country``, ``adminEmail``, ``adminPhoneNumber``, ``adminPassword``.
+
+        Precondition: the deal must be ``approved`` (winning a ``registered`` deal is a
+        400 illegal transition). On success ``status`` → ``won``, ``actualAcvCents`` is
+        stored, tenant provisioning is kicked off (async, downstream) and a
+        ``partner.deal.won`` audit event is written. HTTP 201 / body statusCode 200.
+        """
+        response = await self.post(
+            f"{_DEALS_PATH}/{deal_id}/win", json=win_intake, expected_status=expected_status
+        )
+        return DealWriteResponse.model_validate(response.json())
+
+    async def raw_win_deal(
+        self,
+        deal_id: str,
+        *,
+        win_intake: dict[str, Any],
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw POST win for negative tests — returns the response unvalidated."""
+        return await self.post(
+            f"{_DEALS_PATH}/{deal_id}/win", json=win_intake, expected_status=expected_status
         )
 
     async def lose_deal(

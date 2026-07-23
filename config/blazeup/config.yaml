@@ -69,6 +69,7 @@ modules:
       AUTH_ACCESS_CONTROL: 10
       DEAL_APPROVAL_QUEUE: 11
       PIPELINE_MANAGEMENT: 12
+      SECURITY_COMPLIANCE: 13   # _001 (audit-trail: actor/action/reasoning/correlationId) buildable; _002/_003 BLOCKED
   MARKETPLACE:
     number: 7
   # SA-Dashboard "Audit Log" nav PAGE — distinct from PARTNER.api.AUDIT_LOG (=6),

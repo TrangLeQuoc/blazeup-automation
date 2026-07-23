@@ -24,7 +24,28 @@ from runner.blazeup.registry import TC_REGISTRY  # noqa: E402
 
 # TC IDs to run when no --execute / --mode flag is passed.
 # (empty until BlazeUp Admin test cases are added to the registry)
-DEFAULT_EXECUTE_IDS: list[str] = ["2060101-2061211"]
+DEFAULT_EXECUTE_IDS: list[str] = [
+    2060122,
+    2060208,
+    2060221,
+    2060713,
+    2061003,
+    2060231,
+    2060232,
+    2060228,
+    2060229,
+    2060230,
+    2061111,
+    2061113,
+    2061114,
+    2061115,
+    2060120,
+    2060714,
+    2060414,
+    2060415,
+    2060512,
+    2060234,
+]
 
 # TC IDs to always skip
 DEFAULT_SKIP_IDS: list[str] = []

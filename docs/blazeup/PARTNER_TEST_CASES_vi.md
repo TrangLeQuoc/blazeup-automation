@@ -163,13 +163,13 @@
 **Ghi chú:** FAILED (by design / be_gap). Case cross-entity của rule-5. BE trả **400** cho cross-partner access, nhưng đúng ra phải **404** (ưu tiên, để giấu sự tồn tại của resource) hoặc **403** — 400 gán nhầm một request hợp lệ thành malformed. Test được siết để assert 403/404 + đánh dấu `be_gap` cho tới khi BE fix. Bản thân tenant isolation vẫn đúng (không lộ dữ liệu).
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
-**Ghi chú (NOT_STARTED):** Admin MFA policy enforcement — cần một flow MFA enroll/challenge. Chưa automate (assess các endpoint MFA: /partner/auth/mfa/*).
+**Ghi chú (BLOCKED):** Enforce MFA phía partner — một protected action phải bắt buộc MFA cho phạm vi quy định (PRD §9.1: role `PARTNER_ORG_ADMIN` và/hoặc tier Advanced/Premier). BLOCKED do quyết định sản phẩm: OQ-14 chưa chốt — trục MFA mâu thuẫn giữa PRD §9.1 (theo tier, Advanced+) và sa-portal-architecture §14.8 (theo role, `PARTNER_ORG_ADMIN`); chưa biết cái nào authoritative (chờ Renil) thì expected (ai/action nào phải qua MFA) chưa xác định → không viết assertion được. Ngoài ra MFA enforcement còn gated theo Auth Hardening Phase 0 (PRs #633–641 phải merge trước khi bật live auth). Endpoint MFA phía BE ĐÃ có (partner: /v1/partner/auth/mfa/setup, /totp/enroll, /email-otp/send, /verify, /disable; sa-auth: /two-factors/otp, /sign-in/verify-otp) — nên KHÔNG phải bị chặn do thiếu endpoint. Khi unblock, build còn cần OTP/TOTP xác định (secret cố định hoặc test-only bypass) từ BE để hoàn tất bước challenge trong automation.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_005
-**Ghi chú (NOT_STARTED):** Guard — MSP truy cập payroll data bị cấm. MSP/payroll guard; assess xem có API surface trong domain này không trước khi automate.
+**Ghi chú (BLOCKED):** MSP scope guard (PRD §9.2): MSP partner truy cập payroll/salary/health data của tenant đang quản lý phải bị cấm (403). Không có API surface trong Partner Platform để chạm — payroll nằm ở service HR/tenant riêng (module Payroll của sản phẩm lõi), ngoài sa-partners-api/sa-auth-api/connectors-api (grep cả 3 spec live → 0 endpoint payroll/salary, re-verify 2026-07-22). Còn cần MSP partner + managed tenant, mà MSP tenant provisioning cũng đang blocked (CLIENT_HEALTH_MSP_006). Unblock khi có payroll surface + MSP scope reachable từ domain này.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_006
-**Ghi chú (NOT_STARTED):** Guard — MSP export employee records bị cấm. Như _005.
+**Ghi chú (BLOCKED):** MSP scope guard (PRD §9.2: "Export data ❌"): MSP partner export hồ sơ nhân viên của tenant đang quản lý phải bị cấm. Không có API surface trong Partner Platform — không có endpoint export-employee ở đây (chỉ có `/v1/sa/audit-logs/export` = export audit log của SA, không liên quan); hồ sơ nhân viên nằm ở service HR/tenant riêng. Cùng phụ thuộc như _005 (cần MSP partner + managed tenant, cũng đang blocked). Unblock khi có surface export-employee + MSP scope reachable từ domain này.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_007
 **Mô tả test:** Refresh token hợp lệ cấp một access token mới (không cần re-login).
@@ -276,10 +276,12 @@
 **Ghi chú (BLOCKED):** Không có API surface. Đây là một job nền theo lịch (CRON) — auto-extension của protection kích hoạt theo timer của server khi một deal có activity gần đây sát lúc hết hạn. Không có endpoint để trigger theo yêu cầu và không có cách tua nhanh đồng hồ một cách deterministic từ test, nên hiệu ứng không quan sát được trong một lần chạy test. Xem lại nếu BE expose một hook "run job" thủ công / time-travel. (P1 / Critical trong plan.)
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_006
-**Ghi chú (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
+**Mục đích:** CRON — protection hết hạn mà KHÔNG có hoạt động gần đây → deal expire.
+**Ghi chú (BLOCKED):** Job CRON theo thời gian (quét protection-expiry). Khi cửa sổ bảo vệ (theo tier: 60d Select / 90d Advanced / 120d Premier) trôi qua mà KHÔNG có hoạt động → deal phải chuyển 'expired'. Không có endpoint trigger job on-demand và không có test clock trên staging → không tua tới mốc hết hạn được và không chạy sweep theo yêu cầu, nên không quan sát được transition. Unblock khi BE expose trigger "run protection-expiry job" thủ công hoặc test clock / backdate protectionExpiresAt.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_007
-**Ghi chú (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
+**Mục đích:** CRON — deal đã auto-extend 1 lần thì KHÔNG được auto-extend lần 2 (cap).
+**Ghi chú (BLOCKED):** Job CRON theo thời gian. Verify "không auto-extend lần 2" cần 1 deal đã auto-extend 1 lần (kết quả của _005) VÀ thêm 1 chu kỳ hết hạn nữa — cả hai đều cần job protection-expiry chạy + control clock để tới mốc hết hạn thứ 2, đều không có trên staging. Phụ thuộc _005. Unblock khi BE expose trigger job thủ công hoặc test clock / backdate.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_008
 **Mô tả test:** Duyệt một deal đã registered (POST /v1/sa/deals/{id}/approve): status → approved, reviewer được đóng dấu; kỳ vọng có rate + rate-table version.
@@ -365,7 +367,20 @@
 **Ghi chú (BLOCKED):** Cần một đồng hồ 90 ngày mà staging không cung cấp được. "Đăng ký lại một prospect đã thua conflict được chấp nhận sau 90 ngày (khi chưa có close)" cần một deal thua conflict mà thời điểm thua đã 90+ ngày; createdAt/lostAt do server cấp và không thể backdate, và không có test clock/fast-forward. Negative companion ("từ chối đăng ký lại TRƯỚC 90 ngày") CÓ THỂ build ngay bây giờ như một TC riêng. Unblock khi BE cung cấp một test clock hoặc backdating.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_018
-**Ghi chú (DEFERRED):** Win một deal (POST /v1/sa/deals/{id}/win). WinDealDto mang theo một thẻ thanh toán + chi tiết billing + provisioning tenant — gọi nó có side-effect nặng (provision một tenant, có thể chạm billing). Hoãn để tránh làm bẩn staging; build với một teardown chuyên dụng / một sandbox flag do BE cung cấp.
+**Mô tả test:** SA đánh dấu deal approved là won (POST /v1/sa/deals/{id}/win, WinDealDto = intake tenant-provisioning): status → 'won', lưu actualAcvCents + intake, phát event partner.deal.won (tenant provisioning + commission là downstream/async).
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner; register deal; approve (status 'approved'); build win intake (companyWebsite, industry, admin*, tenantDomain, region, billingCycle, actualAcvCents…).
+**Các bước:**
+1. Đánh dấu deal approved là won (capture intake tenant-provisioning).
+   → Expected: accepted (HTTP 201, envelope statusCode 200); status 'won'; có message.
+2. Verify deal won lưu actualAcvCents + các field intake đã gửi.
+   → Expected: actualAcvCents echo; companyWebsite/industry/adminFirstName/adminLastName/tenantDomain lưu như gửi.
+3. Verify phát event audit 'partner.deal.won' (approved → won).
+   → Expected: một entry (action 'partner.deal.won') cho deal này với after.status == 'won'.
+4. Verify status won bền vững (GET /v1/sa/deals/{id}).
+   → Expected: status 'won', actualAcvCents persist.
+**Teardown:** xóa partner cha.
+**Expected (tổng):** Deal approved chuyển 'won' với intake được lưu và phát won-event; tenant provisioning + commission là downstream (async — commission không xuất hiện sync trong /v1/sa/commissions), ngoài phạm vi.
+**Ghi chú:** PASSED. Approve giờ yêu cầu `planId` (ApproveDealDto đổi — client auto-resolve). Win message: "Deal marked as won; tenant provisioning kicked off". Đối trọng negative/illegal-state là _034.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_019
 **Mô tả test:** SA đánh dấu một deal đã approved là lost (POST /v1/sa/deals/{id}/lose). Lose yêu cầu deal phải 'approved' trước.
@@ -498,6 +513,22 @@
 **Expected (tổng):** extend-protection là một action mutating có tham số — lặp lại là cộng dồn theo thiết kế (không phải một no-op idempotent, không bị cap). Mỗi lần gọi cũng được ghi vào protectionExtensions[].
 **Ghi chú:** PASSED. Probe theo rule 8 (mutating action ≠ POST-create): hành vi là cộng dồn (exp0 +30 → +30 = +60). BE đóng dấu mỗi lần gia hạn vào protectionExtensions[] (extendedBy/at, previous/newExpiresAt, addedDays, trigger, reasoning).
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_034
+**Mô tả test:** Đối trọng negative của _018 (win): illegal transition + id sai bị từ chối đúng code; required intake fields của DTO cũng nên được enforce. Tất cả case đều chạy (thu thập failure).
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner; mỗi case required-field dùng 1 approved deal mới (win thành công tiêu thụ deal).
+**Các bước:** (mỗi case = một POST /v1/sa/deals/{id}/win)
+1. Missing companyWebsite → kỳ vọng **400** (required). **Hiện FAIL** — BE trả 201 (won).
+2. Missing industry → kỳ vọng **400**. **Hiện FAIL** — BE trả 201.
+3. Missing adminFirstName → kỳ vọng **400**. **Hiện FAIL** — BE trả 201.
+4. Missing adminLastName → kỳ vọng **400**. **Hiện FAIL** — BE trả 201.
+5. Win deal non-approved (registered) → **400** 'cannot transition'.
+6. Ghost deal id (đúng định dạng, không tồn tại) → **404** 'not found'. (Win trả 404 đúng ở đây.)
+7. Malformed deal id ('not-an-id') → **400** 'invalid id'.
+8. Re-win một deal đã won → **400** 'cannot transition from won to won' (repeat bị từ chối; mutating action, không phải create).
+**Teardown:** xóa partner cha.
+**Expected (tổng):** Missing required intake → 400; non-approved/already-won → 400; ghost id → 404; malformed id → 400.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1–4): WinDealDto khai companyWebsite/industry/adminFirstName/adminLastName là required, nhưng BE nhận win khi thiếu bất kỳ/tất cả (kể cả empty body → 201, deal won) — required-intake validation không được enforce. Case 5–8 đúng (lưu ý: win trả 404 cho ghost id, khác các SA endpoint khác). Confirm với BE.
+
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001
@@ -526,10 +557,10 @@
 ### API · DEAL_COLLABORATION
 
 #### PARTNER_API_DEAL_COLLABORATION_001
-**Ghi chú (BLOCKED):** Không có API collaboration/notes-thread. Một deal chỉ mang một chuỗi `notes` phẳng duy nhất (set khi register / qua deal update) — không có endpoint comment/activity-thread để thêm, list, hay quy attribution cho các entry collaboration. Re-scope với BE: nếu "collaboration" chỉ là field notes phẳng, nó đã được cover bởi các TC register/update; ngược lại các endpoint chưa tồn tại.
+**Ghi chú (BLOCKED):** PRD §4.5 / §8.5 mô tả một **SHARED NOTES thread** trên mỗi deal — partner (trên stgpartners) và BlazeUp SA rep (trên stgsa) cùng thêm note vào CÙNG một deal, mỗi note ghi tác giả (actor) + timestamp, append-only (xem mock "SHARED NOTES" §4.5: "Jamie Walsh 1 May …" / "Sarah Chen 2 May …"). PRD §8.5 đặt write ở phía partner: `PATCH /v1/partner/deals/:id (notes, docs)`. CHƯA build trên staging: (a) deal partner-portal **chỉ GET** (`GET /v1/partner/portal/deals/{id}` — không PATCH) → partner không thêm note được; (b) phía SA (`PATCH /v1/sa/deals/{id}`) chỉ **đè 1 chuỗi `notes` phẳng** — không actor/timestamp từng note, không append, không thread chung. Tức tính năng shared-notes chưa tồn tại. KHÔNG re-scope thành "SA đè 1 chuỗi notes phẳng" rồi gọi là collaboration (đó là tính năng khác, nhỏ hơn, gọi vậy là sai bản chất). Unblock khi BE ship shared-notes thread (actor + timestamp, append, cả partner + SA viết).
 
 #### PARTNER_API_DEAL_COLLABORATION_002
-**Ghi chú (BLOCKED):** Không có API document/attachment trên deal. Không có endpoint để upload, list, hay download document của deal. Build khi BE expose một surface deal-documents.
+**Ghi chú (BLOCKED):** PRD §4.5 hiển thị mục **DOCUMENTS** trên mỗi deal ("[Upload]" + danh sách document) và §8.5 gộp vào `PATCH /v1/partner/deals/:id (notes, docs)`. CHƯA build trên staging: deal partner-portal chỉ GET, `UpdateDealDto` phía SA không có field `documents`, và PATCH kèm payload `documents` bị từ chối ("No editable fields provided") — không có endpoint để upload/list/download document của deal. Unblock khi BE expose surface deal-documents.
 
 ### API · PIPELINE_MANAGEMENT
 
@@ -599,7 +630,7 @@
 **Ghi chú (BLOCKED):** Endpoint lock-after-accept split co-sell POST /v1/partner/deals/:id/cosell-split-accept không có trong dev build. Cùng endpoint với _001. Unblock khi BE ship nó.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_011
-**Ghi chú (redundant):** "expectedCloseDate không hợp lệ → 400" đã được cover bởi DEAL_REGISTRATION_PIPELINE_021 (step 2e). Không blocked; không có coverage riêng nếu build standalone.
+**Ghi chú (NOT_STARTED — redundant / cross-ref):** "Validate expectedCloseDate không hợp lệ → 400" đã được kiểm bởi **DEAL_REGISTRATION_PIPELINE_021** (case bad-date: `expectedCloseDate` không đúng ISO-8601 → 400, và thiếu expectedCloseDate → 400). _021 hiện PASS nên validation này đã được cover. KHÔNG blocked — chỉ là không có assertion riêng nào để thêm nếu build standalone. KHÔNG build trùng; coi như đã cover bởi _021. (Nếu sau này cần dòng standalone thì trỏ vào cùng validation ngày của POST /v1/sa/deals.)
 ### API · REFERRAL_ATTRIBUTION
 
 #### PARTNER_API_REFERRAL_ATTRIBUTION_001
@@ -652,7 +683,18 @@
 **Ghi chú (BLOCKED):** Tính commission downstream ("renewal EE → rate thấp nhất"); cần pipeline win→commission (deferred) và không có API để đọc rate đã tính. Unblock khi một commission có thể được tạo + rate của nó đọc được.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_002
-**Ghi chú (NOT_STARTED — build được ngay):** GET /v1/partner/portal/commissions (ledger/history commission) đã có; có thể assert schema list + partner scoping (pass ngay cả khi rỗng). Ứng viên build kế tiếp. Khác với PARTNER_PORTAL_004 (commissions/summary, PASSED).
+**Mô tả test:** SA liệt kê commission ledger: GET /sa-partners-api/v1/sa/commissions trả về ledger phân trang, lọc được, đúng cấu trúc.
+**Các bước:**
+1. GET /v1/sa/commissions (page=1, limit=5).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}.
+2. Verify phân trang.
+   → Expected: page size trả về ≤ limit yêu cầu (5).
+3. Verify schema từng entry + không lộ field nhạy cảm (phụ thuộc dữ liệu).
+   → Expected: mỗi entry có id + status enum hợp lệ (earned/pending_approval/approved/paid/disputed/clawback/cancelled); không có key password/token/secret. WARN-skip nếu ledger rỗng.
+4. Verify lọc theo status chỉ trả entry khớp (phụ thuộc dữ liệu).
+   → Expected: status=<status của entry đầu> chỉ trả status đó. WARN-skip nếu rỗng.
+**Expected (tổng):** Commission-ledger list trả envelope đúng, phân trang, lọc được, không lộ dữ liệu nhạy cảm.
+**Ghi chú:** PASSED. Read-only (không setup/cleanup). Commission row được tạo downstream khi deal win (DEAL_018, hoãn), nên trên staging ledger rỗng hợp lệ → bước 3–4 WARN-skip; contract list vẫn đúng. Đối trọng negative (invalid filter/pagination) là _017.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_003
 **Ghi chú (BLOCKED, positive):** POST /v1/partner/portal/commissions/{id}/dispute đã có, nhưng dispute cần một commission {id} thật (win pipeline deferred). Negative (dispute một ghost id → 4xx) build được ngay bây giờ. Unblock khi một commission record có thể được tạo.
@@ -664,7 +706,20 @@
 **Ghi chú (BLOCKED):** Endpoint quyết định waiver / event final-outcome vắng (không có waiver path, 2026-06-30). Cặp với _004/_012.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_006
-**Ghi chú (NOT_STARTED — build được ngay):** Endpoint rate-table tồn tại dưới dạng POST /v1/sa/rate-table (TC ghi PUT /internal/commission/rates — method PUT→POST, path đổi tên). Có thể tạo một version mới + assert nó bền vững. Phía "cached" (Redis invalidation) là internal/không quan sát được qua API (xem _014).
+**Mô tả test:** SA upsert một commission rate (POST /sa-partners-api/v1/sa/rate-table): rate mới được lưu in-place, giá trị cũ giữ trong previousRate (version 1 cấp); không tạo row trùng.
+**Chuẩn bị (điều kiện tiên quyết):** GET rate table; chọn 1 combo ĐÃ tồn tại (tier, dealType, commissionType) + capture rate gốc và clawbackWindowDays. Đăng ký teardown RESTORE rate gốc (không có endpoint DELETE nên test không bao giờ tạo combo mới).
+**Các bước:**
+1. Upsert CÙNG combo với rate mới.
+   → Expected: accepted (HTTP 201, envelope statusCode 200); có message.
+2. Verify rate mới được lưu + giá trị cũ giữ trong previousRate (version trail).
+   → Expected: stored rate == rate mới; previousRate.rate == rate gốc; combo (tier/dealType/commissionType) không đổi.
+3. Verify GET phản ánh rate mới VÀ combo vẫn đúng MỘT row (in-place, không trùng).
+   → Expected: đúng 1 row khớp với rate mới + cùng _id.
+4. Upsert lại lần 2 (rate mới thứ 2) — probe hành vi repeat (mutating action).
+   → Expected: update in-place — vẫn 1 row; rate == giá trị thứ 2; previousRate advance sang giá trị thứ 1 (không phải create trùng).
+**Teardown:** restore rate gốc của combo.
+**Expected (tổng):** Upsert lưu rate mới in-place, version giá trị cũ qua previousRate, không bao giờ nhân đôi combo.
+**Ghi chú:** PASSED. Endpoint là POST /v1/sa/rate-table (plan ghi "PUT /internal/commission/rates" — PUT→POST, path đổi tên). rate ràng buộc 0..1. Phía "cached" (Redis invalidation) là internal / không observe qua API (xem _014). Mutating upsert → không có TC idempotency create-trùng riêng (repeat là in-place, verify ở bước 4). Đối trọng negative là _018.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_007
 **Ghi chú (BLOCKED):** "approve over threshold" hai người duyệt cần /v1/sa/commissions/{id}/approve-payout (dual approval), vắng khỏi spec — chỉ có một POST /{id}/approve đơn. Cũng cần một commission record.
@@ -695,6 +750,34 @@
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_016
 **Ghi chú (BLOCKED):** "Chi tiết banking payout mã hóa at-rest" (CSFLE) là một thuộc tính lưu trữ internal không có API để xác nhận; không có endpoint payout/banking trong khu vực commissions (banking nằm trên partner.payoutAccounts). Verify qua review DB/infra, không qua API.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_017
+**Mô tả test:** Đối trọng negative của _002 (commission ledger): filter/pagination không hợp lệ bị từ chối với code đúng (không bao giờ 5xx). Tất cả case đều chạy (thu thập failure).
+**Các bước:** (mỗi case = một GET /v1/sa/commissions với param đang test)
+1. Bad status enum ('bogus') → **400** 'status must be one of'.
+2. Malformed partnerId ('not-an-id') → **400** 'partnerId must be a mongodb id'.
+3. page=0 → **400** 'skip must be a non-negative integer'.
+4. page=-1 → **400** 'skip must be a non-negative integer'.
+5. limit over max (999999) → **400** 'limit must not exceed 100'.
+6. limit=0 → **200** (default lenient — observe, không 5xx).
+**Expected (tổng):** Filter/pagination không hợp lệ đã validate → 400; limit=0 default gracefully; không bao giờ 5xx.
+**Ghi chú:** PASSED. Dòng negative mới ghép với _002 (GET read-only → không có TC idempotency). limit=0 bị default lenient (200) — điểm weak-validation cần confirm với BE.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_018
+**Mô tả test:** Đối trọng negative của _006 (rate upsert): input không hợp lệ bị từ chối 400 + message field-level TRƯỚC khi ghi (không tạo/sửa combo nào). Tất cả case đều chạy (thu thập failure).
+**Các bước:** (mỗi case = một POST /v1/sa/rate-table với field đang test bị lỗi)
+1. Invalid tier enum ('platinum') → **400** 'tier must be one of'.
+2. Invalid dealType enum ('wholesale') → **400** 'dealType must be one of'.
+3. Invalid commissionType enum ('bogus') → **400** 'commissionType must be one of'.
+4. Missing tier → **400** 'tier must be one of'.
+5. Missing dealType → **400** 'dealType must be one of'.
+6. Missing commissionType → **400** 'commissionType must be one of'.
+7. Missing rate → **400** message có "rate must".
+8. Negative rate (-0.1) → **400** 'rate must not be less than 0'.
+9. Rate over 1 (1.5) → **400** 'rate must not be greater than 1'.
+10. Non-numeric rate ('abc') → **400** 'rate must be a number'.
+**Expected (tổng):** Mọi upsert rate không hợp lệ bị từ chối 400 và không có gì được lưu (rate phải 0..1). Không cần teardown (không ghi).
+**Ghi chú:** PASSED. Dòng negative mới ghép với _006.
 ### API · PARTNER_ACCOUNT_MANAGEMENT
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001
@@ -777,7 +860,18 @@
 **Ghi chú:** PASSED. Đối trọng negative (tier không hợp lệ / cùng tier / id sai) là _015.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_006
-**Ghi chú (BLOCKED):** [BLOCKED — NO API 2026-06-17] Đã tìm trong OpenAPI spec của tất cả 11 platform service (admin-api, compliance-api, connectors, helpplatform-api, sa-auth-api, sa-governance-api, sa-partners-api, sa-plans-api, sa-tenants-api, setting-api, workflow-api): 0 field cho giá reseller/end-client (chỉ có basePrice/totalPrice trong plan/billing, không liên quan). Không có endpoint hay field để gửi/lưu một giá end-client → data-model mà TC này mô tả chưa được implement trong bất kỳ API hiện tại nào. Xác nhận với product/BE: service nào sở hữu, hay đây là một feature PRD tương lai (§2.2/§7.2/§11)? Chưa automate được cho tới khi model tồn tại.
+**Mô tả test:** Enforce reseller sell-price / data-minimization: reseller tự đặt giá cho end-client, và BlazeUp KHÔNG được lưu giá đó. Register reseller deal kèm các field giá end-client thì không được persist.
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner; pick plan; build payload RESELLER deal nhét field giá end-client (endClientPrice, sellPrice, resellerMarginCents — không định nghĩa trong CreateDealDto).
+**Các bước:**
+1. Register reseller deal (kèm các field giá end-client).
+   → Expected: accepted (HTTP 201, envelope statusCode 200) + id server cấp; dealType == 'reseller'. BE nhận + strip (không reject).
+2. Verify response KHÔNG lưu field giá end-client nào.
+   → Expected: endClientPrice / sellPrice / resellerMarginCents vắng mặt trong deal lưu.
+3. Verify GET follow-up xác nhận giá end-client không được lưu.
+   → Expected: GET /v1/sa/deals/{id} không trả các field đó.
+**Teardown:** xóa partner cha.
+**Expected (tổng):** Giá end-client của reseller không được persist (enforced / data-minimized) — yêu cầu chính là BlazeUp KHÔNG lưu nó.
+**Ghi chú:** PASSED. Xác nhận yêu cầu "end-client price không được lưu": CreateDealDto không có field này và BE strip field lạ khi register (nhận 201, bỏ đi). Cùng cơ chế SECURITY_COMPLIANCE_002. Đây là check path REGISTER; đối trọng path UPDATE/PATCH là negative _016. Happy-path reseller register là DEAL_REGISTRATION_PIPELINE_002; idempotency N/A (register trùng = _022).
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_007
 **Ghi chú (BLOCKED):** [BLOCKED — NO API TRIGGER 2026-06-17] Đây là một JOB nền theo lịch (tính lại tier hàng quý), không phải một API endpoint. Không có endpoint manual-trigger trong bất kỳ service nào để gọi nó theo yêu cầu, nên không thể thực thi qua API automation. Thuộc về unit/integration test của BE (hoặc cần một endpoint trigger QA-only). Lưu ý: thay đổi tier thủ công ĐƯỢC cover bởi _005 (POST /upgrade-tier); TC này cụ thể là job hàng quý tự động. Xác nhận với BE xem có thể expose một endpoint trigger không.
@@ -862,7 +956,18 @@
 **Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 6): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1–5 đúng. Xác nhận với BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016
-**Ghi chú (BLOCKED):** [BLOCKED — NO API 2026-06-17] Đã tìm trong OpenAPI spec của tất cả 11 platform service (admin-api, compliance-api, connectors, helpplatform-api, sa-auth-api, sa-governance-api, sa-partners-api, sa-plans-api, sa-tenants-api, setting-api, workflow-api): 0 field cho giá reseller/end-client (chỉ có basePrice/totalPrice trong plan/billing, không liên quan). Không có endpoint hay field để gửi/lưu một giá end-client → data-model mà TC này mô tả chưa được implement trong bất kỳ API hiện tại nào. Xác nhận với product/BE: service nào sở hữu, hay đây là một feature PRD tương lai (§2.2/§7.2/§11)? Chưa automate được cho tới khi model tồn tại.
+**Mô tả test:** Đối trọng negative của _006 (cùng enforcement — BlazeUp không lưu giá end-client của reseller) qua entry-point UPDATE/PATCH: không thể SET giá end-client lên một reseller deal đang mở.
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner; pick plan; register 1 RESELLER deal (mở / editable).
+**Các bước:**
+1. Update deal kèm 1 field hợp lệ (notes) + các field giá end-client (PATCH /v1/sa/deals/{id}).
+   → Expected: HTTP 200; field hợp lệ (notes) được áp; endClientPrice/sellPrice/resellerMarginCents bị strip (không persist).
+2. Update CHỈ với các field giá end-client (không có field editable).
+   → Expected: HTTP 400 "No editable fields provided" — giá end-client không phải field editable hợp lệ.
+3. Verify qua GET.
+   → Expected: notes update đã persist; không field giá end-client nào được lưu.
+**Teardown:** xóa partner cha.
+**Expected (tổng):** Không set được giá end-client của reseller qua update — bị strip khi kèm field hợp lệ, bị reject (400) khi gửi một mình. Không bao giờ persist.
+**Ghi chú:** PASSED. Đối trọng negative/update-path của _006 (register path). Whitelist editable của UpdateDealDto (dealType/prospectEmail/prospectPhone/estimatedAcvCents/planId/expectedCloseDate/notes/wonTenantId) không có field giá end-client → bị strip hoặc update bị reject.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_017
 **Ghi chú (BLOCKED):** [BLOCKED — NO API TRIGGER 2026-06-17] Đây là một JOB nền theo lịch (tính lại tier hàng quý), không phải một API endpoint. Không có endpoint manual-trigger trong bất kỳ service nào để gọi nó theo yêu cầu, nên không thể thực thi qua API automation. Thuộc về unit/integration test của BE (hoặc cần một endpoint trigger QA-only). Lưu ý: thay đổi tier thủ công ĐƯỢC cover bởi _005 (POST /upgrade-tier); TC này cụ thể là job hàng quý tự động. Xác nhận với BE xem có thể expose một endpoint trigger không.
@@ -1340,10 +1445,32 @@
 ### API · SECURITY_COMPLIANCE
 
 #### PARTNER_API_SECURITY_COMPLIANCE_001
-**Ghi chú (NOT_STARTED — buildable):** Endpoint audit-log tồn tại: thực hiện một SA action (approve/deactivate) rồi GET /v1/sa/audit-logs và assert entry mang actor + action + reasoning + correlationId. Được cover một phần bởi DEAL_010 / ACCOUNT_MANAGEMENT_004; một TC envelope-completeness chuyên dụng build được.
+**Mô tả test:** Mọi SA action ghi một audit entry đúng cấu trúc + có correlation: thực hiện một SA action mang reason sẽ tạo entry GET /v1/sa/audit-logs mang actor + action + reasoning + correlationId (+ tham chiếu resource), không lộ field nhạy cảm.
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner (đối tượng action); build reason tier-change duy nhất.
+**Các bước:**
+1. Thực hiện SA action mang reason: đổi tier partner sang 'select' kèm reason.
+   → Expected: HTTP 200; tier == 'select'.
+2. Verify action đã ghi audit entry (GET /v1/sa/audit-logs, retry tối đa 3× cho eventual consistency).
+   → Expected: một entry có action chứa "tier" tham chiếu partner này.
+3. Verify entry mang các field governance.
+   → Expected: actor (có type, vd 'sa-staff'); action (string non-empty); correlationId (UUID); reasoning được ghi (after.reason == reason đã gửi); resource.id tham chiếu partner; không có key password/token/secret.
+**Teardown:** xóa partner cha.
+**Expected (tổng):** Một SA action được audit đầy đủ — actor, action, reasoning, correlation ID — kèm tham chiếu resource và không lộ dữ liệu nhạy cảm.
+**Ghi chú:** PASSED. Reasoning nằm trong `after.reason` với các action mang reason (tier change / deactivate / resolve). Không có negative invalid-input (đây là verify side-effect; negative query audit-log là AUDIT_LOG_005). Idempotency N/A (side-effect, không phải create). Bổ trợ DEAL_010 (event published) / ACCOUNT_MANAGEMENT_004 (decline reason audit-logged).
 
 #### PARTNER_API_SECURITY_COMPLIANCE_002
-**Ghi chú (BLOCKED):** Không có API/rule để assert data-minimization của prospect (PII không cần thiết bị reject / không lưu). Không có endpoint enforce hay expose một rule PII-minimization để test. Xác nhận với BE nơi cái này được enforce.
+**Mô tả test:** Data minimization của prospect: register deal kèm PII thừa (SSN, ngày sinh, national id, passport — field CreateDealDto không định nghĩa) thì KHÔNG được lưu.
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner; pick plan; build deal payload nhét PII thừa (prospectSsn, prospectDateOfBirth, prospectNationalId, prospectPassportNumber).
+**Các bước:**
+1. Register deal (kèm các field PII thừa).
+   → Expected: accepted (HTTP 201, envelope statusCode 200) + id server cấp — BE nhận + strip (không reject).
+2. Verify response KHÔNG lưu bất kỳ field PII thừa nào.
+   → Expected: prospectSsn / prospectDateOfBirth / prospectNationalId / prospectPassportNumber vắng mặt trong deal lưu.
+3. Verify GET follow-up xác nhận PII không được lưu.
+   → Expected: GET /v1/sa/deals/{id} không trả các field đó.
+**Teardown:** xóa partner cha.
+**Expected (tổng):** PII thừa không được lưu (data minimization) — nhánh "not persisted" của "rejected or not persisted".
+**Ghi chú:** PASSED. BE STRIP field lạ âm thầm (nhận 201, bỏ đi) thay vì reject 400 — cả hai đều thoả yêu cầu; nếu policy chặt hơn muốn 400 khi có field lạ thì confirm với BE. Security check này CHÍNH là kịch bản input thừa (không có negative riêng); happy-path register là _001 của DEAL_REGISTRATION_PIPELINE. Idempotency N/A.
 
 #### PARTNER_API_SECURITY_COMPLIANCE_003
 **Ghi chú (BLOCKED):** Data residency (lưu trữ khu vực UAE) là một thuộc tính infra/region không có API để xác nhận dữ liệu lưu ở đâu. Verify qua review infra/DB, không qua API.

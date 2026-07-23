@@ -13,11 +13,20 @@ import asyncio
 import pytest
 from loguru import logger
 
-from utils.data_factory import make_partner, make_partner_user, unique_email
+from utils.data_factory import make_deal, make_partner, make_partner_user, unique_email
 from utils.log_helper import async_step
 
 # A syntactically valid Mongo ObjectId that does not exist — for "not found" tests.
 _GHOST_ID = "000000000000000000000000"
+
+# Reseller-pricing fields BlazeUp must NOT store (the reseller sets its own end-client
+# price; CreateDealDto does not define these — a reseller must be able to keep its
+# margin/sell price private). Data-minimization / enforcement.
+_END_CLIENT_PRICE_FIELDS = {
+    "endClientPrice": 249_999,
+    "sellPrice": 199_999,
+    "resellerMarginCents": 50_000,
+}
 
 
 @pytest.mark.api
@@ -889,3 +898,133 @@ async def test_partner_api_partner_account_management_022(sa_partners_client, cr
         logger.info("CHECK no-duplicate → OK (exactly 1 '{}' cert)", cert_type)
 
     logger.info("RESULT: re-grant certification idempotency checked")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_006(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_006: reseller sell price - end-client price is NOT stored.
+
+    Enforcement / data-minimization: a reseller sets its own price to the end client,
+    and BlazeUp must NOT store that price. Registering a reseller deal with end-client
+    pricing fields (endClientPrice / sellPrice / resellerMarginCents — none defined on
+    CreateDealDto) must not persist them. The BE accepts the request (201) and strips
+    the unknown fields (verified 2026-07-22). This is the same enforcement mechanism as
+    SECURITY_COMPLIANCE_002 (unknown fields stripped), scoped to reseller pricing.
+
+    Covers both plan lines _006 (Security) and _016 (Negative) — same assertion; _016 is
+    a cross-reference (see its note). Happy-path reseller register is DEAL_REGISTRATION_
+    PIPELINE_002; idempotency N/A (register duplicate is _022).
+    """
+    async with async_step(
+        "Setup: partner + plan + a RESELLER deal payload carrying end-client pricing"
+    ):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        payload = make_deal(pid, plan_id, dealType="reseller", **_END_CLIENT_PRICE_FIELDS)
+        logger.info(
+            "SETUP: partner {} + reseller deal payload with end-client pricing: {}",
+            partner.data.get("code"),
+            sorted(_END_CLIENT_PRICE_FIELDS),
+        )
+
+    async with async_step("[1/3] Register the reseller deal (with end-client pricing fields)"):
+        resp = await sa_deals_client.register_deal(payload)
+        deal_id = resp.deal_id
+        assert resp.status_code == 200, f"expected body statusCode 200, got {resp.status_code}"
+        assert deal_id, "the reseller deal must still be created (BE accepts + strips)"
+        assert resp.data.get("dealType") == "reseller", "deal must be a reseller deal"
+        logger.info("CHECK registered → OK (HTTP 201, reseller deal id={})", deal_id)
+
+    async with async_step("[2/3] The create response stores NONE of the end-client-price fields"):
+        leaked = [k for k in _END_CLIENT_PRICE_FIELDS if k in resp.data]
+        assert not leaked, (
+            f"reseller end-client price must not be stored, but the deal kept {leaked}"
+        )
+        logger.info("CHECK response → OK (none of {} stored)", sorted(_END_CLIENT_PRICE_FIELDS))
+
+    async with async_step("[3/3] A follow-up GET confirms the end-client price is not stored"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        leaked = [k for k in _END_CLIENT_PRICE_FIELDS if k in fetched.data]
+        assert not leaked, f"fetched reseller deal must not carry end-client price, found {leaked}"
+        logger.info("CHECK persisted → OK (GET confirms no end-client price stored)")
+
+    logger.info(
+        "RESULT: reseller end-client pricing accepted but not persisted (enforced / data-minimized)"
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_partner_account_management_016(
+    sa_partners_client, sa_deals_client, created_resources
+):
+    """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016: reseller sell price - end-client price cannot be SET via update.
+
+    Negative counterpart of _006 — same enforcement ("BlazeUp does not store the
+    reseller's end-client price"), but through the UPDATE/PATCH entry point instead of
+    register. Attempting to set the end-client price on an open reseller deal must not
+    take: (a) mixed with a valid editable field, the valid field updates but the price
+    fields are stripped (not persisted); (b) with ONLY price fields, the update is
+    rejected 400 ("No editable fields provided") — the end-client price is not a
+    recognized editable field. Verified 2026-07-22.
+    """
+    async with async_step("Setup: partner + plan + a registered (open, editable) reseller deal"):
+        partner = await sa_partners_client.create_partner(make_partner())
+        pid = partner.partner_id
+        if pid:
+            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
+        assert pid, "precondition: partner must be created"
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal_id = (
+            await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="reseller"))
+        ).deal_id
+        assert deal_id, "precondition: reseller deal must be registered"
+        logger.info("SETUP: reseller deal {} ready for update attempts", deal_id)
+
+    async with async_step(
+        "[1/3] Update with a valid field + end-client price → valid field applies, price stripped"
+    ):
+        r = await sa_deals_client.patch(
+            f"/sa-partners-api/v1/sa/deals/{deal_id}",
+            json={"notes": "QA-AUTO update note", **_END_CLIENT_PRICE_FIELDS},
+            expected_status=None,
+        )
+        assert r.status_code == 200, f"update with a valid field must succeed, got {r.status_code}"
+        d = r.json().get("data") or {}
+        assert d.get("notes") == "QA-AUTO update note", "the valid field (notes) must be updated"
+        leaked = [k for k in _END_CLIENT_PRICE_FIELDS if k in d]
+        assert not leaked, f"end-client price must not be settable via update, but kept {leaked}"
+        logger.info(
+            "CHECK mixed update → OK (notes updated; price fields {} stripped)",
+            sorted(_END_CLIENT_PRICE_FIELDS),
+        )
+
+    async with async_step(
+        "[2/3] Update with ONLY end-client price fields → 400 (not a recognized editable field)"
+    ):
+        r = await sa_deals_client.patch(
+            f"/sa-partners-api/v1/sa/deals/{deal_id}",
+            json=dict(_END_CLIENT_PRICE_FIELDS),
+            expected_status=None,
+        )
+        msg = str(r.json().get("message") or "")
+        assert r.status_code == 400 and "no editable fields" in msg.lower(), (
+            f"price-only update must be rejected 400 'No editable fields provided', got {r.status_code} {msg!r}"
+        )
+        logger.info("CHECK price-only update → OK (400 'No editable fields provided')")
+
+    async with async_step("[3/3] GET confirms: notes update persisted, no end-client price stored"):
+        fetched = await sa_deals_client.get_deal(deal_id)
+        assert fetched.data.get("notes") == "QA-AUTO update note", "the notes update must persist"
+        leaked = [k for k in _END_CLIENT_PRICE_FIELDS if k in fetched.data]
+        assert not leaked, f"fetched deal must not carry end-client price, found {leaked}"
+        logger.info("CHECK persisted → OK (notes updated, no end-client price stored)")
+
+    logger.info("RESULT: reseller end-client price cannot be set via update (stripped / 400)")

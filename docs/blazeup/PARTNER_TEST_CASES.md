@@ -163,13 +163,13 @@
 **Note:** FAILED (by design / be_gap). Rule-5 cross-entity case. BE returns **400** for cross-partner access, but it should be **404** (preferred, to hide the resource's existence) or **403** — 400 mislabels a valid request as malformed. Test tightened to assert 403/404 + marked `be_gap` until BE fixes. Tenant isolation itself holds (no data leak).
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
-**Note (NOT_STARTED):** Admin MFA policy enforcement — needs an MFA enrollment/challenge flow. Not yet automated (assess MFA endpoints: /partner/auth/mfa/*).
+**Note (BLOCKED):** Enforce partner MFA policy — a protected action must require MFA for the mandated scope (PRD §9.1: `PARTNER_ORG_ADMIN` role and/or Advanced/Premier tier). BLOCKED on a product decision: OQ-14 is unresolved — the MFA axis conflicts between PRD §9.1 (tier-based, Advanced+) and sa-portal-architecture §14.8 (role-based, `PARTNER_ORG_ADMIN`); until Renil decides which is authoritative, the expected result (who/which action must be MFA-gated) is undefined, so no assertion can be written. Also MFA enforcement is gated on Auth Hardening Phase 0 (PRs #633–641 must land before live auth). BE-side MFA endpoints already exist (partner: /v1/partner/auth/mfa/setup, /totp/enroll, /email-otp/send, /verify, /disable; sa-auth: /two-factors/otp, /sign-in/verify-otp) — so it is NOT endpoint-blocked. When unblocked, building also needs a deterministic OTP/TOTP (a fixed secret or a test-only bypass) from BE to complete the challenge in automation.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_005
-**Note (NOT_STARTED):** Guard — MSP accesses payroll data is forbidden. MSP/payroll guard; assess whether an API surface exists in this domain before automating.
+**Note (BLOCKED):** MSP scope guard (PRD §9.2): an MSP partner accessing a managed tenant's payroll/salary/health data must be forbidden (403). No API surface in the Partner Platform to exercise it — payroll data lives in a separate HR/tenant service (the core product's Payroll module), outside sa-partners-api/sa-auth-api/connectors-api (grep of all 3 live specs → 0 payroll/salary endpoints, re-verified 2026-07-22). Also needs an MSP partner + a managed tenant, and MSP tenant provisioning is itself blocked (CLIENT_HEALTH_MSP_006). Unblock when a payroll surface + MSP scope are reachable from this domain.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_006
-**Note (NOT_STARTED):** Guard — MSP exports employee records is forbidden. As _005.
+**Note (BLOCKED):** MSP scope guard (PRD §9.2: "Export data ❌"): an MSP partner exporting a managed tenant's employee records must be forbidden. No API surface in the Partner Platform to exercise it — there is no employee-export endpoint here (the only export is `/v1/sa/audit-logs/export`, i.e. the SA audit log, unrelated); employee records live in a separate HR/tenant service. Same dependency as _005 (needs MSP partner + managed tenant, itself blocked). Unblock when an employee-export surface + MSP scope are reachable from this domain.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_007
 **Test Description:** Valid refresh token issues a new access token (no re-login).
@@ -276,10 +276,12 @@
 **Note (BLOCKED):** No API surface. This is a scheduled background job (CRON) — protection auto-extension fires on the server's timer when a deal shows recent activity near expiry. There is no endpoint to trigger it on demand and no deterministic way to fast-forward the clock from a test, so the effect cannot be observed within a test run. Revisit if BE exposes a manual "run job" / time-travel hook. (P1 / Critical in the plan.)
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_006
-**Note (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
+**Intent:** CRON — protection expiry WITHOUT recent activity → the deal expires.
+**Note (BLOCKED):** Time-driven CRON job (protection-expiry sweep). When the protection window (tier-based: 60d Select / 90d Advanced / 120d Premier) elapses with NO recent activity, the deal must transition to 'expired'. No on-demand job-trigger endpoint and no test clock on staging → the expiry window cannot be fast-forwarded and the sweep cannot be run on demand, so the transition can't be observed. Unblock when BE exposes a manual "run protection-expiry job" trigger or a test clock / backdating of protectionExpiresAt.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_007
-**Note (BLOCKED):** [PATH 2026-05-27] SA: /internal/deals → /v1/sa/deals
+**Intent:** CRON — a deal already auto-extended once must NOT be auto-extended a second time (cap enforced).
+**Note (BLOCKED):** Time-driven CRON job. Verifying "no second auto-extend" needs a deal that was already auto-extended once (the outcome of _005) AND a second expiry cycle to elapse — both require the scheduled protection-expiry job to run + clock control to reach the second expiry, neither of which exists on staging. Depends on _005. Unblock when BE exposes a manual job trigger or a test clock / backdating.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_008
 **Test Description:** Approve a registered deal (POST /v1/sa/deals/{id}/approve): status → approved, reviewer stamped; rate + rate-table version expected.
@@ -365,7 +367,20 @@
 **Note (BLOCKED):** Needs a 90-day clock staging can't provide. "Re-registering a conflict-lost prospect is accepted after 90 days (when no close exists)" requires a conflict-lost deal whose loss is 90+ days old; createdAt/lostAt are server-assigned and cannot be backdated, and there is no test clock/fast-forward. The negative companion ("reject re-registration BEFORE 90 days") IS buildable now as a separate TC. Unblock when BE provides a test clock or backdating.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_018
-**Note (DEFERRED):** Win a deal (POST /v1/sa/deals/{id}/win). The WinDealDto carries a payment card + billing details + tenant provisioning — calling it has heavy side effects (provisions a tenant, may touch billing). Deferred to avoid polluting staging; build with a dedicated teardown / a BE-provided sandbox flag.
+**Test Description:** SA marks an approved deal as won (POST /v1/sa/deals/{id}/win, WinDealDto = tenant-provisioning intake): status → 'won', actualAcvCents + intake stored, and a partner.deal.won event is emitted (tenant provisioning + commission are downstream/async).
+**Setup (precondition):** SA creates a partner; register a deal; approve it (status 'approved'); build the win intake (companyWebsite, industry, admin*, tenantDomain, region, billingCycle, actualAcvCents…).
+**Test Steps:**
+1. Mark the approved deal as won (capture tenant-provisioning intake).
+   → Expected: accepted (HTTP 201, envelope statusCode 200); status 'won'; confirm message.
+2. Verify the won deal stores actualAcvCents + the submitted intake fields.
+   → Expected: actualAcvCents echoed; companyWebsite/industry/adminFirstName/adminLastName/tenantDomain stored as sent.
+3. Verify a 'partner.deal.won' audit event is emitted (approved → won).
+   → Expected: an audit entry (action 'partner.deal.won') for this deal with after.status == 'won'.
+4. Verify the won status persists (GET /v1/sa/deals/{id}).
+   → Expected: status 'won', actualAcvCents persisted.
+**Teardown:** delete the parent partner.
+**Expected (overall):** An approved deal transitions to 'won' with the intake stored and a won-event emitted; tenant provisioning + commission are downstream (async — the commission does not appear synchronously in /v1/sa/commissions), out of scope here.
+**Note:** PASSED. Approve now requires `planId` (ApproveDealDto changed — client auto-resolves it). Win response message: "Deal marked as won; tenant provisioning kicked off". Negative/illegal-state counterpart is _034.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_019
 **Test Description:** SA marks an approved deal as lost (POST /v1/sa/deals/{id}/lose). Losing requires the deal to be 'approved' first.
@@ -498,6 +513,22 @@
 **Expected (overall):** extend-protection is a parameterized mutating action — repeats are additive by design (not an idempotent no-op, not capped). Each call is also recorded in protectionExtensions[].
 **Note:** PASSED. Probed per rule 8 (mutating action ≠ POST-create): behaviour is additive (exp0 +30 → +30 = +60). BE stamps each extension in protectionExtensions[] (extendedBy/at, previous/newExpiresAt, addedDays, trigger, reasoning).
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_034
+**Test Description:** Negative counterpart of _018 (win): illegal transitions + bad ids are rejected with the correct code; the DTO's required intake fields should be enforced too. All cases run (failures collected).
+**Setup (precondition):** SA creates a partner; a fresh approved deal is built per required-field case (a successful win consumes the deal).
+**Test Steps:** (each case = one POST /v1/sa/deals/{id}/win)
+1. Missing companyWebsite → expected **400** (required). **Currently FAILS** — BE returns 201 (won).
+2. Missing industry → expected **400**. **Currently FAILS** — BE returns 201.
+3. Missing adminFirstName → expected **400**. **Currently FAILS** — BE returns 201.
+4. Missing adminLastName → expected **400**. **Currently FAILS** — BE returns 201.
+5. Win a non-approved (registered) deal → **400** 'cannot transition'.
+6. Ghost deal id (well-formed, absent) → **404** 'not found'. (Win correctly returns 404 here.)
+7. Malformed deal id ('not-an-id') → **400** 'invalid id'.
+8. Re-win an already-won deal → **400** 'cannot transition from won to won' (repeat rejected; mutating action, not a create).
+**Teardown:** delete the parent partner.
+**Expected (overall):** Missing required intake → 400; non-approved/already-won → 400; ghost id → 404; malformed id → 400.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (cases 1–4): WinDealDto declares companyWebsite/industry/adminFirstName/adminLastName as required, but the BE accepts a win with any/all missing (even an empty body → 201, deal won) — required-intake validation is not enforced. Cases 5–8 are correct (note: win returns 404 for a ghost id, unlike other SA endpoints). Confirm with BE.
+
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001
@@ -526,10 +557,10 @@
 ### API · DEAL_COLLABORATION
 
 #### PARTNER_API_DEAL_COLLABORATION_001
-**Note (BLOCKED):** No collaboration/notes-thread API. A deal carries only a single flat `notes` string (set at register / via deal update) — there is no comment/activity-thread endpoint to add, list, or attribute collaboration entries. Re-scope with BE: if "collaboration" is just the flat notes field, it is already covered by the register/update TCs; otherwise the endpoints do not exist yet.
+**Note (BLOCKED):** PRD §4.5 / §8.5 specifies a per-deal **SHARED NOTES thread** — partner (on stgpartners) and the BlazeUp SA rep (on stgsa) both add notes to the SAME deal, each note recording the author (actor) + timestamp, append-only (see the §4.5 "SHARED NOTES" mock: "Jamie Walsh 1 May …" / "Sarah Chen 2 May …"). PRD §8.5 puts the write on the partner side: `PATCH /v1/partner/deals/:id (notes, docs)`. NOT built on staging: (a) the partner-portal deal is **GET-only** (`GET /v1/partner/portal/deals/{id}` — no PATCH), so a partner cannot add a note; (b) the SA side (`PATCH /v1/sa/deals/{id}`) only **overwrites one flat `notes` string** — no per-note actor/timestamp, no append, no shared thread. So the shared-notes collaboration feature does not exist yet. Do NOT re-scope to "SA overwrites a flat notes string" and call it collaboration (that is a different, lesser feature and would misrepresent the test). Unblock when BE ships the shared-notes thread (actor + timestamp, append, partner + SA writers).
 
 #### PARTNER_API_DEAL_COLLABORATION_002
-**Note (BLOCKED):** No document/attachment API on deals. No endpoint to upload, list, or download deal documents. Build when BE exposes a deal-documents surface.
+**Note (BLOCKED):** PRD §4.5 shows a per-deal **DOCUMENTS** area ("[Upload]" + a document list) and §8.5 folds it into `PATCH /v1/partner/deals/:id (notes, docs)`. NOT built on staging: the partner-portal deal is GET-only, the SA `UpdateDealDto` has no `documents` field, and PATCH with a `documents` payload is rejected ("No editable fields provided") — there is no endpoint to upload, list, or download deal documents. Unblock when BE exposes a deal-documents surface.
 
 ### API · PIPELINE_MANAGEMENT
 
@@ -599,7 +630,7 @@
 **Note (BLOCKED):** Co-sell split lock-after-accept endpoint POST /v1/partner/deals/:id/cosell-split-accept not in dev build. Same endpoint as _001. Unblock when BE ships it.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_011
-**Note (redundant):** "Invalid expectedCloseDate → 400" is already covered by DEAL_REGISTRATION_PIPELINE_021 (step 2e). Not blocked; no distinct coverage if built standalone.
+**Note (NOT_STARTED — redundant / cross-ref):** "Validate invalid expectedCloseDate → 400" is already exercised by **DEAL_REGISTRATION_PIPELINE_021** (its bad-date case: `expectedCloseDate` not ISO-8601 → 400, and missing expectedCloseDate → 400). _021 currently PASSES, so this validation is covered. NOT blocked — there is simply no distinct assertion to add if built standalone. Do NOT build a duplicate; treat as covered by _021. (If a standalone line is ever needed, point it at the same POST /v1/sa/deals date validation.)
 ### API · REFERRAL_ATTRIBUTION
 
 #### PARTNER_API_REFERRAL_ATTRIBUTION_001
@@ -652,7 +683,18 @@
 **Note (BLOCKED):** Downstream commission-calc ("renewal EE → lowest rate"); needs the win→commission pipeline (deferred) and there's no API to read the computed rate. Unblock when a commission can be created + its rate is readable.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_002
-**Note (NOT_STARTED — buildable now):** GET /v1/partner/portal/commissions (commission ledger/history) exists; can assert list schema + partner scoping (passes even when empty). Next build candidate. Distinct from PARTNER_PORTAL_004 (commissions/summary, PASSED).
+**Test Description:** SA lists the commission ledger: GET /sa-partners-api/v1/sa/commissions returns a paginated, filterable, well-formed ledger.
+**Test Steps:**
+1. GET /v1/sa/commissions (page=1, limit=5).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}.
+2. Verify pagination.
+   → Expected: returned page size ≤ requested limit (5).
+3. Verify each entry's schema + no sensitive leak (data-dependent).
+   → Expected: each entry carries an id and a valid status enum (earned/pending_approval/approved/paid/disputed/clawback/cancelled); no password/token/secret key. WARN-skips if the ledger is empty.
+4. Verify a status filter returns only matching entries (data-dependent).
+   → Expected: status=<first entry's status> returns only that status. WARN-skips if empty.
+**Expected (overall):** Commission-ledger list returns a correct, paginated, filterable, non-sensitive envelope.
+**Note:** PASSED. Read-only (no setup/cleanup). Commission rows are created downstream on deal-win (DEAL_018, deferred), so on staging the ledger is legitimately empty → steps 3–4 WARN-skip; the list contract still holds. Negative (invalid filter/pagination) counterpart is _017.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_003
 **Note (BLOCKED, positive):** POST /v1/partner/portal/commissions/{id}/dispute exists, but disputing needs a real commission {id} (deferred win pipeline). The negative (dispute a ghost id → 4xx) is buildable now. Unblock when a commission record can be created.
@@ -664,7 +706,20 @@
 **Note (BLOCKED):** Waiver decision / final-outcome event endpoint absent (no waiver path, 2026-06-30). Pairs with _004/_012.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_006
-**Note (NOT_STARTED — buildable now):** Rate-table endpoint exists as POST /v1/sa/rate-table (TC says PUT /internal/commission/rates — method PUT→POST, path renamed). Can create a new version + assert it persists. The "cached" (Redis invalidation) side is internal/not API-observable (see _014).
+**Test Description:** SA upserts a commission rate (POST /sa-partners-api/v1/sa/rate-table): the new rate is stored in place and the prior value is kept under previousRate (a one-level version trail); no duplicate row is created.
+**Setup (precondition):** GET the rate table; pick an EXISTING combo (tier, dealType, commissionType) and capture its original rate + clawbackWindowDays. Register a teardown that RESTORES the original rate (there is no DELETE endpoint, so the test never creates a new combo).
+**Test Steps:**
+1. Upsert the SAME combo with a new rate.
+   → Expected: accepted (HTTP 201, envelope statusCode 200); confirm message.
+2. Verify the new rate is stored + the prior value is kept under previousRate (version trail).
+   → Expected: stored rate == new rate; previousRate.rate == the original rate; the combo (tier/dealType/commissionType) is unchanged.
+3. Verify GET reflects the new rate AND the combo is still exactly ONE row (in-place, no duplicate).
+   → Expected: one matching row with the new rate and the same _id.
+4. Repeat the upsert with a 2nd new rate (mutating action — probe the repeat behavior).
+   → Expected: in-place update — still one row; rate == 2nd value; previousRate advances to the 1st value (not a duplicate create).
+**Teardown:** restore the combo's original rate.
+**Expected (overall):** Rate upsert stores the new rate in place, versions the prior value via previousRate, and never duplicates the combo.
+**Note:** PASSED. Endpoint is POST /v1/sa/rate-table (plan said "PUT /internal/commission/rates" — method PUT→POST, path renamed). rate constraint 0..1. The "cached" (Redis invalidation) side is internal / not API-observable (see _014). Mutating upsert → no separate duplicate-create idempotency TC (repeat is in-place, verified in step 4). Negative counterpart is _018.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_007
 **Note (BLOCKED):** Two-approver "approve over threshold" needs /v1/sa/commissions/{id}/approve-payout (dual approval), absent from the spec — only a single POST /{id}/approve exists. Also needs a commission record.
@@ -695,6 +750,34 @@
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_016
 **Note (BLOCKED):** "Payout banking details encrypted at rest" (CSFLE) is an internal storage property with no API to confirm; no payout/banking endpoint in the commissions area (banking lives on partner.payoutAccounts). Verify via DB/infra review, not API.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_017
+**Test Description:** Negative counterpart of _002 (commission ledger): invalid filter/pagination is rejected with the correct code (never 5xx). All cases run (failures collected).
+**Test Steps:** (each case = one GET /v1/sa/commissions with the param under test)
+1. Bad status enum ('bogus') → **400** 'status must be one of'.
+2. Malformed partnerId ('not-an-id') → **400** 'partnerId must be a mongodb id'.
+3. page=0 → **400** 'skip must be a non-negative integer'.
+4. page=-1 → **400** 'skip must be a non-negative integer'.
+5. limit over max (999999) → **400** 'limit must not exceed 100'.
+6. limit=0 → **200** (leniently defaulted — observed, never 5xx).
+**Expected (overall):** Validated invalid filter/pagination → 400; limit=0 defaults gracefully; never 5xx.
+**Note:** PASSED. New negative line paired with _002 (read-only GET → no idempotency TC). limit=0 is leniently defaulted (200) — a weak-validation note to confirm with BE.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_018
+**Test Description:** Negative counterpart of _006 (rate upsert): invalid input is rejected with 400 + a field-level message BEFORE any write (no combo created/mutated). All cases run (failures collected).
+**Test Steps:** (each case = one POST /v1/sa/rate-table with the field under test broken)
+1. Invalid tier enum ('platinum') → **400** 'tier must be one of'.
+2. Invalid dealType enum ('wholesale') → **400** 'dealType must be one of'.
+3. Invalid commissionType enum ('bogus') → **400** 'commissionType must be one of'.
+4. Missing tier → **400** 'tier must be one of'.
+5. Missing dealType → **400** 'dealType must be one of'.
+6. Missing commissionType → **400** 'commissionType must be one of'.
+7. Missing rate → **400** message mentions "rate must".
+8. Negative rate (-0.1) → **400** 'rate must not be less than 0'.
+9. Rate over 1 (1.5) → **400** 'rate must not be greater than 1'.
+10. Non-numeric rate ('abc') → **400** 'rate must be a number'.
+**Expected (overall):** Every invalid rate upsert is rejected with 400 and nothing is persisted (rate must be 0..1). No teardown needed (no write).
+**Note:** PASSED. New negative line paired with _006.
 ### API · PARTNER_ACCOUNT_MANAGEMENT
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001
@@ -777,7 +860,18 @@
 **Note:** PASSED. Negative (invalid tier / same tier / bad id) counterpart is _015.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_006
-**Note (BLOCKED):** [BLOCKED — NO API 2026-06-17] Searched OpenAPI specs of all 11 platform services (admin-api, compliance-api, connectors, helpplatform-api, sa-auth-api, sa-governance-api, sa-partners-api, sa-plans-api, sa-tenants-api, setting-api, workflow-api): 0 fields for reseller/end-client price (only basePrice/totalPrice in plan/billing, unrelated). No endpoint or field to send/store an end-client price → the data-model this TC describes is not implemented in any current API. Confirm with product/BE: which service owns this, or is it a future PRD feature (§2.2/§7.2/§11)? Not automatable until the model exists.
+**Test Description:** Reseller sell-price enforcement / data-minimization: a reseller sets its own price to the end client, and BlazeUp must NOT store that price. Registering a reseller deal with end-client pricing fields must not persist them.
+**Setup (precondition):** SA creates a partner; pick a plan; build a RESELLER deal payload that injects end-client pricing fields (endClientPrice, sellPrice, resellerMarginCents — none defined on CreateDealDto).
+**Test Steps:**
+1. Register the reseller deal (with the end-client pricing fields).
+   → Expected: accepted (HTTP 201, envelope statusCode 200) + server-assigned id; dealType == 'reseller'. The BE accepts + strips (does not reject).
+2. Verify the create response stores NONE of the end-client-price fields.
+   → Expected: endClientPrice / sellPrice / resellerMarginCents absent from the stored deal.
+3. Verify a follow-up GET confirms the end-client price is not stored.
+   → Expected: GET /v1/sa/deals/{id} returns none of those fields.
+**Teardown:** delete the parent partner.
+**Expected (overall):** The reseller's end-client price is not persisted (enforced / data-minimized) — the requirement is precisely that BlazeUp does NOT store it.
+**Note:** PASSED. Confirmed the requirement "end-client price is not stored": CreateDealDto has no such field and the BE strips the unknown fields on register (accepts 201, drops them). Same enforcement mechanism as SECURITY_COMPLIANCE_002 (unknown fields stripped). This is the REGISTER-path check; the UPDATE/PATCH-path counterpart is the negative _016. Happy-path reseller register is DEAL_REGISTRATION_PIPELINE_002; idempotency N/A (duplicate register is _022).
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_007
 **Note (BLOCKED):** [BLOCKED — NO API TRIGGER 2026-06-17] This is a scheduled background JOB (quarterly tier recalculation), not an API endpoint. No manual-trigger endpoint exists in any service to invoke it on demand, so it cannot be exercised via API automation. Belongs to BE unit/integration tests (or needs a QA-only trigger endpoint). Note: manual tier change IS covered by _005 (POST /upgrade-tier); this TC is specifically the automated quarterly job. Confirm with BE whether a trigger endpoint can be exposed.
@@ -862,7 +956,18 @@
 **Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 6): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–5 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016
-**Note (BLOCKED):** [BLOCKED — NO API 2026-06-17] Searched OpenAPI specs of all 11 platform services (admin-api, compliance-api, connectors, helpplatform-api, sa-auth-api, sa-governance-api, sa-partners-api, sa-plans-api, sa-tenants-api, setting-api, workflow-api): 0 fields for reseller/end-client price (only basePrice/totalPrice in plan/billing, unrelated). No endpoint or field to send/store an end-client price → the data-model this TC describes is not implemented in any current API. Confirm with product/BE: which service owns this, or is it a future PRD feature (§2.2/§7.2/§11)? Not automatable until the model exists.
+**Test Description:** Negative counterpart of _006 (same enforcement — BlazeUp does not store the reseller's end-client price) via the UPDATE/PATCH entry point: the end-client price cannot be SET on an open reseller deal.
+**Setup (precondition):** SA creates a partner; pick a plan; register a RESELLER deal (open / editable).
+**Test Steps:**
+1. Update the deal with a valid editable field (notes) + end-client price fields (PATCH /v1/sa/deals/{id}).
+   → Expected: HTTP 200; the valid field (notes) is applied; endClientPrice/sellPrice/resellerMarginCents are stripped (not persisted).
+2. Update with ONLY end-client price fields (no editable field).
+   → Expected: HTTP 400 "No editable fields provided" — the end-client price is not a recognized editable field.
+3. Verify via GET.
+   → Expected: the notes update persisted; no end-client price fields stored.
+**Teardown:** delete the parent partner.
+**Expected (overall):** The reseller's end-client price cannot be set via update — stripped when mixed with a valid field, rejected (400) when sent alone. Never persisted.
+**Note:** PASSED. Negative/update-path counterpart of _006 (register path). UpdateDealDto's editable whitelist (dealType/prospectEmail/prospectPhone/estimatedAcvCents/planId/expectedCloseDate/notes/wonTenantId) has no end-client price field, so it is stripped or the update is rejected.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_017
 **Note (BLOCKED):** [BLOCKED — NO API TRIGGER 2026-06-17] This is a scheduled background JOB (quarterly tier recalculation), not an API endpoint. No manual-trigger endpoint exists in any service to invoke it on demand, so it cannot be exercised via API automation. Belongs to BE unit/integration tests (or needs a QA-only trigger endpoint). Note: manual tier change IS covered by _005 (POST /upgrade-tier); this TC is specifically the automated quarterly job. Confirm with BE whether a trigger endpoint can be exposed.
@@ -1340,10 +1445,32 @@
 ### API · SECURITY_COMPLIANCE
 
 #### PARTNER_API_SECURITY_COMPLIANCE_001
-**Note (NOT_STARTED — buildable):** Audit-log endpoints exist: perform an SA action (approve/deactivate) then GET /v1/sa/audit-logs and assert the entry carries actor + action + reasoning + correlationId. Partially covered by DEAL_010 / ACCOUNT_MANAGEMENT_004; a dedicated envelope-completeness TC is buildable.
+**Test Description:** Every SA action writes a well-formed, correlated audit entry: performing a reason-carrying SA action produces a GET /v1/sa/audit-logs entry that carries actor + action + reasoning + correlationId (+ a resource reference), leaking no sensitive field.
+**Setup (precondition):** SA creates a partner (the action target); build a unique tier-change reason.
+**Test Steps:**
+1. Perform a reason-carrying SA action: change the partner's tier to 'select' with a reason.
+   → Expected: HTTP 200; tier == 'select'.
+2. Verify the action wrote an audit entry (GET /v1/sa/audit-logs, retry up to 3× for eventual consistency).
+   → Expected: an entry whose action mentions "tier" references this partner.
+3. Verify the entry carries the governance fields.
+   → Expected: actor (with a type, e.g. 'sa-staff'); action (non-empty string); correlationId (a UUID); reasoning captured (after.reason == the supplied reason); resource.id references the acted-on partner; no password/token/secret key.
+**Teardown:** delete the parent partner.
+**Expected (overall):** An SA action is fully audited — actor, action, reasoning, and a correlation ID — with a resource reference and no sensitive leak.
+**Note:** PASSED. Reasoning is captured under `after.reason` for reason-carrying actions (tier change / deactivate / resolve). No invalid-input negative (side-effect verification; audit-log query negatives are AUDIT_LOG_005). Idempotency N/A (side-effect, not a create). Complements DEAL_010 (event published) / ACCOUNT_MANAGEMENT_004 (decline reason audit-logged).
 
 #### PARTNER_API_SECURITY_COMPLIANCE_002
-**Note (BLOCKED):** No API/rule to assert prospect data-minimization (unnecessary PII rejected / not persisted). No endpoint enforces or exposes a PII-minimization rule to test against. Confirm with BE where this is enforced.
+**Test Description:** Prospect data minimization: registering a deal with extra, unnecessary PII (SSN, date of birth, national id, passport — fields the CreateDealDto does not define) must NOT persist them.
+**Setup (precondition):** SA creates a partner; pick a plan; build a deal payload that injects unnecessary PII fields (prospectSsn, prospectDateOfBirth, prospectNationalId, prospectPassportNumber).
+**Test Steps:**
+1. Register the deal (with the unnecessary PII fields).
+   → Expected: accepted (HTTP 201, envelope statusCode 200) + server-assigned id — the BE accepts + strips (does not reject).
+2. Verify the create response persists NONE of the unnecessary PII fields.
+   → Expected: prospectSsn / prospectDateOfBirth / prospectNationalId / prospectPassportNumber absent from the stored deal.
+3. Verify a follow-up GET confirms the PII is not stored.
+   → Expected: GET /v1/sa/deals/{id} returns none of those fields.
+**Teardown:** delete the parent partner.
+**Expected (overall):** Unnecessary PII is not persisted (data minimization) — the "not persisted" branch of "rejected or not persisted".
+**Note:** PASSED. BE STRIPS unknown fields silently (accepts 201, drops them) rather than rejecting with 400 — both satisfy the requirement; if a stricter policy wants a 400 on unknown fields, confirm with BE. This security check IS the unwanted-input scenario (no separate negative); happy-path register is _001 of DEAL_REGISTRATION_PIPELINE. Idempotency N/A.
 
 #### PARTNER_API_SECURITY_COMPLIANCE_003
 **Note (BLOCKED):** Data residency (UAE regional storage) is an infra/region property with no API to confirm where data is stored. Verify via infra/DB review, not API.
