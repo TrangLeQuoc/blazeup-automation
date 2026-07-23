@@ -21,6 +21,7 @@ from api_clients.blazeup.admin.partner.sa_commissions_client import SaCommission
 from api_clients.blazeup.admin.partner.sa_deals_client import SaDealsClient
 from api_clients.blazeup.admin.partner.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
+from pages.blazeup.partner.login_page import PartnerLoginPage
 from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui
 from utils.screenshot_on_fail import attach_screenshot
@@ -232,6 +233,7 @@ async def _create_browser_context(
     settings: Settings,
     result_dir: Path,
     storage_state: dict | None = None,
+    base_url: str | None = None,
 ) -> tuple[Browser, BrowserContext]:
     """Launch a browser and create a context.
 
@@ -259,7 +261,7 @@ async def _create_browser_context(
 
     context_options: dict[str, Any] = {
         "viewport": {"width": settings.viewport_width, "height": settings.viewport_height},
-        "base_url": str(settings.base_url),
+        "base_url": base_url or str(settings.base_url),
         "record_video_dir": str(result_dir / "videos"),
         "record_video_size": {"width": settings.viewport_width, "height": settings.viewport_height},
     }
@@ -431,6 +433,87 @@ def make_page(authenticated_page: Page, settings: Settings):
 
     def _make(page_cls):
         return page_cls(authenticated_page, str(settings.base_url))
+
+    return _make
+
+
+# ---------------------------------------------------------------------------
+# Partner-portal UI auth — separate origin (stgpartners) + single-step login
+# ---------------------------------------------------------------------------
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
+    """Log in to the PARTNER portal once and cache its storage state.
+
+    Mirrors ``auth_state`` but for the partner portal (stgpartners.blazeup.ai):
+    partner credentials + the single-step ``PartnerLoginPage`` + the partner base
+    URL. Session-scoped so the partner login runs exactly once per run.
+    """
+    partner_url = settings.partner_base_url
+    if partner_url is None:
+        pytest.skip("BLOCKED: PARTNER_BASE_URL not configured — cannot run partner UI tests")
+    partner_url = str(partner_url)
+    logger.log("START", "Login UI (partner) - establishing the shared partner-portal session")
+    async with async_playwright() as p:
+        browser_launcher = getattr(p, settings.browser)
+        browser = await browser_launcher.launch(headless=settings.headless)
+        context = await browser.new_context(
+            viewport={"width": settings.viewport_width, "height": settings.viewport_height},
+            base_url=partner_url,
+        )
+        page_obj = await context.new_page()
+        email, password = require_credentials(settings.partner_email, settings.partner_password)
+        try:
+            await login_ui(page_obj, partner_url, email, password, login_page_cls=PartnerLoginPage)
+            state = await context.storage_state()
+        except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
+            logger.error("Login UI (partner) FAILED — blocking the run: {}", exc)
+            pytest.skip(f"BLOCKED: shared partner UI login failed — {blocked_reason(exc)}")
+        finally:
+            await context.close()
+            await browser.close()
+
+    logger.info("Login UI (partner) complete - storage state cached")
+    yield state
+    logger.log("FINISH", "Logout UI (partner) - shared partner session closed")
+
+
+@pytest_asyncio.fixture
+async def partner_authenticated_page(
+    request: pytest.FixtureRequest,
+    settings: Settings,
+    partner_auth_state: dict,
+    result_dir: Path,
+) -> AsyncGenerator[Page]:
+    """Pre-authenticated PARTNER-portal page — fresh context per test, login once."""
+    trace_name = request.node.name.replace("/", "_").replace("\\", "_")
+    async with async_playwright() as playwright:
+        browser, context = await _create_browser_context(
+            playwright,
+            settings,
+            result_dir,
+            storage_state=partner_auth_state,
+            base_url=str(settings.partner_base_url),
+        )
+        page_obj = await context.new_page()
+        request.node._playwright_page = page_obj
+        try:
+            yield page_obj
+        finally:
+            await _save_page_artifacts(page_obj, request, result_dir)
+            await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
+            await page_obj.close()
+            await context.close()
+            await browser.close()
+
+
+@pytest.fixture
+def make_partner_page(partner_authenticated_page: Page, settings: Settings):
+    """Factory for partner-portal page objects (bound to the partner base URL)."""
+
+    def _make(page_cls):
+        return page_cls(partner_authenticated_page, str(settings.partner_base_url))
 
     return _make
 

@@ -276,6 +276,22 @@ def collect_fail_groups(log_text: str) -> list[FailGroup]:
     return list(groups.values())
 
 
+def collect_passed_tcs(log_text: str) -> set[int]:
+    """Return the numeric ids of every TC that PASSED this run (from the log verdicts).
+
+    Feeds the Bug Tracker's RESOLVED report: an open bug whose TC passed is no longer
+    reproducing. A PASSED verdict is authoritative — a transient ERROR line inside a
+    passing test never produces a FAILED verdict, so pass/fail sets stay disjoint.
+    """
+    passed: set[int] = set()
+    for ln in _parse_lines(log_text):
+        if ln.level == "PASSED":
+            m = re.search(r"\d+", ln.tc or "")
+            if m:
+                passed.add(int(m.group()))
+    return passed
+
+
 def _group_prompt(unknown: list[FailGroup]) -> str:
     """Compact prompt: classify ONLY the distinct unknown signatures (index + one line each)."""
     listing = "\n".join(f"[{i}] {g.evidence[:_MAX_EVIDENCE_CHARS]}" for i, g in enumerate(unknown))
@@ -541,6 +557,11 @@ def _resolve_log_path(target: str) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # The reconciliation block prints emojis (✅ 🔵 ⚠ 🆕); the Windows console's
+    # cp1252 default would crash on them, so force UTF-8 output when possible.
+    with contextlib.suppress(Exception):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="AI triage of a BlazeUp test run log.")
     parser.add_argument("target", help="run directory or path to test.log")
     parser.add_argument("--provider", default=None, help="override AI_PROVIDER")
@@ -560,8 +581,23 @@ def main(argv: list[str] | None = None) -> int:
     log_text = log_path.read_text(encoding="utf-8", errors="replace")
 
     groups = collect_fail_groups(log_text)
+    passed_tcs = collect_passed_tcs(log_text)
     if not groups:
+        # No failures — but a fully-green run can still RESOLVE open bugs (every
+        # be_gap test that a BE fix turned green lands here). Report those and stop.
+        from utils.bug_tracker import reconcile as reconcile_bugs
+        from utils.bug_tracker import render as render_bugs
+
+        recon = reconcile_bugs([], passed_tc_ids=passed_tcs)
         print(f"No failures found in {log_path} — nothing to triage.")
+        block = render_bugs(recon)
+        print(block)
+        if recon.resolved:
+            out_md = log_path.parent.parent / "ai_triage.md"
+            out_md.write_text(
+                "# AI Failure Triage\n\n(no failures)\n" + block + "\n", encoding="utf-8"
+            )
+            print(f"\nSaved: {out_md}")
         return 0
 
     total = sum(g.count for g in groups)
@@ -592,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
     from utils.bug_tracker import reconcile as reconcile_bugs
     from utils.bug_tracker import render as render_bugs
 
-    recon = reconcile_bugs(groups)
+    recon = reconcile_bugs(groups, passed_tc_ids=passed_tcs)
     bug_block = render_bugs(recon)
 
     md = render_markdown(groups, log_path, summary) + "\n" + bug_block + "\n"

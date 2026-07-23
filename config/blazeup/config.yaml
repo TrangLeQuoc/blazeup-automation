@@ -54,7 +54,10 @@ modules:
   # (My Pipeline, partner dashboard, ...) belong to the blazeup_partner domain.
   PARTNER:
     number: 6        # reuses the old "PARTNERS" nav-page slot (same concept, merged)
-    # ui: {...}      # add SA Partner Module UI sections when written
+    ui:
+      # Partner-portal (stgpartners) UI sections. PARTNER_PORTAL_SHELL = the
+      # nav/shell page-load smoke across the portal's primary pages.
+      PARTNER_PORTAL_SHELL: 1
     api:
       # API grouped by backend FEATURE/resource (not by page):
       PARTNER_ACCOUNT_MANAGEMENT: 1

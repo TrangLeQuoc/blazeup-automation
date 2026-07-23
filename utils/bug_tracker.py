@@ -7,6 +7,13 @@ defect (triage category ``app_bug``), decide:
 * KNOWN OPEN — a row exists and is still open → just report the Bug ID.
 * REOPEN     — a row exists but is Closed and the test failed again → report ⚠.
 
+The mirror of REOPEN is reported too, keyed by the run's PASSED test-case ids:
+
+* RESOLVED   — a row exists and is still open, but the TC PASSED this run → the
+               defect is no longer reproducing → report ✅ and suggest closing it.
+               Suggest-only: the tracker's Status is NEVER auto-changed (a single
+               pass can be flaky/env — a human decides the close).
+
 Writes happen only on **local** runs (``CI`` env unset) and only to this separate
 file — never the test plan. On CI it is propose-only (report, no file change).
 """
@@ -28,6 +35,7 @@ class BugRow:
     tc_id: int
     bug_id: str
     status: str
+    evidence: str = ""  # the assertion/evidence recorded when the bug was opened
 
 
 @dataclass
@@ -35,6 +43,7 @@ class Reconciliation:
     new: list[dict] = field(default_factory=list)
     known_open: list[BugRow] = field(default_factory=list)
     reopen: list[BugRow] = field(default_factory=list)
+    resolved: list[BugRow] = field(default_factory=list)
     written: int = 0
     wrote_to_file: bool = False
     tracker: Path = DEFAULT_TRACKER
@@ -43,6 +52,25 @@ class Reconciliation:
 def _tc_int(tc: str) -> int | None:
     m = re.search(r"\d+", tc or "")
     return int(m.group()) if m else None
+
+
+# Normalize a failure message to a stable signature (mongo ids / numbers / quoted
+# values masked) so the SAME root cause collapses to one string. Mirrors
+# ai_triage._signature — used to tell whether a re-failure is the SAME defect as a
+# closed bug (→ reopen) or a DIFFERENT one (→ open a new bug).
+_ID_RE = re.compile(r"\b[0-9a-fA-F]{24}\b")
+_QUOTED_RE = re.compile(r"(['\"]).*?\1")
+_NUM_RE = re.compile(r"\d+")
+
+
+def _sig(text: str) -> str:
+    core = (text or "").split(" -- ", 1)[-1]
+    if "AssertionError:" in core:
+        core = core.split("AssertionError:", 1)[-1]
+    s = _ID_RE.sub("<id>", core.strip())
+    s = _QUOTED_RE.sub("'<v>'", s)
+    s = _NUM_RE.sub("<n>", s)
+    return s.lower()[:120]
 
 
 def _registry_lookup() -> dict[int, object]:
@@ -76,6 +104,7 @@ def load_tracker(path: Path) -> dict[int, BugRow]:
     ws = wb[_SHEET]
     hdr = {str(c.value).strip().lower(): i for i, c in enumerate(ws[1], 1) if c.value}
     ci_bug, ci_tc, ci_st = hdr.get("bug id"), hdr.get("test case id"), hdr.get("status")
+    ci_ev = hdr.get("evidence / assertion") or hdr.get("summary")
     out: dict[int, BugRow] = {}
     if not (ci_bug and ci_tc and ci_st):
         return out
@@ -87,6 +116,7 @@ def load_tracker(path: Path) -> dict[int, BugRow]:
             tc_id=tc,
             bug_id=str(row[ci_bug - 1].value or "").strip(),
             status=str(row[ci_st - 1].value or "").strip(),
+            evidence=(str(row[ci_ev - 1].value or "").strip() if ci_ev else ""),
         )
     return out
 
@@ -115,8 +145,19 @@ def _append_rows(path: Path, rows: list[dict]) -> int:
     return len(rows)
 
 
-def reconcile(groups, *, tracker_path: Path = DEFAULT_TRACKER, allow_write: bool | None = None):
-    """Compare app_bug failures to the tracker; append new rows on local runs."""
+def reconcile(
+    groups,
+    *,
+    passed_tc_ids: set[int] | None = None,
+    tracker_path: Path = DEFAULT_TRACKER,
+    allow_write: bool | None = None,
+):
+    """Compare app_bug failures to the tracker; append new rows on local runs.
+
+    ``passed_tc_ids`` (the run's PASSED test-case ids) drives the RESOLVED report:
+    an open bug whose TC passed this run is no longer reproducing → suggest closing
+    it. Detection is suggest-only — the tracker's Status is never auto-changed.
+    """
     res = Reconciliation(tracker=tracker_path)
     existing = load_tracker(tracker_path)
     is_ci = bool(os.environ.get("CI"))
@@ -137,34 +178,64 @@ def reconcile(groups, *, tracker_path: Path = DEFAULT_TRACKER, allow_write: bool
     reg = _registry_lookup()
     next_n = _next_bug_seq(existing)
     to_append: list[dict] = []
+
+    def _build_entry(tc_id: int, g: object, bug_n: int, note: str) -> dict:
+        tc = reg.get(tc_id)  # enrich from the code registry when available
+        name = getattr(tc, "tc_string", "") if tc else ""
+        evidence = (getattr(g, "evidence", "") or "")[:300]
+        return {
+            "Bug ID": f"BUG-{bug_n:03d}",
+            "Test Case ID": tc_id,
+            "Test Case Name": name,
+            "Module": getattr(tc, "module", "").capitalize() if tc else "",
+            "Feature": _feature_from_tc_string(name),
+            "Severity": "Major",
+            "Priority": getattr(tc, "priority", "P2") if tc else "P2",
+            "Status": "Open",
+            "Reported By": "AI Triage",
+            "Date Opened": datetime.date.today().isoformat(),
+            "Summary": (getattr(tc, "title", "") if tc else "") or evidence[:200],
+            "Evidence / Assertion": evidence,
+            "Notes": note,
+        }
+
     for tc_id, g in sorted(candidates):
         row = existing.get(tc_id)
+        cur_ev = (getattr(g, "evidence", "") or "")[:300]
         if row is None:
-            tc = reg.get(tc_id)  # enrich from the code registry when available
-            name = getattr(tc, "tc_string", "") if tc else ""
-            evidence = (getattr(g, "evidence", "") or "")[:300]
-            entry = {
-                "Bug ID": f"BUG-{next_n:03d}",
-                "Test Case ID": tc_id,
-                "Test Case Name": name,
-                "Module": getattr(tc, "module", "").capitalize() if tc else "",
-                "Feature": _feature_from_tc_string(name),
-                "Severity": "Major",
-                "Priority": getattr(tc, "priority", "P2") if tc else "P2",
-                "Status": "Open",
-                "Reported By": "AI Triage",
-                "Date Opened": datetime.date.today().isoformat(),
-                "Summary": (getattr(tc, "title", "") if tc else "") or evidence[:200],
-                "Evidence / Assertion": evidence,
-                "Notes": "auto-added by AI triage",
-            }
+            entry = _build_entry(tc_id, g, next_n, "auto-added by AI triage")
             next_n += 1
             res.new.append(entry)
             to_append.append(entry)
         elif row.status.lower() in _CLOSED_STATUSES:
-            res.reopen.append(row)
+            # A closed bug is failing again. If the failure matches the recorded
+            # evidence (same root cause) → REOPEN the same bug. If it's a DIFFERENT
+            # failure (or the old evidence is unknown to compare) → treat SAME-cause
+            # as reopen (conservative, no duplicate); only a clearly-different
+            # signature opens a NEW bug distinct from the closed one.
+            same_cause = (not row.evidence) or (_sig(cur_ev) == _sig(row.evidence))
+            if same_cause:
+                res.reopen.append(row)
+            else:
+                entry = _build_entry(
+                    tc_id, g, next_n, f"new defect, distinct from closed {row.bug_id}"
+                )
+                entry["_distinct_from"] = row.bug_id  # transient hint for render (not a column)
+                next_n += 1
+                res.new.append(entry)
+                to_append.append(entry)
         else:
             res.known_open.append(row)
+
+    # RESOLVED (mirror of REOPEN): an open bug whose TC PASSED this run no longer
+    # reproduces → suggest closing it. Skip any TC that also failed this run (a
+    # fail can't coexist with a pass, but guard anyway — a fail always wins).
+    for tc_id in sorted(passed_tc_ids or ()):
+        if tc_id in seen:
+            continue
+        row = existing.get(tc_id)
+        if row is not None and row.status.lower() not in _CLOSED_STATUSES:
+            res.resolved.append(row)
 
     if to_append and allow_write:
         res.written = _append_rows(tracker_path, to_append)
@@ -175,18 +246,26 @@ def reconcile(groups, *, tracker_path: Path = DEFAULT_TRACKER, allow_write: bool
 def render(res: Reconciliation) -> str:
     """Human-readable reconciliation block (safe for console + markdown)."""
     lines = ["", "── Bug Tracker reconciliation ──"]
-    if not (res.new or res.known_open or res.reopen):
+    if not (res.new or res.known_open or res.reopen or res.resolved):
         lines.append("  No backend-defect failures to track. ✅")
         return "\n".join(lines)
+    for r in res.resolved:
+        lines.append(
+            f"  ✅ RESOLVED    {r.bug_id}  (TC-{r.tc_id}) — passed this run, no longer "
+            f"failing → safe to CLOSE (status is '{r.status}')"
+        )
     for r in res.known_open:
         lines.append(f"  🔵 KNOWN OPEN  {r.bug_id}  (TC-{r.tc_id}) — already tracked, still open")
     for r in res.reopen:
         lines.append(
-            f"  ⚠  REOPEN      {r.bug_id}  (TC-{r.tc_id}) — CLOSED but failing again → reopen"
+            f"  ⚠  REOPEN      {r.bug_id}  (TC-{r.tc_id}) — CLOSED but the SAME failure is "
+            f"back → reopen"
         )
     for e in res.new:
         tag = "added" if res.wrote_to_file else "would add (propose-only)"
-        lines.append(f"  🆕 NEW         {e['Bug ID']}  (TC-{e['Test Case ID']}) — {tag}")
+        distinct = e.get("_distinct_from")
+        extra = f"; NEW defect, different from closed {distinct}" if distinct else ""
+        lines.append(f"  🆕 NEW         {e['Bug ID']}  (TC-{e['Test Case ID']}) — {tag}{extra}")
     if res.new:
         if res.wrote_to_file:
             lines.append(f"  → {res.written} row(s) appended to {res.tracker.name}")

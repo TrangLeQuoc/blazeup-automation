@@ -80,7 +80,17 @@
 - PARTNER_UI_MY_PIPELINE_033
 ### UI · PARTNER_PORTAL_SHELL
 
-- PARTNER_UI_PARTNER_PORTAL_SHELL_001
+#### PARTNER_UI_PARTNER_PORTAL_SHELL_001
+**Mô tả test:** Mở tất cả route nav chính của shell partner portal và xác nhận mỗi trang render đúng nội dung (đúng page content, không có lỗi micro-frontend). Một test lặp đi qua tất cả trang bằng URL trực tiếp và thu thập failure → một verdict duy nhất nêu trang nào lỗi.
+**Chuẩn bị (điều kiện tiên quyết):** Đăng nhập một lần bằng user channel-partner đã cấu hình (login UI partner cache theo session). Warm up SPA (mở Dashboard một lần) để trang đầu trong vòng lặp không bị tính chi phí bootstrap một lần.
+**Các bước:** (mỗi trang = một `page.goto(route)` rồi chờ READY_MARKER trong `<main>`, fast-fail nếu hiện panel "Something went wrong") — nav chính đã verify live 2026-07-23:
+1. Dashboard → `/dashboard` → Expected: page title **"Tier & Performance"** hiện trong `<main>`, không có error panel.
+2. Deals → `/deals` → Expected: **"Deal Pipeline"** hiện.
+3. Commissions → `/commissions` → Expected: **"Commissions"** hiện.
+4. Resources → `/resources` → Expected: **"Resources"** hiện.
+5. My Apps → `/apps` → Expected: **"My Apps"** hiện.
+**Expected (tổng):** Cả 5 trang chính render được content module (không có MFE error panel); trang lỗi sẽ fast-fail nêu rõ trang nào.
+**Ghi chú:** PASSED — verified 2026-07-23 (TC 12060101). Test UI partner-portal đầu tiên; tạo bản đồ route live (Dashboard/Deals/Commissions/Resources/My Apps) để các content-test sau dùng lại. **Mapping plan-vs-live:** step text trong plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế của portal là Deals / Resources / My Apps — "My Pipeline" chính là trang **Deals** (title "Deal Pipeline"); "My Clients"/"Training" không phải nav cấp cao (sub-section / tương lai). Negative: N/A — smoke page-load không có bề mặt input sai; case trang lỗi đã built-in (wait_ready fast-fail trên MFE error panel). Idempotency: N/A — điều hướng read-only, không tạo gì. Điều hướng bằng click nav (thay vì URL) là _002 tương lai.
 - PARTNER_UI_PARTNER_PORTAL_SHELL_002
 - PARTNER_UI_PARTNER_PORTAL_SHELL_003
 ### UI · PARTNER_TEAM
@@ -160,7 +170,7 @@
 1. Partner B gọi GET /partner/portal/deals/{A_deal_id}.
    → Expected: bị từ chối với **404** (ưu tiên — giấu sự tồn tại) hoặc **403** — không bao giờ 400 — và deal của A KHÔNG có trong body.
 **Expected (tổng):** Một partner không truy cập được deal của partner khác — bị từ chối, không lộ dữ liệu.
-**Ghi chú:** FAILED (by design / be_gap). Case cross-entity của rule-5. BE trả **400** cho cross-partner access, nhưng đúng ra phải **404** (ưu tiên, để giấu sự tồn tại của resource) hoặc **403** — 400 gán nhầm một request hợp lệ thành malformed. Test được siết để assert 403/404 + đánh dấu `be_gap` cho tới khi BE fix. Bản thân tenant isolation vẫn đúng (không lộ dữ liệu).
+**Ghi chú:** PASSED — verified 2026-07-23. Case cross-entity của rule-5. BE giờ trả **404** cho cross-partner access (giấu sự tồn tại của resource); lỗ hổng cũ (gán nhầm 400) đã được fix. Tenant isolation vẫn đúng (không lộ dữ liệu). Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
 **Ghi chú (BLOCKED):** Enforce MFA phía partner — một protected action phải bắt buộc MFA cho phạm vi quy định (PRD §9.1: role `PARTNER_ORG_ADMIN` và/hoặc tier Advanced/Premier). BLOCKED do quyết định sản phẩm: OQ-14 chưa chốt — trục MFA mâu thuẫn giữa PRD §9.1 (theo tier, Advanced+) và sa-portal-architecture §14.8 (theo role, `PARTNER_ORG_ADMIN`); chưa biết cái nào authoritative (chờ Renil) thì expected (ai/action nào phải qua MFA) chưa xác định → không viết assertion được. Ngoài ra MFA enforcement còn gated theo Auth Hardening Phase 0 (PRs #633–641 phải merge trước khi bật live auth). Endpoint MFA phía BE ĐÃ có (partner: /v1/partner/auth/mfa/setup, /totp/enroll, /email-otp/send, /verify, /disable; sa-auth: /two-factors/otp, /sign-in/verify-otp) — nên KHÔNG phải bị chặn do thiếu endpoint. Khi unblock, build còn cần OTP/TOTP xác định (secret cố định hoặc test-only bypass) từ BE để hoàn tất bước challenge trong automation.
@@ -421,10 +431,10 @@
 9. Thiếu expectedCloseDate → "iso 8601".
 10. Định dạng ngày sai ('31-12-2026') → "iso 8601".
 11. Ghost partnerId (000000000000000000000000) → "not found".
-12. Ghost planId ('no-such-plan-qa', đã verify không tồn tại ở trên) → kỳ vọng bị từ chối "plan". **Hiện FAIL** — được chấp nhận (HTTP 201).
+12. Ghost planId ('no-such-plan-qa', đã verify không tồn tại ở trên) → **404**, message đề cập "plan".
 **Teardown:** xóa partner cha (gỡ mọi deal vô tình tạo bởi gap planId).
 **Expected (tổng):** Mọi payload register không hợp lệ bị từ chối với một message rõ ràng và không tạo deal nào; planId nên được validate với catalog.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate). Gap (case 12): một planId không tồn tại được chấp nhận (201). sa-plans trả 4xx cho id đó, nhưng endpoint deals không validate planId cross-service. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap (case 12): một planId không tồn tại giờ bị từ chối với **404** (trước đây được chấp nhận 201). Cả 12 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
 **Mô tả test:** Đối trọng idempotency/duplicate của _001: CÙNG partner đăng ký CÙNG prospect hai lần bị từ chối (không có deal thứ hai).
@@ -444,12 +454,12 @@
 **Mô tả test:** Đối trọng negative của _008 (approve): ba target approve bất hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng (không bao giờ thành công ngầm). Tất cả case đều chạy (thu thập failure).
 **Chuẩn bị (điều kiện tiên quyết):** SA tạo một partner; đăng ký một deal và approve nó (status 'approved') để case illegal-transition có target.
 **Các bước:** (mỗi case = một POST /v1/sa/deals/{id}/approve)
-1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400.
+1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 3. Deal đã approved (illegal transition) → **400** 'cannot transition' (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận).
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; illegal transition → 400/409. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với _031. Case 2 & 3 đúng. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_029
 **Mô tả test:** Đối trọng negative của _009 (resolve-conflict): sáu input không hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng. Tất cả case đều chạy (thu thập failure).
@@ -460,10 +470,10 @@
 3. Thiếu reasoning → **400** message đề cập "reasoning".
 4. Malformed id ('not-an-id') → **400** 'invalid id'.
 5. Deal non-flagged (illegal state) → **400** message đề cập "flagged" (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận).
-6. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400.
+6. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message "not found".
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Lỗi validation/format/state → 400; id không tồn tại → 404. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 6): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với _031. Case 1–5 đúng. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 6): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 6 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_030
 **Mô tả test:** Đối trọng negative của _016 (extend-protection): tám input không hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng. BE validate body TRƯỚC khi lookup deal, nên các case field tự chứng minh trên một ghost id (không cần deal thật). Tất cả case đều chạy (thu thập failure).
@@ -476,28 +486,28 @@
 5. addedDays quá max (181) → **400** "greater than 180".
 6. addedDays không phải số ('abc') → **400** message "addeddays".
 7. Malformed id ('not-an-id') → **400** "invalid id".
-8. Ghost deal id (body hợp lệ, đúng định dạng nhưng không tồn tại) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400.
+8. Ghost deal id (body hợp lệ, đúng định dạng nhưng không tồn tại) → **404** Not Found, message "not found".
 **Expected (tổng):** Validation body / boundary / format / malformed → 400; id không tồn tại → 404. Không bao giờ 5xx. Ràng buộc spec: addedDays ∈ 1..180; reasoning bắt buộc + không rỗng.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 8): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với _031. Case 1–7 đúng. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 8): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 8 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_031
 **Mô tả test:** Đối trọng negative của _020 (get-by-id): hai ngữ nghĩa từ chối riêng biệt — một malformed id là bad request (400), một ghost id là missing resource (404). Tự chứng minh; GET → không lo idempotency. Tất cả case đều chạy (thu thập failure).
 **Các bước:** (mỗi case = một GET /v1/sa/deals/{id}; kỳ vọng code + gợi ý message, không bao giờ 5xx)
-1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message đề cập "not found". **Hiện FAIL** — BE trả 400.
+1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message đề cập "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message đề cập "invalid id".
 **Expected (tổng):** Một malformed id → 400; một id đúng định dạng nhưng không tồn tại → 404. Không bao giờ 5xx, không trả record.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một id đúng định dạng nhưng không tồn tại trả **400** với message "not found" — status mâu thuẫn message; REST đúng là **404 Not Found**. Case malformed-id (400) đúng. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400, status mâu thuẫn message). Cả 2 case đều pass. Đây là TC root-cause của lỗ hổng ghost→404 mang tính hệ thống. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_032
 **Mô tả test:** Đối trọng negative của _019 (lose): ba target lose bất hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng (không bao giờ 5xx). Tất cả case đều chạy (thu thập failure).
 **Chuẩn bị (điều kiện tiên quyết):** SA tạo một partner; đăng ký một deal (status 'registered', CHƯA approved — lose yêu cầu 'approved').
 **Các bước:** (mỗi case = một POST /v1/sa/deals/{id}/lose)
 1. Deal registered (illegal transition — chưa approved) → **400** 'cannot transition' (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận ở đây).
-2. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400.
+2. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message "not found".
 3. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Illegal transition → 400/409; malformed id → 400; id không tồn tại → 404. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 2): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với _031. Case 1 & 3 đúng. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 2): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
 **Mô tả test:** Đối trọng idempotency của _016 (extend-protection): một gia hạn lặp lại là CỘNG DỒN, không phải no-op hay cap.
@@ -547,12 +557,12 @@
 **Mô tả test:** Đối trọng negative của _001 (reject): ba target reject bất hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng. Tất cả case đều chạy (thu thập failure).
 **Chuẩn bị (điều kiện tiên quyết):** SA tạo một partner; đăng ký một deal và reject nó (status 'rejected') để case illegal-transition có target.
 **Các bước:** (mỗi case = một POST /v1/sa/deals/{id}/reject)
-1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400.
+1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 3. Deal đã rejected (illegal transition) → **400** 'cannot transition' (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận).
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; illegal transition → 400/409. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với _031. Case 2 & 3 đúng. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
 
 ### API · DEAL_COLLABORATION
 
@@ -1097,10 +1107,10 @@
 1. Re-invite CÙNG email E.
    → Expected: một outcome xác định — reject (409) HOẶC idempotent (không user mới).
 2. Verify partner KHÔNG kết thúc với một user duplicate-email (list các user của partner).
-   → Expected: đúng 1 user cho email E. **Hiện FAIL** — list hiện 2.
+   → Expected: đúng 1 user cho email E.
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Re-invite không được tạo một user duplicate-email (email là login identity).
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker BUG-004). Gap: re-invite trả 201 và tạo một user THỨ HAI cùng email (list hiện 2). BE nên reject (409) hoặc idempotent. Xác nhận với BE.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap duplicate-invite: re-invite cùng email không còn tạo user thứ hai (list hiện đúng 1). Marker `be_gap` đã cũ, cần gỡ khỏi code; Bug_Tracker BUG-004 có thể đóng.
 
 #### PARTNER_API_PARTNER_USERS_014
 **Mô tả test:** Đối trọng negative của _003 (reset password): id không hợp lệ bị từ chối với code đúng (không bao giờ 5xx). Tự chứng minh; tất cả case đều chạy (thu thập failure).

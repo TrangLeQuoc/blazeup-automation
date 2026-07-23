@@ -1,8 +1,10 @@
 """Test data factories — generate unique, identifiable payloads with Faker.
 
 Why factories instead of hard-coded data:
-  * Uniqueness  — every record gets fresh values (``fake.unique.*``), so tests
-    never collide on "already exists" and are safe to run in parallel (-n auto).
+  * Uniqueness  — uniqueness-sensitive fields (email, domain, prospect name) carry a
+    uuid ``_token``, so records never collide on "already exists" across runs OR in
+    parallel (-n auto). (Faker's ``.unique`` only dedupes within one process, so it
+    repeats across separate runs — avoid it for anything the BE persists.)
   * Identifiable — names/emails carry the ``QA-AUTO`` prefix, so automation data
     is easy to spot and bulk-clean on shared environments.
   * Overridable — pass kwargs to pin any field you want to assert on, e.g.
@@ -19,11 +21,13 @@ the endpoints are finalized — the structure here is a sensible starting point,
 not a guarantee of the backend schema.
 """
 
+import uuid
 from typing import Any
 
 from faker import Faker
 
-# Module-level generator. `.unique` guarantees no repeats within a test process.
+# Module-level generator. For cross-run-unique values use ``_token`` (below), not
+# ``_fake.unique`` — the latter only dedupes within a single process.
 _fake = Faker()
 
 # Prefix stamped onto human-readable fields so QA automation data is easy to
@@ -47,10 +51,38 @@ def valid_phone() -> str:
     return "+14155552671"
 
 
+def _token(n: int = 12) -> str:
+    """Short high-entropy token that is unique ACROSS runs (uuid-based, not pool-based).
+
+    This is the safe uniqueness primitive for anything the BE persists and rejects on
+    repeat: unlike Faker's ``.unique`` (in-memory, per-process, small pool → repeats
+    across runs) a uuid slice never collides between runs, and never raises
+    ``UniquenessException`` when a pool is exhausted.
+    """
+    return uuid.uuid4().hex[:n]
+
+
 def unique_email(domain: str = "mailinator.com") -> str:
-    """Return a unique, tagged email address safe for parallel runs."""
-    # local-part includes a unique token; '+' tagging keeps it one real inbox.
-    return f"qa.auto+{_fake.unique.user_name()}@{domain}"
+    """Return an email unique ACROSS runs (not just within one process), tagged for cleanup.
+
+    Faker's ``.unique`` only dedupes within a single process, and ``user_name()`` draws
+    from a small pool — so across separate runs the SAME address recurs. Because created
+    records persist on staging, the BE then rejects the re-used address with 400
+    "already exists" (this is what flaked partner/deal setups). A short uuid token makes
+    the local-part globally unique; the readable username keeps it identifiable and '+'
+    tagging keeps it one real inbox.
+    """
+    return f"qa.auto+{_fake.user_name()}-{_token()}@{domain}"
+
+
+def unique_domain(tld: str = "com") -> str:
+    """Return a syntactically-valid domain unique ACROSS runs (for tenantDomain etc.).
+
+    ``fake.unique.domain_name()`` repeats across runs (same reason as ``unique_email``);
+    a persisted tenant domain then collides. The ``qa-auto-`` label keeps it identifiable
+    and bulk-cleanable, and the uuid token guarantees global uniqueness.
+    """
+    return f"qa-auto-{_token(10)}.{tld}"
 
 
 def make_user(**overrides: Any) -> dict[str, Any]:
@@ -71,7 +103,7 @@ def make_tenant(**overrides: Any) -> dict[str, Any]:
     """Build a tenant/organization creation payload."""
     data: dict[str, Any] = {
         "name": tag(_fake.company()),
-        "domain": _fake.unique.domain_word(),
+        "domain": unique_domain(),
         "admin_email": unique_email(),
         "country": _fake.country_code(),
     }
@@ -121,18 +153,19 @@ def make_prospect(**overrides: Any) -> dict[str, Any]:
     Deal-conflict detection keys on the prospect identity, so the name MUST be
     unique per test. A plain ``fake.company()`` is NOT unique — two conflict tests
     running in parallel (``-n auto``) can generate the same name and contaminate
-    each other (a deal in test A flags against a deal in test B). ``fake.unique``
-    guarantees no repeat within the process.
+    each other (a deal in test A flags against a deal in test B). A uuid ``_token``
+    guarantees no repeat within OR across runs (``fake.unique`` only dedupes within
+    one process, so it repeats across runs — see ``_token``).
 
     Reuse the SAME returned dict for both partners in a conflict test to create
-    the intended same-prospect collision::
+    the intended same-prospect collision (the shared token makes both names equal)::
 
         prospect = make_prospect()
         await client.register_deal(make_deal(p1, plan, **prospect))
         await client.register_deal(make_deal(p2, plan, **prospect))  # flagged
     """
     data: dict[str, Any] = {
-        "prospectName": tag(f"{_fake.unique.company()} Prospect"),
+        "prospectName": tag(f"{_fake.company()} Prospect {_token(8)}"),
         "prospectEmail": unique_email(),
     }
     data.update(overrides)
@@ -173,8 +206,8 @@ def make_deal(partner_id: str, plan_id: str, **overrides: Any) -> dict[str, Any]
         "partnerId": partner_id,
         "planId": plan_id,
         "dealType": "referral",
-        "tenantDomain": _fake.unique.domain_name(),
-        "prospectName": tag(f"{_fake.company()} Opportunity"),
+        "tenantDomain": unique_domain(),
+        "prospectName": tag(f"{_fake.company()} Opportunity {_token(8)}"),
         "prospectEmail": unique_email(),
         "prospectPhone": valid_phone(),
         "prospectCountry": "US",

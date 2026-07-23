@@ -52,6 +52,7 @@ async def login_ui(
     email: str,
     password: str,
     timeout: int = 30_000,
+    login_page_cls: "type[BasePage] | None" = None,
 ) -> Page:
     """Log in through the BlazeUp UI login page (domain-aware).
 
@@ -60,11 +61,14 @@ async def login_ui(
     browser navigates away from the login page.
 
     Args:
-        page:     A Playwright ``Page`` (may be blank or on any URL).
-        base_url: Application root URL, e.g. ``"https://stgsa.blazeup.ai"``.
-        email:    User e-mail address.
-        password: User password.
-        timeout:  Milliseconds to wait for the post-login redirect (default 30 s).
+        page:           A Playwright ``Page`` (may be blank or on any URL).
+        base_url:       Application root URL, e.g. ``"https://stgsa.blazeup.ai"``.
+        email:          User e-mail address.
+        password:       User password.
+        timeout:        Milliseconds to wait for the post-login redirect (default 30 s).
+        login_page_cls: Login page object class to use. Defaults to the admin
+                        (SA) two-step login; pass ``PartnerLoginPage`` for the
+                        single-step partner portal login.
 
     Returns:
         The same ``Page`` object, now authenticated.
@@ -72,7 +76,7 @@ async def login_ui(
     Raises:
         AssertionError: If the browser is still on ``/login`` after *timeout*.
     """
-    login_page = _login_page_for_domain()(page, base_url)
+    login_page = (login_page_cls or _login_page_for_domain())(page, base_url)
     await login_page.open()
     await login_page.login(email, password)
     await pw_expect(page).not_to_have_url(re.compile(r".*/login.*"), timeout=timeout)

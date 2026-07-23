@@ -80,7 +80,17 @@
 - PARTNER_UI_MY_PIPELINE_033
 ### UI · PARTNER_PORTAL_SHELL
 
-- PARTNER_UI_PARTNER_PORTAL_SHELL_001
+#### PARTNER_UI_PARTNER_PORTAL_SHELL_001
+**Test Description:** Open every primary nav route of the partner portal shell and confirm each page's content module renders (correct page content shown, no micro-frontend error). One looping test walks all pages via direct URL and soft-collects failures → a single verdict naming any bad page.
+**Setup (precondition):** Log in once as the configured channel-partner user (session-cached partner UI login). Warm up the SPA (open Dashboard once) so the first page in the loop isn't charged the one-off bootstrap.
+**Test Steps:** (each page = one `page.goto(route)` then wait for its READY_MARKER in `<main>`, fast-fail on the "Something went wrong" MFE panel) — primary nav verified live 2026-07-23:
+1. Dashboard → `/dashboard` → Expected: page title **"Tier & Performance"** visible in `<main>`, no error panel.
+2. Deals → `/deals` → Expected: **"Deal Pipeline"** visible.
+3. Commissions → `/commissions` → Expected: **"Commissions"** visible.
+4. Resources → `/resources` → Expected: **"Resources"** visible.
+5. My Apps → `/apps` → Expected: **"My Apps"** visible.
+**Expected (overall):** All 5 primary pages render their content module (no MFE error panel); a broken page fast-fails naming which one.
+**Note:** PASSED — verified 2026-07-23 (TC 12060101). First partner-portal UI test; establishes the live route map (Dashboard/Deals/Commissions/Resources/My Apps) reused by later content tests. **Plan-vs-live mapping:** the plan's step text named "My Pipeline / My Clients / Training", but the live portal's primary nav is Deals / Resources / My Apps — "My Pipeline" is the **Deals** page (title "Deal Pipeline"); "My Clients"/"Training" are not top-level nav (sub-sections / future). Negative counterpart: N/A — a page-load smoke has no invalid-input surface; the broken-page case is built in (wait_ready fast-fails on the MFE error panel). Idempotency: N/A — read-only navigation, creates nothing. Nav-click navigation (vs URL) is a natural future _002.
 - PARTNER_UI_PARTNER_PORTAL_SHELL_002
 - PARTNER_UI_PARTNER_PORTAL_SHELL_003
 ### UI · PARTNER_TEAM
@@ -160,7 +170,7 @@
 1. Partner B calls GET /partner/portal/deals/{A_deal_id}.
    → Expected: refused with **404** (preferred — hides existence) or **403** — never 400 — and A's deal is NOT in the body.
 **Expected (overall):** A partner cannot access another partner's deal — refused, no data leak.
-**Note:** FAILED (by design / be_gap). Rule-5 cross-entity case. BE returns **400** for cross-partner access, but it should be **404** (preferred, to hide the resource's existence) or **403** — 400 mislabels a valid request as malformed. Test tightened to assert 403/404 + marked `be_gap` until BE fixes. Tenant isolation itself holds (no data leak).
+**Note:** PASSED — verified 2026-07-23. Rule-5 cross-entity case. BE now returns **404** for cross-partner access (hides the resource's existence); the earlier gap (400 mislabel) is fixed. Tenant isolation holds (no data leak). Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
 **Note (BLOCKED):** Enforce partner MFA policy — a protected action must require MFA for the mandated scope (PRD §9.1: `PARTNER_ORG_ADMIN` role and/or Advanced/Premier tier). BLOCKED on a product decision: OQ-14 is unresolved — the MFA axis conflicts between PRD §9.1 (tier-based, Advanced+) and sa-portal-architecture §14.8 (role-based, `PARTNER_ORG_ADMIN`); until Renil decides which is authoritative, the expected result (who/which action must be MFA-gated) is undefined, so no assertion can be written. Also MFA enforcement is gated on Auth Hardening Phase 0 (PRs #633–641 must land before live auth). BE-side MFA endpoints already exist (partner: /v1/partner/auth/mfa/setup, /totp/enroll, /email-otp/send, /verify, /disable; sa-auth: /two-factors/otp, /sign-in/verify-otp) — so it is NOT endpoint-blocked. When unblocked, building also needs a deterministic OTP/TOTP (a fixed secret or a test-only bypass) from BE to complete the challenge in automation.
@@ -421,10 +431,10 @@
 9. Missing expectedCloseDate → "iso 8601".
 10. Bad date format ('31-12-2026') → "iso 8601".
 11. Ghost partnerId (000000000000000000000000) → "not found".
-12. Ghost planId ('no-such-plan-qa', verified absent above) → expected "plan" rejection. **Currently FAILS** — accepted (HTTP 201).
+12. Ghost planId ('no-such-plan-qa', verified absent above) → **404**, message mentions "plan".
 **Teardown:** delete the parent partner (removes any deal accidentally created by the planId gap).
 **Expected (overall):** Every invalid register payload is rejected with a clear message and no deal is created; planId should be validated against the catalog.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate). Gap (case 12): a non-existent planId is accepted (201). sa-plans returns 4xx for that id, but the deals endpoint does not validate planId cross-service. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the gap (case 12): a non-existent planId is now rejected with **404** (was accepted 201). All 12 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
 **Test Description:** Idempotency/duplicate counterpart of _001: the SAME partner registering the SAME prospect twice is rejected (no second deal).
@@ -444,12 +454,12 @@
 **Test Description:** Negative counterpart of _008 (approve): three illegal approve targets, each rejected with its own code + a clear message (never silently succeed). All cases run (failures collected).
 **Setup (precondition):** SA creates a partner; register a deal and approve it (status 'approved') so the illegal-transition case has a target.
 **Test Steps:** (each case = one POST /v1/sa/deals/{id}/approve)
-1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 3. Already-approved deal (illegal transition) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted).
 **Teardown:** delete the parent partner.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 2 & 3 are correct. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_029
 **Test Description:** Negative counterpart of _009 (resolve-conflict): six invalid inputs, each rejected with its own code + a clear message. All cases run (failures collected).
@@ -460,10 +470,10 @@
 3. Missing reasoning → **400** message mentions "reasoning".
 4. Malformed id ('not-an-id') → **400** 'invalid id'.
 5. Non-flagged deal (illegal state) → **400** message mentions "flagged" (409 Conflict would be more precise, but 400 is accepted).
-6. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+6. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message "not found".
 **Teardown:** delete the parent partner.
 **Expected (overall):** Validation/format/state errors → 400; non-existent id → 404. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 6): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 1–5 are correct. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 6): a well-formed non-existent id now returns **404** "not found" (was 400). All 6 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_030
 **Test Description:** Negative counterpart of _016 (extend-protection): eight invalid inputs, each rejected with its own code + a clear message. BE validates the body BEFORE the deal lookup, so field cases are self-proving on a ghost id (no real deal needed). All cases run (failures collected).
@@ -476,28 +486,28 @@
 5. addedDays over max (181) → **400** "greater than 180".
 6. Non-numeric addedDays ('abc') → **400** message "addeddays".
 7. Malformed id ('not-an-id') → **400** "invalid id".
-8. Ghost deal id (valid body, well-formed but non-existent) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+8. Ghost deal id (valid body, well-formed but non-existent) → **404** Not Found, message "not found".
 **Expected (overall):** Body-validation / boundary / format / malformed → 400; non-existent id → 404. Never 5xx. Spec constraint: addedDays ∈ 1..180; reasoning required + non-empty.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 8): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 1–7 are correct. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 8): a well-formed non-existent id now returns **404** "not found" (was 400). All 8 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_031
 **Test Description:** Negative counterpart of _020 (get-by-id): two distinct rejection semantics — a malformed id is a bad request (400), a ghost id is a missing resource (404). Self-proving; GET → no idempotency concern. All cases run (failures collected).
 **Test Steps:** (each case = one GET /v1/sa/deals/{id}; expected code + message hint, never 5xx)
-1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message mentions "not found". **Currently FAILS** — BE returns 400.
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message mentions "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message mentions "invalid id".
 **Expected (overall):** A malformed id → 400; a well-formed but non-existent id → 404. Never 5xx, no record returned.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** with message "not found" — status contradicts the message; correct REST is **404 Not Found**. The malformed-id case (400) is correct. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400, status contradicting the message). Both cases pass. This was the root-cause TC for the systemic ghost→404 gap. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_032
 **Test Description:** Negative counterpart of _019 (lose): three illegal lose targets, each rejected with its own code + a clear message (never 5xx). All cases run (failures collected).
 **Setup (precondition):** SA creates a partner; register a deal (status 'registered', NOT approved — lose requires 'approved').
 **Test Steps:** (each case = one POST /v1/sa/deals/{id}/lose)
 1. Registered deal (illegal transition — not approved) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted here).
-2. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+2. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message "not found".
 3. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Teardown:** delete the parent partner.
 **Expected (overall):** Illegal transition → 400/409; malformed id → 400; non-existent id → 404. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 2): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 1 & 3 are correct. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 2): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
 **Test Description:** Idempotency counterpart of _016 (extend-protection): a repeat extension is ADDITIVE, not a no-op or a cap.
@@ -547,12 +557,12 @@
 **Test Description:** Negative counterpart of _001 (reject): three illegal reject targets, each rejected with its own code + a clear message. All cases run (failures collected).
 **Setup (precondition):** SA creates a partner; register a deal and reject it (status 'rejected') so the illegal-transition case has a target.
 **Test Steps:** (each case = one POST /v1/sa/deals/{id}/reject)
-1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
+1. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 3. Already-rejected deal (illegal transition) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted).
 **Teardown:** delete the parent partner.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as _031. Cases 2 & 3 are correct. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
 
 ### API · DEAL_COLLABORATION
 
@@ -1097,10 +1107,10 @@
 1. Re-invite the SAME email E.
    → Expected: a defined outcome — reject (409) OR idempotent (no new user).
 2. Verify the partner does NOT end up with a duplicate-email user (list the partner's users).
-   → Expected: exactly 1 user for email E. **Currently FAILS** — the list shows 2.
+   → Expected: exactly 1 user for email E.
 **Teardown:** delete the parent partner.
 **Expected (overall):** Re-invite must not create a duplicate-email user (email is the login identity).
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-004). Gap: re-invite returns 201 and creates a SECOND user with the same email (list shows 2). BE should reject (409) or be idempotent. Confirm with BE.
+**Note:** PASSED — verified 2026-07-23. BE fixed the duplicate-invite gap: re-inviting the same email no longer creates a second user (list shows exactly 1). Stale `be_gap` marker to be removed from code; Bug_Tracker BUG-004 can be closed.
 
 #### PARTNER_API_PARTNER_USERS_014
 **Test Description:** Negative counterpart of _003 (reset password): invalid id is rejected with the correct code (never 5xx). Self-proving; all cases run (failures collected).

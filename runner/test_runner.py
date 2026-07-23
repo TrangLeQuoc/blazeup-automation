@@ -755,11 +755,13 @@ def run_tc_ids(
         excel_report_path=excel_report_path,
     )
 
-    # Optionally run AI triage when the run had failures. ai_triage itself is a
-    # no-op if it finds no failures in the log, so this is safe to call broadly.
-    # Wrapped so a triage/AI error never changes the test return code.
-    if ai_triage and result.returncode not in (0, 5):
-        print(f"\n{_BLUE}Running AI failure triage…{_RESET}")
+    # Run AI triage after any run that executed tests (returncode 5 = nothing
+    # collected → skip). On a run WITH failures it classifies them; on a fully-GREEN
+    # run it still reconciles the Bug Tracker — an open bug whose TC now passes is
+    # reported RESOLVED (suggest close). No LLM call is made when there are no
+    # failures. Wrapped so a triage/AI error never changes the test return code.
+    if ai_triage and result.returncode != 5:
+        print(f"\n{_BLUE}Running AI triage…{_RESET}")
         try:
             from utils.ai_triage import main as _triage_main
 
