@@ -143,3 +143,21 @@ class PartnerShellPage(BasePage):
                     f"issue for this page — confirm with BE."
                 )
         logger.log("STEP", "Content OK [{}] (no error banner)", section)
+
+    async def horizontal_overflow_px(self) -> int:
+        """Return how many px the page content overflows the viewport horizontally.
+
+        0 (or a tiny scrollbar allowance) = responsive/no horizontal scroll; a large
+        positive value means the layout does not fit the viewport width (content is
+        cut off / needs sideways scrolling) — a responsive-layout defect on mobile.
+        """
+        return await self.page.evaluate(
+            "() => document.documentElement.scrollWidth - window.innerWidth"
+        )
+
+    async def visible_nav_link_count(self) -> int:
+        """Return the number of sidebar/nav links currently visible (nav is usable)."""
+        return await self.page.evaluate(
+            "() => Array.from(document.querySelectorAll('aside a[href], nav a[href]'))"
+            ".filter(a => a.offsetParent !== null).length"
+        )

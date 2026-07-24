@@ -1,7 +1,7 @@
 """Reconcile triaged failures against the Bug Tracker (docs/blazeup/Bug_Tracker.xlsx).
 
-Deterministic — keyed by **Test Case ID**, never the LLM. For each real backend
-defect (triage category ``app_bug``), decide:
+Deterministic — keyed by **Test Case ID**, never the LLM. For each real defect
+(triage category ``app_bug`` — API or UI), decide:
 
 * NEW        — the TC has no row yet → append one (local runs only).
 * KNOWN OPEN — a row exists and is still open → just report the Bug ID.
@@ -155,7 +155,12 @@ def _append_rows(path: Path, rows: list[dict]) -> int:
         rt = ws.max_row + 1
         for key, val in r.items():
             if key in hdr:
-                ws.cell(rt, hdr[key], val)
+                cell = ws.cell(rt, hdr[key], val)
+                # Test Case ID is a plain integer id, not a quantity — force the
+                # "0" number format so it never renders with thousands separators
+                # (e.g. 12,060,102 instead of 12060102).
+                if key == "Test Case ID":
+                    cell.number_format = "0"
     wb.save(path)
     return len(rows)
 
@@ -183,7 +188,7 @@ def reconcile(
     candidates: list[tuple[int, object]] = []
     for g in groups:
         if getattr(g, "category", "") != "app_bug":
-            continue  # only real backend defects — skip env/flaky/deploy noise
+            continue  # only real defects (API + UI) — skip env/flaky/deploy noise
         for tc in getattr(g, "tcs", []):
             n = _tc_int(tc)
             if n is not None and n not in seen:
@@ -194,7 +199,7 @@ def reconcile(
     next_n = _next_bug_seq(existing)
     to_append: list[dict] = []
 
-    def _build_entry(tc_id: int, g: object, bug_n: int, note: str) -> dict:
+    def _build_entry(tc_id: int, g: object, bug_n: int) -> dict:
         tc = reg.get(tc_id)  # enrich from the code registry when available
         name = getattr(tc, "tc_string", "") if tc else ""
         evidence = (getattr(g, "evidence", "") or "")[:300]
@@ -214,14 +219,14 @@ def reconcile(
             "Expected": expected,
             "Actual": actual,
             "Evidence / Assertion": evidence,
-            "Notes": note,
+            "Notes": "",  # left blank by request — no auto-generated note text
         }
 
     for tc_id, g in sorted(candidates):
         row = existing.get(tc_id)
         cur_ev = (getattr(g, "evidence", "") or "")[:300]
         if row is None:
-            entry = _build_entry(tc_id, g, next_n, "auto-added by AI triage")
+            entry = _build_entry(tc_id, g, next_n)
             next_n += 1
             res.new.append(entry)
             to_append.append(entry)
@@ -235,9 +240,7 @@ def reconcile(
             if same_cause:
                 res.reopen.append(row)
             else:
-                entry = _build_entry(
-                    tc_id, g, next_n, f"new defect, distinct from closed {row.bug_id}"
-                )
+                entry = _build_entry(tc_id, g, next_n)
                 entry["_distinct_from"] = row.bug_id  # transient hint for render (not a column)
                 next_n += 1
                 res.new.append(entry)
@@ -265,7 +268,7 @@ def render(res: Reconciliation) -> str:
     """Human-readable reconciliation block (safe for console + markdown)."""
     lines = ["", "── Bug Tracker reconciliation ──"]
     if not (res.new or res.known_open or res.reopen or res.resolved):
-        lines.append("  No backend-defect failures to track. ✅")
+        lines.append("  No defects to track. ✅")
         return "\n".join(lines)
     for r in res.resolved:
         lines.append(

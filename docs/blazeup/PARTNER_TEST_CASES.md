@@ -91,7 +91,18 @@
 5. My Apps → `/apps` → Expected: **"My Apps"** visible + no error banner. → **FAILS** — the shell renders (title "My Apps" + tabs + Submit button) but the app list data-fetch fails, showing the red banner **"Failed to load your apps. Please refresh and try again."**
 **Expected (overall):** All 5 primary pages render their module AND their content (no MFE panel, no content-load error banner); a broken page fast-fails naming which one.
 **Note:** FAILED (by design) — verified 2026-07-23 (TC 12060101). 4/5 pages pass; **`/apps` (My Apps) FAILS**: the section shell renders but the app-list data-fetch fails → persistent banner "Failed to load your apps. Please refresh and try again." (a backend/data-load defect for this page — **confirm with BE**). Reproduced live; not a one-off flap. **This TC also hardened the readiness check:** marker-only (page title) gave a FALSE PASS because the heading renders even when data fails — added a content-error-banner assertion after the marker, which correctly turns `/apps` red. **Plan-vs-live mapping:** the plan named "My Pipeline / My Clients / Training", but the live primary nav is Deals / Resources / My Apps ("My Pipeline" = the Deals page, title "Deal Pipeline"). First partner-portal UI test — establishes the live route map reused by later content tests. Negative counterpart: N/A (page-load smoke has no invalid-input surface; broken-page/content-error cases are built in). Idempotency: N/A (read-only navigation).
-- PARTNER_UI_PARTNER_PORTAL_SHELL_002
+#### PARTNER_UI_PARTNER_PORTAL_SHELL_002
+**Test Description:** Open the partner portal at a common mobile viewport (375×812) and confirm the shell stays usable on every primary nav page — the section renders, the sidebar nav stays reachable, and the layout does NOT overflow horizontally (no content cut off / sideways scroll) — then tap a sidebar link to prove mobile navigation works. One looping test soft-collects per-page failures → single verdict.
+**Setup (precondition):** Log in once as the configured channel-partner user; resize the page to 375×812; warm up the SPA (open Dashboard once).
+**Test Steps:** (per page at mobile width: shell READY_MARKER visible + ≥1 nav link visible + horizontal overflow ≤ 5px scrollbar allowance) — verified live 2026-07-24:
+1. Dashboard `/dashboard` → Expected: renders, nav reachable, no h-overflow. → **PASS** (overflow 0px).
+2. Deals `/deals` → Expected: no h-overflow. → **FAILS** — content overflows the 375px viewport by **+162px** (tabs/filter/view controls don't fit → sideways scroll).
+3. Commissions `/commissions` → Expected: no h-overflow. → **PASS** (0px).
+4. Resources `/resources` → Expected: no h-overflow. → **PASS** (0px).
+5. My Apps `/apps` → Expected: no h-overflow. → **FAILS** — overflows by **+263px**.
+6. Tap sidebar link at mobile → Commissions routes + renders. → **PASS** (mobile nav is usable).
+**Expected (overall):** Every primary page fits the mobile viewport (no horizontal overflow) with the nav reachable; tapping nav routes correctly.
+**Note:** FAILED (by design) — verified 2026-07-24 (TC 12060102). 3/5 pages fit + mobile nav works, but **Deals (+162px) and My Apps (+263px) overflow horizontally at 375px** = responsive-layout defects (content doesn't fit small screens → sideways scroll; **confirm with FE**). The mobile sidebar stays an icon-bar (not hidden) and nav taps route correctly, so navigation itself is usable — the defect is page-content width on Deals/My Apps. Reproduced live. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
 - PARTNER_UI_PARTNER_PORTAL_SHELL_003
 ### UI · PARTNER_TEAM
 

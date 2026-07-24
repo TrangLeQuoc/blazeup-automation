@@ -91,7 +91,18 @@
 5. My Apps → `/apps` → Expected: **"My Apps"** hiện + không banner lỗi. → **FAIL** — shell render được (title "My Apps" + tabs + nút Submit) nhưng data-fetch danh sách apps lỗi, hiện banner đỏ **"Failed to load your apps. Please refresh and try again."**
 **Expected (tổng):** Cả 5 trang chính render được module VÀ content (không MFE panel, không banner lỗi content); trang lỗi sẽ fast-fail nêu rõ trang nào.
 **Ghi chú:** FAILED (by design) — verified 2026-07-23 (TC 12060101). 4/5 trang pass; **`/apps` (My Apps) FAIL**: shell render được nhưng data-fetch danh sách apps lỗi → banner "Failed to load your apps. Please refresh and try again." (lỗi backend/data-load của trang này — **confirm với BE**). Đã reproduce live, không phải flap một lần. **TC này cũng siết lại readiness check:** chỉ dựa marker (title) cho FALSE PASS vì tiêu đề vẫn render dù data lỗi — đã thêm assertion bắt banner lỗi content sau marker, nhờ đó `/apps` đúng là đỏ. **Mapping plan-vs-live:** plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế là Deals / Resources / My Apps ("My Pipeline" = trang Deals, title "Deal Pipeline"). Test UI partner-portal đầu tiên — tạo bản đồ route live để các content-test sau dùng lại. Negative: N/A (smoke page-load không có bề mặt input sai; case trang lỗi/content-error đã built-in). Idempotency: N/A (điều hướng read-only).
-- PARTNER_UI_PARTNER_PORTAL_SHELL_002
+#### PARTNER_UI_PARTNER_PORTAL_SHELL_002
+**Mô tả test:** Mở partner portal ở mobile viewport phổ biến (375×812) và xác nhận shell vẫn dùng được trên mọi trang nav chính — trang render, sidebar nav vẫn truy cập được, và layout KHÔNG tràn ngang (không bị cắt nội dung / cuộn ngang) — rồi tap một link sidebar để chứng minh điều hướng mobile hoạt động. Một test lặp thu thập failure theo trang → một verdict.
+**Chuẩn bị (điều kiện tiên quyết):** Đăng nhập một lần bằng user channel-partner đã cấu hình; resize page về 375×812; warm up SPA (mở Dashboard một lần).
+**Các bước:** (mỗi trang ở mobile: READY_MARKER hiện + ≥1 nav link hiện + tràn ngang ≤ 5px cho scrollbar) — verify live 2026-07-24:
+1. Dashboard `/dashboard` → Expected: render, nav truy cập được, không tràn ngang. → **PASS** (tràn 0px).
+2. Deals `/deals` → Expected: không tràn ngang. → **FAIL** — nội dung tràn viewport 375px **+162px** (tabs/filter/nút không fit → cuộn ngang).
+3. Commissions `/commissions` → Expected: không tràn ngang. → **PASS** (0px).
+4. Resources `/resources` → Expected: không tràn ngang. → **PASS** (0px).
+5. My Apps `/apps` → Expected: không tràn ngang. → **FAIL** — tràn **+263px**.
+6. Tap link sidebar ở mobile → Commissions điều hướng + render. → **PASS** (nav mobile dùng được).
+**Expected (tổng):** Mọi trang chính fit mobile viewport (không tràn ngang) và nav truy cập được; tap nav điều hướng đúng.
+**Ghi chú:** FAILED (by design) — verified 2026-07-24 (TC 12060102). 3/5 trang fit + nav mobile hoạt động, nhưng **Deals (+162px) và My Apps (+263px) tràn ngang ở 375px** = lỗi responsive-layout (nội dung không fit màn nhỏ → cuộn ngang; **confirm với FE**). Sidebar mobile vẫn là icon-bar (không ẩn) và tap nav điều hướng đúng, nên bản thân navigation dùng được — lỗi nằm ở độ rộng nội dung trang Deals/My Apps. Đã reproduce live. Negative: N/A (responsive smoke không có bề mặt input sai; case "layout không fit" chính là điều đang kiểm). Idempotency: N/A (điều hướng/resize read-only).
 - PARTNER_UI_PARTNER_PORTAL_SHELL_003
 ### UI · PARTNER_TEAM
 

@@ -194,11 +194,13 @@ _RULES: list[tuple[tuple[str, ...], str]] = [
     ),
     (("exceeded limit", "did not render", "timed out", "timeout"), "flaky_slow"),
     (("dynamically imported module", "something went wrong"), "deploy_mfe"),
-    # BE-defect signatures the be_gap tests emit — classify deterministically as
-    # app_bug so a mis-firing LLM can't relabel them env_auth (e.g. a ghost FK
-    # accepted with 2xx reads like "status 201" but is a real backend bug).
+    # Real product-defect signatures (API + UI) the tests emit — classify
+    # deterministically as app_bug so a mis-firing LLM can't relabel them
+    # env_auth/test_or_ui_bug (e.g. a ghost FK accepted with 2xx reads like
+    # "status 201" but is a real bug; a responsive overflow is a real FE defect).
     (
         (
+            # API / backend defects
             "confirm with be",
             "confirm be",
             "must not dup",
@@ -209,6 +211,14 @@ _RULES: list[tuple[tuple[str, ...], str]] = [
             "should reject",
             "must reject",
             "should be rejected",
+            # UI / frontend defects
+            "confirm with fe",
+            "responsive-layout defect",
+            "overflows the",
+            "content does not fit",
+            "content failed to load",
+            "failed to load your",
+            "please refresh and try again",
         ),
         "app_bug",
     ),
@@ -622,7 +632,7 @@ def main(argv: list[str] | None = None) -> int:
         out.write_text(str(exc), encoding="utf-8")
         raise SystemExit(f"Model did not return valid JSON. Detail saved to {out}") from exc
 
-    # Reconcile real backend defects (category app_bug) against the Bug Tracker —
+    # Reconcile real defects (category app_bug — API + UI) against the Bug Tracker —
     # deterministic (keyed by Test Case ID). New bugs are appended on local runs;
     # on CI it is propose-only (report, no file change).
     from utils.bug_tracker import reconcile as reconcile_bugs
