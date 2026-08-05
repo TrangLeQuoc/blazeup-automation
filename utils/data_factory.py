@@ -51,6 +51,19 @@ def valid_phone() -> str:
     return "+14155552671"
 
 
+def phone_detail(country_code: str = "US") -> dict[str, str]:
+    """Return a phone as the nested ``PhoneDetail`` object the BE now requires.
+
+    sa-partners-api changed its phone fields (CreatePartnerDto.phone,
+    CreateDealDto.prospectPhone, PartnerContactDto.phone) from a flat E.164 string
+    to a ``{"number", "countryCode"}`` object; a plain string now 400s with
+    "nested property phone must be either object or array". ``number`` is the local
+    subscriber number, ``countryCode`` an ISO 3166-1 alpha-2 code — 4155552671 / US
+    is the known-good San Francisco number matching :func:`valid_phone`.
+    """
+    return {"number": "4155552671", "countryCode": country_code}
+
+
 def _token(n: int = 12) -> str:
     """Short high-entropy token that is unique ACROSS runs (uuid-based, not pool-based).
 
@@ -123,7 +136,7 @@ def make_partner(**overrides: Any) -> dict[str, Any]:
         "name": tag(_fake.company()),
         "email": unique_email(),
         "type": "channel",
-        "phone": valid_phone(),
+        "phone": phone_detail(),
         "website": _fake.url(),
     }
     data.update(overrides)
@@ -209,7 +222,7 @@ def make_deal(partner_id: str, plan_id: str, **overrides: Any) -> dict[str, Any]
         "tenantDomain": unique_domain(),
         "prospectName": tag(f"{_fake.company()} Opportunity {_token(8)}"),
         "prospectEmail": unique_email(),
-        "prospectPhone": valid_phone(),
+        "prospectPhone": phone_detail(),
         "prospectCountry": "US",
         "estimatedAcvCents": _fake.random_int(min=1_000_00, max=5_000_000_00),
         "currency": "USD",  # required by CreateDealDto (ISO 4217) — ACV/plan-budget currency

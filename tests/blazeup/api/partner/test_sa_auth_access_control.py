@@ -16,7 +16,12 @@ from loguru import logger
 
 from utils.data_factory import make_deal, make_prospect
 from utils.log_helper import async_step
-from utils.partner_portal import mint_partner_session, portal_client, provision_partner_user
+from utils.partner_portal import (
+    mint_partner_session,
+    partner_login,
+    portal_client,
+    provision_partner_user,
+)
 
 _AUTH = "/sa-partners-api/v1/partner/auth"
 _PORTAL = "/sa-partners-api/v1/partner/portal"
@@ -40,11 +45,7 @@ async def test_partner_api_auth_access_control_001(sa_partners_client, settings,
         created_resources.add(lambda: sa_partners_client.delete_partner(creds["partner_id"]))
         anon = portal_client(settings)
         created_resources.add(lambda: anon.close())
-        login = await anon.post(
-            f"{_AUTH}/login",
-            json={"email": creds["email"], "password": creds["password"]},
-            expected_status=(200, 201),
-        )
+        login = await partner_login(anon, creds["email"], creds["password"])
         token = login.json().get("accessToken")
         assert token, "login must return an accessToken"
         portal = portal_client(settings, token)
@@ -101,11 +102,7 @@ async def test_partner_api_auth_access_control_007(sa_partners_client, settings,
         created_resources.add(lambda: sa_partners_client.delete_partner(creds["partner_id"]))
         anon = portal_client(settings)
         created_resources.add(lambda: anon.close())
-        login = await anon.post(
-            f"{_AUTH}/login",
-            json={"email": creds["email"], "password": creds["password"]},
-            expected_status=(200, 201),
-        )
+        login = await partner_login(anon, creds["email"], creds["password"])
         body = login.json()
         access, refresh = body.get("accessToken"), body.get("refreshToken")
         assert access and refresh, "login must return access + refresh tokens"
@@ -153,11 +150,7 @@ async def test_partner_api_auth_access_control_008(sa_partners_client, settings,
         created_resources.add(lambda: sa_partners_client.delete_partner(creds["partner_id"]))
         anon = portal_client(settings)
         created_resources.add(lambda: anon.close())
-        login = await anon.post(
-            f"{_AUTH}/login",
-            json={"email": creds["email"], "password": creds["password"]},
-            expected_status=(200, 201),
-        )
+        login = await partner_login(anon, creds["email"], creds["password"])
         body = login.json()
         access, refresh = body.get("accessToken"), body.get("refreshToken")
         assert access and refresh, "login must return access + refresh tokens"
@@ -198,11 +191,7 @@ async def test_partner_api_auth_access_control_009(sa_partners_client, settings,
         created_resources.add(lambda: sa_partners_client.delete_partner(creds["partner_id"]))
         anon = portal_client(settings)
         created_resources.add(lambda: anon.close())
-        login = await anon.post(
-            f"{_AUTH}/login",
-            json={"email": creds["email"], "password": creds["password"]},
-            expected_status=(200, 201),
-        )
+        login = await partner_login(anon, creds["email"], creds["password"])
         portal = portal_client(settings, login.json().get("accessToken"))
         created_resources.add(lambda: portal.close())
         logger.info(

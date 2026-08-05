@@ -53,6 +53,7 @@ async def login_ui(
     password: str,
     timeout: int = 30_000,
     login_page_cls: "type[BasePage] | None" = None,
+    totp_secret: str | None = None,
 ) -> Page:
     """Log in through the BlazeUp UI login page (domain-aware).
 
@@ -78,7 +79,11 @@ async def login_ui(
     """
     login_page = (login_page_cls or _login_page_for_domain())(page, base_url)
     await login_page.open()
-    await login_page.login(email, password)
+    # Only the partner login supports a TOTP step; pass it through when provided.
+    if totp_secret is not None:
+        await login_page.login(email, password, totp_secret=totp_secret)
+    else:
+        await login_page.login(email, password)
     await pw_expect(page).not_to_have_url(re.compile(r".*/login.*"), timeout=timeout)
     return page
 
@@ -90,6 +95,7 @@ async def login_api(
     password: str,
     max_response_time_ms: int = 30_000,
     auth_cls: "type[BaseAuthClient] | None" = None,
+    totp_secret: str | None = None,
 ) -> str:
     """Log in via the BlazeUp REST API and return a bearer token.
 
@@ -118,7 +124,7 @@ async def login_api(
         app_origin=app_origin,
     )
     try:
-        response = await client.login(email, password)
+        response = await client.login(email, password, totp_secret=totp_secret)
         return response.bearer_token
     finally:
         await client.close()

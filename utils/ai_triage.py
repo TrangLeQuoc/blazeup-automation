@@ -241,6 +241,12 @@ def _signature(msg: str) -> str:
     return s.lower()[:120]
 
 
+def _tc_num(tc: str | None) -> int | None:
+    """Numeric id from a 'TC-<id>' token (None if absent)."""
+    m = re.search(r"\d+", tc or "")
+    return int(m.group()) if m else None
+
+
 def _rule_category(text: str) -> str:
     """Best-effort deterministic category; ``unknown`` falls through to the LLM."""
     t = text.lower()
@@ -252,6 +258,38 @@ def _rule_category(text: str) -> str:
     return "unknown"
 
 
+# Categories that are "infra / couldn't-really-run" — a be_gap marker must NOT
+# override these (a be_gap test that merely timed out is still flaky, not a
+# confirmed defect this run).
+_INFRA_CATEGORIES = frozenset({"env_auth", "flaky_slow", "deploy_mfe"})
+
+
+def _tc_markers(tc: str) -> list[str]:
+    """Registry markers for a 'TC-<id>' token (empty on any lookup failure)."""
+    m = re.search(r"\d+", tc or "")
+    if not m:
+        return []
+    try:
+        from runner.tc_registry import TC_REGISTRY
+
+        entry = TC_REGISTRY.get(int(m.group()))
+        return list(getattr(entry, "markers", []) or [])
+    except Exception:  # noqa: BLE001 — marker enrichment is best-effort
+        return []
+
+
+def _is_known_be_gap_group(group: FailGroup) -> bool:
+    """True when EVERY test in the group is marked ``be_gap`` in the registry.
+
+    A be_gap test is a KNOWN backend gap by author intent (``@pytest.mark.be_gap``),
+    so a real assertion failure from it is an app defect — regardless of the exact
+    wording. Using the marker (not a hard-coded phrase) keeps this future-proof: any
+    new be_gap test is classified correctly with zero rule maintenance.
+    """
+    tcs = [tc for tc in group.tcs if re.search(r"\d+", tc or "")]
+    return bool(tcs) and all("be_gap" in _tc_markers(tc) for tc in tcs)
+
+
 def collect_fail_groups(log_text: str) -> list[FailGroup]:
     """Group failing TCs by a normalized failure signature (dedup), rule-classify each.
 
@@ -261,10 +299,17 @@ def collect_fail_groups(log_text: str) -> list[FailGroup]:
     failure count. This is what makes triage scale to 1000+ TC runs.
     """
     lines = _parse_lines(log_text)
+    # TCs that PASSED somewhere in the log. With pytest-rerunfailures a transient
+    # failure re-runs and, on success, emits a later PASSED banner for the SAME tc —
+    # so a tc appearing in BOTH failed and passed was RECOVERED on rerun and must NOT
+    # be reported as a failure (the run's final verdict for it is pass).
+    passed_ids = {n for ln in lines if ln.level == "PASSED" if (n := _tc_num(ln.tc)) is not None}
     evidence_by_tc: dict[str, str] = {}
     verdict_by_tc: dict[str, str] = {}
     order: list[str] = []
     for ln in lines:
+        if _tc_num(ln.tc) in passed_ids:
+            continue  # recovered on rerun → skip its transient failure evidence/verdict
         if ln.level in {"ERROR", "CRITICAL"} and ln.msg and ln.tc not in evidence_by_tc:
             evidence_by_tc[ln.tc] = ln.msg
         if ln.level == "FAILED":
@@ -283,6 +328,15 @@ def collect_fail_groups(log_text: str) -> list[FailGroup]:
             )
         else:
             g.tcs.append(tc)
+
+    # Marker-aware upgrade: a group of KNOWN be_gap tests that failed on an
+    # assertion (i.e. landed in the ambiguous test_or_ui_bug / unknown buckets, not
+    # in an infra bucket) is a real backend defect → reclassify as app_bug so it
+    # reconciles against the Bug Tracker. Infra failures (env/flaky/deploy) keep
+    # their category — a be_gap test that only timed out is still flaky.
+    for g in groups.values():
+        if g.category not in _INFRA_CATEGORIES and _is_known_be_gap_group(g):
+            g.category = "app_bug"
     return list(groups.values())
 
 
@@ -300,6 +354,19 @@ def collect_passed_tcs(log_text: str) -> set[int]:
             if m:
                 passed.add(int(m.group()))
     return passed
+
+
+def collect_recovered_tcs(log_text: str) -> set[int]:
+    """Ids that FAILED then later PASSED in the same log — recovered on rerun.
+
+    With pytest-rerunfailures a transient failure re-runs; on success the SAME tc
+    emits a later PASSED banner. Such a tc is flaky-but-recovered (final verdict =
+    pass), so it is excluded from the failure groups and reported separately.
+    """
+    lines = _parse_lines(log_text)
+    failed = {n for ln in lines if ln.level == "FAILED" if (n := _tc_num(ln.tc)) is not None}
+    passed = {n for ln in lines if ln.level == "PASSED" if (n := _tc_num(ln.tc)) is not None}
+    return failed & passed
 
 
 def _group_prompt(unknown: list[FailGroup]) -> str:
@@ -485,11 +552,27 @@ def call_ai(prompt: str, *, provider: str, model: str, settings) -> str:
 _CAT_EMOJI = {
     "deploy_mfe": "DEPLOY",
     "flaky_slow": "FLAKY",
-    "test_or_ui_bug": "TEST/UI",
+    "test_or_ui_bug": "TEST/SPEC",
     "app_bug": "APP BUG",
     "env_auth": "ENV/AUTH",
     "unknown": "UNKNOWN",
 }
+
+# Print order: most-actionable first (real defects), noise (env/flaky) last, so the
+# reader sees APP BUG before FLAKY instead of buried under it.
+_CAT_ORDER = {
+    "app_bug": 0,
+    "test_or_ui_bug": 1,
+    "deploy_mfe": 2,
+    "env_auth": 3,
+    "flaky_slow": 4,
+    "unknown": 5,
+}
+
+
+def _sorted_groups(groups: list[FailGroup]) -> list[FailGroup]:
+    """Order causes by importance (app_bug → … → flaky/unknown), then count desc."""
+    return sorted(groups, key=lambda g: (_CAT_ORDER.get(g.category, 9), -g.count))
 
 
 def _coerce_json(text: str) -> dict:
@@ -510,7 +593,7 @@ def _sample_tcs(g: FailGroup) -> str:
 
 
 def render_markdown(groups: list[FailGroup], log_path: Path, summary: str) -> str:
-    groups = sorted(groups, key=lambda g: g.count, reverse=True)
+    groups = _sorted_groups(groups)
     total = sum(g.count for g in groups)
     lines = [
         "# AI Failure Triage",
@@ -534,7 +617,7 @@ def render_markdown(groups: list[FailGroup], log_path: Path, summary: str) -> st
 
 
 def _print_console(groups: list[FailGroup], summary: str) -> None:
-    groups = sorted(groups, key=lambda g: g.count, reverse=True)
+    groups = _sorted_groups(groups)
     total = sum(g.count for g in groups)
     print("\n=== AI Failure Triage ===")
     print(f"{total} failure(s) → {len(groups)} distinct cause(s)")
@@ -592,6 +675,12 @@ def main(argv: list[str] | None = None) -> int:
 
     groups = collect_fail_groups(log_text)
     passed_tcs = collect_passed_tcs(log_text)
+    recovered = collect_recovered_tcs(log_text)
+    if recovered:
+        print(
+            f"↻ {len(recovered)} transient failure(s) auto-recovered on rerun "
+            f"(not counted as failures): {', '.join(f'TC-{n}' for n in sorted(recovered))}"
+        )
     if not groups:
         # No failures — but a fully-green run can still RESOLVE open bugs (every
         # be_gap test that a BE fix turned green lands here). Report those and stop.

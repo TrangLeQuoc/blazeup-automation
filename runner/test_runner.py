@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Core BlazeUp test execution helper."""
 
+import importlib.util
 import json
 import os
 import re
@@ -195,6 +196,58 @@ def make_result_dir(base_dir: Path = Path(".")) -> Path:
     return base
 
 
+# Auto-retry ONLY transient failures — staging cold-loads (MFE render) + Playwright
+# action timeouts flap under full-run load. These patterns match the failure repr
+# (exception + message), so a genuine assertion bug ("expected 404, got 400") or a
+# be_gap defect is NEVER retried — it fails immediately. Tune reruns via the
+# BLAZEUP_UI_RERUNS env var (0 disables); delay via BLAZEUP_RERUN_DELAY.
+_RERUN_PATTERNS = (
+    "TimeoutError",  # Playwright fill/click/navigation/wait timeouts
+    "Timeout .* exceeded",
+    "did not render",  # MFE cold-load readiness assertion
+    "Failed to fetch dynamically imported module",
+    "502",
+    "503",
+    "504",
+    "Bad Gateway",
+    "ECONNREFUSED",
+    "ECONNRESET",
+    # Slow-staging API transients: httpx transport timeouts + the response-time SLA
+    # breach. A one-off spike passes on retry; a consistently-slow endpoint fails
+    # every retry and stays flagged (a real perf signal, not hidden).
+    "ReadTimeout",
+    "ConnectTimeout",
+    "PoolTimeout",
+    "WriteTimeout",
+    "exceeded limit",  # base_client response-time assertion ("response time … exceeded limit …")
+)
+
+
+def _rerun_args() -> list[str]:
+    """pytest-rerunfailures flags: retry transient-only failures (env-tunable).
+
+    Returns ``[]`` (and warns once) when the plugin is not importable in the
+    interpreter that will run pytest (``sys.executable``), so a missing dependency
+    degrades to "no reruns" instead of crashing pytest with 'unrecognized
+    arguments: --reruns'. Install it with ``pip install -r requirements.txt``.
+    """
+    reruns = int(os.getenv("BLAZEUP_UI_RERUNS", "0"))
+    if reruns <= 0:
+        return []
+    if importlib.util.find_spec("pytest_rerunfailures") is None:
+        logger.warning(
+            "pytest-rerunfailures not installed in this environment — auto-retry of "
+            "transient failures is DISABLED. Run `pip install -r requirements.txt` "
+            "(or `pip install pytest-rerunfailures`) to enable it."
+        )
+        return []
+    delay = os.getenv("BLAZEUP_RERUN_DELAY", "3")
+    args = ["--reruns", str(reruns), "--reruns-delay", str(delay)]
+    for pattern in _RERUN_PATTERNS:
+        args += ["--only-rerun", pattern]
+    return args
+
+
 def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = False) -> list[str]:
     """Build pytest CLI arguments for the selected test cases.
 
@@ -232,6 +285,7 @@ def build_pytest_args(tcs: list[TestCase], result_dir: Path, debug_log: bool = F
         f"--junitxml={result_dir / 'logs' / 'junit.xml'}",
         "-p",
         "no:cacheprovider",
+        *_rerun_args(),
     ]
 
 
@@ -303,6 +357,7 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
                 "status": "UNKNOWN",
                 "time": "0",
                 "message": "JUnit XML not found",
+                "error_type": "",
             }
             for tc in tcs
         ]
@@ -325,17 +380,23 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
 
         status = "MISSING"
         message = ""
+        err_type = ""
         duration = matched.attrib.get("time", "0") if matched is not None else "0"
         if matched is not None:
-            if matched.find("failure") is not None:
+            fail_el = matched.find("failure")
+            err_el = matched.find("error")
+            skip_el = matched.find("skipped")
+            if fail_el is not None:
                 status = "FAILED"
-                message = matched.find("failure").text or ""
-            elif matched.find("error") is not None:
+                message = fail_el.text or ""
+                err_type = fail_el.attrib.get("type", "")
+            elif err_el is not None:
                 status = "ERROR"
-                message = matched.find("error").text or ""
-            elif matched.find("skipped") is not None:
+                message = err_el.text or ""
+                err_type = err_el.attrib.get("type", "")
+            elif skip_el is not None:
                 status = "SKIPPED"
-                message = matched.find("skipped").attrib.get("message", "")
+                message = skip_el.attrib.get("message", "")
             else:
                 status = "PASSED"
 
@@ -351,9 +412,29 @@ def parse_junit_xml(junit_path: Path, tcs: list[TestCase]) -> list[dict[str, str
                 "status": status,
                 "time": duration,
                 "message": message.strip().splitlines()[0] if message else "",
+                "error_type": _error_type_label(status, err_type, message),
             }
         )
     return rows
+
+
+def _error_type_label(status: str, err_type: str, message: str) -> str:
+    """Short error-type label for the summary table.
+
+    Uses the JUnit ``<failure/error type=…>`` (e.g. ``AssertionError``,
+    ``playwright…TimeoutError`` → ``TimeoutError``) for real failures; a plain
+    category for env-blocked / skipped; empty for passes.
+    """
+    if status == "BLOCKED":
+        return "BLOCKED"
+    if status == "SKIPPED":
+        return "SKIP"
+    if status not in ("FAILED", "ERROR"):
+        return ""
+    if err_type:
+        return err_type.rsplit(".", 1)[-1]  # strip module path → bare class name
+    m = re.search(r"\b(\w+(?:Error|Exception|TimeoutError))\b", message or "")
+    return m.group(1) if m else "AssertionError"
 
 
 # ---------------------------------------------------------------------------
@@ -374,6 +455,7 @@ def _build_tc_summaries_from_rows(summary_rows: list[dict[str, str]]) -> list[di
                 "priority": tc.priority if tc else "--",
                 "type": tc.type if tc else "--",
                 "module": tc.module if tc else "--",
+                "tc_string": tc.tc_string if tc else str(tc_id),
                 "title": row["title"],
                 "runs": 1,
                 "passed": 1 if status == "PASSED" else 0,
@@ -382,6 +464,7 @@ def _build_tc_summaries_from_rows(summary_rows: list[dict[str, str]]) -> list[di
                 "skipped": 1 if status == "SKIPPED" else 0,
                 "avg_time": float(row["time"] or 0),
                 "last_msg": row["message"],
+                "error_type": row.get("error_type", ""),
             }
         )
     return result
@@ -403,17 +486,20 @@ def _build_tc_summaries_from_perf(
         skipped = sum(1 for r in runs if r["status"] == "SKIPPED")
         times = [float(r["time"]) for r in runs if r.get("time") and r["status"] != "MISSING"]
         avg_t = sum(times) / len(times) if times else 0.0
-        last_msg = next(
-            (r["message"] for r in reversed(runs) if r["status"] in ("FAILED", "ERROR", "BLOCKED")),
-            "",
+        last_fail = next(
+            (r for r in reversed(runs) if r["status"] in ("FAILED", "ERROR", "BLOCKED")),
+            None,
         )
+        last_msg = last_fail["message"] if last_fail else ""
         result.append(
             {
                 "tc_id": tc.tc_id,
                 "priority": tc.priority,
                 "type": tc.type,
                 "module": tc.module,
+                "tc_string": tc.tc_string,
                 "title": tc.title,
+                "error_type": last_fail.get("error_type", "") if last_fail else "",
                 "runs": len(runs),
                 "passed": passed,
                 "failed": failed,
@@ -437,13 +523,13 @@ def _render_single_run_table(summaries: list[dict]) -> str:
     }
 
     headers = [
-        _bold("TC"),
-        _bold("P"),
+        _bold("ID"),
         _bold("Type"),
-        _bold("Title"),
+        _bold("Name"),
         _bold("Status"),
         _bold("Time"),
-        _bold("Failure (first line)"),
+        _bold("Error Type"),
+        _bold("Failure detail"),
     ]
     rows = []
     for s in summaries:
@@ -458,9 +544,9 @@ def _render_single_run_table(summaries: list[dict]) -> str:
         else:
             key = "missing"
 
-        title = s["title"]
-        if len(title) > 42:
-            title = title[:39] + "..."
+        name = s.get("tc_string") or str(s["tc_id"])
+        if len(name) > 42:
+            name = name[:39] + "..."
         msg = s["last_msg"]
         if len(msg) > 45:
             msg = msg[:42] + "..."
@@ -468,11 +554,11 @@ def _render_single_run_table(summaries: list[dict]) -> str:
         rows.append(
             [
                 f"{_BLUE}{s['tc_id']}{_RESET}",
-                s["priority"],
                 s["type"],
-                title,
+                name,
                 _STATUS[key],
                 f"{s['avg_time']:.2f}s",
+                s.get("error_type", ""),
                 msg,
             ]
         )
@@ -885,7 +971,7 @@ def run_performance_plan(
 
         print(f"\n  [{label}]", end="  ", flush=True)
 
-        _, rows = _run_single_batch(batch_tcs, base_dir, debug_log)
+        result_dir, rows = _run_single_batch(batch_tcs, base_dir, debug_log)
 
         # Print per-TC inline status
         for row in rows:
@@ -905,6 +991,9 @@ def run_performance_plan(
                 total_failures += 1
 
         print()  # newline after inline statuses
+        # Per-iteration artifact folder (its own logs/test.log, videos/, screenshots/)
+        # so each repeat run is inspectable without hunting for it.
+        print(f"    {_CYAN}result{_RESET}: {result_dir}")
 
         if fail_fast_count and total_failures >= fail_fast_count:
             print(

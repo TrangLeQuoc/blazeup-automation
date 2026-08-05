@@ -161,3 +161,10 @@ class PartnerShellPage(BasePage):
             "() => Array.from(document.querySelectorAll('aside a[href], nav a[href]'))"
             ".filter(a => a.offsetParent !== null).length"
         )
+
+    async def nav_hrefs(self) -> list[str]:
+        """Return all sidebar/nav hrefs (to check the partner nav set / no SA-only routes)."""
+        return await self.page.evaluate(
+            "() => Array.from(document.querySelectorAll('aside a[href], nav a[href]'))"
+            ".map(a => a.getAttribute('href'))"
+        )

@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     )
     partner_email: str | None = Field(default=None)
     partner_password: str | None = Field(default=None)
+    # TOTP shared secret (base32) for the partner portal's two-factor step. The
+    # portal added 2FA (email+password → 6-digit TOTP from an authenticator app).
+    # Put the enrolment "setup key" here (config/blazeup/.env, gitignored) so the
+    # login helper can generate the current code with pyotp. Optional: when unset,
+    # the login flow behaves as the pre-2FA single-step form.
+    partner_totp_secret: str | None = Field(default=None)
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)

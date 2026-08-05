@@ -19,6 +19,25 @@ class PartnerLoginLocators:
         "button:text-is('Login'), "
         "button[type='submit']"
     )
+    # ── Two-factor (TOTP) step ────────────────────────────────────────────────
+    # After email+password the portal shows a 6-digit authenticator-code step.
+    # OTP inputs are commonly either a single one-time-code field or 6 single-char
+    # boxes — the page object handles both. Selectors kept broad on purpose.
+    TOTP_SINGLE_INPUT = (
+        "input[autocomplete='one-time-code'], "
+        "input[name*='otp' i], input[name*='code' i], "
+        "input[placeholder*='code' i], input[inputmode='numeric']"
+    )
+    TOTP_DIGIT_BOXES = "input[maxlength='1']"
+    TOTP_VERIFY_BUTTON = (
+        "button:text-is('Verify'), "
+        "button:text-is('Verify code'), "
+        "button:text-is('Continue'), "
+        "button:text-is('Submit'), "
+        "button:text-is('Confirm'), "
+        "button[type='submit']"
+    )
+
     ERROR_CONTAINERS = (
         "[role='alert'], "
         ".error, "

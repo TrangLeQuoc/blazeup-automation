@@ -63,7 +63,8 @@ class BasePage:
             else value
         )
         logger.log("STEP", "Fill  [{}] = {}", desc, masked_value)
-        logger.debug("Fill selector: {} | Value: {}", selector, value)
+        # Use the MASKED value here too — never log a raw password/secret, even at DEBUG.
+        logger.debug("Fill selector: {} | Value: {}", selector, masked_value)
         await self._retry(lambda: locator.fill(value, timeout=timeout))
 
     async def get_text(self, selector: str, timeout: int = 10_000) -> str:

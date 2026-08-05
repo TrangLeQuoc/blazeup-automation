@@ -21,24 +21,20 @@ from pages.blazeup.partner.partner_shell_page import PartnerShellPage
 from utils.log_helper import finalize_checks, ordinal
 
 PAGES = list(PartnerShellLocators.SECTIONS.keys())
-MOBILE = {"width": 375, "height": 812}  # iPhone-X class, a common mobile width
 OVERFLOW_TOL = 5  # px allowance for a scrollbar; more than this = layout doesn't fit
 
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_partner_portal_shell_002(
-    partner_authenticated_page, make_partner_page, request
-):
+@pytest.mark.mobile
+async def test_partner_ui_partner_portal_shell_002(make_partner_page, request):
     """PARTNER_UI_PARTNER_PORTAL_SHELL_002: portal stays usable at mobile width (no h-overflow, nav reachable).
 
-    Resizes the authenticated page to a mobile viewport, then per primary page
-    asserts: shell renders (READY_MARKER), >=1 nav link visible, and horizontal
+    The ``mobile`` marker gives a 375×812 context (viewport + video match). Per primary
+    page asserts: shell renders (READY_MARKER), >=1 nav link visible, and horizontal
     overflow <= a scrollbar allowance. Finally taps a sidebar link to prove mobile
     navigation works.
     """
-    await partner_authenticated_page.set_viewport_size(MOBILE)
-    logger.log("STEP", "Set mobile viewport {}x{}", MOBILE["width"], MOBILE["height"])
     shell = make_partner_page(PartnerShellPage)
     failures: list[str] = []
 
@@ -70,7 +66,7 @@ async def test_partner_ui_partner_portal_shell_002(
     logger.log("STEP", "Exercise mobile nav: tap sidebar link → 'commissions'")
     await shell.open("dashboard")
     await shell.wait_ready("dashboard")
-    link = partner_authenticated_page.locator("aside a[href='/commissions']").first
+    link = shell.page.locator("aside a[href='/commissions']").first
     await link.click(timeout=15_000)
     await shell.wait_ready("commissions")
     logger.info("Mobile nav tap → 'commissions' routed and rendered")

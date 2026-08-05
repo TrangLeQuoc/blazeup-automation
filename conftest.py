@@ -7,7 +7,6 @@ the implementation stays organized under `pytest_support/`.
 from pytest_support.fixtures import (
     api_token,
     auth_client,
-    auth_state,
     authenticated_page,
     browser_context,
     created_resources,
@@ -25,12 +24,11 @@ from pytest_support.fixtures import (
     tc_logger,
     test_user,
 )
-from pytest_support.hooks import pytest_runtest_makereport
+from pytest_support.hooks import pytest_collection_modifyitems, pytest_runtest_makereport
 
 __all__ = [
     "api_token",
     "auth_client",
-    "auth_state",
     "authenticated_page",
     "browser_context",
     "created_resources",
@@ -40,6 +38,7 @@ __all__ = [
     "page",
     "partner_authenticated_page",
     "partner_auth_state",
+    "pytest_collection_modifyitems",
     "pytest_runtest_makereport",
     "result_dir",
     "sa_commissions_client",

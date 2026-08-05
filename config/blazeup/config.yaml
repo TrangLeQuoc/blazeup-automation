@@ -58,6 +58,13 @@ modules:
       # Partner-portal (stgpartners) UI sections. PARTNER_PORTAL_SHELL = the
       # nav/shell page-load smoke across the portal's primary pages.
       PARTNER_PORTAL_SHELL: 1
+      MY_PIPELINE: 2   # Deals page (/deals, "Deal Pipeline"): pipeline view, filters, deal cards
+      COMMISSIONS: 3   # Commissions page (/commissions): earnings/payout totals, ledger tabs
+      DASHBOARD: 4     # Dashboard page (/dashboard): KPI cards, tier progress, pipeline snapshot
+      PARTNER_TEAM: 6  # Directory page (/directory): partner org team members + Invite User
+      # SA-side partner-management screens (stgsa SA Dashboard "Partners" area):
+      # directory, application FSM, deal-approval/conflict queues, rate table, etc.
+      SA_PARTNER_MODULE: 5
     api:
       # API grouped by backend FEATURE/resource (not by page):
       PARTNER_ACCOUNT_MANAGEMENT: 1

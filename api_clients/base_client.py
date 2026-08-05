@@ -36,6 +36,14 @@ _BODY_PREVIEW_LIMIT = 1000
 # therefore run exactly once and fail fast.
 _IDEMPOTENT_METHODS = frozenset({"GET", "HEAD", "PUT", "DELETE", "OPTIONS"})
 
+# Budgets for SETUP / precondition calls (create/approve/invite/delete) — NOT the
+# call under assertion. Staging routinely takes 10-25s for a mutation, and an httpx
+# ReadTimeout at the default 30s hangs the whole test. Setup calls pass these
+# generous values so a slow-but-successful precondition never fails/blocks the test;
+# the tight per-client SLA still applies to the actual call under test (e.g. reads).
+SETUP_RESPONSE_TIME_MS = 45_000
+SETUP_HTTP_TIMEOUT_S = 60.0
+
 
 def _mask(obj: Any) -> Any:
     """Recursively replace values of sensitive-looking keys with ``***``."""
@@ -139,6 +147,7 @@ class BaseClient:
         *,
         expected_status: int | tuple[int, ...] | None = None,
         schema: type[SchemaT] | None = None,
+        max_response_time_ms: int | None = None,
         **kwargs: Any,
     ) -> httpx.Response | SchemaT:
         """Send a request, assert response time + optional status/schema.
@@ -147,10 +156,18 @@ class BaseClient:
         for idempotent methods (see ``_IDEMPOTENT_METHODS``). POST/PATCH run once
         and fail fast, so a retry can never double-create a resource.
 
-        Raises ``AssertionError`` when the round-trip exceeds
-        ``max_response_time_ms`` (the response-time SLA), or when the status is
-        not in ``expected_status``.
+        Raises ``AssertionError`` when the round-trip exceeds the response-time SLA,
+        or when the status is not in ``expected_status``.
+
+        ``max_response_time_ms`` overrides the client's SLA for THIS call only —
+        setup/precondition calls (create/approve/invite) pass a generous budget so a
+        slow-but-successful precondition on staging does not fail the test under
+        assertion. An httpx ``timeout=`` in kwargs likewise overrides the transport
+        timeout for the call.
         """
+        sla_ms = (
+            max_response_time_ms if max_response_time_ms is not None else self.max_response_time_ms
+        )
 
         # Strip leading "/" so the endpoint is always relative to base_url.
         # httpx treats a leading "/" as an absolute path (RFC 3986), which
@@ -226,7 +243,7 @@ class BaseClient:
         )
 
         elapsed_ms = response.extensions["elapsed_ms"]
-        too_slow = elapsed_ms >= self.max_response_time_ms
+        too_slow = elapsed_ms >= sla_ms
         if too_slow:
             # Greppable marker for the log timeline / AI triage; the assertion
             # below is what actually fails the call.
@@ -235,7 +252,7 @@ class BaseClient:
                 method.upper(),
                 endpoint,
                 elapsed_ms,
-                self.max_response_time_ms,
+                sla_ms,
             )
         if expected_status is not None:
             allowed = (expected_status,) if isinstance(expected_status, int) else expected_status
@@ -247,7 +264,7 @@ class BaseClient:
         # assertion so a wrong status surfaces first; setup-only calls (e.g.
         # login) raise the limit instead of disabling the check.
         assert not too_slow, (
-            f"response time {elapsed_ms}ms exceeded limit {self.max_response_time_ms}ms "
+            f"response time {elapsed_ms}ms exceeded limit {sla_ms}ms "
             f"for {method.upper()} {endpoint}"
         )
         if schema is not None:

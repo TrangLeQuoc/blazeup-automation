@@ -30,7 +30,7 @@ DEFAULT_EXECUTE_IDS: list[str] = ["2060101-2061211"]
 DEFAULT_SKIP_IDS: list[str] = []
 
 # Export results to Excel after every run (the Partner Platform test plan).
-REPORT_EXCEL: bool = True
+REPORT_EXCEL: bool = False
 
 # Run AI failure triage automatically when a run has failures (writes ai_triage.md).
 REPORT_AI_TRIAGE: bool = True

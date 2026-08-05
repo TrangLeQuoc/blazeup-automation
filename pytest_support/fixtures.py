@@ -1,5 +1,6 @@
 """Shared pytest fixtures for UI and API automation."""
 
+import contextlib
 import logging
 import os
 import re
@@ -234,6 +235,7 @@ async def _create_browser_context(
     result_dir: Path,
     storage_state: dict | None = None,
     base_url: str | None = None,
+    viewport: dict | None = None,
 ) -> tuple[Browser, BrowserContext]:
     """Launch a browser and create a context.
 
@@ -241,9 +243,8 @@ async def _create_browser_context(
         playwright_obj: The async_playwright instance.
         settings:       Runtime settings (browser type, viewport, etc.).
         result_dir:     Artifact directory for video recording.
-        storage_state:  Playwright storage state dict (cookies + localStorage).
-                        Pass the value from the ``auth_state`` fixture to create
-                        a pre-authenticated context without re-logging in.
+        storage_state:  Playwright storage state dict (cookies + localStorage) to
+                        pre-authenticate the context, or ``None`` to log in fresh.
 
     Returns:
         ``(Browser, BrowserContext)`` — both must be closed by the caller.
@@ -259,11 +260,12 @@ async def _create_browser_context(
 
     browser: Browser = await browser_launcher.launch(**launch_options)
 
+    vp = viewport or {"width": settings.viewport_width, "height": settings.viewport_height}
     context_options: dict[str, Any] = {
-        "viewport": {"width": settings.viewport_width, "height": settings.viewport_height},
+        "viewport": vp,
         "base_url": base_url or str(settings.base_url),
         "record_video_dir": str(result_dir / "videos"),
-        "record_video_size": {"width": settings.viewport_width, "height": settings.viewport_height},
+        "record_video_size": vp,  # match the viewport so the video has no dead margin
     }
     if storage_state is not None:
         context_options["storage_state"] = storage_state
@@ -294,6 +296,31 @@ async def _save_page_artifacts(
         logger.info("Saved final screenshot to {}", screenshot_path)
 
 
+async def _rename_video(video, request: pytest.FixtureRequest, result_dir: Path) -> None:
+    """Rename the auto-generated ``page@<hash>.webm`` to ``TC-<id>_<status>.webm``.
+
+    Playwright names each context's video by a random hash, so it's impossible to
+    tell which run a video belongs to. This renames it to the test-case id + verdict
+    once the video is finalized (called AFTER the context is closed). A timestamp is
+    appended only if a same-named file already exists (e.g. parametrized runs), so we
+    never clobber a sibling video.
+    """
+    if video is None:
+        return
+    with contextlib.suppress(Exception):
+        src = Path(await video.path())
+        if not src.exists():
+            return
+        tc_id = _parse_tc_id(request.node.name)
+        report = getattr(request.node, "rep_call", None)
+        status = "failed" if report and report.failed else "passed"
+        dst = src.with_name(f"TC-{tc_id}_{status}{src.suffix}")
+        if dst.exists():
+            dst = src.with_name(f"TC-{tc_id}_{status}_{datetime.now():%H%M%S}{src.suffix}")
+        src.rename(dst)
+        logger.info("Saved run video to {}", dst.name)
+
+
 # ---------------------------------------------------------------------------
 # Unauthenticated browser fixtures  (login-page tests, non-auth scenarios)
 # ---------------------------------------------------------------------------
@@ -317,7 +344,11 @@ async def browser_context(
             yield context
         finally:
             await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
+            # capture the page's video (set by the `page` fixture) before closing the context
+            _pg = getattr(request.node, "_playwright_page", None)
+            _video = _pg.video if _pg else None
             await context.close()
+            await _rename_video(_video, request, result_dir)
             await browser.close()
 
 
@@ -338,82 +369,53 @@ async def page(
 
 
 # ---------------------------------------------------------------------------
-# Auth — session-scoped  (login once for the entire test run)
+# Auth — SA UI (fresh login per test; see authenticated_page for why)
 # ---------------------------------------------------------------------------
-
-
-@pytest_asyncio.fixture(scope="session", loop_scope="session")
-async def auth_state(settings: Settings) -> AsyncGenerator[dict]:
-    """Log in once and cache the Playwright storage state (cookies + localStorage).
-
-    Session-scoped: runs exactly once per test run regardless of how many tests
-    request ``authenticated_page``.  The yielded dict is injected into every
-    new browser context via ``storage_state=``, so each test starts already
-    authenticated without repeating the login flow.
-
-    Logs a ``START Login UI`` banner before authenticating and a
-    ``FINISH Logout UI`` banner at session teardown so the run log clearly
-    brackets the single UI login that serves all UI tests.
-    """
-    logger.log("START", "Login UI - establishing the shared session for all UI tests")
-    async with async_playwright() as p:
-        browser_launcher = getattr(p, settings.browser)
-        browser = await browser_launcher.launch(headless=settings.headless)
-        context = await browser.new_context(
-            viewport={"width": settings.viewport_width, "height": settings.viewport_height},
-            base_url=str(settings.base_url),
-        )
-        page_obj = await context.new_page()
-        email, password = require_credentials(settings.test_email, settings.test_password)
-        try:
-            await login_ui(page_obj, str(settings.base_url), email, password)
-            state = await context.storage_state()
-        except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
-            logger.error("Login UI FAILED — blocking the run: {}", exc)
-            pytest.skip(f"BLOCKED: shared SA UI login failed — {blocked_reason(exc)}")
-        finally:
-            await context.close()
-            await browser.close()
-
-    logger.info("Login UI complete - storage state cached (no re-login for the rest of the run)")
-    yield state
-    logger.log("FINISH", "Logout UI - shared UI session closed")
 
 
 @pytest_asyncio.fixture
 async def authenticated_page(
     request: pytest.FixtureRequest,
     settings: Settings,
-    auth_state: dict,
     result_dir: Path,
 ) -> AsyncGenerator[Page]:
-    """Pre-authenticated page — fresh isolated context per test, login only once.
+    """Pre-authenticated stgsa page — a FRESH UI login per test.
 
-    Each test gets its own browser context (full isolation — no shared cookies
-    between tests) but the context is pre-loaded with ``auth_state`` so the
-    login page is never visited again after the first test in the session.
+    Why re-login (not one shared ``auth_state`` snapshot injected into every
+    context): the stgsa SA auth uses a rotating, single-use refresh cookie. The
+    first page load refreshes the token and the server invalidates the old refresh
+    cookie, so a 2nd+ context that replays the SAME captured storage_state 401s on
+    ``current-user`` / ``refresh-cookie-token`` and the SA micro-frontend never
+    renders (the "1st SA test passes, the rest time out at 90s" flaky).
 
-    Timeline:
-        Session start  →  auth_state fixture logs in once, saves storage state
-        Test 1  →  new context + storage_state injected  →  page is authenticated
-        Test 2  →  new context + storage_state injected  →  page is authenticated
-        ...
-        Test N  →  new context + storage_state injected  →  page is authenticated
+    Tests run sequentially, so a fresh login per test keeps exactly ONE active
+    session at a time — no cross-context cookie rotation. Everything (context,
+    login, the test) runs on the SAME function-scoped event loop, so there is no
+    cross-loop hazard (a shared live BrowserContext would deadlock across loops).
     """
     trace_name = request.node.name.replace("/", "_").replace("\\", "_")
     async with async_playwright() as playwright:
-        browser, context = await _create_browser_context(
-            playwright, settings, result_dir, storage_state=auth_state
-        )
+        browser, context = await _create_browser_context(playwright, settings, result_dir)
         page_obj = await context.new_page()
         request.node._playwright_page = page_obj
+        try:
+            email, password = require_credentials(settings.test_email, settings.test_password)
+            await login_ui(page_obj, str(settings.base_url), email, password)
+        except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
+            logger.error("SA UI login FAILED — blocking this test: {}", exc)
+            await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
+            await context.close()
+            await browser.close()
+            pytest.skip(f"BLOCKED: SA UI login failed — {blocked_reason(exc)}")
         try:
             yield page_obj
         finally:
             await _save_page_artifacts(page_obj, request, result_dir)
             await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
+            video = page_obj.video
             await page_obj.close()
             await context.close()
+            await _rename_video(video, request, result_dir)
             await browser.close()
 
 
@@ -446,9 +448,11 @@ def make_page(authenticated_page: Page, settings: Settings):
 async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
     """Log in to the PARTNER portal once and cache its storage state.
 
-    Mirrors ``auth_state`` but for the partner portal (stgpartners.blazeup.ai):
-    partner credentials + the single-step ``PartnerLoginPage`` + the partner base
-    URL. Session-scoped so the partner login runs exactly once per run.
+    Session-scoped snapshot for the partner portal (stgpartners.blazeup.ai): partner
+    credentials + the single-step ``PartnerLoginPage`` + the partner base URL, run
+    once per session. (The SA side re-logs in per test instead — see
+    ``authenticated_page`` — because stgsa's rotating refresh cookie breaks a shared
+    snapshot; the partner portal does not, so a single shared snapshot is fine here.)
     """
     partner_url = settings.partner_base_url
     if partner_url is None:
@@ -465,7 +469,14 @@ async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
         page_obj = await context.new_page()
         email, password = require_credentials(settings.partner_email, settings.partner_password)
         try:
-            await login_ui(page_obj, partner_url, email, password, login_page_cls=PartnerLoginPage)
+            await login_ui(
+                page_obj,
+                partner_url,
+                email,
+                password,
+                login_page_cls=PartnerLoginPage,
+                totp_secret=settings.partner_totp_secret,
+            )
             state = await context.storage_state()
         except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
             logger.error("Login UI (partner) FAILED — blocking the run: {}", exc)
@@ -486,8 +497,14 @@ async def partner_authenticated_page(
     partner_auth_state: dict,
     result_dir: Path,
 ) -> AsyncGenerator[Page]:
-    """Pre-authenticated PARTNER-portal page — fresh context per test, login once."""
+    """Pre-authenticated PARTNER-portal page — fresh context per test, login once.
+
+    Tests marked ``@pytest.mark.mobile`` get a mobile-sized context (375×812) so the
+    viewport AND the recorded video match — no need to resize at runtime (which would
+    leave the video canvas at the desktop size with a grey dead margin).
+    """
     trace_name = request.node.name.replace("/", "_").replace("\\", "_")
+    viewport = {"width": 375, "height": 812} if request.node.get_closest_marker("mobile") else None
     async with async_playwright() as playwright:
         browser, context = await _create_browser_context(
             playwright,
@@ -495,6 +512,7 @@ async def partner_authenticated_page(
             result_dir,
             storage_state=partner_auth_state,
             base_url=str(settings.partner_base_url),
+            viewport=viewport,
         )
         page_obj = await context.new_page()
         request.node._playwright_page = page_obj
@@ -503,8 +521,10 @@ async def partner_authenticated_page(
         finally:
             await _save_page_artifacts(page_obj, request, result_dir)
             await context.tracing.stop(path=str(result_dir / "traces" / f"{trace_name}.zip"))
+            video = page_obj.video
             await page_obj.close()
             await context.close()
+            await _rename_video(video, request, result_dir)
             await browser.close()
 
 

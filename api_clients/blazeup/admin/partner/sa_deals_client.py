@@ -55,10 +55,14 @@ class SaDealsClient(BaseClient):
         if not plans:
             raise RuntimeError("no billing plans available to register a deal")
         published = next((p for p in plans if p.get("status") == "published"), plans[0])
-        plan_id = published.get("planId") or published.get("_id")
+        # Register requires the plan's Mongo **_id** (ObjectId). The human-readable
+        # slug ('planId') is now rejected with 400 "Invalid id: '<slug>'" (BE
+        # contract — verified 2026-07-24). Prefer _id; fall back to planId only if
+        # the catalog omits _id.
+        plan_id = published.get("_id") or published.get("planId")
         if not plan_id:
             raise RuntimeError(
-                f"billing plan has no planId/_id to register a deal with: {published!r}"
+                f"billing plan has no _id/planId to register a deal with: {published!r}"
             )
         return plan_id
 

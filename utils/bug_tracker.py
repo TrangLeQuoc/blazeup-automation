@@ -27,7 +27,16 @@ from pathlib import Path
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TRACKER = _PROJECT_ROOT / "docs" / "blazeup" / "Bug_Tracker.xlsx"
 _SHEET = "Bug Tracker"
-_CLOSED_STATUSES = {"closed", "fixed", "done", "resolved", "verified"}
+# Status stems that mean "no longer open". Matched by PREFIX (case-insensitive) so
+# human variants all count: CLOSE / Closed / closing, Fix / Fixed, Resolve / Resolved,
+# Verify / Verified, Done, Won't Fix / WontFix, Complete / Completed.
+_CLOSED_STEMS = ("close", "fix", "resolv", "verif", "done", "wontfix", "won't", "complete")
+
+
+def _is_closed(status: str | None) -> bool:
+    """True when a tracker Status means the bug is no longer open (prefix match)."""
+    s = (status or "").strip().lower()
+    return any(s.startswith(stem) for stem in _CLOSED_STEMS)
 
 
 @dataclass
@@ -136,33 +145,103 @@ def load_tracker(path: Path) -> dict[int, BugRow]:
     return out
 
 
-def _next_bug_seq(existing: dict[int, BugRow]) -> int:
+# ── Section-aware Bug IDs ─────────────────────────────────────────────────────
+# The tracker is split into an **API** section and a **UI** section, each opened by
+# a bold header row (col A == "API" / "UI", the other columns blank). Bug IDs are
+# prefixed + numbered per section: BUG-API-001.. and BUG-UI-001.. . New bugs are
+# inserted at the END of their own section so ids stay stable and the two lists
+# never interleave.
+_SECTIONS = ("API", "UI")
+
+
+def _is_ui(tc_id: int, tc_string: str = "") -> bool:
+    """UI vs API classification for a test case (drives the Bug ID section)."""
+    if "_UI_" in (tc_string or ""):
+        return True
+    if "_API_" in (tc_string or ""):
+        return False
+    # Fallback by id magnitude: UI ids are 8-digit and start with 1 (e.g. 12060515);
+    # API ids are 7-digit and start with 2 (e.g. 2060234).
+    return len(str(tc_id)) >= 8 and str(tc_id).startswith("1")
+
+
+def _section_for(tc_id: int, tc_string: str = "") -> str:
+    return "UI" if _is_ui(tc_id, tc_string) else "API"
+
+
+def _next_seq(existing: dict[int, BugRow], section: str) -> int:
+    """Highest existing sequence for BUG-<section>-NNN (0 if none)."""
+    pat = re.compile(rf"BUG-{section}-0*(\d+)", re.IGNORECASE)
     mx = 0
     for r in existing.values():
-        m = re.search(r"(\d+)", r.bug_id or "")
+        m = pat.match(r.bug_id or "")
         if m:
             mx = max(mx, int(m.group(1)))
-    return mx + 1
+    return mx
+
+
+def _find_section_rows(ws) -> dict[str, int]:
+    """{'API': header_row, 'UI': header_row} by scanning col A for the labels."""
+    out: dict[str, int] = {}
+    for r in range(1, ws.max_row + 1):
+        label = str(ws.cell(r, 1).value or "").strip().upper()
+        if label in _SECTIONS and (ws.cell(r, 2).value in (None, "")):
+            out[label] = r
+    return out
+
+
+def _last_bug_row(ws, start: int, end: int) -> int:
+    """Last row in (start, end) holding a Bug ID; else `start` (the section header)."""
+    last = start
+    for r in range(start + 1, end):
+        if str(ws.cell(r, 1).value or "").upper().startswith("BUG-"):
+            last = r
+    return last
+
+
+def _write_row(ws, idx: int, row: dict, hdr: dict[str, int]) -> None:
+    for key, val in row.items():
+        if key.startswith("_") or key not in hdr:  # skip transient hints (_section, …)
+            continue
+        cell = ws.cell(idx, hdr[key], val)
+        # Test Case ID is a plain integer id, not a quantity — force the "0" number
+        # format so it never renders with thousands separators (e.g. 12,060,102).
+        if key == "Test Case ID":
+            cell.number_format = "0"
 
 
 def _append_rows(path: Path, rows: list[dict]) -> int:
+    """Insert each new bug at the end of its section (API above UI).
+
+    Each row carries a transient ``_section`` ("API"/"UI"). Rows are inserted (not
+    appended at the sheet bottom) so API bugs stay in the API block and UI bugs in
+    the UI block; the Status dropdown + colour rules span a fixed range (H2:H500),
+    so inserted rows inherit them automatically.
+    """
     import openpyxl
 
     wb = openpyxl.load_workbook(path)  # not data_only → preserve styles
     ws = wb[_SHEET]
     hdr = {str(c.value).strip(): i for i, c in enumerate(ws[1], 1) if c.value}
-    for r in rows:
-        rt = ws.max_row + 1
-        for key, val in r.items():
-            if key in hdr:
-                cell = ws.cell(rt, hdr[key], val)
-                # Test Case ID is a plain integer id, not a quantity — force the
-                # "0" number format so it never renders with thousands separators
-                # (e.g. 12,060,102 instead of 12060102).
-                if key == "Test Case ID":
-                    cell.number_format = "0"
+    written = 0
+    for section in _SECTIONS:
+        batch = [r for r in rows if r.get("_section") == section]
+        for row in batch:
+            secs = _find_section_rows(ws)  # recompute — earlier inserts shift rows
+            if section in secs:
+                end = secs["UI"] if section == "API" and "UI" in secs else ws.max_row + 1
+                idx = _last_bug_row(ws, secs[section], end) + 1
+                ws.insert_rows(idx)
+            else:  # fallback: no section header found → append at the bottom
+                idx = ws.max_row + 1
+            _write_row(ws, idx, row, hdr)
+            written += 1
+    # Any rows without a recognised section (shouldn't happen) → bottom-append.
+    for row in (r for r in rows if r.get("_section") not in _SECTIONS):
+        _write_row(ws, ws.max_row + 1, row, hdr)
+        written += 1
     wb.save(path)
-    return len(rows)
+    return written
 
 
 def reconcile(
@@ -196,16 +275,27 @@ def reconcile(
                 candidates.append((n, g))
 
     reg = _registry_lookup()
-    next_n = _next_bug_seq(existing)
+    # Per-section running sequence (API / UI numbered independently).
+    next_seq = {s: _next_seq(existing, s) for s in _SECTIONS}
     to_append: list[dict] = []
 
-    def _build_entry(tc_id: int, g: object, bug_n: int) -> dict:
+    def _build_entry(tc_id: int, g: object) -> dict:
         tc = reg.get(tc_id)  # enrich from the code registry when available
         name = getattr(tc, "tc_string", "") if tc else ""
+        section = _section_for(tc_id, name)
+        next_seq[section] += 1
+        bug_id = f"BUG-{section}-{next_seq[section]:03d}"
+        title = ((getattr(tc, "title", "") if tc else "") or "").strip()
         evidence = (getattr(g, "evidence", "") or "")[:300]
         expected, actual = _expected_actual(evidence)
+        # Expected must never be blank. If the assertion had no "Expected … got …"
+        # pattern (e.g. UI defects: overflow, "accepts invalid …"), fall back to the
+        # TC title — it states the intended/correct behavior — then to the evidence.
+        if not expected:
+            expected = title or evidence[:200] or "(expected behavior — see Test Case Name)"
         return {
-            "Bug ID": f"BUG-{bug_n:03d}",
+            "Bug ID": bug_id,
+            "_section": section,  # transient hint for _append_rows (not a column)
             "Test Case ID": tc_id,
             "Test Case Name": name,
             "Module": getattr(tc, "module", "").capitalize() if tc else "",
@@ -215,9 +305,9 @@ def reconcile(
             "Status": "Open",
             "Reported By": "AI Triage",
             "Date Opened": datetime.date.today().isoformat(),
-            "Summary": (getattr(tc, "title", "") if tc else "") or evidence[:200],
+            "Summary": title or evidence[:200],
             "Expected": expected,
-            "Actual": actual,
+            "Actual": actual or evidence[:250],
             "Evidence / Assertion": evidence,
             "Notes": "",  # left blank by request — no auto-generated note text
         }
@@ -226,11 +316,10 @@ def reconcile(
         row = existing.get(tc_id)
         cur_ev = (getattr(g, "evidence", "") or "")[:300]
         if row is None:
-            entry = _build_entry(tc_id, g, next_n)
-            next_n += 1
+            entry = _build_entry(tc_id, g)
             res.new.append(entry)
             to_append.append(entry)
-        elif row.status.lower() in _CLOSED_STATUSES:
+        elif _is_closed(row.status):
             # A closed bug is failing again. If the failure matches the recorded
             # evidence (same root cause) → REOPEN the same bug. If it's a DIFFERENT
             # failure (or the old evidence is unknown to compare) → treat SAME-cause
@@ -240,9 +329,8 @@ def reconcile(
             if same_cause:
                 res.reopen.append(row)
             else:
-                entry = _build_entry(tc_id, g, next_n)
+                entry = _build_entry(tc_id, g)
                 entry["_distinct_from"] = row.bug_id  # transient hint for render (not a column)
-                next_n += 1
                 res.new.append(entry)
                 to_append.append(entry)
         else:
@@ -255,7 +343,7 @@ def reconcile(
         if tc_id in seen:
             continue
         row = existing.get(tc_id)
-        if row is not None and row.status.lower() not in _CLOSED_STATUSES:
+        if row is not None and not _is_closed(row.status):
             res.resolved.append(row)
 
     if to_append and allow_write:
@@ -265,28 +353,33 @@ def reconcile(
 
 
 def render(res: Reconciliation) -> str:
-    """Human-readable reconciliation block (safe for console + markdown)."""
+    """Human-readable reconciliation block (safe for console + markdown).
+
+    Sections are ordered most-actionable first (NEW → REOPEN → KNOWN OPEN →
+    RESOLVED); RESOLVED is a close-suggestion, so it sits last. Within each section
+    rows are sorted by Bug ID so the list reads in order (BUG-API-001, 002, …).
+    """
     lines = ["", "── Bug Tracker reconciliation ──"]
     if not (res.new or res.known_open or res.reopen or res.resolved):
         lines.append("  No defects to track. ✅")
         return "\n".join(lines)
-    for r in res.resolved:
-        lines.append(
-            f"  ✅ RESOLVED    {r.bug_id}  (TC-{r.tc_id}) — passed this run, no longer "
-            f"failing → safe to CLOSE (status is '{r.status}')"
-        )
-    for r in res.known_open:
-        lines.append(f"  🔵 KNOWN OPEN  {r.bug_id}  (TC-{r.tc_id}) — already tracked, still open")
-    for r in res.reopen:
-        lines.append(
-            f"  ⚠  REOPEN      {r.bug_id}  (TC-{r.tc_id}) — CLOSED but the SAME failure is "
-            f"back → reopen"
-        )
-    for e in res.new:
+    for e in sorted(res.new, key=lambda e: e["Bug ID"]):
         tag = "added" if res.wrote_to_file else "would add (propose-only)"
         distinct = e.get("_distinct_from")
         extra = f"; NEW defect, different from closed {distinct}" if distinct else ""
         lines.append(f"  🆕 NEW         {e['Bug ID']}  (TC-{e['Test Case ID']}) — {tag}{extra}")
+    for r in sorted(res.reopen, key=lambda r: r.bug_id):
+        lines.append(
+            f"  ⚠  REOPEN      {r.bug_id}  (TC-{r.tc_id}) — CLOSED but the SAME failure is "
+            f"back → reopen"
+        )
+    for r in sorted(res.known_open, key=lambda r: r.bug_id):
+        lines.append(f"  🔵 KNOWN OPEN  {r.bug_id}  (TC-{r.tc_id}) — already tracked, still open")
+    for r in sorted(res.resolved, key=lambda r: r.bug_id):
+        lines.append(
+            f"  ✅ RESOLVED    {r.bug_id}  (TC-{r.tc_id}) — passed this run, no longer "
+            f"failing → safe to CLOSE (status is '{r.status}')"
+        )
     if res.new:
         if res.wrote_to_file:
             lines.append(f"  → {res.written} row(s) appended to {res.tracker.name}")

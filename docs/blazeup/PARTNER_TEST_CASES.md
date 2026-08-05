@@ -2,82 +2,317 @@
 
 > Generated from the test plan. NOT_STARTED test cases show the name only; BLOCKED show the block reason; PASSED/FAILED show full description, steps (with expected per step), overall expected, and notes.
 
+## 0. Candidate MISSING test cases (Figma design exists, no plan TC)
+
+These SA-side partner-management workflows have a "Ready for dev" Figma design (`design_partner/…`, `[PN…]`) but **no corresponding TC in the test plan**. Suggested to add (all SA-side / stgsa Partners area). Add to the plan then automate once the UI is deployed.
+
+| Design | Suggested TC |
+|---|---|
+| PN002 View Partner Detail page | SA partner detail (Overview / Deals / Commission / Members / Notes) loads |
+| PN004 Reject partner application | SA reject application (+ reason) |
+| PN005 Resend expired activation invite | SA resend invite email |
+| PN014 Manage partner team (deactivate/reactivate member) | SA deactivate + reactivate a partner's member (+ reason) |
+| PN015 Suspend active partner | SA suspend partner |
+| PN016 Reactivate suspended partner | SA reactivate partner |
+| PN027 Request additional info from applicant | SA request-info (part of the FSM) |
+| PN011 Mark deal Won → trigger commission calc | SA mark-won (UI) [+ API commission-calc] |
+| PN019 Mark deal Lost | SA mark-lost |
+| PN027 Review custom plan request | SA review/respond custom-plan request |
+| PN028 Propose co-sell split override (ACV > $100K) | SA co-sell split override |
+| PN013 Process commission clawback on early churn | SA process-clawback |
+
 ## 1. UI
 
 ### UI · COMMISSIONS
 
-- PARTNER_UI_COMMISSIONS_001
-- PARTNER_UI_COMMISSIONS_002
-- PARTNER_UI_COMMISSIONS_003
-- PARTNER_UI_COMMISSIONS_004
-- PARTNER_UI_COMMISSIONS_005
-- PARTNER_UI_COMMISSIONS_006
-- PARTNER_UI_COMMISSIONS_007
-- PARTNER_UI_COMMISSIONS_008
-- PARTNER_UI_COMMISSIONS_009
-- PARTNER_UI_COMMISSIONS_010
-- PARTNER_UI_COMMISSIONS_011
+#### PARTNER_UI_COMMISSIONS_001
+**Note (BLOCKED):** Type estimated annual value → commission projection updates live (in the deal-register wizard, step 2). Blocked on test data (verified live 2026-07-27): the test partner has **no commission rate configured** — `/resources` shows *"Commission Rates: No rates configured yet. Contact your programme manager."* The projection is `Total rate × Estimated ACV`, so with an empty rate it computes **no value** (probed: changing inputs shows no `$` projection). Also the ACV isn't a direct input — "Estimated ACV / Rate / Projected commission" are collapsible display sections in the wizard (ACV appears derived from plan × seats), so there's nothing to "type" for a live rate×ACV calc. Unblock when a commission **rate is configured** for the test partner (via SA rate-table) so the projection produces a verifiable value.
+#### PARTNER_UI_COMMISSIONS_002
+**Test Description:** Open the Commissions page and confirm the earned/pending/paid summary totals + ledger status tabs render. Read-only: works with an empty ledger (amounts may be $0) — verifies the page structure, not specific data.
+**Setup (precondition):** Log in as the channel-partner user; open `/commissions` via the shell and wait for the "Commissions" READY_MARKER; let the data settle.
+**Test Steps:**
+1. The 4 summary totals render, each with a $ amount.
+   → Expected: **Pending Payout**, **Paid YTD**, **Total Earned**, **Clawback Risk** cards each show a $ value (e.g. $0 on an empty ledger).
+2. All ledger status tabs are visible.
+   → Expected: **All / Earned / Pending / Approved / Paid / Disputed / Clawback** tabs render.
+**Expected (overall):** The Commissions page renders its summary totals + all ledger tabs (independent of how many commissions exist).
+**Note:** PASSED — verified 2026-07-28 (TC 12060302). First COMMISSIONS content test — establishes the `CommissionsPage` page-object (summary cards, ledger tabs). Empty ledger shows "No commissions yet" (partner has no won deals). Negative counterpart: N/A — read-only view. Idempotency: N/A — read-only.
+#### PARTNER_UI_COMMISSIONS_003 — BLOCKED (no ledger data)
+**Intent:** Trace a commission row — open a row and verify the full lifecycle fields (deal → close → rate/version → approval → payout → clawback/waiver → payment status); totals reconcile to the visible rows.
+**Block reason:** The commission ledger is **empty** — the test partner has no **Won** deals, so no commission rows exist ("No commissions yet"). Nothing to open / verify. Data-dependency chain: rate configured (SA_PARTNER_MODULE_009, not deployed) → deal approved (SA deal queue blocked by BUG-025) → deal Won → commission row. Unblock once at least one commission exists in the ledger.
+#### PARTNER_UI_COMMISSIONS_004 — BLOCKED (no ledger data)
+**Intent:** Submit a commission dispute from a single text field on a commission row.
+**Block reason:** Same as _003 — no commission rows in the ledger to dispute (partner has no Won deals → empty ledger). Needs a real commission entry first (rate → approved deal → Won).
+#### PARTNER_UI_COMMISSIONS_005 — BLOCKED (no ledger data)
+**Intent:** Submit a product-failure waiver request with evidence linked to a commission/clawback row.
+**Block reason:** Same as _003/_004 — no clawback-eligible commission row exists (empty ledger). Needs a commission in a clawback-eligible state first.
+#### PARTNER_UI_COMMISSIONS_006 — BLOCKED (UI + data not available) — Security
+**Intent:** Approve a commission payout **> $10K** — two-eye approval is enforced (one person cannot approve a large payout alone).
+**Block reason:** Needs (a) a payout > $10K pending approval — which requires a Won deal → commission → payout (empty ledger, blocked as _003), and (b) the two-eye approval UI (SA-side, design PN012) which is **not deployed** on staging. Unblock when both the payout data + the two-eye approval UI exist.
+#### PARTNER_UI_COMMISSIONS_007 — BLOCKED (SA-side config UI not deployed)
+**Where:** per the Figma design (PN021) the clawback **policy/waiver** is **SA-side** — stgsa → Partners → Commission → Commission configuration → **Clawback settings** + a **Waiver Review Queue** (not the partner-portal Commissions page). Design ready-for-dev.
+**Intent:** Display Clawback notification — policy terms and the product-failure waiver path are visible (sensitive details masked).
+**Block reason:** The SA Commission **configuration** view (which holds Clawback settings + the Waiver Review Queue) is **not deployed on staging** (re-verified 2026-07-30, same finding as _009/_010: no "View configuration" entry on `/partners/commissions`, config routes 404). An earlier note here checked the partner-portal `/commissions` (its "Clawback" tab only filters the empty ledger) — the actual clawback-policy/waiver experience is SA-side per PN021. Unblock when FE deploys the Commission configuration view.
+#### PARTNER_UI_COMMISSIONS_008 — BLOCKED (Blazey AI feature)
+**Intent:** Ask the Blazey AI assistant a commission question → get a context-aware answer (correct deal/tier/rate for this partner, without exposing other partners) with an actionable next step.
+**Block reason:** Depends on the **Blazey AI assistant** (deferred AI feature) + real commission context data. The assistant is not available/testable on the current build, and the ledger is empty (no commission context). Unblock when Blazey ships + commission data exists.
+#### PARTNER_UI_COMMISSIONS_009 — BLOCKED (UI not located) — Security
+**Intent:** Edit payout / banking details by region → only the correct region-appropriate payment methods are offered; sensitive details are masked.
+**Block reason:** No payout/banking-details edit UI found on the partner build — `/commissions` is a read-only ledger; a payout-details/settings screen (per region) was not located. Needs the payout-details UI + region fixtures. Unblock when the payout-details screen is available.
+#### PARTNER_UI_COMMISSIONS_010 — BLOCKED (no commission data + no clawback-processing UI)
+**Intent:** Process a commission clawback when a client churns within the clawback window → the commission is adjusted to Clawback, the partner is notified, and the product-failure waiver path is available.
+**Block reason:** Verified live 2026-07-31 on the SA commission ledger (stgsa `/partners/commissions`): the ledger is **empty** ("No Data Found", 0 commissions) so there is no commission to clawback, and there is **no process-clawback action** in the UI (only a "Clawback Exposure" summary card + a Clawback status filter tab — no per-row "process clawback" control; design PN013 not deployed). Needs the full chain — rate configured → deal approved (blocked by BUG-025) → deal Won → commission — plus the process-clawback UI. Unblock when a churned-client commission exists + the process-clawback UI ships.
+#### PARTNER_UI_COMMISSIONS_011 — BLOCKED (needs reseller partner + Won reseller deal)
+**Intent:** For a Won **reseller** deal, the commission shows the configured **reseller rate** (not the referral/co-sell rate), clearly labelled as reseller commission.
+**Block reason:** Needs a **Reseller-type partner** with a **Won reseller deal** and a reseller rate configured. The test partner is type Channel, the register wizard fixes deal type to Referral, and there is no configured rate / Won deal — so no reseller commission entry exists to verify. Unblock with a reseller partner + Won reseller deal + rate.
+#### PARTNER_UI_COMMISSIONS_012 — BLOCKED (needs reseller partner + Won reseller deal)
+**Intent:** On reseller-deal close, an invoice is generated **for the partner entity** (not the end-client); amount = reseller rate × deal value; no end-client billing details are exposed.
+**Block reason:** Same dependency as _010 — needs a reseller partner + Won reseller deal that has passed commission processing, plus the invoice/billing UI (not seen on the partner build). Unblock with the reseller data + invoice UI.
 ### UI · DASHBOARD
 
-- PARTNER_UI_DASHBOARD_001
-- PARTNER_UI_DASHBOARD_002
-- PARTNER_UI_DASHBOARD_003
-- PARTNER_UI_DASHBOARD_004
-- PARTNER_UI_DASHBOARD_005
-- PARTNER_UI_DASHBOARD_006
-- PARTNER_UI_DASHBOARD_007
-- PARTNER_UI_DASHBOARD_008
-- PARTNER_UI_DASHBOARD_009
+#### PARTNER_UI_DASHBOARD_001
+**Test Description:** The partner shell loads for a channel-partner user and lands on the Dashboard. Confirms the shell chrome (brand + nav + profile), partner-only navigation (no SA/tenant-only routes leaked), and Dashboard content loading with no error/authorization banner.
+**Setup (precondition):** Log in as the channel-partner user; navigate to the portal root `/` (Dashboard is the default page) and wait for the "Tier & Performance" READY_MARKER.
+**Test Steps:**
+1. Partner shell chrome renders.
+   → Expected: the "PARTNER PORTAL" brand, ≥5 sidebar nav links, and the "Open profile menu" control are visible.
+2. Only partner navigation is exposed.
+   → Expected: partner routes `/dashboard`, `/deals`, `/commissions` present; NO SA/tenant-only routes (`/tenants`, `/billing`, `/plans`, `/partners`, `/connectors`, `/auditLog`).
+3. Dashboard content loads with no error/authorization banner.
+   → Expected: no "Something went wrong" / "not authorized" / "Unauthorized" / "403" / "Access denied"; the "Tier & Performance" panel is visible in `<main>`.
+**Expected (overall):** The partner shell loads for the channel partner with the Dashboard active, partner-scoped nav only, and no error/auth banner.
+**Note:** PASSED — verified 2026-07-28 (TC 12060401). Access-control style shell test: proves the partner portal exposes only partner routes and the Dashboard is the default landing page. Negative counterpart: N/A — access-control assertion is embedded (asserts SA-only routes are absent). Idempotency: N/A — read-only view.
+#### PARTNER_UI_DASHBOARD_002
+**Test Description:** Open the partner Dashboard and confirm the KPI metric cards + main section panels render. Read-only: works with empty data (values may be 0 / USD 0) — verifies the cards render, not specific figures.
+**Setup (precondition):** Log in as the channel-partner user; open `/dashboard` via the shell and wait for the "Tier & Performance" READY_MARKER.
+**Test Steps:**
+1. KPI cards render, each with a metric value.
+   → Expected: **Total pipeline ACV**, **Commission YTD**, **Active Tenants** each show a value (e.g. "USD 0" / 0).
+2. The main dashboard sections render.
+   → Expected: **Tier & Performance**, **Territory Assignments**, **Action Required**, **Pipeline Snapshot** panels are visible.
+**Expected (overall):** The dashboard renders its KPI metric cards + all main sections (independent of the data).
+**Note:** PASSED — verified 2026-07-28 (TC 12060402). First DASHBOARD content test — establishes the `DashboardPage` page-object (KPI cards, sections). Empty partner data shows "No Data Found" in Action Required / Pipeline Snapshot. Negative counterpart: N/A — read-only view. Idempotency: N/A.
+#### PARTNER_UI_DASHBOARD_003
+**Test Description:** The dashboard Tier Progress component shows progress to the next tier. Read-only.
+**Setup (precondition):** Log in as the channel-partner user; open `/dashboard` and wait for the "Tier & Performance" READY_MARKER.
+**Test Steps:**
+1. Tier Progress shows the current tier + "working towards" the next tier + current ARR.
+   → Expected: "Tier Progress" present; the **current tier** (SELECT/ADVANCED/PREMIER), the **"Working towards \<next tier\>"** copy, and **T12M ARR** are shown.
+2. Progress metrics are shown.
+   → Expected: the **deal count** and **Win rate** are shown in the tier progress panel.
+**Expected (overall):** Progress toward the next tier is visible (current tier + next-tier copy + ARR + metrics).
+**Note:** PASSED — verified 2026-07-28 (TC 12060403; current=SELECT, working towards ADVANCED, ARR USD 0). **Plan-vs-live:** the plan also lists a **threshold target**, a **progress bar**, and a **remaining delta** — this build does NOT render those (no `role=progressbar` element, no threshold/remaining text); it shows current tier + next-tier copy + ARR + deals/win-rate. The test asserts what the UI actually renders. Negative counterpart: N/A — read-only view. Idempotency: N/A.
+#### PARTNER_UI_DASHBOARD_004 — BLOCKED
+**Intent:** Render — the Action Required list HAS pending tasks, so the partner sees next actions (each item shows client/deal name, urgency/status, and an action control).
+**Block reason:** No fixture / seeding path to make the Action Required list non-empty. The test partner (channel-partner) has empty data — the section renders its graceful empty state ("Action Required · No Data Found · Looks like there's nothing here yet"). Action-Required items are DERIVED (renewals due, deals needing partner action); there is no partner-side API to seed them, and the existing QA-AUTO deals (pending SA approval) do not surface here. The "has pending tasks" positive path cannot be verified until a partner account with real action items (or a seed hook) is available. Revisit with a data-seeded partner.
+#### PARTNER_UI_DASHBOARD_005 — FAILED (by design · BE gap)
+**Test Description:** Tier-qualification math on the dashboard — per PRD §2.1/§4.3 the Tier Progress component must surface the next-tier **T12M ARR threshold target**, the **remaining delta** to reach it, and a **progress bar**, in addition to the current tier + ARR.
+**Setup (precondition):** Log in as the channel-partner user; open `/dashboard` and wait for the "Tier & Performance" READY_MARKER; locate the Tier Progress component.
+**Test Steps:**
+1. Current tier + current T12M ARR are shown (baseline).
+   → Expected: current tier (SELECT/ADVANCED/PREMIER) + "T12M ARR" are shown. **(PASSES — build renders these.)**
+2. Next-tier T12M ARR threshold target + remaining delta are shown.
+   → Expected: a threshold/target/remaining figure toward the next tier is shown. **(FAILS — not rendered.)**
+3. A progress bar toward the next-tier threshold is shown.
+   → Expected: a `role=progressbar` / `<progress>` element is present. **(Would FAIL — none rendered.)**
+**Expected (overall):** The tier-qualification threshold + remaining delta + progress bar are visible.
+**Note:** FAILED by design (`be_gap`) — verified 2026-07-28 (TC 12060405). The live build renders only the current tier, "Working towards \<next tier\>" copy, current ARR (USD 0), and deal/win-rate counts ("0/0 deals") — it does NOT render any ARR threshold amount, any remaining-delta amount, or a progress bar (no `role=progressbar`). Assertion fails with "confirm with BE". Complements DASHBOARD_003 (which asserts only what the UI *does* render); this TC pins the missing tier-qualification math as a tracked gap. Excluded from the merge gate (`be_gap`). Negative counterpart: N/A — read-only calc view. Idempotency: N/A.
+#### PARTNER_UI_DASHBOARD_006 — BLOCKED (needs downgrade-state fixture)
+**Intent:** Warn of a pending **tier downgrade** — the dashboard shows a 30-day notice + the grace-quarter info (PRD §2.1/§5.5).
+**Block reason:** The test partner is not in a **tier-downgrade-pending** state, and there is no way to seed one (tier downgrade is derived from T12M ARR falling below the current tier's threshold over a grace quarter). With no partner in that state, the 30-day-notice / grace-quarter warning cannot be triggered or verified. Also depends on the tier-qualification math that _005 showed is not fully rendered. Unblock with a partner fixture in the downgrade-pending state (+ the warning UI).
+#### PARTNER_UI_DASHBOARD_007 — PASSED
+**Test Description:** (Negative guard) The dashboard hides vanity metrics — per PRD §4.3 the first dashboard view shows ONLY actionable/decision-supporting values (pipeline ACV, commission, active tenants, tier progress, action items, pipeline snapshot) and must NOT surface non-actionable "vanity" metrics (page/profile views, impressions, followers, bounce rate, login counts, …).
+**Setup (precondition):** Log in as the channel-partner user; open `/dashboard` and wait for the "Tier & Performance" READY_MARKER.
+**Test Steps:**
+1. Only actionable/decision-supporting KPI metrics are shown.
+   → Expected: Total pipeline ACV, Commission YTD, Active Tenants visible.
+2. No non-actionable vanity metrics are present.
+   → Expected: none of {page views, profile views, impressions, followers, bounce rate, time on page, click-through, logins, vanity} appear in `<main>`.
+3. The page hierarchy still highlights the actionable sections.
+   → Expected: Action Required, Tier Progress, Pipeline Snapshot are visible.
+**Expected (overall):** The dashboard surfaces only actionable metrics + the action/tier/pipeline hierarchy; vanity metrics are hidden.
+**Note:** PASSED — TC 12060407, verified 2026-07-30 (ran green once staging recovered; the earlier "pending verify" was a transient staging MFE outage on 2026-07-28, not a test defect). Negative TC by design (guards absence of vanity metrics). Negative counterpart: this IS the negative guard. Idempotency: N/A — read-only view.
+#### PARTNER_UI_DASHBOARD_008 — BLOCKED (Blazey AI feature)
+**Intent:** Ask the Blazey AI assistant (dashboard widget) a **deal-status** question → the answer includes the current deal stage, next action, and the BlazeUp rep contact, scoped to the logged-in partner's deals only.
+**Block reason:** Depends on the **Blazey AI assistant** (deferred AI feature) — the widget is not available/testable on the current build — plus real deal data for the partner. Unblock when Blazey ships + the partner has deals.
+#### PARTNER_UI_DASHBOARD_009 — BLOCKED (Blazey AI feature)
+**Intent:** Ask Blazey a **tier-projection** question ("how much more ARR to reach Premier?") → the answer includes current tier, T12M ARR, ARR gap to next tier, and an estimated timeline; figures match the tier progress bar.
+**Block reason:** Same as _008 — depends on the Blazey AI assistant (deferred) + tier data. Note the tier-qualification figures it would quote (threshold/gap) are also the ones _005 showed the UI doesn't fully render yet. Unblock when Blazey ships.
 ### UI · MY_CLIENTS
 
-- PARTNER_UI_MY_CLIENTS_001
-- PARTNER_UI_MY_CLIENTS_002
-- PARTNER_UI_MY_CLIENTS_003
-- PARTNER_UI_MY_CLIENTS_004
-- PARTNER_UI_MY_CLIENTS_005
-- PARTNER_UI_MY_CLIENTS_006
-- PARTNER_UI_MY_CLIENTS_007
-- PARTNER_UI_MY_CLIENTS_008
-- PARTNER_UI_MY_CLIENTS_009
-- PARTNER_UI_MY_CLIENTS_010
-- PARTNER_UI_MY_CLIENTS_011
-- PARTNER_UI_MY_CLIENTS_012
-- PARTNER_UI_MY_CLIENTS_013
+**Whole module BLOCKED — not deployed on the partner portal** (re-verified live 2026-07-30, thorough probe: clean login + long wait). The partner nav has 6 items — Dashboard, Deals, Commissions, Directory, Resources, My Apps — with **no "My Clients"** item; `/clients` and `/my-clients` do **not render** a `<main>`; `/apps` is the "My Apps" app-submission page (Draft/Certified/Published…), not client management. The post-close client-management experience (client list / health / renewal / MSP provisioning / expansion) these TCs describe is not built/exposed on this build. Additionally: several need real **client data** (a closed deal → client) which the test partner does not have, and _010/_012/_013 depend on the **Blazey AI** assistant (deferred). Unblock when the My Clients module is deployed (nav + pages) + at least one closed-deal client exists.
+- PARTNER_UI_MY_CLIENTS_001 — BLOCKED (Action Required renewal CTA opens renewal flow: module not deployed)
+- PARTNER_UI_MY_CLIENTS_002 — BLOCKED (open My Clients → post-close clients list: module not deployed)
+- PARTNER_UI_MY_CLIENTS_003 — BLOCKED (client health detail: ARR/renewal/usage/tickets/CSM — module not deployed + needs client data)
+- PARTNER_UI_MY_CLIENTS_004 — BLOCKED (register renewal deal from client detail, prefilled: module not deployed)
+- PARTNER_UI_MY_CLIENTS_005 — BLOCKED (add MSP managed client → provisioning form: module not deployed)
+- PARTNER_UI_MY_CLIENTS_006 — BLOCKED (Security: MSP ticket consent default OFF: module not deployed)
+- PARTNER_UI_MY_CLIENTS_007 — BLOCKED (filter "Renewal This Quarter": module not deployed + needs client data)
+- PARTNER_UI_MY_CLIENTS_008 — BLOCKED (filter "Health At Risk": module not deployed + needs client data)
+- PARTNER_UI_MY_CLIENTS_009 — BLOCKED (search client by name: module not deployed + needs client data)
+- PARTNER_UI_MY_CLIENTS_010 — BLOCKED (Blazey client insight / adoption recommendation: module not deployed + Blazey AI deferred)
+- PARTNER_UI_MY_CLIENTS_011 — BLOCKED (register expansion deal from My Clients, client prefilled: module not deployed)
+- PARTNER_UI_MY_CLIENTS_012 — BLOCKED (Blazey client insight: module not deployed + Blazey AI deferred)
+- PARTNER_UI_MY_CLIENTS_013 — BLOCKED (Blazey client insight: module not deployed + Blazey AI deferred)
 ### UI · MY_PIPELINE
 
-- PARTNER_UI_MY_PIPELINE_001
-- PARTNER_UI_MY_PIPELINE_002
-- PARTNER_UI_MY_PIPELINE_003
-- PARTNER_UI_MY_PIPELINE_004
-- PARTNER_UI_MY_PIPELINE_005
-- PARTNER_UI_MY_PIPELINE_006
-- PARTNER_UI_MY_PIPELINE_007
-- PARTNER_UI_MY_PIPELINE_008
-- PARTNER_UI_MY_PIPELINE_009
-- PARTNER_UI_MY_PIPELINE_010
-- PARTNER_UI_MY_PIPELINE_011
-- PARTNER_UI_MY_PIPELINE_012
-- PARTNER_UI_MY_PIPELINE_013
-- PARTNER_UI_MY_PIPELINE_014
-- PARTNER_UI_MY_PIPELINE_015
-- PARTNER_UI_MY_PIPELINE_016
-- PARTNER_UI_MY_PIPELINE_017
-- PARTNER_UI_MY_PIPELINE_018
-- PARTNER_UI_MY_PIPELINE_019
-- PARTNER_UI_MY_PIPELINE_020
-- PARTNER_UI_MY_PIPELINE_021
-- PARTNER_UI_MY_PIPELINE_022
-- PARTNER_UI_MY_PIPELINE_023
-- PARTNER_UI_MY_PIPELINE_024
-- PARTNER_UI_MY_PIPELINE_025
-- PARTNER_UI_MY_PIPELINE_026
-- PARTNER_UI_MY_PIPELINE_027
-- PARTNER_UI_MY_PIPELINE_028
-- PARTNER_UI_MY_PIPELINE_029
-- PARTNER_UI_MY_PIPELINE_030
-- PARTNER_UI_MY_PIPELINE_031
-- PARTNER_UI_MY_PIPELINE_032
-- PARTNER_UI_MY_PIPELINE_033
+#### PARTNER_UI_MY_PIPELINE_001
+**Test Description:** Register-a-Deal wizard, step 1: entering valid company details advances the wizard to the next step and preserves the entered data. Modal-only (open → fill → advance → back); does not submit, so no deal is created.
+**Setup (precondition):** Log in as the channel-partner user; open `/deals`; click "Register a deal" to open the wizard (opens on "Step 1 of 3 — Register company").
+**Test Steps:**
+1. Enter company details (name, domain, country) + primary contact (name, email), then verify each field holds the entered value.
+   → Expected: every field **echoes** the entered value (company name, domain, contact name, email — no silent mutation/clear), a country is selected, and — with all required fields filled — "Next" becomes **enabled**. ("Valid" here = required-complete + values echoed; this build does not format-check the fields — that gap is _003.)
+2. Click Next.
+   → Expected: wizard advances to **Step 2 of 3 (Deal info)** and the Deal-info content renders (a step-2-only field, e.g. "Expected close date", is visible — proving it landed on Deal info, not just a counter change). Deep Deal-info field testing is _008–_012.
+3. Go Back to step 1.
+   → Expected: returns to Step 1 of 3 and the **company name is preserved**.
+**Expected (overall):** Valid step-1 details advance the wizard and the data persists across steps.
+**Note:** PASSED — verified 2026-07-24 (TC 12060201). **Plan-vs-live:** the plan says "advances to the contact step", but the live wizard puts the primary contact IN step 1 ("Register company"); a valid step 1 advances to step 2 ("Deal info"). Validation is enforced by **disabling "Next"** until required fields are filled (no inline error text on this build). Not affected by the deals-list defect (_024/_025) — the wizard is a standalone modal. Negative counterpart: **_002**. Idempotency: N/A — modal navigation, does not submit/create.
+
+#### PARTNER_UI_MY_PIPELINE_002
+**Test Description:** Negative counterpart of _001: leaving the required **company name** blank blocks the wizard from advancing; providing it unblocks — proving company name is required.
+**Setup (precondition):** Open `/deals`; launch the Register-a-Deal wizard (Step 1 of 3).
+**Test Steps:**
+1. Fill every OTHER required field (domain, country, contact name, email) and leave ONLY company name blank.
+   → Expected: the company field is confirmed blank while the others hold their values; "Next" stays **disabled** and the wizard stays on Step 1 of 3 — so the block is attributable **only** to the missing company name.
+2. Fill the company name.
+   → Expected: "Next" becomes **enabled** (company name was the blocking required field).
+**Expected (overall):** A blank required field (company name) prevents advancing; filling it allows advancing.
+**Note:** PASSED — verified 2026-07-24 (TC 12060202). **Plan-vs-live:** the plan says "required field error is shown", but this build shows NO inline error text — it enforces required fields by **disabling "Next"**, so the test asserts the disabled→enabled transition instead of an error message. Idempotency: N/A (negative validation, no submit).
+#### PARTNER_UI_MY_PIPELINE_003
+**Test Description:** Negative (fail-by-design): an invalid/malformed domain in the register wizard must be rejected with a domain-format error (block advancing or flag the field). All cases run (collected).
+**Setup (precondition):** Open the Register-a-Deal wizard (step 1) with valid company name, country, and primary contact; vary only the Domain field.
+**Test Steps:** (each = enter a malformed domain, blur, check it is rejected)
+1. `@@@` → Expected: rejected (Next disabled or field flagged). **Currently FAILS** — accepted (Next stays enabled, field not flagged).
+2. `ab cd` (space) → Expected: rejected. **Currently FAILS** — accepted.
+3. `notadomain` (no TLD) → Expected: rejected. **Currently FAILS** — accepted.
+4. `http://x.com` (scheme, not a bare domain) → Expected: rejected. **Currently FAILS** — accepted.
+**Expected (overall):** A malformed domain is rejected with a clear format error; no deal is created.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-07-24 (TC 12060203). The register wizard performs **no domain-format validation**: every malformed domain (even `@@@` / `ab cd`) is accepted — the Domain field **keeps the garbage value**, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset), so the deal can proceed with a garbage domain (which "derives the tenant subdomain"). **Confirm with FE** — add domain-format validation on the Domain field. Positive sibling: _001. Idempotency: N/A (no submit).
+#### PARTNER_UI_MY_PIPELINE_004
+**Test Description:** In the register wizard, entering a domain (subdomain label) already reserved by another active deal shows an inline active-account/conflict warning; a free domain shows none. UI-only (no submit).
+**Setup (precondition):** Prove via the partner `check-domain` API which candidate label is reserved (`available=false`) vs free (`available=true`) — so the UI assertion is not circular. Open the wizard with valid company/country/contact. NOTE: the "Domain" field is a **subdomain label** (lowercase/numbers/hyphens, no dots) — placeholder "acme.com" is misleading; a value with dots returns 400 from check-domain.
+**Test Steps:**
+1. Enter the RESERVED domain (proven `available=false`, e.g. "test").
+   → Expected: inline warning shows, e.g. **"This domain is reserved by another active deal. Register will get a conflict queue."** (Next stays enabled — the deal would enter the conflict queue on submit, not blocked.)
+2. Enter an AVAILABLE domain (proven `available=true`) — control.
+   → Expected: no reserved/active-deal warning.
+**Expected (overall):** A reserved domain surfaces the inline active-account/conflict warning; a free domain does not.
+**Note:** PASSED — verified 2026-07-27 (TC 12060204). On blur the field calls `GET /v1/partner/portal/check-domain?domain=<label>`; `available=false` (reason e.g. `deal_won`) drives the inline warning. Reserved/free state is proven via that API first (non-circular). If no reserved label exists among the candidates, the test SKIPS with a clear reason (never false-passes). The submit → conflict-queue outcome is _005. Negative/control: the available-domain branch (no warning) is included. Idempotency: N/A (read-only check).
+#### PARTNER_UI_MY_PIPELINE_005
+**Test Description:** Submit the full register wizard on an already-reserved domain (the conflict path). Fills every step (company + contact + reserved domain; deal info: plan / seats / region / expected close date) and submits; a deal is created (would enter the conflict queue).
+**Setup (precondition):** Prove via `check-domain` API a reserved label (available=false). Open the wizard.
+**Test Steps:**
+1. Step 1 with the RESERVED domain → the inline conflict warning shows ("reserved by another active deal … conflict queue"); advance.
+   → Expected: warning shown; wizard advances to Deal info.
+2. Fill Deal info — plan (billing cycle auto-sets), granted seats, region, expected close date (next month) → advance to Summary.
+   → Expected: with Deal info complete, "Next" is enabled; wizard reaches Step 3 of 3 (Summary).
+3. Submit.
+   → Expected: submission succeeds — `POST /v1/partner/portal/deals` returns **201** and a deal id.
+**Expected (overall):** The wizard submits end-to-end on a reserved domain and the deal is created.
+**Note:** PASSED — verified 2026-07-27 (TC 12060205). Full e2e submit works: reserved-domain warning → Deal info → **submit → 201** (deal id logged in the run for manual lookup). **PENDING (verify step — intentionally not asserted yet):** confirming the deal actually LANDS in the conflict queue is deferred — the partner deals-list endpoint is 400 (`_024`) so the deal isn't listable, and there is no delete API to clean up the created deal. **To improve once BE provides a way to fetch/remove the created deal** (user following up with BE). Side-effect: each run creates one non-deletable deal. Negative/conflict-detection is covered by _004 (UI warning) + API `2060204`. Idempotency: N/A here (duplicate-register is _022).
+#### PARTNER_UI_MY_PIPELINE_006
+**Test Description:** Negative (required): leaving the primary-contact **email** blank blocks the wizard from advancing; providing a valid email unblocks — proving the email is required.
+**Setup (precondition):** Open the wizard (Step 1); fill every other required field (company name, domain, country, contact name).
+**Test Steps:**
+1. Leave contact email blank (others filled).
+   → Expected: email field confirmed blank while others hold values; "Next" stays **disabled** — block attributable only to the missing email.
+2. Fill a valid email.
+   → Expected: "Next" becomes **enabled**.
+**Expected (overall):** A blank required email prevents advancing; a valid email allows it.
+**Note:** PASSED — verified 2026-07-27 (TC 12060206). Same mechanism as _002: required fields enforced by disabling "Next" (no inline error text). Idempotency: N/A (validation, no submit).
+
+#### PARTNER_UI_MY_PIPELINE_007
+**Test Description:** Negative (fail-by-design): a malformed contact **email** must be rejected with a format error (block advancing or flag the field). All cases run (collected).
+**Setup (precondition):** Open the wizard (Step 1) with valid company/domain/country/contact-name; vary only the email.
+**Test Steps:** (each = enter a malformed email, blur, check it is rejected)
+1. `notanemail` (no @) → Expected: rejected. **Currently FAILS** — accepted (field keeps value, Next enabled, not flagged).
+2. `abc@` (no domain) → Expected: rejected. **Currently FAILS** — accepted.
+3. `abc@x` (no TLD) → Expected: rejected. **Currently FAILS** — accepted.
+4. `a b@x.com` (space) → Expected: rejected. **Currently FAILS** — accepted.
+**Expected (overall):** A malformed email is rejected with a clear format error; no deal is created.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-07-27 (TC 12060207). The register wizard performs **no email-format validation**: every malformed email (even `notanemail` / `a b@x.com` with a space) is accepted — the field keeps the value, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset). Same class of gap as _003 (domain). **Confirm with FE** — add email-format validation on the contact email field. Positive sibling: _001. Idempotency: N/A (no submit).
+#### PARTNER_UI_MY_PIPELINE_008
+**Test Description:** Choosing the referral deal type: on this wizard the deal type is Referral (default), and it persists to the Summary. UI-only (no submit).
+**Setup (precondition):** Open the wizard; complete step 1 (company/domain/country/contact).
+**Test Steps:**
+1. On Deal info, the deal type shows **Referral** (Reseller/Co-sell are not offered — see _009/_010).
+   → Expected: "Referral" visible; no "Reseller" option present.
+2. Complete Deal info (plan/seats/region/date) → continue to Summary.
+   → Expected: reaches Step 3 of 3 (Summary).
+3. Summary persists the deal type.
+   → Expected: Summary shows **Deal type = Referral**.
+**Expected (overall):** Referral deal type is captured and persists across navigation to the Summary.
+**Note:** PASSED — verified 2026-07-27 (TC 12060208). On this build the deal type is a **fixed read-only "Referral" badge** (reseller/co-sell are NOT selectable — clicking it opens nothing, there's no deal-type dropdown, and no "Reseller"/"Co-sell" text). Referral implies the direct billing model (business rule); the UI shows only the type label "Referral" (no explicit "direct billing" text). No submit → no side-effect. Idempotency: N/A.
+
+#### PARTNER_UI_MY_PIPELINE_009
+**Note (BLOCKED):** Choose reseller deal type → reseller billing path. Blocked (verified live 2026-07-27): the register wizard does **not offer a reseller deal type** — the deal type is a fixed read-only "Referral" badge (no deal-type dropdown; clicking it opens nothing; "Reseller" text is absent). There is no UI control to select reseller, so the reseller billing path cannot be exercised from the wizard. (The API supports dealType `reseller` — see `make_deal` / API deal TCs — so this is a UI gap.) Unblock when the wizard exposes a deal-type selector with reseller.
+
+#### PARTNER_UI_MY_PIPELINE_010
+**Note (BLOCKED):** Choose co-sell deal type → co-sell option captured. Blocked (verified live 2026-07-27): same as _009 — the wizard's deal type is a fixed read-only "Referral" badge with no selector; "Co-sell" is not offered in the UI. No control to choose co-sell. (API supports `co_sell`.) Unblock when the wizard exposes a deal-type selector with co-sell.
+#### PARTNER_UI_MY_PIPELINE_011
+**Test Description:** The review Summary (step 3) displays all entered data. Fills the wizard with known unique values (company / domain / contact name / email) + deal info, reaches the Summary, and confirms every entered value is shown for review. Verified at the Summary (pre-submit); no submit → no deal created.
+**Setup (precondition):** Open the wizard; fill step 1 (company/domain/country/contact) + Deal info (plan/seats/region/expected close date) with known data.
+**Test Steps:**
+1. Summary shows the entered COMPANY + CONTACT values.
+   → Expected: the unique company name, domain, contact name, and email are all visible on the Summary.
+2. Summary shows the DEAL section fields.
+   → Expected: Deal type = **Referral**, plus Expected close date, Plan source, and Country rows are shown.
+**Expected (overall):** The Summary reflects every entered value for review before submission.
+**Note:** PASSED — verified 2026-07-27 (TC 12060211). Uses 4 unique text inputs (company/domain/contact/email) asserted verbatim on the Summary → strong proof the entered data is displayed. Verified pre-submit (no submit → no side-effect). Idempotency: N/A.
+#### PARTNER_UI_MY_PIPELINE_012
+**Test Description:** Performance — a valid deal registration returns a success response within 2 seconds. Submits the full wizard with a valid (available) domain and measures the register API's own network round-trip.
+**Setup (precondition):** Open the wizard; fill step 1 (company/domain/country/contact) + Deal info (plan/seats/region/expected close date) with a unique available domain.
+**Test Steps:**
+1. Submit the deal.
+   → Expected: `POST /v1/partner/portal/deals` returns **2xx** (201) with a deal id.
+2. Measure the response time.
+   → Expected: the request→response round-trip is **< 2000 ms** (measured from the request's network timing: responseEnd − requestStart; excludes UI render).
+**Expected (overall):** A valid registration succeeds and the API responds within the 2s budget.
+**Note:** PASSED — verified 2026-07-27 (TC 12060212; observed ~642 ms). Measures the register API round-trip (server + network), not full UI render. Side-effect: submitting creates a real deal (no delete API — see _005; deal id logged in the run). A staging blip can push it over 2s → re-run before filing a perf bug. Idempotency: N/A here (duplicate-register is _022).
+#### PARTNER_UI_MY_PIPELINE_013
+**Test Description:** Performance/mobile — the deal registration flow finishes under 90 seconds on a mobile viewport (375×812). Completes the full wizard and submits at mobile width, timing the whole flow (open wizard → submitted).
+**Setup (precondition):** Resize the page to 375×812; open the wizard.
+**Test Steps:**
+1. At mobile width, fill step 1 (company/domain/country/contact) and advance.
+2. Fill Deal info (plan/seats/region/expected close date) and advance to Summary.
+3. Submit → the register succeeds and the whole flow completes within budget.
+   → Expected: `POST /v1/partner/portal/deals` 2xx (201); elapsed from opening the wizard to the success response is **< 90 s**.
+**Expected (overall):** The registration is completable on mobile within 90 seconds.
+**Note:** PASSED — verified 2026-07-27 (TC 12060213; observed ~6 s, well under 90 s). All wizard controls (dropdowns, date picker, submit) work at 375×812. Side-effect: submitting creates a real deal (no delete API — see _005; deal id logged). Partner UI login can flake (login page slow to render) → the run may BLOCK on a login timeout; re-run. Idempotency: N/A.
+#### PARTNER_UI_MY_PIPELINE_014
+**Test Description:** Open My Pipeline (the Deals page) and confirm all deal stages and their counts are visible — the pipeline shows the 6 stage tabs (All / Pending / Approved / Won / Lost / Expired), each with a numeric deal count, plus the pipeline summary and the Register CTA. Read-only: works with an empty pipeline (counts may be 0) — it verifies the stages RENDER, not any specific data.
+**Setup (precondition):** Log in once as the configured channel-partner user; open `/deals` via the shell and wait for the "Deal Pipeline" READY_MARKER.
+**Test Steps:**
+1. All 6 pipeline stage tabs are visible.
+   → Expected: All, Pending, Approved, Won, Lost, Expired tabs all render (role=tab).
+2. Every stage tab shows a numeric deal count.
+   → Expected: each tab shows an integer count ≥ 0 (e.g. "All 0").
+3. Pipeline summary + Register CTA are visible.
+   → Expected: "… deals in your pipeline" summary and the "Register a deal" button are visible.
+**Expected (overall):** The pipeline renders all 6 stages with counts + summary + Register CTA (independent of how many deals exist).
+**Note:** PASSED — verified 2026-07-24 (TC 12060214). All 6 stages render with counts (0 on the empty test pipeline); summary + Register CTA visible. First MY_PIPELINE content test — establishes the `DealsPage` page-object (stage tabs, counts, controls) reused by the filter/card TCs (_024/_025/_026/_027/_033). Negative counterpart: N/A — a read-only view has no invalid-input surface. Idempotency: N/A — read-only (creates nothing).
+- PARTNER_UI_MY_PIPELINE_015 — BLOCKED (deal detail timeline / approval history: deals-list 400 "Invalid id: 'pro-v1'" → pipeline empty, no deal to open; same BE defect as _024)
+- PARTNER_UI_MY_PIPELINE_016 — BLOCKED (accept co-sell override proposal: co-sell deal type not offered in the wizard + needs a proposal; feature absent)
+- PARTNER_UI_MY_PIPELINE_017 — BLOCKED (Negative: co-sell override ≤ $100K unavailable: co-sell not offered in the UI)
+- PARTNER_UI_MY_PIPELINE_018 — BLOCKED (co-sell override > $100K requires written agreement: co-sell not offered in the UI)
+- PARTNER_UI_MY_PIPELINE_019 — BLOCKED (enrich on blur valid domain: no enrichment feature — verified live 2026-07-30, Headcount is a manual "Select range" dropdown + Logo is a manual URL field; blur only derives the tenant subdomain)
+- PARTNER_UI_MY_PIPELINE_020 — BLOCKED (choose modules of interest: no modules-of-interest selection in the wizard — verified live 2026-07-30, step 2 has deal type/plan/seats/region/close date only)
+- PARTNER_UI_MY_PIPELINE_021 — BLOCKED (register conflict-lost prospect after 90 days: needs a conflict-lost deal aged 90 days — time-based data not available)
+- PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: no registration by either partner → commission not awarded: behavioural/backend outcome, no partner-UI action to exercise)
+- PARTNER_UI_MY_PIPELINE_023 — BLOCKED (reseller deal → end-client price field absent: reseller deal type not offered in the wizard; feature absent)
+#### PARTNER_UI_MY_PIPELINE_024
+**Note (BLOCKED):** Click a pipeline deal card so the deal detail opens. Blocked by a BE defect (verified live 2026-07-24): the partner-portal deals-list endpoint `GET /v1/partner/portal/deals` returns **400 "Invalid id: 'pro-v1'"**, so the pipeline **never renders any deal row/card** (the UI falls back to the "No deals found" empty state even when the partner HAS deals). Root cause = the plan-reference contract drift: older deals store a plan **slug** (`planId:"pro-v1"`) while the BE now resolves plans by Mongo **_id** (ObjectId), so listing a partner whose deals include any slug-referenced plan throws "Invalid id" and the whole list fails. Confirmed a freshly SA-registered deal for the partner still does not appear (list stays 400 for ~40 s). With no deal card to click, the "open deal detail" flow cannot be exercised. **Same blocker applies to the other deal-list/detail pipeline TCs** (_015 detail, _025/_026/_027 filter, _033 card tag). Unblock when BE fixes the deals-list endpoint (tolerate/migrate legacy slug plan refs, or resolve by _id) so the pipeline renders deal cards. **Related:** register now requires the plan **_id** (slug → 400) — `pick_billing_plan_id` updated accordingly.
+#### PARTNER_UI_MY_PIPELINE_025
+**Note (BLOCKED):** Filter deals by company text so matching deals are displayed. Blocked by the same BE defect as _024 (verified live 2026-07-24): the deals-list endpoint `GET /v1/partner/portal/deals` returns **400 "Invalid id: 'pro-v1'"** — and the search variant `?search=QA` returns the **same 400** (filtering runs through the same endpoint). With the list broken, no deal ever renders, so a "matching deals displayed" assertion cannot be exercised. Unblock together with _024 (BE must fix the deals-list endpoint to tolerate/resolve legacy slug plan refs).
+- PARTNER_UI_MY_PIPELINE_026 — BLOCKED (filter by deal type: deals-list 400 → pipeline empty; a Filter button exists but filtering can't be verified with 0 deals; same BE defect as _024/_025)
+- PARTNER_UI_MY_PIPELINE_027 — BLOCKED (filter by module: same deals-list 400 + no "module" concept in the deal model/wizard)
+- PARTNER_UI_MY_PIPELINE_028 — BLOCKED (add shared note to a deal: no deal detail — deals-list 400, pipeline empty, no deal to open)
+- PARTNER_UI_MY_PIPELINE_029 — BLOCKED (upload document to a deal: no deal detail — same as _028)
+- PARTNER_UI_MY_PIPELINE_030 — BLOCKED (view assigned BlazeUp rep: a rep is assigned on SA approval (blocked by BUG-025) + deals-list 400, no deal to open)
+- PARTNER_UI_MY_PIPELINE_031 — BLOCKED (request manual protection extension: needs an approved deal with a running protection clock + deal detail — deals-list 400 / no SA approval)
+- PARTNER_UI_MY_PIPELINE_032 — BLOCKED (reseller marks deal Won / self-confirm: reseller deal type not offered in the UI)
+- PARTNER_UI_MY_PIPELINE_033 — BLOCKED (pipeline card shows reseller billing tag: deals-list 400 → no card renders + reseller not offered)
 ### UI · PARTNER_PORTAL_SHELL
 
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
@@ -103,44 +338,167 @@
 6. Tap sidebar link at mobile → Commissions routes + renders. → **PASS** (mobile nav is usable).
 **Expected (overall):** Every primary page fits the mobile viewport (no horizontal overflow) with the nav reachable; tapping nav routes correctly.
 **Note:** FAILED (by design) — verified 2026-07-24 (TC 12060102). 3/5 pages fit + mobile nav works, but **Deals (+162px) and My Apps (+263px) overflow horizontally at 375px** = responsive-layout defects (content doesn't fit small screens → sideways scroll; **confirm with FE**). The mobile sidebar stays an icon-bar (not hidden) and nav taps route correctly, so navigation itself is usable — the defect is page-content width on Deals/My Apps. Reproduced live. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
-- PARTNER_UI_PARTNER_PORTAL_SHELL_003
+#### PARTNER_UI_PARTNER_PORTAL_SHELL_003
+**Note (BLOCKED):** Dual-account partner switching between **Pack** and **Channel** dashboards. Cannot automate — the feature and the test data do not exist on staging (verified live 2026-07-24): (a) **no account-switcher control** in the portal shell — the header "Select" is the tier badge (tier=`select`), not an account switcher, and the profile menu only offers Profile/Logout; (b) the logged-in partner is a **single account** — `GET /v1/partner/auth/me` returns one `partnerId` with `type:"channel"`, `tier:"select"`, no accounts array; (c) **no "Pack" concept** — the partner `type` enum is channel/referral/msp/system_integrator (no "pack"), so a Pack↔Channel dual-account cannot even be represented. Unblock when BE ships multi-account membership (one user → a Pack + a Channel account) + a shell account switcher, AND a dual-account test partner is provisioned.
 ### UI · PARTNER_TEAM
 
-- PARTNER_UI_PARTNER_TEAM_001
-- PARTNER_UI_PARTNER_TEAM_002
-- PARTNER_UI_PARTNER_TEAM_003
+**Correction (2026-07-30):** the partner portal nav has **6 items** — Dashboard, Deals, Commissions, **Directory**, Resources, My Apps. An earlier note here wrongly said "5 nav / no team UI" — that was a false negative from a too-short probe wait (see the `probe-mfe-with-long-wait` learning). `/directory` IS the partner team-members page.
+#### PARTNER_UI_PARTNER_TEAM_001 — PASSED
+**Test Description:** Invite a partner team member. On the partner Directory (`/directory`), open "Invite User", fill the new member's email + name + role, send the invite, and confirm the invitation is created (one-time credential shown) and the member appears in the team table with its role.
+**Setup (precondition):** Log in as the channel-partner user (stgpartners, 2FA); open `/directory` and wait for the "Directory" READY_MARKER.
+**Test Steps:**
+1. The member table + Invite User action render.
+   → Expected: MEMBER / ROLE / STATUS / LAST LOGIN columns + "Invite User" button.
+2. The Invite dialog exposes email + name + a role selector.
+   → Expected: Email*, First name*, Last name*, Role (default "Viewer") fields + Send Invite.
+3. Send the invite → "User invited" confirmation.
+   → Expected: the credential dialog ("User invited" — one-time temporary password) appears; close via Done.
+4. The invited member appears in the Directory with its role.
+   → Expected: a row for the invited email shows role "Viewer" and status Active.
+**Expected (overall):** The invitation is created with the role and the new member is visible in the Directory.
+**Note:** PASSED — verified 2026-07-30 (TC 12060601). Partner-side team management on `/directory` (Invite User → email/name/role → Send → one-time credential → member Active). New config section `PARTNER.ui.PARTNER_TEAM = 6`. Side-effect: each run creates a real Active member (unique `qa.auto+…` email; no UI delete — members accumulate). Negative counterpart: N/A here (could add required-field validation later). Idempotency: N/A (unique email each run).
+- PARTNER_UI_PARTNER_TEAM_002 — BLOCKED (create campaign referral link: no referral-link UI found on `/directory`; feature not located on the partner portal — recheck if/when a referral-link area ships)
+- PARTNER_UI_PARTNER_TEAM_003 — BLOCKED (copy referral link: same — no referral-link UI found)
 ### UI · RESOURCES
 
-- PARTNER_UI_RESOURCES_001
-- PARTNER_UI_RESOURCES_002
-- PARTNER_UI_RESOURCES_003
-- PARTNER_UI_RESOURCES_004
-- PARTNER_UI_RESOURCES_005
+**All BLOCKED** — the Resources page exists but its content does not match these TCs (verified live 2026-07-29). `/resources` renders a read-only **"Commission Rates + Assigned Territories"** view (rates applicable to your tier; regions you are authorised to sell) — there is **no demo sandbox, no marketing-resource download, no co-branded pitch-deck generator, and no ROI calculator** (no action buttons at all). The demo-sandbox / marketing-assets / pitch-deck / ROI-calculator experiences these TCs describe are not implemented in this build (possibly gated to a higher tier than the test partner's Select/Registered).
+- PARTNER_UI_RESOURCES_001 — BLOCKED (demo sandbox reset: no sandbox UI)
+- PARTNER_UI_RESOURCES_002 — BLOCKED (sandbox weekly auto-reset toggle: no sandbox UI)
+- PARTNER_UI_RESOURCES_003 — BLOCKED (download marketing resource: no marketing-assets UI)
+- PARTNER_UI_RESOURCES_004 — BLOCKED (generate co-branded pitch deck: no generator UI)
+- PARTNER_UI_RESOURCES_005 — BLOCKED (ROI calculator → prospect PDF: no calculator UI)
 ### UI · SA_PARTNER_MODULE
 
-- PARTNER_UI_SA_PARTNER_MODULE_001
-- PARTNER_UI_SA_PARTNER_MODULE_002
-- PARTNER_UI_SA_PARTNER_MODULE_003
-- PARTNER_UI_SA_PARTNER_MODULE_004
-- PARTNER_UI_SA_PARTNER_MODULE_005
-- PARTNER_UI_SA_PARTNER_MODULE_006
-- PARTNER_UI_SA_PARTNER_MODULE_007
+#### PARTNER_UI_SA_PARTNER_MODULE_001 — BLOCKED
+**Intent:** Resolve a Conflict Queue entry with written reasoning — decision is saved, parties notified, record becomes immutable.
+**Block reason:** Blocked by the SA Deal Approval Queue backend defect (see _007 / BUG-025). The Conflict Queue (`/partners/deals` → Conflicts tab) fails to load any deals — every tab shows "Server Error — Invalid id: 'pro-v1'" — so no conflicted deal can be opened to resolve. Revisit once BUG-025 is fixed and a two-parties-same-domain conflict fixture exists.
+#### PARTNER_UI_SA_PARTNER_MODULE_002 — BLOCKED
+**Intent:** Conflict Queue decision UI shows prospect-confirmation status + first-registered timestamps + mandatory written reasoning + 5-business-day SLA indicator.
+**Block reason:** Same as _001 — the Conflict Queue deal list fails to load (BUG-025), so the conflict-decision detail UI cannot be reached. Needs BUG-025 fixed + a conflict fixture with prospect-confirmation data.
+#### PARTNER_UI_SA_PARTNER_MODULE_003
+**Test Description:** The SA-side Partner Directory loads (stgsa SA Dashboard → Partners). Confirms the directory renders with its breadcrumb + summary stat cards, the Status/Tier filter controls + "Onboard Partner" action, and the partner table with its full column header. Read-only + empty-safe.
+**Setup (precondition):** Log in as the super-admin user (stgsa); open `/partners` and wait for the "Partners" READY_MARKER in `<main>`.
+**Test Steps:**
+1. The directory loads with its breadcrumb + summary cards.
+   → Expected: the "Directory" breadcrumb + the 4 summary cards (**Total Partners**, **Active**, **Pending Approval**, **Premier Tier**) are visible.
+2. The filter controls + Onboard action are visible.
+   → Expected: the **Status** and **Tier** filter controls + the **Onboard Partner** action are visible.
+3. The partner table renders (full column header; rows when present).
+   → Expected: the table shows all 8 headers (PARTNER, TIER, TYPE, CONTACT, TOTAL ARR, OPEN DEALS, STATUS, JOINED); partner rows render when partners exist, otherwise the "No Data Found" empty state.
+**Expected (overall):** The SA Partner Directory loads with its summary, filters, and partner table structure (data-independent).
+**Note:** PASSED — verified 2026-07-29 (TC 12060503). First SA_PARTNER_MODULE test — establishes the SA-side surface (stgsa SA Dashboard, super-admin) via the existing `ShellPage` + new `PartnerDirectoryPage`. Runs on the SA domain (`make_page`/`authenticated_page`), NOT the partner portal. New config section `PARTNER.ui.SA_PARTNER_MODULE = 5`. Empty-safe: verified with both 0 rows (empty state) and ≥1 partner row. Negative counterpart: N/A — read-only directory load. Idempotency: N/A. NOTE: stgsa flapped during verification (login-fail + 90 s render-timeout on 2 earlier attempts) — passed cleanly once staging stabilized; env flakiness, not a test defect.
+#### PARTNER_UI_SA_PARTNER_MODULE_004 — BLOCKED (FSM UI not deployed)
+**Where:** stgsa (SA portal) → Partners → Directory → Pending Approval → open application. **Design:** PN003 (3-stage FSM), ready-for-dev.
+**Intent:** Partner-application review FSM — the SA Review / Legal Countersign / Final Approval stages are visible with status indicators; stage-skip is prevented; applicant details shown.
+**Block reason:** The FSM review UI is **not deployed on staging** (re-verified 2026-07-30, thorough probe). The pending-application **fixture IS creatable**: stgsa Partners→Directory→"Onboard Partner" creates a partner in **Pending** status (verified — onboarded PAR-795503, Pending Approval 0→1). BUT even a pending partner's detail page shows only Overview / Deals / Commission / Members tabs — **no SA Review / Legal Countersign / Final Approval stages, no Approve/Reject**. So the blocker is the FSM screen deploy, NOT the fixture. Once FE ships the FSM review UI, the test can self-seed via Onboard Partner.
+#### PARTNER_UI_SA_PARTNER_MODULE_005 — BLOCKED (FSM UI not deployed)
+**Design:** PN003 "lack of document" variant, ready-for-dev.
+**Intent:** (Negative) Missing signed agreement blocks advancing to Legal Countersign; Request Agreement notifies applicant; attaching an agreement enables Advance.
+**Block reason:** Same as _004 — FSM review UI (SA Review stage / Advance-to-Legal-Countersign / agreement-attach) not deployed on staging. Fixture creatable via Onboard Partner; unblock when the FSM UI ships.
+#### PARTNER_UI_SA_PARTNER_MODULE_006 — BLOCKED (FSM UI not deployed)
+**Design:** PN003, ready-for-dev.
+**Intent:** Legal countersign of the partner agreement makes Final Approval available (+ audit trail / notification).
+**Block reason:** Same as _004/_005 — the Legal-Countersign stage of the FSM review UI is not deployed on staging. Unblock when the FSM UI ships.
+#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect)
+**Test Description:** The SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) — the Pending Approval + Conflicts queues are visible and load their deals. Confirms the queue shell (3 tabs All Deals / Pending Approval / Conflicts + Status/Deal Type filters + deals table header), then that the Pending Approval and Conflicts queues actually load deals with no backend error.
+**Setup (precondition):** Log in as super-admin (stgsa); open `/partners/deals` and wait for the "Pending Approval" tab (queue shell) to render.
+**Test Steps:**
+1. The three queue tabs + filters render.
+   → Expected: **All Deals**, **Pending Approval**, **Conflicts** tabs + **Status**, **Deal Type** filters are visible. **(PASSES.)**
+2. The deals table header renders (all columns).
+   → Expected: PROSPECT, PARTNER, TYPE, EST. ACV, PLAN, STATUS, EXPECTED CLOSE, PROTECTION. **(PASSES.)**
+3. The Pending Approval + Conflicts queues load without a server error.
+   → Expected: no backend error; deals load (partners have open deals). **(FAILS.)**
+**Expected (overall):** The SA deal approval queue shows the Pending + Conflict queues with their deals loaded.
+**Note:** FAILED — real app/BE defect, verified 2026-07-29 (TC 12060507). The queue SHELL renders (tabs/filters/header all pass), but the deal-list fetch fails on **every** tab with **"Server Error — Invalid id: 'pro-v1'"**, so no deal rows load even though partners have open deals (Directory shows OPEN DEALS ≥ 1). Deterministic (not staging flakiness — sa-partners-api is UP, returns the error). Assertion fails with "confirm with BE". This is the SA-side view where partner-registered deals (incl. the QA-AUTO deals from the partner MY_PIPELINE _005/_012/_013 submits) should appear — blocked by this defect, so it also blocks verifying the partner-side conflict-queue (_005). Row-level checks (partner/ACV/type/conflict-status + Approve/Reject/Request-Info buttons per PRD §5.2) are unverifiable until the deal list loads. Negative counterpart: N/A — read-only queue view. Idempotency: N/A.
 - PARTNER_UI_SA_PARTNER_MODULE_008
-- PARTNER_UI_SA_PARTNER_MODULE_009
-- PARTNER_UI_SA_PARTNER_MODULE_010
-- PARTNER_UI_SA_PARTNER_MODULE_011
-- PARTNER_UI_SA_PARTNER_MODULE_012
+#### PARTNER_UI_SA_PARTNER_MODULE_009 — BLOCKED (config UI not deployed)
+**Where:** stgsa → Partners → Commission → (Commission configuration → Commission rate). **Design:** PN020, ready-for-dev.
+**Intent:** Configure a versioned Commission Rate Table — tier × deal-type (Registered/Select/Advanced/Premier × Referral/Reseller/Co-sell) with NN/EN/EE rate fields; editing creates a new version, preserving history; locked rate per deal.
+**Block reason:** The Commission **configuration** view is **not deployed on staging** (re-verified 2026-07-30, thorough probe: full-page text + all clickables + routes). `/partners/commissions` renders only the payout ledger (Pending Payout / Paid YTD / Clawback Exposure + payout table) — there is **no "View configuration" entry point**, no rate/version text anywhere, and config routes (`/partners/commissions/configuration`, `/partners/commission-rates`, …) 404 / "Invalid id". Design PN020 is ready-for-dev but the config UI is not live yet. Unblock when FE deploys the Commission configuration view.
+#### PARTNER_UI_SA_PARTNER_MODULE_010 — BLOCKED (config UI not deployed)
+**Where:** stgsa → Partners → Commission → (Commission configuration → SPIFF Program). **Design:** PN020 (SPIFF section), ready-for-dev.
+**Intent:** Create a SPIFF bonus programme (name, bonus %, regions, tiers, valid dates) → appears in Active SPIFF Programmes; reflected in partner commission projection.
+**Block reason:** Same as _009 — the SPIFF configuration lives in the same Commission configuration view, which is not deployed on staging. Unblock when FE deploys it.
+#### PARTNER_UI_SA_PARTNER_MODULE_011 — FAILED (app bug · BE defect)
+**Test Description:** The SA Partner Programme Analytics dashboard (stgsa `/partners/analytics`, PRD §7) — funnel + KPI + tier-distribution + top-partners render and load with no backend error.
+**Setup (precondition):** Log in as super-admin (stgsa); open `/partners/analytics` and wait for the "Deal Funnel" section.
+**Test Steps:**
+1. Summary KPI cards + Deal Funnel stages render.
+   → Expected: Total Partners, Total ARR, Avg Deal Size, Win Rate, Pending Payouts, Clawback Exposure + funnel stages Registered/Approved/In Progress/Won. **(PASSES.)**
+2. The Tier Distribution + Top Partners sections render.
+   → Expected: Deal Funnel, Tier Distribution, Top Partners by ARR sections visible. **(PASSES.)**
+3. The analytics data loads without a server error.
+   → Expected: no backend error. **(FAILS.)**
+**Expected (overall):** The analytics dashboard shows the funnel + KPIs + sections with data loaded.
+**Note:** FAILED — real BE defect, verified 2026-07-29 (TC 12060511, **BUG-026**). The dashboard shell renders (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
+#### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory page not deployed)
+**Where:** stgsa → Partners → Territory (and from Partner detail). **Design:** Territory PN021, ready-for-dev.
+**Intent:** Assign a Territory (regions, verticals, exclusivity type, effective dates) to a partner; shows an exclusivity-conflict warning; the exclusive territory auto-routes conflicting deals.
+**Block reason:** The Territory page is **not deployed on staging** (re-verified 2026-07-30). `/partners/territory` and `/partners/territories` return "Server Error — Invalid id: 'territory'" (route not registered), and the partner-detail Territory section is read-only "No territories assigned to this partner" with no "+ Assign Territory" control / assignment form / exclusivity-conflict warning. Design PN021 is ready-for-dev but the Territory management UI is not live. Unblock when FE deploys it.
+#### PARTNER_UI_SA_PARTNER_MODULE_013 — PASSED
+**Test Description:** The SA-side Partner Detail page (stgsa `/partners/<id>`) loads with its detail chrome — the Overview / Deals / Commission / Members tabs, the Tier & Performance + Territory Assignments sections, the partner info (id + type + tier), and the Partner-actions control.
+**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner via **Onboard Partner** (the Directory list is unreliable on staging), then open its detail.
+**Test Steps:**
+1. The detail tabs render.
+   → Expected: **Overview**, **Deals**, **Commission**, **Members** tabs are visible (Radix `role="tab"`). **(PASSES.)**
+2. The Overview sections + partner info render.
+   → Expected: **Tier & Performance** + **Territory Assignments** sections + partner company name + **Channel** type + **PAR-…** id are visible. **(PASSES.)**
+3. The Partner-actions control renders.
+   → Expected: the **Partner actions** kebab control is visible on the header. **(PASSES.)**
+**Expected (overall):** The SA Partner Detail loads with tabs, sections, partner info, and the actions control.
+**Note:** PASSED, verified 2026-07-31 (TC 12060513). Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A.
+#### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate not in UI)
+**Test Description:** From the SA Partner Detail → **Members** tab, an SA adds a portal user (member) to an active partner; the new user appears in the Portal Users list with **Active** status.
+**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active), open the Members tab.
+**Test Steps:**
+1. The Members tab shows the Portal Users list (empty).
+   → Expected: **Portal Users** heading + an **Add User** / **Add First User** control; empty-state "No portal users yet". **(PASSES.)**
+2. Add a portal user (First / Last / Email / Password / Role via the Add-User form → **Create Portal User**).
+   → Expected: **"Portal user created successfully"** confirmation. **(PASSES.)**
+3. The new user appears as an Active row.
+   → Expected: the new user's row shows the email + **Viewer** role + **Active** status; the header reads **Portal Users (1)**. **(PASSES.)**
+**Expected (overall):** An SA can add a portal user to a partner; it appears Active in the Portal Users list.
+**Note:** PASSED, verified 2026-08-03 (TC 12060514). Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email).
+#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-028, FE↔BE contract)
+**Test Description:** From the SA Partner Detail page, an Active partner is suspended via **Partner actions → Deactivate**. Expected: the partner transitions out of Active (Suspended/Inactive) and portal access is revoked.
+**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active).
+**Test Steps:**
+1. Deactivate (suspend) the active partner — Partner actions → Deactivate → confirm the "Deactivate Partner" dialog.
+   → Expected: the request succeeds. **(FAILS.)**
+2. The partner is suspended and no error is shown.
+   → Expected: no error banner; partner is no longer Active (Suspended/Inactive). **(FAILS.)**
+**Expected (overall):** An SA can suspend an Active partner from the UI; the partner loses portal access.
+**Note:** FAILED — real app bug, verified 2026-07-31 (TC 12060515, **BUG-028**, marked `be_gap`). The **"Deactivate Partner" confirm dialog collects NO reason** (only Cancel / Deactivate buttons), but the deactivate API **requires** a non-empty reason string. The FE sends the request without one, so the BE rejects it — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — the UI shows **"Failed to deactivate partner"** and the partner **stays Active**. Deterministic FE↔BE contract mismatch: **no SA can suspend a partner via the UI**. Fix: add a required Reason field to the dialog (and send it), or make `reason` optional on the API. This also blocks _016 (reactivate — cannot reach the Suspended state). Negative counterpart: N/A (single state-transition action). Idempotency: N/A — action never succeeds.
+#### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (depends on BUG-028)
+**Test Description:** From the SA Partner Detail page, a **Suspended** partner is reactivated via **Partner actions → Reactivate**; the partner returns to Active and regains portal access.
+**Intent:** Verify the Suspended → Active transition (the mirror of _015).
+**Block reason:** Cannot reach the **Suspended** precondition. Suspending a partner is broken by **BUG-028** — the "Deactivate Partner" confirm dialog sends no `reason`, so the deactivate API rejects it ("reason should not be empty / must be a string / ≤ 2000 chars") and the partner stays Active. With no way to produce a Suspended partner through the UI (and no SA-side reactivate control reachable until one exists), the reactivate flow is untestable. **Unblock when BUG-028 is fixed** (then build: onboard → Approve → Deactivate → Reactivate → assert Active). Negative counterpart: N/A. Idempotency: N/A.
+#### PARTNER_UI_SA_PARTNER_MODULE_017 — BLOCKED (candidate; application-review UI not deployed)
+**Candidate TC** (not yet in the plan). **Design:** PN004 — Reject partner application.
+**Intent:** From the SA partner-application review, reject a Pending application (with a reason) → the application moves to Rejected and the applicant is notified.
+**Block reason:** No **Reject / Decline** control exists on this build (verified live 2026-08-03). A Pending partner's **Partner actions** menu offers **only "Approve Partner"**; the Directory row has no action control; a whole-page keyword scan finds no Reject/Decline. This is the partner-application **FSM review UI**, which is **not deployed on staging** (same gap as _004/_005/_006). Unblock when the application-review UI (with Reject) ships.
+#### PARTNER_UI_SA_PARTNER_MODULE_018 — BLOCKED (candidate; activation-invite UI not deployed)
+**Candidate TC** (not yet in the plan). **Design:** PN005 — Resend expired activation invite.
+**Intent:** For a partner/user whose activation invite has expired, resend the activation invite from the SA side → a fresh invite/activation email is sent.
+**Block reason:** No **Resend / Invite / Activation** surface exists on this build (verified live 2026-08-03, Pending **and** Approved partner + Members tab). The Members tab creates a portal user by **setting a password directly** ("Share these credentials with the partner") — there is no email-invite / activation-link flow, hence no "expired invite" state to resend, and no Resend control anywhere. Unblock when an activation-invite (email) flow with a Resend action is deployed.
+#### PARTNER_UI_SA_PARTNER_MODULE_019 — BLOCKED (candidate; application-review UI not deployed)
+**Candidate TC** (not yet in the plan). **Design:** PN027 — Request additional information from applicant.
+**Intent:** From the SA partner-application review, request more information from a Pending applicant → the application enters an "info requested" state and the applicant is prompted.
+**Block reason:** No **Request info / Additional information / More info** control exists on this build (verified live 2026-08-03). As with _017, a Pending partner's actions menu offers only "Approve Partner" and the whole-page keyword scan finds no request-info wording. Part of the same undeployed application-review FSM UI. Unblock when the review UI (with Request-info) ships.
 ### UI · SECURITY_COMPLIANCE
 
-- PARTNER_UI_SECURITY_COMPLIANCE_001
-- PARTNER_UI_SECURITY_COMPLIANCE_002
-- PARTNER_UI_SECURITY_COMPLIANCE_003
-- PARTNER_UI_SECURITY_COMPLIANCE_004
+Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behavioural, so not directly buildable on the current partner-portal setup.
+- PARTNER_UI_SECURITY_COMPLIANCE_001 — BLOCKED (Security: deny cross-partner data access — needs ≥2 partner fixtures + a defined cross-access attempt surface; the portal already scopes to the logged-in partner but there is no set-up to attempt viewing another partner's data)
+- PARTNER_UI_SECURITY_COMPLIANCE_002 — BLOCKED (Security: audit — SA-action activity-log entry visible; the partner portal has no audit log (6-item nav), the Audit Log is SA-side (stgsa); needs an SA action + the log)
+- PARTNER_UI_SECURITY_COMPLIANCE_003 — CANDIDATE (Security: deal-registration prospect data minimization). The one TC touching an existing partner surface — the register wizard requests a known field set (company name, domain, country, headcount, logo URL + contact name/email/phone/title). Buildable as an assertion that the requested field set ⊆ an allowed policy list — **needs the PRD-defined allowlist** of permitted prospect fields to assert against (not blocked by missing UI, blocked by a missing spec).
+- PARTNER_UI_SECURITY_COMPLIANCE_004 — BLOCKED (Compliance: SA impersonation → "pending legal decision" placeholder; the impersonation/legal-placeholder feature is not implemented on this build)
 ### UI · TRAINING
 
-- PARTNER_UI_TRAINING_001
-- PARTNER_UI_TRAINING_002
-- PARTNER_UI_TRAINING_003
+**Whole module BLOCKED — not deployed on the partner portal** (re-verified live 2026-07-30, thorough probe: clean login + long wait). The partner nav has 6 items — Dashboard, Deals, Commissions, Directory, Resources, My Apps — with **no "Training"**; `/training`, `/certifications`, `/learning` do **not render** a `<main>`. The training / certification experience these TCs describe is not built/exposed (certification data exists SA-side — the SA partner-detail Members tab has a CERTIFICATE column — but there is no partner-facing Training page). Unblock when the Training module is deployed + certification fixture data exists.
+- PARTNER_UI_TRAINING_001 — BLOCKED (view Training page: certifications + progress + locked/unlocked modules — module not deployed)
+- PARTNER_UI_TRAINING_002 — BLOCKED (certification completed → status updates: module not deployed)
+- PARTNER_UI_TRAINING_003 — BLOCKED (continue in-progress learning path → current module opens: module not deployed)
 
 ## 2. API
 

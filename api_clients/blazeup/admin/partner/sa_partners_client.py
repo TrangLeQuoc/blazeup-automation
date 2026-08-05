@@ -10,7 +10,11 @@ from typing import Any
 import httpx
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from api_clients.base_client import BaseClient
+from api_clients.base_client import (
+    SETUP_HTTP_TIMEOUT_S,
+    SETUP_RESPONSE_TIME_MS,
+    BaseClient,
+)
 
 # Full gateway path (service prefix + route). BaseClient strips the leading "/"
 # and appends to api_base_url, so the final URL is
@@ -103,7 +107,13 @@ class SaPartnersClient(BaseClient):
         list endpoint we validate the envelope ourselves (no ``schema=``) so the
         wrapper keys (statusCode/data/message) are preserved.
         """
-        response = await self.post(_PARTNERS_PATH, json=payload, expected_status=expected_status)
+        response = await self.post(
+            _PARTNERS_PATH,
+            json=payload,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
+        )
         return PartnerWriteResponse.model_validate(response.json())
 
     async def raw_create_partner(
@@ -133,7 +143,11 @@ class SaPartnersClient(BaseClient):
         ``statusCode`` is 200 (same pattern as create).
         """
         response = await self.post(
-            f"{_PARTNERS_PATH}/{partner_id}/approve", json={}, expected_status=expected_status
+            f"{_PARTNERS_PATH}/{partner_id}/approve",
+            json={},
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return PartnerWriteResponse.model_validate(response.json())
 
@@ -155,7 +169,12 @@ class SaPartnersClient(BaseClient):
         expected_status: int | tuple[int, ...] = (200, 204),
     ) -> httpx.Response:
         """DELETE a partner by id — used for test cleanup."""
-        return await self.delete(f"{_PARTNERS_PATH}/{partner_id}", expected_status=expected_status)
+        return await self.delete(
+            f"{_PARTNERS_PATH}/{partner_id}",
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
+        )
 
     async def get_partner(
         self,
@@ -269,7 +288,11 @@ class SaPartnersClient(BaseClient):
     ) -> PartnerWriteResponse:
         """POST invite a partner-portal user. Response ``data`` carries ``userId``."""
         response = await self.post(
-            _PARTNER_USERS_PATH, json=payload, expected_status=expected_status
+            _PARTNER_USERS_PATH,
+            json=payload,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return PartnerWriteResponse.model_validate(response.json())
 
@@ -578,10 +601,15 @@ class SaPartnersClient(BaseClient):
         negative cases (invalid format/filter) that inspect the raw error.
         """
         params = {k: v for k, v in {"format": format, **filters}.items() if v is not None}
+        # A bulk export (up to the 10k-row cap) is legitimately slow — the default
+        # per-read SLA (10s) is unrealistic for it, so use the generous budget +
+        # transport timeout. Slowness here is expected, not a perf regression.
         return await self.get(
             "/sa-partners-api/v1/sa/audit-logs/export",
             params=params,
             expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
 
     async def get_audit_log(

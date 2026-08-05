@@ -159,13 +159,18 @@ def resolve_base_ids(args: argparse.Namespace) -> list[int]:
     if mode == "smoke":
         return [tc.tc_id for tc in TC_REGISTRY.values() if "smoke" in tc.markers]
 
-    # normal mode -- narrow down by secondary filters if present
-    if args.module:
-        return [tc.tc_id for tc in list_by_module(args.module)]
-    if args.type:
-        return [tc.tc_id for tc_type in args.type for tc in list_by_type(tc_type)]
-    if args.marker:
-        return [tc.tc_id for tc in list_by_marker(args.marker)]
+    # normal mode -- narrow down by secondary filters. They COMPOSE (AND): passing
+    # --module partner --type ui returns partner ∩ ui, not partner alone. A repeated
+    # --type (e.g. --type api --type ui) is a union within the type filter.
+    if args.module or args.type or args.marker:
+        ids = set(TC_REGISTRY.keys())
+        if args.module:
+            ids &= {tc.tc_id for tc in list_by_module(args.module)}
+        if args.type:
+            ids &= {tc.tc_id for tc_type in args.type for tc in list_by_type(tc_type)}
+        if args.marker:
+            ids &= {tc.tc_id for tc in list_by_marker(args.marker)}
+        return sorted(ids)
 
     # Absolute default: use DEFAULT_EXECUTE_IDS if set, otherwise run every registered TC
     if DEFAULT_EXECUTE_IDS:

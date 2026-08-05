@@ -13,6 +13,7 @@ Usage in a test::
     resp = await portal.get("/sa-partners-api/v1/partner/portal/dashboard", expected_status=200)
 """
 
+import asyncio
 import contextlib
 
 import pytest
@@ -23,6 +24,44 @@ from utils.data_factory import make_partner, make_partner_user
 from utils.helpers import blocked_reason
 
 _PARTNER_LOGIN_PATH = "/sa-partners-api/v1/partner/auth/login"
+
+# A user created via invite (201) is occasionally not yet visible to the login read
+# (DB replication lag) → login returns 400 "partner_users … not found". That is a
+# timing artefact of the SETUP, not a login defect, so the login is retried a few
+# times. Any OTHER non-2xx (wrong password → 401, 5xx, real rejection) returns
+# immediately so the caller's assertion still fires on a genuine failure.
+_LOGIN_RETRY_ATTEMPTS = 4
+_LOGIN_RETRY_DELAY_S = 0.75
+
+
+async def partner_login(anon: BaseClient, email: str, password: str, *, expected=(200, 201)):
+    """POST the partner login, absorbing the transient just-invited 'user not found'.
+
+    Returns the httpx.Response — a 2xx on success, or the last response once retries
+    are exhausted (so the caller can still assert on a real failure). Only the
+    replication-lag signature (400 + 'not found') is retried; everything else is
+    returned on the first attempt.
+    """
+    resp = None
+    for attempt in range(1, _LOGIN_RETRY_ATTEMPTS + 1):
+        resp = await anon.post(
+            _PARTNER_LOGIN_PATH,
+            json={"email": email, "password": password},
+            expected_status=None,
+        )
+        if resp.status_code in expected:
+            return resp
+        transient = resp.status_code == 400 and "not found" in (resp.text or "").lower()
+        if not transient or attempt == _LOGIN_RETRY_ATTEMPTS:
+            return resp
+        logger.info(
+            "partner login: user not yet visible (attempt {}/{}) — retry in {}s",
+            attempt,
+            _LOGIN_RETRY_ATTEMPTS,
+            _LOGIN_RETRY_DELAY_S,
+        )
+        await asyncio.sleep(_LOGIN_RETRY_DELAY_S)
+    return resp
 
 
 def portal_client(settings, token: str | None = None) -> BaseClient:
@@ -84,11 +123,7 @@ async def mint_partner_session(sa_partners_client, settings) -> tuple[BaseClient
         creds = await provision_partner_user(sa_partners_client)
         anon = portal_client(settings)
         try:
-            resp = await anon.post(
-                _PARTNER_LOGIN_PATH,
-                json={"email": creds["email"], "password": creds["password"]},
-                expected_status=(200, 201),
-            )
+            resp = await partner_login(anon, creds["email"], creds["password"])
             token = resp.json().get("accessToken") or resp.json().get("token")
         finally:
             await anon.close()
