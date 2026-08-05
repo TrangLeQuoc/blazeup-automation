@@ -4,22 +4,16 @@
 
 ## 0. TC còn THIẾU (Figma design có, plan chưa có TC)
 
-Các workflow partner-management phía SA này có design Figma "Ready for dev" (`design_partner/…`, `[PN…]`) nhưng **không có TC tương ứng trong test plan**. Đề xuất thêm (đều SA-side / stgsa Partners). Thêm vào plan rồi automate khi UI deploy.
+Các workflow partner-management phía SA này có design Figma "Ready for dev" (`design_partner/…`, `[PN…]`) nhưng **chưa có TC tương ứng**. Đề xuất thêm vào plan, rồi automate khi UI deploy.
+
+> Các candidate trước đây giờ đã thành **TC documented** nên đã bỏ khỏi danh sách này: PN002 → `SA_PARTNER_MODULE_013`, PN014 → `_014`, PN015 → `_015`, PN016 → `_016`, PN004 → `_017`, PN005 → `_018`, PN027 (request-info) → `_019`, PN013 (clawback) → `COMMISSIONS_010`.
 
 | Design | TC đề xuất |
 |---|---|
-| PN002 View Partner Detail page | SA partner detail (Overview / Deals / Commission / Members / Notes) load |
-| PN004 Reject partner application | SA reject application (+ reason) |
-| PN005 Resend expired activation invite | SA resend invite email |
-| PN014 Manage partner team (deactivate/reactivate member) | SA deactivate + reactivate member của partner (+ reason) |
-| PN015 Suspend active partner | SA suspend partner |
-| PN016 Reactivate suspended partner | SA reactivate partner |
-| PN027 Request additional info from applicant | SA request-info (thuộc FSM) |
 | PN011 Mark deal Won → trigger commission | SA mark-won (UI) [+ API commission-calc] |
-| PN019 Mark deal Lost | SA mark-lost |
+| PN019 Mark deal Lost | SA mark-lost (UI) |
 | PN027 Review custom plan request | SA review/respond custom-plan request |
 | PN028 Propose co-sell split override (ACV > $100K) | SA co-sell split override |
-| PN013 Process commission clawback on early churn | SA process-clawback |
 
 ## 1. UI
 
@@ -399,18 +393,16 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Design:** PN003, ready-for-dev.
 **Intent:** Legal countersign partner agreement → Final Approval khả dụng (+ audit trail / notification).
 **Lý do block:** Giống _004/_005 — stage Legal-Countersign của UI FSM review chưa deploy. Unblock khi UI FSM ra.
-#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect)
-**Mô tả test:** SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) — queue Pending Approval + Conflicts hiển thị và load được deal. Xác nhận queue shell (3 tab All Deals / Pending Approval / Conflicts + filter Status/Deal Type + header table deal), rồi Pending Approval và Conflicts load deal không lỗi backend.
-**Chuẩn bị (điều kiện tiên quyết):** Đăng nhập super-admin (stgsa); mở `/partners/deals` và chờ tab "Pending Approval" (queue shell) render.
+#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect, be_gap · BUG-025)
+**Mô tả test:** SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) render shell — filter **Deal Type** + **Conflicts only** và header table deal — rồi load deal không lỗi backend. (Trang đã redesign 2026-08-05: status giờ là chip `<span>` custom **All / Pending / Approved / In Progress / Won / Expired / Lost / Rejected**; tab cũ "All Deals / Pending Approval / Conflicts" không còn — readiness/assert dựa vào filter + header table ổn định, không dựa chip.)
+**Chuẩn bị (điều kiện tiên quyết):** Đăng nhập super-admin (stgsa); mở `/partners/deals` và chờ filter **Deal Type** (queue shell) render.
 **Các bước:**
-1. 3 queue tab + filter render.
-   → Expected: tab **All Deals**, **Pending Approval**, **Conflicts** + filter **Status**, **Deal Type** hiển thị. **(PASS.)**
-2. Header table deal render (đủ cột).
-   → Expected: PROSPECT, PARTNER, TYPE, EST. ACV, PLAN, STATUS, EXPECTED CLOSE, PROTECTION. **(PASS.)**
-3. Queue Pending Approval + Conflicts load không server error.
-   → Expected: không lỗi backend; deal load (partner có open deal). **(FAIL.)**
-**Expected (tổng):** SA deal approval queue hiển thị queue Pending + Conflict với deal đã load.
-**Ghi chú:** FAILED — app/BE defect thật, verified 2026-07-29 (TC 12060507, **BUG-025**). Queue SHELL render OK (tab/filter/header đều pass), nhưng deal-list fetch fail ở **mọi** tab với **"Server Error — Invalid id: 'pro-v1'"**, nên không deal nào load dù partner có open deal (Directory hiện OPEN DEALS ≥ 1). Deterministic (không phải staging flap — sa-partners-api UP, trả lỗi). Assertion fail với "confirm with BE". Đây là view phía SA nơi deal partner đăng ký (gồm QA-AUTO từ partner MY_PIPELINE _005/_012/_013) đáng lẽ hiện — bị chặn bởi defect này, nên cũng chặn việc verify conflict-queue phía partner (_005). Check row-level (partner/ACV/type/conflict-status + nút Approve/Reject/Request-Info theo PRD §5.2) chưa verify được cho tới khi deal list load. Negative: N/A — view queue read-only. Idempotency: N/A.
+1. Shell queue render — filter + header table deal.
+   → Expected: filter **Deal Type** + **Conflicts only** hiển thị; header **DEAL ID, DOMAIN, COMPANY, PARTNER, ESTIMATED ACV, DEAL TYPE, PLAN, STATUS, ACTIONS**. **(PASS.)**
+2. Deal list load không server error (chờ deal-list fetch async settle trước khi assert).
+   → Expected: không lỗi backend; deal rows load (partner có open deal). **(FAIL.)**
+**Expected (tổng):** SA deal approval queue render và load được deal.
+**Ghi chú:** FAILED by design — BE defect thật, `be_gap`, **BUG-025** (re-verify 2026-08-05, TC 12060507). Shell render OK (filter + header 9 cột pass), nhưng deal-list fetch `GET /sa/deals?page=1&limit=20` trả **"Server Error — Invalid id: 'pro-v1'"** (plan-slug bị dùng chỗ cần Mongo `_id`) trong khi `GET /sa/deals/stats` (KPI counts) trả 200 — nên table hiện **"No Data Found"** dù counts khác 0. FE hiện lỗi dưới dạng **toast thoáng qua** (mắt thường dễ miss; thấy rõ ở DevTools → Network là call 400). Test **chờ deal-list settle** rồi mới assert nên bắt lỗi deterministic (bản cũ race async → có thể PASS oan). Assertion kết thúc "confirm with BE". Negative: N/A — view read-only. Idempotency: N/A.
 - PARTNER_UI_SA_PARTNER_MODULE_008
 #### PARTNER_UI_SA_PARTNER_MODULE_009 — BLOCKED (UI config chưa deploy)
 **Ở đâu:** stgsa → Partners → Commission → (Commission configuration → Commission rate). **Design:** PN020, ready-for-dev.

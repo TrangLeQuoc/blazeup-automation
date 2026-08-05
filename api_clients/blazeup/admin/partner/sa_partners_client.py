@@ -205,6 +205,8 @@ class SaPartnersClient(BaseClient):
             f"{_PARTNERS_PATH}/{partner_id}/deactivate",
             json=body,
             expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
 
     async def change_tier(
@@ -227,6 +229,8 @@ class SaPartnersClient(BaseClient):
             f"{_PARTNERS_PATH}/{partner_id}/upgrade-tier",
             json=body,
             expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return PartnerWriteResponse.model_validate(response.json())
 
@@ -356,6 +360,8 @@ class SaPartnersClient(BaseClient):
             f"{_PARTNER_USERS_PATH}/{user_id}/certifications",
             json=body,
             expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return PartnerWriteResponse.model_validate(response.json())
 
@@ -477,7 +483,13 @@ class SaPartnersClient(BaseClient):
         expected_status: int | tuple[int, ...] = 201,
     ) -> PartnerWriteResponse:
         """POST assign a territory to a partner (``CreateTerritoryDto``). Response data carries ``_id``."""
-        response = await self.post(_TERRITORIES_PATH, json=payload, expected_status=expected_status)
+        response = await self.post(
+            _TERRITORIES_PATH,
+            json=payload,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
+        )
         return PartnerWriteResponse.model_validate(response.json())
 
     async def raw_assign_territory(
@@ -544,7 +556,10 @@ class SaPartnersClient(BaseClient):
     ) -> httpx.Response:
         """DELETE remove a territory assignment by id (also used for test cleanup)."""
         return await self.delete(
-            f"{_TERRITORIES_PATH}/{territory_id}", expected_status=expected_status
+            f"{_TERRITORIES_PATH}/{territory_id}",
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
 
     async def list_audit_logs(

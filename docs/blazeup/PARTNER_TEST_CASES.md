@@ -4,22 +4,16 @@
 
 ## 0. Candidate MISSING test cases (Figma design exists, no plan TC)
 
-These SA-side partner-management workflows have a "Ready for dev" Figma design (`design_partner/…`, `[PN…]`) but **no corresponding TC in the test plan**. Suggested to add (all SA-side / stgsa Partners area). Add to the plan then automate once the UI is deployed.
+These SA-side partner-management workflows have a "Ready for dev" Figma design (`design_partner/…`, `[PN…]`) but **no corresponding TC yet**. Suggested to add to the plan, then automate once the UI is deployed.
+
+> Previously-listed candidates are now **documented TCs** and have been removed from this list: PN002 → `SA_PARTNER_MODULE_013`, PN014 → `_014`, PN015 → `_015`, PN016 → `_016`, PN004 → `_017`, PN005 → `_018`, PN027 (request-info) → `_019`, PN013 (clawback) → `COMMISSIONS_010`.
 
 | Design | Suggested TC |
 |---|---|
-| PN002 View Partner Detail page | SA partner detail (Overview / Deals / Commission / Members / Notes) loads |
-| PN004 Reject partner application | SA reject application (+ reason) |
-| PN005 Resend expired activation invite | SA resend invite email |
-| PN014 Manage partner team (deactivate/reactivate member) | SA deactivate + reactivate a partner's member (+ reason) |
-| PN015 Suspend active partner | SA suspend partner |
-| PN016 Reactivate suspended partner | SA reactivate partner |
-| PN027 Request additional info from applicant | SA request-info (part of the FSM) |
 | PN011 Mark deal Won → trigger commission calc | SA mark-won (UI) [+ API commission-calc] |
-| PN019 Mark deal Lost | SA mark-lost |
+| PN019 Mark deal Lost | SA mark-lost (UI) |
 | PN027 Review custom plan request | SA review/respond custom-plan request |
 | PN028 Propose co-sell split override (ACV > $100K) | SA co-sell split override |
-| PN013 Process commission clawback on early churn | SA process-clawback |
 
 ## 1. UI
 
@@ -399,18 +393,16 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Design:** PN003, ready-for-dev.
 **Intent:** Legal countersign of the partner agreement makes Final Approval available (+ audit trail / notification).
 **Block reason:** Same as _004/_005 — the Legal-Countersign stage of the FSM review UI is not deployed on staging. Unblock when the FSM UI ships.
-#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect)
-**Test Description:** The SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) — the Pending Approval + Conflicts queues are visible and load their deals. Confirms the queue shell (3 tabs All Deals / Pending Approval / Conflicts + Status/Deal Type filters + deals table header), then that the Pending Approval and Conflicts queues actually load deals with no backend error.
-**Setup (precondition):** Log in as super-admin (stgsa); open `/partners/deals` and wait for the "Pending Approval" tab (queue shell) to render.
+#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect, be_gap · BUG-025)
+**Test Description:** The SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) renders its shell — the **Deal Type** + **Conflicts only** filters and the deals table header — then loads its deals with no backend error. (Page redesigned 2026-08-05: status is now custom `<span>` chips **All / Pending / Approved / In Progress / Won / Expired / Lost / Rejected**; the old "All Deals / Pending Approval / Conflicts" tabs no longer exist — readiness/assertions key off the stable filters + table header, not the chips.)
+**Setup (precondition):** Log in as super-admin (stgsa); open `/partners/deals` and wait for the **Deal Type** filter (queue shell) to render.
 **Test Steps:**
-1. The three queue tabs + filters render.
-   → Expected: **All Deals**, **Pending Approval**, **Conflicts** tabs + **Status**, **Deal Type** filters are visible. **(PASSES.)**
-2. The deals table header renders (all columns).
-   → Expected: PROSPECT, PARTNER, TYPE, EST. ACV, PLAN, STATUS, EXPECTED CLOSE, PROTECTION. **(PASSES.)**
-3. The Pending Approval + Conflicts queues load without a server error.
-   → Expected: no backend error; deals load (partners have open deals). **(FAILS.)**
-**Expected (overall):** The SA deal approval queue shows the Pending + Conflict queues with their deals loaded.
-**Note:** FAILED — real app/BE defect, verified 2026-07-29 (TC 12060507). The queue SHELL renders (tabs/filters/header all pass), but the deal-list fetch fails on **every** tab with **"Server Error — Invalid id: 'pro-v1'"**, so no deal rows load even though partners have open deals (Directory shows OPEN DEALS ≥ 1). Deterministic (not staging flakiness — sa-partners-api is UP, returns the error). Assertion fails with "confirm with BE". This is the SA-side view where partner-registered deals (incl. the QA-AUTO deals from the partner MY_PIPELINE _005/_012/_013 submits) should appear — blocked by this defect, so it also blocks verifying the partner-side conflict-queue (_005). Row-level checks (partner/ACV/type/conflict-status + Approve/Reject/Request-Info buttons per PRD §5.2) are unverifiable until the deal list loads. Negative counterpart: N/A — read-only queue view. Idempotency: N/A.
+1. The queue shell renders — filters + deals table header.
+   → Expected: **Deal Type** + **Conflicts only** filters visible; table header **DEAL ID, DOMAIN, COMPANY, PARTNER, ESTIMATED ACV, DEAL TYPE, PLAN, STATUS, ACTIONS**. **(PASSES.)**
+2. The deal list loads without a server error (waits for the async deal-list fetch to settle first).
+   → Expected: no backend error; deal rows load (partners have open deals). **(FAILS.)**
+**Expected (overall):** The SA deal approval queue renders and loads its deals.
+**Note:** FAILED by design — real BE defect, `be_gap`, **BUG-025** (re-verified 2026-08-05, TC 12060507). The queue SHELL renders (filters + 9-col header pass), but the deal-list fetch `GET /sa/deals?page=1&limit=20` returns **"Server Error — Invalid id: 'pro-v1'"** (a plan-slug used where a Mongo `_id` is expected) while `GET /sa/deals/stats` (the KPI counts) returns 200 — so the table shows **"No Data Found"** despite non-zero counts. The FE surfaces the error as a **transient toast** (easy to miss manually; visible in DevTools → Network as the 400). The test waits for the deal-list to settle before asserting, so it catches the error deterministically (an earlier version raced the async fetch and could false-PASS). Assertion ends "confirm with BE". Negative counterpart: N/A — read-only queue view. Idempotency: N/A.
 - PARTNER_UI_SA_PARTNER_MODULE_008
 #### PARTNER_UI_SA_PARTNER_MODULE_009 — BLOCKED (config UI not deployed)
 **Where:** stgsa → Partners → Commission → (Commission configuration → Commission rate). **Design:** PN020, ready-for-dev.

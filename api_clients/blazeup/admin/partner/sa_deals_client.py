@@ -12,7 +12,11 @@ from typing import Any
 import httpx
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from api_clients.base_client import BaseClient
+from api_clients.base_client import (
+    SETUP_HTTP_TIMEOUT_S,
+    SETUP_RESPONSE_TIME_MS,
+    BaseClient,
+)
 
 _DEALS_PATH = "/sa-partners-api/v1/sa/deals"
 _BILLING_PLANS_PATH = "/sa-plans-api/v1/billing-plans"  # read-only catalog (sa-plans-api)
@@ -82,7 +86,13 @@ class SaDealsClient(BaseClient):
         expected_status: int | tuple[int, ...] = 201,
     ) -> DealWriteResponse:
         """POST register a new partner deal."""
-        response = await self.post(_DEALS_PATH, json=payload, expected_status=expected_status)
+        response = await self.post(
+            _DEALS_PATH,
+            json=payload,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
+        )
         return DealWriteResponse.model_validate(response.json())
 
     async def raw_register_deal(
@@ -126,7 +136,11 @@ class SaDealsClient(BaseClient):
         if review_notes is not None:
             body["reviewNotes"] = review_notes
         response = await self.post(
-            f"{_DEALS_PATH}/{deal_id}/approve", json=body, expected_status=expected_status
+            f"{_DEALS_PATH}/{deal_id}/approve",
+            json=body,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
 
@@ -168,6 +182,8 @@ class SaDealsClient(BaseClient):
             f"{_DEALS_PATH}/{deal_id}/extend-protection",
             json={"addedDays": added_days, "reasoning": reasoning},
             expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
 
@@ -202,7 +218,11 @@ class SaDealsClient(BaseClient):
         """
         body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
         response = await self.post(
-            f"{_DEALS_PATH}/{deal_id}/reject", json=body, expected_status=expected_status
+            f"{_DEALS_PATH}/{deal_id}/reject",
+            json=body,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
 
@@ -240,7 +260,11 @@ class SaDealsClient(BaseClient):
         ``partner.deal.won`` audit event is written. HTTP 201 / body statusCode 200.
         """
         response = await self.post(
-            f"{_DEALS_PATH}/{deal_id}/win", json=win_intake, expected_status=expected_status
+            f"{_DEALS_PATH}/{deal_id}/win",
+            json=win_intake,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
 
@@ -270,7 +294,11 @@ class SaDealsClient(BaseClient):
         """
         body: dict[str, Any] = {} if notes is None else {"notes": notes}
         response = await self.post(
-            f"{_DEALS_PATH}/{deal_id}/lose", json=body, expected_status=expected_status
+            f"{_DEALS_PATH}/{deal_id}/lose",
+            json=body,
+            expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
 
@@ -305,6 +333,8 @@ class SaDealsClient(BaseClient):
             f"{_DEALS_PATH}/{deal_id}/resolve-conflict",
             json={"decision": decision, "reasoning": reasoning},
             expected_status=expected_status,
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
 

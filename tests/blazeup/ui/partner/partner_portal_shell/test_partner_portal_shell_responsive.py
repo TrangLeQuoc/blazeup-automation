@@ -27,6 +27,7 @@ OVERFLOW_TOL = 5  # px allowance for a scrollbar; more than this = layout doesn'
 @pytest.mark.ui
 @pytest.mark.regression
 @pytest.mark.mobile
+@pytest.mark.be_gap  # BUG-UI-002: pages overflow the mobile viewport (responsive defect). Confirm with FE.
 async def test_partner_ui_partner_portal_shell_002(make_partner_page, request):
     """PARTNER_UI_PARTNER_PORTAL_SHELL_002: portal stays usable at mobile width (no h-overflow, nav reachable).
 

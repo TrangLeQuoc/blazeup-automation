@@ -29,6 +29,7 @@ PAGES = list(PartnerShellLocators.SECTIONS.keys())
 
 @pytest.mark.ui
 @pytest.mark.regression
+@pytest.mark.be_gap  # BUG-UI-001: the 'apps' (My Apps) section content fails to load. Confirm with FE.
 async def test_partner_ui_partner_portal_shell_001(make_partner_page, request):
     """PARTNER_UI_PARTNER_PORTAL_SHELL_001: every primary nav page loads via URL (no MFE error).
 
