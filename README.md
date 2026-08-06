@@ -131,10 +131,10 @@ blazeup_automation/
 │
 ├── pytest_support/
 │   ├── fixtures.py                       #   All pytest fixtures
-│   │                                      #   - auth_state (session-scoped: login once)
-│   │                                      #   - authenticated_page / make_page (UI tests)
+│   │                                      #   - authenticated_page / make_page (SA UI tests)
+│   │                                      #   - partner_authenticated_page / make_partner_page (partner UI)
 │   │                                      #   - api_token (session-scoped)
-│   │                                      #   - auth_client (API)
+│   │                                      #   - auth_client / sa_*_client (API)
 │   │                                      #   - created_resources (auto-cleanup)
 │   └── hooks.py                          #   pytest_runtest_makereport hook
 │
@@ -328,16 +328,26 @@ grep "TC-" results/run_*/logs/test.log
 | Fixture | Scope | Use When |
 |---------|-------|----------|
 | `settings` | session | Access typed config (BASE_URL, API_BASE_URL, etc.) |
-| `authenticated_page` | function | UI test, already logged in |
-| `page` | function | UI test without login (login tests) |
-| `api_token` | session | API test, already have JWT token |
-| `auth_client` | function | Authenticated API client (AuthClient) |
-| `attendance_client` | function | Authenticated API client (AttendanceClient) |
-| `make_page` | function | Factory: build an authenticated page object — `make_page(ShellPage)` |
-| `created_resources` | function | Track created resources → auto-delete on teardown (CRUD tests) |
-| `auth_state` | session | Pre-cached Playwright storage state (internal) |
+| `result_dir` | session | Run artifact dir (`results/run_*`) + configures loguru sinks |
+| `tc_logger` | function (autouse) | Emits per-TC START/PASSED/FAILED banners + binds the TC id to logs |
 | `fake` | session | Faker instance for dynamic data generation |
 | `test_user` | function | Generated user data dict |
+| `created_resources` | function | Track created resources → auto-delete on teardown (CRUD tests) |
+| **SA / stgsa UI** | | |
+| `authenticated_page` | function | SA (stgsa) UI test — fresh UI login per test |
+| `make_page` | function | Factory: build an SA page object — `make_page(ShellPage)` |
+| `page` | function | UI test WITHOUT login (login-flow tests) |
+| `browser_context` | function | Unauthenticated browser context (used by `page`) |
+| **Partner / stgpartners UI** | | |
+| `partner_auth_state` | session | Partner-portal login once → cached storage state |
+| `partner_authenticated_page` | function | Partner-portal (stgpartners) UI test, pre-authenticated |
+| `make_partner_page` | function | Factory: build a partner page object — `make_partner_page(PartnerShellPage)` |
+| **API** | | |
+| `api_token` | session | SA API test, already have a JWT token |
+| `auth_client` | function | Authenticated `AuthClient` (SA auth) |
+| `sa_partners_client` | function | Authenticated `SaPartnersClient` (sa-partners-api) |
+| `sa_deals_client` | function | Authenticated `SaDealsClient` (SA deals) |
+| `sa_commissions_client` | function | Authenticated `SaCommissionsClient` (SA commissions) |
 
 > Data factories live in `utils/data_factory.py` (`make_user`, `make_tenant`, …).
 > See **[docs/guides/test-data.md](docs/guides/test-data.md)** and **[docs/guides/page-objects.md](docs/guides/page-objects.md)**.
