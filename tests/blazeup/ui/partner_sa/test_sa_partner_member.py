@@ -27,7 +27,7 @@ def _throwaway_password() -> str:
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_sa_partner_module_014(make_page):
+async def test_partner_ui_sa_partner_module_014(sa_cleanup, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_014: add a portal user (member) to a partner.
 
     Self-seeds a throwaway partner, approves it to Active, opens the Members tab
@@ -41,6 +41,9 @@ async def test_partner_ui_sa_partner_module_014(make_page):
     async with async_step("Setup: onboard a throwaway partner and approve it to Active"):
         await detail.open_directory()
         await detail.onboard_partner(company, unique_email())
+        # Register cleanup as soon as the record exists (before the assertions). Deleting
+        # the partner also removes the portal user added below, so one cleanup covers both.
+        created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
         await detail.open_partner(company)
         await detail.approve_partner()
         logger.info("SETUP → partner {} is Active", company)

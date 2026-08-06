@@ -33,7 +33,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Note:** PASSED — verified 2026-07-28 (TC 12060302). First COMMISSIONS content test — establishes the `CommissionsPage` page-object (summary cards, ledger tabs). Empty ledger shows "No commissions yet" (partner has no won deals). Negative counterpart: N/A — read-only view. Idempotency: N/A — read-only.
 #### PARTNER_UI_COMMISSIONS_003 — BLOCKED (no ledger data)
 **Intent:** Trace a commission row — open a row and verify the full lifecycle fields (deal → close → rate/version → approval → payout → clawback/waiver → payment status); totals reconcile to the visible rows.
-**Block reason:** The commission ledger is **empty** — the test partner has no **Won** deals, so no commission rows exist ("No commissions yet"). Nothing to open / verify. Data-dependency chain: rate configured (SA_PARTNER_MODULE_009, not deployed) → deal approved (SA deal queue blocked by BUG-025) → deal Won → commission row. Unblock once at least one commission exists in the ledger.
+**Block reason:** The commission ledger is **empty** — the test partner has no **Won** deals, so no commission rows exist ("No commissions yet"). Nothing to open / verify. Data-dependency chain: rate configured (SA_PARTNER_MODULE_009, not deployed) → deal approved (SA deal queue blocked by BUG-UI-005) → deal Won → commission row. Unblock once at least one commission exists in the ledger.
 #### PARTNER_UI_COMMISSIONS_004 — BLOCKED (no ledger data)
 **Intent:** Submit a commission dispute from a single text field on a commission row.
 **Block reason:** Same as _003 — no commission rows in the ledger to dispute (partner has no Won deals → empty ledger). Needs a real commission entry first (rate → approved deal → Won).
@@ -55,7 +55,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Block reason:** No payout/banking-details edit UI found on the partner build — `/commissions` is a read-only ledger; a payout-details/settings screen (per region) was not located. Needs the payout-details UI + region fixtures. Unblock when the payout-details screen is available.
 #### PARTNER_UI_COMMISSIONS_010 — BLOCKED (no commission data + no clawback-processing UI)
 **Intent:** Process a commission clawback when a client churns within the clawback window → the commission is adjusted to Clawback, the partner is notified, and the product-failure waiver path is available.
-**Block reason:** Verified live 2026-07-31 on the SA commission ledger (stgsa `/partners/commissions`): the ledger is **empty** ("No Data Found", 0 commissions) so there is no commission to clawback, and there is **no process-clawback action** in the UI (only a "Clawback Exposure" summary card + a Clawback status filter tab — no per-row "process clawback" control; design PN013 not deployed). Needs the full chain — rate configured → deal approved (blocked by BUG-025) → deal Won → commission — plus the process-clawback UI. Unblock when a churned-client commission exists + the process-clawback UI ships.
+**Block reason:** Verified live 2026-07-31 on the SA commission ledger (stgsa `/partners/commissions`): the ledger is **empty** ("No Data Found", 0 commissions) so there is no commission to clawback, and there is **no process-clawback action** in the UI (only a "Clawback Exposure" summary card + a Clawback status filter tab — no per-row "process clawback" control; design PN013 not deployed). Needs the full chain — rate configured → deal approved (blocked by BUG-UI-005) → deal Won → commission — plus the process-clawback UI. Unblock when a churned-client commission exists + the process-clawback UI ships.
 #### PARTNER_UI_COMMISSIONS_011 — BLOCKED (needs reseller partner + Won reseller deal)
 **Intent:** For a Won **reseller** deal, the commission shows the configured **reseller rate** (not the referral/co-sell rate), clearly labelled as reseller commission.
 **Block reason:** Needs a **Reseller-type partner** with a **Won reseller deal** and a reseller rate configured. The test partner is type Channel, the register wizard fixes deal type to Referral, and there is no configured rate / Won deal — so no reseller commission entry exists to verify. Unblock with a reseller partner + Won reseller deal + rate.
@@ -303,7 +303,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 - PARTNER_UI_MY_PIPELINE_027 — BLOCKED (filter by module: same deals-list 400 + no "module" concept in the deal model/wizard)
 - PARTNER_UI_MY_PIPELINE_028 — BLOCKED (add shared note to a deal: no deal detail — deals-list 400, pipeline empty, no deal to open)
 - PARTNER_UI_MY_PIPELINE_029 — BLOCKED (upload document to a deal: no deal detail — same as _028)
-- PARTNER_UI_MY_PIPELINE_030 — BLOCKED (view assigned BlazeUp rep: a rep is assigned on SA approval (blocked by BUG-025) + deals-list 400, no deal to open)
+- PARTNER_UI_MY_PIPELINE_030 — BLOCKED (view assigned BlazeUp rep: a rep is assigned on SA approval (blocked by BUG-UI-005) + deals-list 400, no deal to open)
 - PARTNER_UI_MY_PIPELINE_031 — BLOCKED (request manual protection extension: needs an approved deal with a running protection clock + deal detail — deals-list 400 / no SA approval)
 - PARTNER_UI_MY_PIPELINE_032 — BLOCKED (reseller marks deal Won / self-confirm: reseller deal type not offered in the UI)
 - PARTNER_UI_MY_PIPELINE_033 — BLOCKED (pipeline card shows reseller billing tag: deals-list 400 → no card renders + reseller not offered)
@@ -350,7 +350,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 4. The invited member appears in the Directory with its role.
    → Expected: a row for the invited email shows role "Viewer" and status Active.
 **Expected (overall):** The invitation is created with the role and the new member is visible in the Directory.
-**Note:** PASSED — verified 2026-07-30 (TC 12060601). Partner-side team management on `/directory` (Invite User → email/name/role → Send → one-time credential → member Active). New config section `PARTNER.ui.PARTNER_TEAM = 6`. Side-effect: each run creates a real Active member (unique `qa.auto+…` email; no UI delete — members accumulate). Negative counterpart: N/A here (could add required-field validation later). Idempotency: N/A (unique email each run).
+**Note:** PASSED — verified 2026-07-30 (TC 12060601). Partner-side team management on `/directory` (Invite User → email/name/role → Send → one-time credential → member Active). New config section `PARTNER.ui.PARTNER_TEAM = 6`. Side-effect: each run creates a real Active member (unique `qa.auto+…` email; no UI delete — members accumulate). Negative counterpart: N/A here (could add required-field validation later). Idempotency: N/A (unique email each run). **Cleanup:** none possible — beyond the missing UI control, `sa-partners-api` exposes no delete/revoke for partner users either (only certifications; verified against `docs/api-snapshots/blazeup/sa-partners-api.endpoints.json`), and the member lives in the SHARED partner org, so it cannot be removed by any route. Each run logs `CLEANUP LEAK` naming the email.
 - PARTNER_UI_PARTNER_TEAM_002 — BLOCKED (create campaign referral link: no referral-link UI found on `/directory`; feature not located on the partner portal — recheck if/when a referral-link area ships)
 - PARTNER_UI_PARTNER_TEAM_003 — BLOCKED (copy referral link: same — no referral-link UI found)
 ### UI · RESOURCES
@@ -365,10 +365,10 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 
 #### PARTNER_UI_SA_PARTNER_MODULE_001 — BLOCKED
 **Intent:** Resolve a Conflict Queue entry with written reasoning — decision is saved, parties notified, record becomes immutable.
-**Block reason:** Blocked by the SA Deal Approval Queue backend defect (see _007 / BUG-025). The Conflict Queue (`/partners/deals` → Conflicts tab) fails to load any deals — every tab shows "Server Error — Invalid id: 'pro-v1'" — so no conflicted deal can be opened to resolve. Revisit once BUG-025 is fixed and a two-parties-same-domain conflict fixture exists.
+**Block reason:** Blocked by the SA Deal Approval Queue backend defect (see _007 / BUG-UI-005). The Conflict Queue (`/partners/deals` → Conflicts tab) fails to load any deals — every tab shows "Server Error — Invalid id: 'pro-v1'" — so no conflicted deal can be opened to resolve. Revisit once BUG-UI-005 is fixed and a two-parties-same-domain conflict fixture exists.
 #### PARTNER_UI_SA_PARTNER_MODULE_002 — BLOCKED
 **Intent:** Conflict Queue decision UI shows prospect-confirmation status + first-registered timestamps + mandatory written reasoning + 5-business-day SLA indicator.
-**Block reason:** Same as _001 — the Conflict Queue deal list fails to load (BUG-025), so the conflict-decision detail UI cannot be reached. Needs BUG-025 fixed + a conflict fixture with prospect-confirmation data.
+**Block reason:** Same as _001 — the Conflict Queue deal list fails to load (BUG-UI-005), so the conflict-decision detail UI cannot be reached. Needs BUG-UI-005 fixed + a conflict fixture with prospect-confirmation data.
 #### PARTNER_UI_SA_PARTNER_MODULE_003
 **Test Description:** The SA-side Partner Directory loads (stgsa SA Dashboard → Partners). Confirms the directory renders with its breadcrumb + summary stat cards, the Status/Tier filter controls + "Onboard Partner" action, and the partner table with its full column header. Read-only + empty-safe.
 **Setup (precondition):** Log in as the super-admin user (stgsa); open `/partners` and wait for the "Partners" READY_MARKER in `<main>`.
@@ -393,7 +393,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Design:** PN003, ready-for-dev.
 **Intent:** Legal countersign of the partner agreement makes Final Approval available (+ audit trail / notification).
 **Block reason:** Same as _004/_005 — the Legal-Countersign stage of the FSM review UI is not deployed on staging. Unblock when the FSM UI ships.
-#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect, be_gap · BUG-025)
+#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect, be_gap · BUG-UI-005)
 **Test Description:** The SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) renders its shell — the **Deal Type** + **Conflicts only** filters and the deals table header — then loads its deals with no backend error. (Page redesigned 2026-08-05: status is now custom `<span>` chips **All / Pending / Approved / In Progress / Won / Expired / Lost / Rejected**; the old "All Deals / Pending Approval / Conflicts" tabs no longer exist — readiness/assertions key off the stable filters + table header, not the chips.)
 **Setup (precondition):** Log in as super-admin (stgsa); open `/partners/deals` and wait for the **Deal Type** filter (queue shell) to render.
 **Test Steps:**
@@ -402,7 +402,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 2. The deal list loads without a server error (waits for the async deal-list fetch to settle first).
    → Expected: no backend error; deal rows load (partners have open deals). **(FAILS.)**
 **Expected (overall):** The SA deal approval queue renders and loads its deals.
-**Note:** FAILED by design — real BE defect, `be_gap`, **BUG-025** (re-verified 2026-08-05, TC 12060507). The queue SHELL renders (filters + 9-col header pass), but the deal-list fetch `GET /sa/deals?page=1&limit=20` returns **"Server Error — Invalid id: 'pro-v1'"** (a plan-slug used where a Mongo `_id` is expected) while `GET /sa/deals/stats` (the KPI counts) returns 200 — so the table shows **"No Data Found"** despite non-zero counts. The FE surfaces the error as a **transient toast** (easy to miss manually; visible in DevTools → Network as the 400). The test waits for the deal-list to settle before asserting, so it catches the error deterministically (an earlier version raced the async fetch and could false-PASS). Assertion ends "confirm with BE". Negative counterpart: N/A — read-only queue view. Idempotency: N/A.
+**Note:** FAILED by design — real BE defect, `be_gap`, **BUG-UI-005** (re-verified 2026-08-05, TC 12060507). The queue SHELL renders (filters + 9-col header pass), but the deal-list fetch `GET /sa/deals?page=1&limit=20` returns **"Server Error — Invalid id: 'pro-v1'"** (a plan-slug used where a Mongo `_id` is expected) while `GET /sa/deals/stats` (the KPI counts) returns 200 — so the table shows **"No Data Found"** despite non-zero counts. The FE surfaces the error as a **transient toast** (easy to miss manually; visible in DevTools → Network as the 400). The test waits for the deal-list to settle before asserting, so it catches the error deterministically (an earlier version raced the async fetch and could false-PASS). Assertion ends "confirm with BE". Negative counterpart: N/A — read-only queue view. Idempotency: N/A. **Blocks (5 TC):** `PARTNER_UI_SA_PARTNER_MODULE_001`, `PARTNER_UI_SA_PARTNER_MODULE_002`, `PARTNER_UI_COMMISSIONS_003`, `PARTNER_UI_COMMISSIONS_010`, `PARTNER_UI_MY_PIPELINE_030` — all of them wait on this same BE defect, so fixing **BUG-UI-005** unblocks the whole group.
 - PARTNER_UI_SA_PARTNER_MODULE_008
 #### PARTNER_UI_SA_PARTNER_MODULE_009 — BLOCKED (config UI not deployed)
 **Where:** stgsa → Partners → Commission → (Commission configuration → Commission rate). **Design:** PN020, ready-for-dev.
@@ -423,7 +423,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The analytics data loads without a server error.
    → Expected: no backend error. **(FAILS.)**
 **Expected (overall):** The analytics dashboard shows the funnel + KPIs + sections with data loaded.
-**Note:** FAILED — real BE defect, verified 2026-07-29 (TC 12060511, **BUG-026**). The dashboard shell renders (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
+**Note:** FAILED — real BE defect, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). The dashboard shell renders (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory page not deployed)
 **Where:** stgsa → Partners → Territory (and from Partner detail). **Design:** Territory PN021, ready-for-dev.
 **Intent:** Assign a Territory (regions, verticals, exclusivity type, effective dates) to a partner; shows an exclusivity-conflict warning; the exclusive territory auto-routes conflicting deals.
@@ -439,7 +439,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The Partner-actions control renders.
    → Expected: the **Partner actions** kebab control is visible on the header. **(PASSES.)**
 **Expected (overall):** The SA Partner Detail loads with tabs, sections, partner info, and the actions control.
-**Note:** PASSED, verified 2026-07-31 (TC 12060513). Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A.
+**Note:** PASSED, verified 2026-07-31 (TC 12060513). Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-021**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate not in UI)
 **Test Description:** From the SA Partner Detail → **Members** tab, an SA adds a portal user (member) to an active partner; the new user appears in the Portal Users list with **Active** status.
 **Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active), open the Members tab.
@@ -451,8 +451,8 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The new user appears as an Active row.
    → Expected: the new user's row shows the email + **Viewer** role + **Active** status; the header reads **Portal Users (1)**. **(PASSES.)**
 **Expected (overall):** An SA can add a portal user to a partner; it appears Active in the Portal Users list.
-**Note:** PASSED, verified 2026-08-03 (TC 12060514). Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email).
-#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-028, FE↔BE contract)
+**Note:** PASSED, verified 2026-08-03 (TC 12060514). Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email). **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-021**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-UI-008, FE↔BE contract)
 **Test Description:** From the SA Partner Detail page, an Active partner is suspended via **Partner actions → Deactivate**. Expected: the partner transitions out of Active (Suspended/Inactive) and portal access is revoked.
 **Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active).
 **Test Steps:**
@@ -461,11 +461,11 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 2. The partner is suspended and no error is shown.
    → Expected: no error banner; partner is no longer Active (Suspended/Inactive). **(FAILS.)**
 **Expected (overall):** An SA can suspend an Active partner from the UI; the partner loses portal access.
-**Note:** FAILED — real app bug, verified 2026-07-31 (TC 12060515, **BUG-028**, marked `be_gap`). The **"Deactivate Partner" confirm dialog collects NO reason** (only Cancel / Deactivate buttons), but the deactivate API **requires** a non-empty reason string. The FE sends the request without one, so the BE rejects it — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — the UI shows **"Failed to deactivate partner"** and the partner **stays Active**. Deterministic FE↔BE contract mismatch: **no SA can suspend a partner via the UI**. Fix: add a required Reason field to the dialog (and send it), or make `reason` optional on the API. This also blocks _016 (reactivate — cannot reach the Suspended state). Negative counterpart: N/A (single state-transition action). Idempotency: N/A — action never succeeds.
-#### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (depends on BUG-028)
+**Note:** FAILED — real app bug, verified 2026-07-31 (TC 12060515, **BUG-UI-008**, marked `be_gap`). The **"Deactivate Partner" confirm dialog collects NO reason** (only Cancel / Deactivate buttons), but the deactivate API **requires** a non-empty reason string. The FE sends the request without one, so the BE rejects it — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — the UI shows **"Failed to deactivate partner"** and the partner **stays Active**. Deterministic FE↔BE contract mismatch: **no SA can suspend a partner via the UI**. Fix: add a required Reason field to the dialog (and send it), or make `reason` optional on the API. This also blocks _016 (reactivate — cannot reach the Suspended state). Negative counterpart: N/A (single state-transition action). Idempotency: N/A — action never succeeds. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-021**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+#### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (depends on BUG-UI-008)
 **Test Description:** From the SA Partner Detail page, a **Suspended** partner is reactivated via **Partner actions → Reactivate**; the partner returns to Active and regains portal access.
 **Intent:** Verify the Suspended → Active transition (the mirror of _015).
-**Block reason:** Cannot reach the **Suspended** precondition. Suspending a partner is broken by **BUG-028** — the "Deactivate Partner" confirm dialog sends no `reason`, so the deactivate API rejects it ("reason should not be empty / must be a string / ≤ 2000 chars") and the partner stays Active. With no way to produce a Suspended partner through the UI (and no SA-side reactivate control reachable until one exists), the reactivate flow is untestable. **Unblock when BUG-028 is fixed** (then build: onboard → Approve → Deactivate → Reactivate → assert Active). Negative counterpart: N/A. Idempotency: N/A.
+**Block reason:** Cannot reach the **Suspended** precondition. Suspending a partner is broken by **BUG-UI-008** — the "Deactivate Partner" confirm dialog sends no `reason`, so the deactivate API rejects it ("reason should not be empty / must be a string / ≤ 2000 chars") and the partner stays Active. With no way to produce a Suspended partner through the UI (and no SA-side reactivate control reachable until one exists), the reactivate flow is untestable. **Unblock when BUG-UI-008 is fixed** (then build: onboard → Approve → Deactivate → Reactivate → assert Active). Negative counterpart: N/A. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_017 — BLOCKED (candidate; application-review UI not deployed)
 **Candidate TC** (not yet in the plan). **Design:** PN004 — Reject partner application.
 **Intent:** From the SA partner-application review, reject a Pending application (with a reason) → the application moves to Rejected and the applicant is notified.
@@ -1385,7 +1385,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: exactly 1 'sales_certified' cert. **Currently FAILS** — the list shows 2.
 **Teardown:** delete the parent partner.
 **Expected (overall):** Re-grant must not duplicate an active cert of the same type.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-001). Gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject (409). Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-API-001). Gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject (409). Confirm with BE.
 
 ### API · PARTNER_USERS
 
@@ -1471,7 +1471,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: exactly 1 user for email E.
 **Teardown:** delete the parent partner.
 **Expected (overall):** Re-invite must not create a duplicate-email user (email is the login identity).
-**Note:** PASSED — verified 2026-07-23. BE fixed the duplicate-invite gap: re-inviting the same email no longer creates a second user (list shows exactly 1). Stale `be_gap` marker to be removed from code; Bug_Tracker BUG-004 can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the duplicate-invite gap: re-inviting the same email no longer creates a second user (list shows exactly 1). Stale `be_gap` marker to be removed from code; Bug_Tracker BUG-API-004 can be closed.
 
 #### PARTNER_API_PARTNER_USERS_014
 **Test Description:** Negative counterpart of _003 (reset password): invalid id is rejected with the correct code (never 5xx). Self-proving; all cases run (failures collected).
@@ -1800,7 +1800,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; never 5xx.
-**Note:** PASSED. Notable: this partner-portal endpoint correctly returns **404** for a ghost id — unlike the SA-side get-by-id endpoints which return 400 (the systemic gap tracked in Bug_Tracker BUG-006…019). The test pins the correct 404 so a regression would be caught.
+**Note:** PASSED. Notable: this partner-portal endpoint correctly returns **404** for a ghost id — unlike the SA-side get-by-id endpoints which return 400 (the systemic gap tracked in Bug_Tracker BUG-API-006…019). The test pins the correct 404 so a regression would be caught.
 
 #### PARTNER_API_PARTNER_PORTAL_013
 **Test Description:** Negative counterpart of _003 (own certs): three invalid filters, each rejected with 400 + a clear message (never 5xx). All cases run (failures collected).

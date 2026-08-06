@@ -17,6 +17,7 @@ from faker import Faker
 from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
+from api_clients.base_client import SETUP_RESPONSE_TIME_MS
 from api_clients.blazeup.admin.auth_client import AuthClient
 from api_clients.blazeup.admin.partner.sa_commissions_client import SaCommissionsClient
 from api_clients.blazeup.admin.partner.sa_deals_client import SaDealsClient
@@ -26,6 +27,7 @@ from pages.blazeup.partner.login_page import PartnerLoginPage
 from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui
 from utils.screenshot_on_fail import attach_screenshot
+from utils.ui_cleanup import SaCleanup
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -626,6 +628,74 @@ async def sa_commissions_client(
     )
     yield client
     await client.close()
+
+
+@pytest_asyncio.fixture
+async def sa_cleanup(settings: Settings) -> AsyncGenerator[SaCleanup]:
+    """Deletes records a UI test created through the browser. Logs in LAZILY.
+
+    Why not reuse ``sa_partners_client`` / ``api_token``:
+
+    * ``api_token`` calls ``pytest.skip`` when the SA API login fails. That is right for
+      an API test (no token = nothing to test) but wrong for a UI test, which needs only
+      the UI login — staging answers ``/sign-in/credentials`` with 500
+      ``MongoWriteConcernError`` often enough that coupling the two would make the whole
+      UI suite hostage to an unrelated API outage. Here a failed login only disables
+      cleanup (reported as a leak); the UI test still runs.
+    * The login is deferred to the first cleanup call, i.e. teardown. stgsa's SA auth
+      uses a rotating, single-use refresh cookie (see ``authenticated_page``), so an API
+      session held open ALONGSIDE the browser session for the length of the test can
+      rotate the session out from under the UI. Logging in only after the UI work is
+      done keeps the two sessions from overlapping.
+
+    Request ``created_resources`` AFTER this fixture so the cleanups run before the
+    client is closed::
+
+        async def test_x(sa_cleanup, make_page, created_resources):
+            ...
+            created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
+    """
+
+    async def _login() -> SaPartnersClient | None:
+        if not (settings.admin_email and settings.admin_password):
+            logger.warning(
+                "UI cleanup DISABLED: ADMIN_EMAIL/ADMIN_PASSWORD are not configured — "
+                "records created through the UI will be left on staging."
+            )
+            return None
+        try:
+            token = await login_api(
+                str(settings.api_base_url),
+                str(settings.base_url),
+                settings.admin_email,
+                settings.admin_password,
+                max_response_time_ms=settings.default_response_time_ms * 5,
+            )
+        except Exception as exc:  # noqa: BLE001 — cleanup is best-effort, never a blocker
+            # Include the exception TYPE: httpx timeout errors stringify to "", so
+            # blocked_reason() alone would render an empty, undebuggable reason.
+            logger.warning(
+                "UI cleanup DISABLED: SA API login failed ({}: {}). The test result is "
+                "unaffected, but anything it created is left on staging. Sweep with: "
+                "python -m utils.cleanup_staging",
+                type(exc).__name__,
+                blocked_reason(exc),
+            )
+            return None
+        return SaPartnersClient(
+            str(settings.api_base_url),
+            token=token,
+            # Cleanup is a setup-grade call, not the assertion under test: staging
+            # mutations routinely take 10-25s, so a tight SLA would only add noise.
+            max_response_time_ms=SETUP_RESPONSE_TIME_MS,
+            app_origin=str(settings.base_url),
+        )
+
+    cleanup = SaCleanup(_login)
+    try:
+        yield cleanup
+    finally:
+        await cleanup.aclose()
 
 
 @pytest.fixture

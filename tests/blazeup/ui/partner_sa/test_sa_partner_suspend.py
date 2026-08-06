@@ -26,7 +26,7 @@ _BE_ERROR_MARKERS = ("Failed to deactivate", "Server Error", "reason should not 
 @pytest.mark.ui
 @pytest.mark.regression
 @pytest.mark.be_gap  # Deactivate dialog sends no 'reason'; BE requires it -> suspend fails. Confirm with BE.
-async def test_partner_ui_sa_partner_module_015(make_page):
+async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_015: suspend (deactivate) an active partner.
 
     Self-seeds a throwaway partner, approves it to Active, then deactivates it and
@@ -40,6 +40,9 @@ async def test_partner_ui_sa_partner_module_015(make_page):
     async with async_step("Setup: onboard a throwaway partner and approve it to Active"):
         await detail.open_directory()
         await detail.onboard_partner(company, email)
+        # Register cleanup as soon as the record exists (before the assertions). This TC
+        # is be_gap — it fails on purpose — so without this the leak was guaranteed.
+        created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
         await detail.open_partner(company)
         await detail.approve_partner()
         assert "Active" in await detail.detail_text(), "precondition: partner must be Active"

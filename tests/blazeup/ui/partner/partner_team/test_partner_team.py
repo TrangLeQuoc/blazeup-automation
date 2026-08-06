@@ -3,6 +3,15 @@
 PARTNER_UI_PARTNER_TEAM_001 — invite a team member: the Invite User dialog captures
                               email + name + role, sends the invite, and the new
                               member appears in the Directory with its role.
+
+NO CLEANUP POSSIBLE (not an oversight): the invite creates a partner user inside the
+SHARED partner org, and sa-partners-api exposes no delete for partner users — only
+``POST /v1/sa/partner-users``, ``.../reset-password``, ``.../unlock`` and a DELETE for
+*certifications* (verified against docs/api-snapshots/blazeup/sa-partners-api.endpoints.json).
+Deleting the parent partner is not an option either; it is the real shared account the
+whole partner-portal suite logs in with. So each run leaves one invited member behind —
+the email is logged below so it can be found. Revisit when BE adds a remove/revoke
+endpoint for partner users.
 """
 
 import pytest
@@ -66,4 +75,9 @@ async def test_partner_ui_partner_team_001(make_partner_page):
         )
         logger.info("CHECK member row → OK ({})", row_text)
 
+    logger.warning(
+        "CLEANUP LEAK (known, no endpoint): invited member {} stays in the shared partner "
+        "org — sa-partners-api has no delete for partner users. See the module docstring.",
+        email,
+    )
     logger.info("RESULT: team member invited with role and now visible in the Directory")

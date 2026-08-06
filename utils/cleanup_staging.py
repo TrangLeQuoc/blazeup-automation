@@ -14,6 +14,18 @@ Safe by default: it LISTS what it would delete and stops. Pass ``--execute`` to
 actually delete. Partners the BE refuses to delete (e.g. still referenced by a
 deal) are reported, not hidden.
 
+IMPORTANT — a 200 does NOT mean the record is gone
+--------------------------------------------------
+``DELETE /v1/sa/partners/{id}`` answers ``200 {"message": "Partner deleted
+successfully"}`` but performs a SOFT delete: the record survives with ``status``
+flipped to ``suspended`` and ``internalNotes = "Deleted by SA"``, and it is still
+returned by ``GET /v1/sa/partners`` (probed on stgsa 2026-08-06). This script
+therefore RE-READS the list after deleting and reports what actually remains,
+instead of counting HTTP 200s as removals. Counting the 200s is how ~1.8k
+"cleaned up" QA-AUTO partners accumulated on staging without anyone noticing.
+
+Exit code: 0 only when the environment is actually clean afterwards.
+
 Usage::
 
     # dry-run: show what would be removed, delete nothing
@@ -103,19 +115,53 @@ async def _run(execute: bool) -> int:
             )
             return 0
 
-        deleted = failed = 0
+        accepted = refused = 0
+        targeted: set[str] = set()
         for p in partners:
             pid = p.get("_id") or p.get("id")
             if not pid:
                 continue
             try:
                 await client.delete_partner(pid)
-                deleted += 1
+                accepted += 1
+                targeted.add(str(pid))
             except Exception as exc:  # noqa: BLE001 — report each failure and continue
-                failed += 1
+                refused += 1
                 logger.warning("Could not delete {} ({}): {}", pid, p.get("name"), exc)
-        logger.info("Deleted {} partner(s); {} could not be deleted.", deleted, failed)
-        return 1 if failed else 0
+
+        # ── Verify, don't assume ──────────────────────────────────────────────
+        # The endpoint soft-deletes (see the module docstring), so the only honest
+        # way to report a sweep is to re-read the list and see what survived.
+        logger.info("Re-reading the partner list to verify what was actually removed…")
+        remaining = await _collect_qa_partners(client)
+        remaining_ids = {str(p.get("_id") or p.get("id")) for p in remaining}
+        survived = targeted & remaining_ids
+        really_gone = accepted - len(survived)
+
+        logger.info(
+            "Sweep result: {} DELETE(s) accepted, {} refused, {} actually removed.",
+            accepted,
+            refused,
+            really_gone,
+        )
+        if survived:
+            logger.warning(
+                "SOFT DELETE: {} partner(s) returned HTTP 200 but are STILL listed "
+                "(status → 'suspended', internalNotes → 'Deleted by SA'). The endpoint "
+                "does not remove records and does not exclude them from GET "
+                "/v1/sa/partners, so no sweep and no test cleanup can actually clean "
+                "this environment. Confirm with BE.",
+                len(survived),
+            )
+        if remaining:
+            logger.warning(
+                "{} QA-AUTO partner(s) remain on staging after the sweep.", len(remaining)
+            )
+        else:
+            logger.info("Environment is clean — no QA-AUTO partners remain.")
+        # Non-zero whenever the environment is NOT clean: a refusal, a soft delete, or
+        # anything still sitting there. A silent 0 would be the old lie in a new place.
+        return 1 if (refused or remaining) else 0
     finally:
         await client.close()
 

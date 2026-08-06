@@ -16,7 +16,7 @@ from utils.log_helper import async_step
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_sa_partner_module_013(make_page):
+async def test_partner_ui_sa_partner_module_013(sa_cleanup, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_013: the SA Partner Detail page loads.
 
     Onboards a throwaway partner, opens its detail, and confirms the detail chrome
@@ -31,6 +31,10 @@ async def test_partner_ui_sa_partner_module_013(make_page):
     async with async_step("Setup: onboard a throwaway partner and open its detail"):
         await detail.open_directory()
         await detail.onboard_partner(company, email)
+        # Register cleanup as soon as the record exists (before the assertions) so the
+        # throwaway partner is removed even when a later step fails. The UI never exposes
+        # the partner's `_id`, so cleanup resolves it from this unique company name.
+        created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
         await detail.open_partner(company)
 
     async with async_step("[1/3] The detail tabs render"):

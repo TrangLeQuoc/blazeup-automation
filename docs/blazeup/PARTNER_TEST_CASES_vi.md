@@ -33,7 +33,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Ghi chú:** PASSED — verified 2026-07-28 (TC 12060302). Content-test COMMISSIONS đầu tiên — dựng nền page-object `CommissionsPage` (summary cards, ledger tabs). Ledger rỗng hiện "No commissions yet" (partner chưa có deal won). Negative: N/A — view read-only. Idempotency: N/A — read-only.
 #### PARTNER_UI_COMMISSIONS_003 — BLOCKED (thiếu data ledger)
 **Intent:** Trace 1 dòng commission — mở row và verify đủ trường lifecycle (deal → close → rate/version → approval → payout → clawback/waiver → payment status); tổng khớp các dòng hiển thị.
-**Lý do block:** Ledger commission **rỗng** — partner test chưa có deal **Won** nào nên không có commission row ("No commissions yet"). Không có gì để mở/verify. Chuỗi phụ thuộc: rate cấu hình (SA_PARTNER_MODULE_009, chưa deploy) → deal approve (SA deal queue bị BUG-025) → deal Won → commission row. Unblock khi ledger có ít nhất 1 commission.
+**Lý do block:** Ledger commission **rỗng** — partner test chưa có deal **Won** nào nên không có commission row ("No commissions yet"). Không có gì để mở/verify. Chuỗi phụ thuộc: rate cấu hình (SA_PARTNER_MODULE_009, chưa deploy) → deal approve (SA deal queue bị BUG-UI-005) → deal Won → commission row. Unblock khi ledger có ít nhất 1 commission.
 #### PARTNER_UI_COMMISSIONS_004 — BLOCKED (thiếu data ledger)
 **Intent:** Submit commission dispute từ 1 ô text trên 1 dòng commission.
 **Lý do block:** Giống _003 — không có commission row nào để dispute (partner chưa có Won deal → ledger rỗng). Cần 1 commission thật trước (rate → approved deal → Won).
@@ -55,7 +55,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Lý do block:** Không tìm thấy UI edit payout/banking details trên build partner — `/commissions` chỉ là ledger read-only; màn payout-details/settings (theo region) chưa định vị được. Cần UI payout-details + region fixtures. Unblock khi có màn payout-details.
 #### PARTNER_UI_COMMISSIONS_010 — BLOCKED (không có commission data + không có UI process-clawback)
 **Intent:** Process clawback commission khi client churn trong clawback window → commission bị điều chỉnh thành Clawback, partner được notify, và có product-failure waiver path.
-**Lý do block:** Verify live 2026-07-31 (SA commission ledger, stgsa `/partners/commissions`): ledger **rỗng** ("No Data Found", 0 commission) nên không có commission để clawback, và **không có action process-clawback** trên UI (chỉ có summary card "Clawback Exposure" + tab filter status Clawback — không có control "process clawback" theo row; design PN013 chưa deploy). Cần chuỗi đầy đủ — rate config → deal approve (bị BUG-025) → deal Won → commission — + UI process-clawback. Unblock khi có commission client-churn + UI process-clawback deploy.
+**Lý do block:** Verify live 2026-07-31 (SA commission ledger, stgsa `/partners/commissions`): ledger **rỗng** ("No Data Found", 0 commission) nên không có commission để clawback, và **không có action process-clawback** trên UI (chỉ có summary card "Clawback Exposure" + tab filter status Clawback — không có control "process clawback" theo row; design PN013 chưa deploy). Cần chuỗi đầy đủ — rate config → deal approve (bị BUG-UI-005) → deal Won → commission — + UI process-clawback. Unblock khi có commission client-churn + UI process-clawback deploy.
 #### PARTNER_UI_COMMISSIONS_011 — BLOCKED (cần reseller partner + Won reseller deal)
 **Intent:** Với reseller deal đã Won, commission hiện **rate reseller** (không phải referral/co-sell), nhãn ghi rõ reseller.
 **Lý do block:** Cần **partner type Reseller** có **Won reseller deal** + reseller rate cấu hình. Partner test là Channel, wizard fix deal type Referral, chưa có rate/Won deal → không có commission reseller để kiểm. Unblock với reseller partner + Won reseller deal + rate.
@@ -303,7 +303,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 - PARTNER_UI_MY_PIPELINE_027 — BLOCKED (filter theo module: cùng deals-list 400 + không có concept "module" trong deal model/wizard)
 - PARTNER_UI_MY_PIPELINE_028 — BLOCKED (add shared note vào deal: không có deal detail — deals-list 400, pipeline rỗng, không có deal để mở)
 - PARTNER_UI_MY_PIPELINE_029 — BLOCKED (upload document vào deal: không có deal detail — như _028)
-- PARTNER_UI_MY_PIPELINE_030 — BLOCKED (xem BlazeUp rep được assign: rep assign khi SA approve (bị BUG-025) + deals-list 400, không có deal để mở)
+- PARTNER_UI_MY_PIPELINE_030 — BLOCKED (xem BlazeUp rep được assign: rep assign khi SA approve (bị BUG-UI-005) + deals-list 400, không có deal để mở)
 - PARTNER_UI_MY_PIPELINE_031 — BLOCKED (request gia hạn protection thủ công: cần deal approved có protection clock chạy + deal detail — deals-list 400 / chưa SA approve)
 - PARTNER_UI_MY_PIPELINE_032 — BLOCKED (reseller tự mark deal Won: wizard không cho chọn reseller)
 - PARTNER_UI_MY_PIPELINE_033 — BLOCKED (card pipeline hiện tag reseller billing: deals-list 400 → không render card + không có reseller)
@@ -350,7 +350,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 4. Member được invite xuất hiện trong Directory với role.
    → Expected: dòng cho email vừa invite hiện role "Viewer", status Active.
 **Expected (tổng):** Invite được tạo với role và member mới hiển thị trong Directory.
-**Ghi chú:** PASSED — verified 2026-07-30 (TC 12060601). Team management phía partner ở `/directory` (Invite User → email/name/role → Send → credential 1 lần → member Active). Section config mới `PARTNER.ui.PARTNER_TEAM = 6`. Side-effect: mỗi run tạo 1 member Active thật (email `qa.auto+…` unique; UI không có xoá — member tích lũy). Negative: N/A (có thể thêm validation required-field sau). Idempotency: N/A (email unique mỗi run).
+**Ghi chú:** PASSED — verified 2026-07-30 (TC 12060601). Team management phía partner ở `/directory` (Invite User → email/name/role → Send → credential 1 lần → member Active). Section config mới `PARTNER.ui.PARTNER_TEAM = 6`. Side-effect: mỗi run tạo 1 member Active thật (email `qa.auto+…` unique; UI không có xoá — member tích lũy). Negative: N/A (có thể thêm validation required-field sau). Idempotency: N/A (email unique mỗi run). **Cleanup:** không thể dọn — ngoài việc UI không có control, `sa-partners-api` cũng **không có** endpoint delete/revoke cho partner user (chỉ có cho certifications; đối chiếu `docs/api-snapshots/blazeup/sa-partners-api.endpoints.json`), và member nằm trong org partner DÙNG CHUNG nên không thể xoá bằng đường nào. Mỗi lần chạy log `CLEANUP LEAK` kèm email.
 - PARTNER_UI_PARTNER_TEAM_002 — BLOCKED (tạo campaign referral link: không tìm thấy UI referral-link trên `/directory`; feature chưa định vị được trên partner portal — recheck khi có khu referral-link)
 - PARTNER_UI_PARTNER_TEAM_003 — BLOCKED (copy referral link: giống trên — không tìm thấy UI referral-link)
 ### UI · RESOURCES
@@ -365,10 +365,10 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 
 #### PARTNER_UI_SA_PARTNER_MODULE_001 — BLOCKED
 **Intent:** Resolve entry Conflict Queue với written reasoning — decision lưu, thông báo 2 bên, record thành immutable.
-**Lý do block:** Bị chặn bởi defect backend của SA Deal Approval Queue (xem _007 / BUG-025). Conflict Queue (`/partners/deals` → tab Conflicts) không load được deal — mọi tab báo "Server Error — Invalid id: 'pro-v1'" — nên không mở được conflicted deal để resolve. Xem lại khi BUG-025 fix + có fixture 2-bên-cùng-domain.
+**Lý do block:** Bị chặn bởi defect backend của SA Deal Approval Queue (xem _007 / BUG-UI-005). Conflict Queue (`/partners/deals` → tab Conflicts) không load được deal — mọi tab báo "Server Error — Invalid id: 'pro-v1'" — nên không mở được conflicted deal để resolve. Xem lại khi BUG-UI-005 fix + có fixture 2-bên-cùng-domain.
 #### PARTNER_UI_SA_PARTNER_MODULE_002 — BLOCKED
 **Intent:** UI decision Conflict Queue hiện prospect-confirmation + first-registered timestamp + written reasoning bắt buộc + SLA 5-ngày-làm-việc.
-**Lý do block:** Giống _001 — deal list Conflict Queue không load (BUG-025), nên không tới được UI conflict-decision. Cần BUG-025 fix + fixture conflict có prospect-confirmation.
+**Lý do block:** Giống _001 — deal list Conflict Queue không load (BUG-UI-005), nên không tới được UI conflict-decision. Cần BUG-UI-005 fix + fixture conflict có prospect-confirmation.
 #### PARTNER_UI_SA_PARTNER_MODULE_003
 **Mô tả test:** Partner Directory phía SA load (stgsa SA Dashboard → Partners). Xác nhận directory render với breadcrumb + summary stat cards, filter Status/Tier + action "Onboard Partner", và table partner với đủ header cột. Read-only + empty-safe.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập super-admin (stgsa); mở `/partners` và chờ READY_MARKER "Partners" trong `<main>`.
@@ -393,7 +393,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Design:** PN003, ready-for-dev.
 **Intent:** Legal countersign partner agreement → Final Approval khả dụng (+ audit trail / notification).
 **Lý do block:** Giống _004/_005 — stage Legal-Countersign của UI FSM review chưa deploy. Unblock khi UI FSM ra.
-#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect, be_gap · BUG-025)
+#### PARTNER_UI_SA_PARTNER_MODULE_007 — FAILED (app bug · BE defect, be_gap · BUG-UI-005)
 **Mô tả test:** SA Deal Approval Queue (stgsa `/partners/deals`, PRD §5.2) render shell — filter **Deal Type** + **Conflicts only** và header table deal — rồi load deal không lỗi backend. (Trang đã redesign 2026-08-05: status giờ là chip `<span>` custom **All / Pending / Approved / In Progress / Won / Expired / Lost / Rejected**; tab cũ "All Deals / Pending Approval / Conflicts" không còn — readiness/assert dựa vào filter + header table ổn định, không dựa chip.)
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập super-admin (stgsa); mở `/partners/deals` và chờ filter **Deal Type** (queue shell) render.
 **Các bước:**
@@ -402,7 +402,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 2. Deal list load không server error (chờ deal-list fetch async settle trước khi assert).
    → Expected: không lỗi backend; deal rows load (partner có open deal). **(FAIL.)**
 **Expected (tổng):** SA deal approval queue render và load được deal.
-**Ghi chú:** FAILED by design — BE defect thật, `be_gap`, **BUG-025** (re-verify 2026-08-05, TC 12060507). Shell render OK (filter + header 9 cột pass), nhưng deal-list fetch `GET /sa/deals?page=1&limit=20` trả **"Server Error — Invalid id: 'pro-v1'"** (plan-slug bị dùng chỗ cần Mongo `_id`) trong khi `GET /sa/deals/stats` (KPI counts) trả 200 — nên table hiện **"No Data Found"** dù counts khác 0. FE hiện lỗi dưới dạng **toast thoáng qua** (mắt thường dễ miss; thấy rõ ở DevTools → Network là call 400). Test **chờ deal-list settle** rồi mới assert nên bắt lỗi deterministic (bản cũ race async → có thể PASS oan). Assertion kết thúc "confirm with BE". Negative: N/A — view read-only. Idempotency: N/A.
+**Ghi chú:** FAILED by design — BE defect thật, `be_gap`, **BUG-UI-005** (re-verify 2026-08-05, TC 12060507). Shell render OK (filter + header 9 cột pass), nhưng deal-list fetch `GET /sa/deals?page=1&limit=20` trả **"Server Error — Invalid id: 'pro-v1'"** (plan-slug bị dùng chỗ cần Mongo `_id`) trong khi `GET /sa/deals/stats` (KPI counts) trả 200 — nên table hiện **"No Data Found"** dù counts khác 0. FE hiện lỗi dưới dạng **toast thoáng qua** (mắt thường dễ miss; thấy rõ ở DevTools → Network là call 400). Test **chờ deal-list settle** rồi mới assert nên bắt lỗi deterministic (bản cũ race async → có thể PASS oan). Assertion kết thúc "confirm with BE". Negative: N/A — view read-only. Idempotency: N/A. **Chặn (5 TC):** `PARTNER_UI_SA_PARTNER_MODULE_001`, `PARTNER_UI_SA_PARTNER_MODULE_002`, `PARTNER_UI_COMMISSIONS_003`, `PARTNER_UI_COMMISSIONS_010`, `PARTNER_UI_MY_PIPELINE_030` — tất cả đều chờ đúng defect BE này, nên fix **BUG-UI-005** sẽ mở khoá cả nhóm.
 - PARTNER_UI_SA_PARTNER_MODULE_008
 #### PARTNER_UI_SA_PARTNER_MODULE_009 — BLOCKED (UI config chưa deploy)
 **Ở đâu:** stgsa → Partners → Commission → (Commission configuration → Commission rate). **Design:** PN020, ready-for-dev.
@@ -423,7 +423,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. Data analytics load không server error.
    → Expected: không lỗi backend. **(FAIL.)**
 **Expected (tổng):** Dashboard analytics hiện funnel + KPIs + sections với data đã load.
-**Ghi chú:** FAILED — BE defect thật, verified 2026-07-29 (TC 12060511, **BUG-026**). Dashboard shell render (KPIs + funnel + tier distribution + top-partners đều pass), nhưng 1 query analytics phân trang fail với **"Server Error — Invalid pagination: limit must not exceed 100"** (defect backend: frontend request page size > 100 bị API từ chối). Deterministic. Assertion fail với "confirm with BE". Lưu ý: KPI set live khác plan một chút (Approval Rate / Avg Deal Velocity / line-item commission chi tiết không render) — test assert đúng cái UI render. Negative: N/A — dashboard read-only. Idempotency: N/A.
+**Ghi chú:** FAILED — BE defect thật, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). Dashboard shell render (KPIs + funnel + tier distribution + top-partners đều pass), nhưng 1 query analytics phân trang fail với **"Server Error — Invalid pagination: limit must not exceed 100"** (defect backend: frontend request page size > 100 bị API từ chối). Deterministic. Assertion fail với "confirm with BE". Lưu ý: KPI set live khác plan một chút (Approval Rate / Avg Deal Velocity / line-item commission chi tiết không render) — test assert đúng cái UI render. Negative: N/A — dashboard read-only. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory chưa deploy)
 **Ở đâu:** stgsa → Partners → Territory (và từ Partner detail). **Design:** Territory PN021, ready-for-dev.
 **Intent:** Assign Territory (regions, verticals, exclusivity type, effective dates) cho partner; hiện warning conflict exclusivity; territory exclusive auto-route deal conflict.
@@ -439,7 +439,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. Control Partner-actions render.
    → Expected: control **Partner actions** (kebab) hiển thị trên header. **(PASS.)**
 **Expected (tổng):** Partner Detail load với tabs, sections, thông tin partner và control actions.
-**Note:** PASSED, verify 2026-07-31 (TC 12060513). Check load read-only (an toàn khi rỗng). Negative: N/A — chỉ load read-only. Idempotency: N/A.
+**Note:** PASSED, verify 2026-07-31 (TC 12060513). Check load read-only (an toàn khi rỗng). Negative: N/A — chỉ load read-only. Idempotency: N/A. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-021**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate chưa có UI)
 **Mô tả:** Từ trang Partner Detail phía SA → tab **Members**, SA thêm 1 portal user (member) cho partner đang active; user mới xuất hiện trong danh sách Portal Users với status **Active**.
 **Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm, **Approve** (Pending → Active), mở tab Members.
@@ -451,8 +451,8 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. User mới xuất hiện ở row Active.
    → Expected: row của user mới hiện email + role **Viewer** + status **Active**; header hiện **Portal Users (1)**. **(PASS.)**
 **Expected (tổng):** SA thêm được portal user cho partner; user hiện Active trong danh sách Portal Users.
-**Note:** PASSED, verify 2026-08-03 (TC 12060514). Password của user tạm (staging) được sinh ngẫu nhiên và **không log**. **Phạm vi:** tab Members chỉ có **Add User** (tạo) + action **Reset Password** trên từng row — **KHÔNG có** control member deactivate / reactivate / suspend / remove nào trên build này (verify live 2026-08-03: full HTML row + hover + quét keyword), nên phần deactivate/reactivate của intent gốc _014 **không tự động hóa được** (UI chưa có). Khi control đó lên, mở rộng thêm cho TC này. Negative: N/A — happy-path add (validate form là TC riêng). Idempotency: N/A — mỗi lần add tạo user khác nhau (email unique).
-#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-028, lệch contract FE↔BE)
+**Note:** PASSED, verify 2026-08-03 (TC 12060514). Password của user tạm (staging) được sinh ngẫu nhiên và **không log**. **Phạm vi:** tab Members chỉ có **Add User** (tạo) + action **Reset Password** trên từng row — **KHÔNG có** control member deactivate / reactivate / suspend / remove nào trên build này (verify live 2026-08-03: full HTML row + hover + quét keyword), nên phần deactivate/reactivate của intent gốc _014 **không tự động hóa được** (UI chưa có). Khi control đó lên, mở rộng thêm cho TC này. Negative: N/A — happy-path add (validate form là TC riêng). Idempotency: N/A — mỗi lần add tạo user khác nhau (email unique). **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-021**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-UI-008, lệch contract FE↔BE)
 **Mô tả:** Từ trang Partner Detail phía SA, suspend một partner đang Active qua **Partner actions → Deactivate**. Kỳ vọng: partner chuyển khỏi Active (Suspended/Inactive) và mất quyền truy cập portal.
 **Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm, **Approve** (Pending → Active).
 **Test Steps:**
@@ -461,11 +461,11 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 2. Partner bị suspend, không có lỗi.
    → Expected: không có banner lỗi; partner không còn Active (Suspended/Inactive). **(FAIL.)**
 **Expected (tổng):** SA suspend được partner Active từ UI; partner mất quyền truy cập portal.
-**Note:** FAILED — app bug thật, verify 2026-07-31 (TC 12060515, **BUG-028**, gắn `be_gap`). Dialog confirm **"Deactivate Partner" KHÔNG có ô nhập reason** (chỉ có nút Cancel / Deactivate), nhưng API deactivate **bắt buộc** field `reason` (chuỗi không rỗng). FE gửi request thiếu reason → BE reject — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — UI hiện **"Failed to deactivate partner"** và partner **vẫn Active**. Lệch contract FE↔BE, deterministic: **không SA nào suspend được partner qua UI**. Fix: thêm ô Reason bắt buộc vào dialog (và gửi nó), hoặc để `reason` optional ở API. Cũng chặn luôn _016 (reactivate — không tới được state Suspended). Negative: N/A (1 action chuyển state). Idempotency: N/A — action không bao giờ thành công.
-#### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (phụ thuộc BUG-028)
+**Note:** FAILED — app bug thật, verify 2026-07-31 (TC 12060515, **BUG-UI-008**, gắn `be_gap`). Dialog confirm **"Deactivate Partner" KHÔNG có ô nhập reason** (chỉ có nút Cancel / Deactivate), nhưng API deactivate **bắt buộc** field `reason` (chuỗi không rỗng). FE gửi request thiếu reason → BE reject — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — UI hiện **"Failed to deactivate partner"** và partner **vẫn Active**. Lệch contract FE↔BE, deterministic: **không SA nào suspend được partner qua UI**. Fix: thêm ô Reason bắt buộc vào dialog (và gửi nó), hoặc để `reason` optional ở API. Cũng chặn luôn _016 (reactivate — không tới được state Suspended). Negative: N/A (1 action chuyển state). Idempotency: N/A — action không bao giờ thành công. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-021**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+#### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (phụ thuộc BUG-UI-008)
 **Mô tả:** Từ trang Partner Detail phía SA, reactivate một partner đang **Suspended** qua **Partner actions → Reactivate**; partner trở lại Active và có lại quyền truy cập portal.
 **Intent:** Verify chuyển state Suspended → Active (đối xứng với _015).
-**Lý do block:** Không tạo được điều kiện tiên quyết **Suspended**. Việc suspend partner đang hỏng do **BUG-028** — dialog confirm "Deactivate Partner" không gửi `reason`, nên API deactivate reject ("reason should not be empty / must be a string / ≤ 2000 chars") và partner vẫn Active. Vì không tạo được partner Suspended qua UI (và không tới được control reactivate cho tới khi có state đó), flow reactivate không test được. **Unblock khi BUG-028 được fix** (rồi build: onboard → Approve → Deactivate → Reactivate → assert Active). Negative: N/A. Idempotency: N/A.
+**Lý do block:** Không tạo được điều kiện tiên quyết **Suspended**. Việc suspend partner đang hỏng do **BUG-UI-008** — dialog confirm "Deactivate Partner" không gửi `reason`, nên API deactivate reject ("reason should not be empty / must be a string / ≤ 2000 chars") và partner vẫn Active. Vì không tạo được partner Suspended qua UI (và không tới được control reactivate cho tới khi có state đó), flow reactivate không test được. **Unblock khi BUG-UI-008 được fix** (rồi build: onboard → Approve → Deactivate → Reactivate → assert Active). Negative: N/A. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_017 — BLOCKED (candidate; UI review hồ sơ chưa deploy)
 **Candidate TC** (chưa có trong plan). **Design:** PN004 — Reject partner application.
 **Intent:** Từ màn review hồ sơ partner phía SA, reject một application Pending (kèm lý do) → application chuyển sang Rejected và applicant được thông báo.
@@ -1385,7 +1385,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: đúng 1 cert 'sales_certified'. **Hiện FAIL** — list hiện 2.
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Re-grant không được duplicate một active cert cùng loại.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker BUG-001). Gap: re-grant trả 201 và tạo một active cert THỨ HAI (list hiện 2). BE nên renew hoặc reject (409). Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker BUG-API-001). Gap: re-grant trả 201 và tạo một active cert THỨ HAI (list hiện 2). BE nên renew hoặc reject (409). Xác nhận với BE.
 
 ### API · PARTNER_USERS
 
@@ -1471,7 +1471,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: đúng 1 user cho email E.
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Re-invite không được tạo một user duplicate-email (email là login identity).
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap duplicate-invite: re-invite cùng email không còn tạo user thứ hai (list hiện đúng 1). Marker `be_gap` đã cũ, cần gỡ khỏi code; Bug_Tracker BUG-004 có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap duplicate-invite: re-invite cùng email không còn tạo user thứ hai (list hiện đúng 1). Marker `be_gap` đã cũ, cần gỡ khỏi code; Bug_Tracker BUG-API-004 có thể đóng.
 
 #### PARTNER_API_PARTNER_USERS_014
 **Mô tả test:** Đối trọng negative của _003 (reset password): id không hợp lệ bị từ chối với code đúng (không bao giờ 5xx). Tự chứng minh; tất cả case đều chạy (thu thập failure).
@@ -1800,7 +1800,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Teardown:** đóng session portal; xóa partner.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; không bao giờ 5xx.
-**Ghi chú:** PASSED. Đáng chú ý: endpoint partner-portal này trả **404** đúng cho một ghost id — khác với các endpoint get-by-id phía SA vốn trả 400 (gap hệ thống tracked trong Bug_Tracker BUG-006…019). Test ghim đúng 404 để một regression sẽ bị bắt.
+**Ghi chú:** PASSED. Đáng chú ý: endpoint partner-portal này trả **404** đúng cho một ghost id — khác với các endpoint get-by-id phía SA vốn trả 400 (gap hệ thống tracked trong Bug_Tracker BUG-API-006…019). Test ghim đúng 404 để một regression sẽ bị bắt.
 
 #### PARTNER_API_PARTNER_PORTAL_013
 **Mô tả test:** Đối trọng negative của _003 (own certs): ba filter không hợp lệ, mỗi cái bị từ chối với 400 + một message rõ ràng (không bao giờ 5xx). Tất cả case đều chạy (thu thập failure).
