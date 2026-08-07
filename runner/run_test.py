@@ -185,6 +185,55 @@ def resolve_base_ids(args: argparse.Namespace) -> list[int]:
     return sorted(TC_REGISTRY.keys())
 
 
+# Exit code for "the environment is unusable" — distinct from pytest's 1 (test
+# failures) and the runner's 5 (nothing selected), so CI can tell "staging is down"
+# apart from "the product is broken".
+EXIT_ENV_DOWN = 6
+
+# UI sections that live on the PARTNER PORTAL origin; every other UI section runs on
+# the SA origin. Mirrors config/blazeup/config.yaml → modules.PARTNER.ui. Kept as a
+# list of section names (not TC ids) so adding a TC to an existing page needs no edit.
+_PARTNER_PORTAL_SECTIONS = (
+    "PARTNER_PORTAL_SHELL",
+    "MY_PIPELINE",
+    "COMMISSIONS",
+    "DASHBOARD",
+    "PARTNER_TEAM",
+)
+
+
+def _preflight_for(tc_ids: list[int]) -> tuple[bool, list[str]]:
+    """Probe only the surfaces the selected TCs actually use."""
+    from config.settings import get_settings
+    from utils.preflight import run_preflight
+
+    settings = get_settings()
+    selected = [TC_REGISTRY[i] for i in tc_ids if i in TC_REGISTRY]
+
+    # EVERY test needs the backend, so this is not keyed off tc.type: an API test calls
+    # the gateway directly, a UI test's page loads its data from it, and several UI TCs
+    # call it outright (sa_cleanup, login_api in the register-wizard TCs). Keying this off
+    # `type == "api"` skipped the probe on UI-only runs — the one thing that is down for
+    # every test alike would have gone unchecked.
+    needs_api = bool(selected)
+    ui_tcs = [tc for tc in selected if tc.type == "ui"]
+
+    origins: dict[str, str] = {}
+    for tc in ui_tcs:
+        # tc_string looks like PARTNER_UI_MY_PIPELINE_001 -> section = MY_PIPELINE
+        on_portal = any(f"_UI_{s}_" in tc.tc_string for s in _PARTNER_PORTAL_SECTIONS)
+        if on_portal and settings.partner_base_url:
+            origins["Partner portal"] = str(settings.partner_base_url)
+        elif not on_portal:
+            origins["SA dashboard"] = str(settings.admin_base_url)
+
+    return run_preflight(
+        api_base_url=str(settings.api_base_url) if needs_api else None,
+        ui_origins=origins,
+        browser=settings.browser,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Helper: repeat strategy
 # ---------------------------------------------------------------------------
@@ -356,6 +405,16 @@ def main() -> int:
     out.add_argument(
         "--debug-log", action="store_true", help="Write DEBUG-level logs to the run log file."
     )
+    out.add_argument(
+        "--preflight",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Check that the environment the selected tests need is reachable before "
+            "running (default: on). Aborts with exit 6 when it is not, instead of letting "
+            "every test time out. Use --no-preflight to run anyway."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -415,6 +474,21 @@ def main() -> int:
     if args.dry_run:
         print_dry_run(base_ids, repeat, args.repeat_mode)
         return 0
+
+    # ── Preflight ───────────────────────────────────────────────────────────
+    # Probe only what THIS selection needs: an API-only run must not be blocked
+    # because a UI portal is down, and vice versa.
+    if args.preflight:
+        abort, failures = _preflight_for(base_ids)
+        if failures:
+            from utils.preflight import log_preflight_failure
+
+            log_preflight_failure(failures)
+        # Abort ONLY when every probed surface is down. A partial outage still runs:
+        # the healthy surfaces produce real results, and the tests bound to the dead
+        # one fail fast by themselves (measured: 21 blocked TCs = 10.8s in total).
+        if abort:
+            return EXIT_ENV_DOWN
 
     # ── Execute ─────────────────────────────────────────────────────────────
     if repeat > 1:

@@ -138,6 +138,11 @@ jobs:
             echo "::warning::No test cases matched (mode='$MODE', execute='$EXECUTE') — nothing to run."
             ec=0
           fi
+          # Runner exit 6 = preflight failed: staging was unusable, so NOTHING ran.
+          # Kept distinct from 1 so an outage is never filed as a product regression.
+          if [ "$ec" -eq 6 ]; then
+            echo "::warning::Preflight failed — the environment was unreachable and no test was executed."
+          fi
           RUN_DIR=$(ls -dt results/run_* 2>/dev/null | head -1)
           echo "RUN_DIR=$RUN_DIR"   >> "$GITHUB_ENV"
           echo "PYTEST_EXIT=$ec"    >> "$GITHUB_ENV"
@@ -187,6 +192,8 @@ jobs:
           # notification cannot be misread as a regression.
           if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then
             ICON="✅"; STATUS="PASSED"
+          elif [ "${PYTEST_EXIT:-0}" -eq 6 ]; then
+            ICON="🚧"; STATUS="ENVIRONMENT DOWN (no test ran)"
           elif [ "$SUITE" = "be_gap" ]; then
             ICON="🟡"; STATUS="BE GAPS STILL OPEN (expected)"
           else
@@ -236,6 +243,12 @@ jobs:
         env:
           SUITE: ${{ inputs.suite }}
         run: |
+          # Checked FIRST: an outage must be reported even on a be_gap watch run, which
+          # otherwise always exits 0 — silently "passing" while nothing ran.
+          if [ "${PYTEST_EXIT:-0}" -eq 6 ]; then
+            echo "::error::Preflight failed — staging was unusable and NO test ran. This is an environment outage, not a regression. Re-run once the environment is back."
+            exit 6
+          fi
           # The BE-gap watch is EXPECTED to be red — those TCs fail by design until BE
           # ships the fix. Failing the job on them would train everyone to ignore red,
           # which is exactly what hides a real regression.

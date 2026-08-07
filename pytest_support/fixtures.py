@@ -200,7 +200,14 @@ async def tc_logger(
             failed = (rep_call is not None and rep_call.failed) or (
                 rep_setup is not None and rep_setup.failed
             )
-            skipped = rep_call is not None and rep_call.skipped
+            # A skip raised by a FIXTURE (the BLOCKED path: shared login down, missing
+            # credentials) lands on rep_setup and leaves rep_call as None — checking only
+            # rep_call made every BLOCKED test fall through to the else branch and log
+            # "PASSED". The summary table read the pytest report directly and correctly
+            # said BLOCK, so the log and the table disagreed on the same test case.
+            skipped = (rep_call is not None and rep_call.skipped) or (
+                rep_setup is not None and rep_setup.skipped
+            )
 
             # Optional verdict detail set by the test body via
             # utils.log_helper.finalize_checks (e.g. "2/15 pages failed: ...").

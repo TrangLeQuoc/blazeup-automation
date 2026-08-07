@@ -976,6 +976,45 @@ git push
 
 ---
 
+### "Environment is not usable — aborting before any test runs" (exit 6)
+
+**Problem:** the run stops immediately with a `Preflight` table showing a FAIL row.
+
+**Meaning:** the surface those tests need is unreachable *before* a single test starts —
+a dead API gateway, a DNS failure, or a TLS certificate the browser refuses. Nothing ran,
+so this is **not** a product regression.
+
+The gate probes only what the selected TCs actually use, so an API-only run is never
+blocked by a UI portal being down:
+
+| Selection contains | Probed |
+|---|---|
+| any `api` TC | API gateway (httpx) |
+| a partner-portal UI TC (`PARTNER_PORTAL_SHELL`, `MY_PIPELINE`, `COMMISSIONS`, `DASHBOARD`, `PARTNER_TEAM`) | `PARTNER_BASE_URL` **in Chromium** |
+| any other UI TC | `ADMIN_BASE_URL` **in Chromium** |
+
+UI origins are probed with Chromium, not httpx, on purpose: the two do not share a trust
+store. On 2026-08-07 Python verified `stgpartners.blazeup.ai`'s certificate while Chromium
+rejected it — an httpx probe would have reported the environment healthy and let 21 partner
+UI TCs go BLOCKED one by one.
+
+**Fix:** wait for the environment, then re-run. To run anyway (e.g. to reproduce the
+failure yourself): `--no-preflight`.
+
+> **Only one surface is down?** The gate is all-or-nothing: if the partner portal is
+> unreachable it stops the whole run, including the API and SA UI tests that would pass.
+> When that happens, re-run with `--no-preflight` — the tests bound to the dead surface
+> report BLOCKED (their fixture fails fast) and everything else runs normally:
+>
+> ```powershell
+> python -m runner.blazeup.run_test --no-preflight
+> ```
+
+> A single dead microservice does **not** abort the run — only a fault that would doom
+> every test does. Use `make health` for the per-service picture.
+
+---
+
 ### Flaky tests
 
 **Problem:** Tests fail intermittently (timeout, slow response).

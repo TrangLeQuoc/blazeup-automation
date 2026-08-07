@@ -240,6 +240,9 @@ python -m runner.blazeup.run_test --execute 2061001   # Run a specific TC
 python -m pytest tests/blazeup/ui/ -s -k test_partner_ui_partner_portal_shell_001
 python -m pytest tests/ --co                          # Collect tests (show discovery)
 
+# Skip the pre-run environment gate (it runs by default; exits 6 when staging is down)
+python -m runner.blazeup.run_test --execute 2060101 --no-preflight
+
 # Sync TC registry (after adding new test functions)
 python utils/sync_registry.py
 
