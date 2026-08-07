@@ -28,6 +28,14 @@ on:
         description: "Specific TC IDs, space-separated (e.g. 2061001 2061002). Leave blank to use mode."
         type: string
         default: ""
+      suite:
+        description: "gate = everything except known BE gaps (job result is meaningful) · be_gap = only the known-red ones (never fails the job) · all = both mixed"
+        type: choice
+        default: gate
+        options:
+          - gate
+          - be_gap
+          - all
       excel:
         description: "Export Excel report"
         type: boolean
@@ -103,16 +111,25 @@ jobs:
           EXECUTE: ${{ inputs.execute }}
           EXCEL: ${{ inputs.excel }}
           AITRIAGE: ${{ inputs.ai_triage }}
+          SUITE: ${{ inputs.suite }}
         run: |
           set +e
           EXCEL_FLAG=""
           [ "$EXCEL" = "false" ] && EXCEL_FLAG="--no-excel-report"
           AI_FLAG=""
           [ "$AITRIAGE" = "false" ] && AI_FLAG="--no-ai-triage"
+          # Keep the known-red BE gaps out of the pass/fail signal (docs/guides/
+          # test-organization.md §5): `gate` is the run whose red means REGRESSION,
+          # `be_gap` tracks the gaps separately and never fails the job.
+          SUITE_FLAG=""
+          case "$SUITE" in
+            gate)   SUITE_FLAG="--exclude-marker be_gap" ;;
+            be_gap) SUITE_FLAG="--marker be_gap" ;;
+          esac
           if [ -n "$EXECUTE" ]; then
-            python -m runner.blazeup.run_test --mode "$MODE" --execute $EXECUTE $EXCEL_FLAG $AI_FLAG
+            python -m runner.blazeup.run_test --mode "$MODE" --execute $EXECUTE $SUITE_FLAG $EXCEL_FLAG $AI_FLAG
           else
-            python -m runner.blazeup.run_test --mode "$MODE" $EXCEL_FLAG $AI_FLAG
+            python -m runner.blazeup.run_test --mode "$MODE" $SUITE_FLAG $EXCEL_FLAG $AI_FLAG
           fi
           ec=$?
           set -e
@@ -153,6 +170,7 @@ jobs:
           TELEGRAM_CHAT_ID_BLAZEUP_ADMIN: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_ADMIN }}
           MODE: ${{ inputs.mode }}
           EXECUTE: ${{ inputs.execute }}
+          SUITE: ${{ inputs.suite }}
           REPO_NAME: ${{ github.event.repository.name }}
           OWNER: ${{ github.repository_owner }}
           RUN_NUM: ${{ github.run_number }}
@@ -165,11 +183,20 @@ jobs:
             exit 0
           fi
           API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
-          if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then ICON="✅"; STATUS="PASSED"; else ICON="❌"; STATUS="FAILED"; fi
+          # A red BE-gap watch is the expected state, not an incident — label it so the
+          # notification cannot be misread as a regression.
+          if [ "${PYTEST_EXIT:-0}" -eq 0 ]; then
+            ICON="✅"; STATUS="PASSED"
+          elif [ "$SUITE" = "be_gap" ]; then
+            ICON="🟡"; STATUS="BE GAPS STILL OPEN (expected)"
+          else
+            ICON="❌"; STATUS="FAILED"
+          fi
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           DASH_URL="https://${OWNER}.github.io/${REPO_NAME}/blazeup/"
           SEL="mode=${MODE}"
           [ -n "$EXECUTE" ] && SEL="execute=${EXECUTE}"
+          SEL="${SEL} · suite=${SUITE}"
           MSG=$(printf '%s <b>Job run #%s</b>\n\n<b>BlazeUp CI</b>\nResult: <b>%s</b>\nSelection: <code>%s</code>\n\n🔗 <a href="%s">View run</a>   📊 <a href="%s">Dashboard</a>' \
             "$ICON" "$RUN_NUM" "$STATUS" "$SEL" "$RUN_URL" "$DASH_URL")
           curl -s -X POST "${API}/sendMessage" \
@@ -206,9 +233,22 @@ jobs:
 
       - name: Fail job if tests failed
         if: always()
+        env:
+          SUITE: ${{ inputs.suite }}
         run: |
+          # The BE-gap watch is EXPECTED to be red — those TCs fail by design until BE
+          # ships the fix. Failing the job on them would train everyone to ignore red,
+          # which is exactly what hides a real regression.
+          if [ "$SUITE" = "be_gap" ]; then
+            echo "::notice::BE-gap watch (runner exit ${PYTEST_EXIT:-0}) — failures here are known gaps and do not fail the job. Check the Allure report for which gaps closed."
+            exit 0
+          fi
           if [ "${PYTEST_EXIT:-0}" -ne 0 ]; then
-            echo "::error::Tests failed (runner exit code ${PYTEST_EXIT})."
+            if [ "$SUITE" = "gate" ]; then
+              echo "::error::Tests failed (runner exit ${PYTEST_EXIT}). Known BE gaps were excluded, so this is a REGRESSION."
+            else
+              echo "::error::Tests failed (runner exit ${PYTEST_EXIT}). suite=$SUITE includes the known-red be_gap TCs — check the report before calling it a regression."
+            fi
             exit "${PYTEST_EXIT}"
           fi
           echo "All selected tests passed (or none matched)."

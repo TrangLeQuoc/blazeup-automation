@@ -396,6 +396,7 @@ app), choosing:
 |-------|---------|-------|
 | `mode` | `smoke` / `regression` / `normal` | Ignored when `execute` is set |
 | `execute` | e.g. `2061001 2061002` or `2060201-2060220` | Specific TC IDs / ranges |
+| `suite` | `gate` (default) / `be_gap` / `all` | `gate` drops the known-red `be_gap` TCs so a red job means a **regression**; `be_gap` runs only those and never fails the job |
 | `excel` | checkbox | Export Excel report |
 | `ai_triage` | checkbox | Run AI failure triage |
 

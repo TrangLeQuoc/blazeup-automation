@@ -133,9 +133,25 @@ separate directories by type.
 | `@pytest.mark.be_gap` | Known BE gap, **intentionally red** until BE fixes it (per §6 rule 4) | A TC whose main check step fails because the BE lacks logic |
 
 > **Separate the pass/fail signal:** a TC marked `be_gap` still FAILs to report the gap
-> (rule 4), but the **merge gate runs `-m "not be_gap"`** so 100% green = no regression. A
-> separate job runs `-m be_gap` to track BE gaps (allowed to be red). This way "known
-> reds" do not mask "new reds".
+> (rule 4), but the **gate run excludes it** so 100% green = no regression. A separate run
+> tracks the BE gaps (allowed to be red). This way "known reds" do not mask "new reds".
+
+The runner hands pytest explicit **node ids**, so `-m "not be_gap"` is not passed through to
+pytest — the equivalent is `--exclude-marker`, applied to the selection before the node list
+is built (it works in every mode, including `--execute`, and prints which TCs it dropped):
+
+```bash
+python -m runner.blazeup.run_test --exclude-marker be_gap   # gate: red here = REGRESSION
+python -m runner.blazeup.run_test --marker be_gap           # watch: red here is expected
+```
+
+On CI (`.github/workflows/test.yml`) this is the **`suite`** input:
+
+| `suite` | Runs | Job result |
+|---|---|---|
+| `gate` (default) | everything except `be_gap` | fails on any red — a real regression |
+| `be_gap` | only the `be_gap` TCs | **never fails the job**; reported as 🟡 "BE GAPS STILL OPEN" |
+| `all` | both mixed | fails on any red (known reds included — the old behaviour) |
 
 ```bash
 python -m runner.<domain>.run_test --mode smoke        # smoke only

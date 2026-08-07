@@ -16,6 +16,11 @@ Examples:
   python -m runner.run_test --mode smoke --repeat 5 --repeat-mode batch
   python -m runner.run_test --execute 1001 1002 --repeat 20 --dry-run
   python -m runner.run_test --mode regression --priority P1 --type api
+
+  # Pass/fail gate — everything EXCEPT the known-red BE gaps:
+  python -m runner.run_test --exclude-marker be_gap
+  # BE-gap watch — only the known-red ones (allowed to fail):
+  python -m runner.run_test --marker be_gap
 """
 
 import argparse
@@ -97,6 +102,8 @@ def _display_mode(args: argparse.Namespace) -> str:
         extras.append(f"type={'+'.join(args.type)}")
     if args.marker:
         extras.append(f"marker={args.marker}")
+    if getattr(args, "exclude_marker", None):
+        extras.append(f"not {'+'.join(args.exclude_marker)}")
     if args.execute:
         extras.append(f"ids={len(args.execute)} specified")
     return f"{base} ({', '.join(extras)})" if extras else base
@@ -285,6 +292,19 @@ def main() -> int:
         help="Filter by test type (may be repeated: --type api --type ui).",
     )
     sel.add_argument("--marker", type=str, help="Filter by pytest marker.")
+    sel.add_argument(
+        "--exclude-marker",
+        type=str,
+        action="append",
+        dest="exclude_marker",
+        metavar="MARKER",
+        help=(
+            "Drop TCs carrying this marker (repeatable). Applied LAST, to whatever the "
+            "other filters selected — the runner selects by node id, so this is how you "
+            'express pytest\'s -m "not <marker>". Main use: --exclude-marker be_gap keeps '
+            "known-red BE gaps out of the pass/fail gate."
+        ),
+    )
 
     # ── Performance ────────────────────────────────────────────────────────
     perf = parser.add_argument_group("performance / stability")
@@ -355,6 +375,26 @@ def main() -> int:
             for tc_id in base_ids
             if TC_REGISTRY.get(tc_id) and TC_REGISTRY[tc_id].priority == args.priority
         ]
+
+    # Marker exclusion — applied LAST so it subtracts from whatever the other filters
+    # produced, in every mode (normal / smoke / regression / --execute). This is the
+    # runner's equivalent of pytest's -m "not <marker>": we hand pytest explicit node
+    # ids, so an excluded TC must be dropped here, before the node list is built.
+    if args.exclude_marker:
+        excluded = set(args.exclude_marker)
+        dropped = [
+            tc_id
+            for tc_id in base_ids
+            if TC_REGISTRY.get(tc_id) and excluded & set(TC_REGISTRY[tc_id].markers)
+        ]
+        if dropped:
+            # Never drop TCs silently — a run that quietly shrank looks like a clean
+            # pass over the whole suite when it was really a pass over a subset.
+            print(
+                f"Excluded {len(dropped)} TC(s) marked {', '.join(sorted(excluded))}: "
+                f"{', '.join(str(i) for i in dropped)}"
+            )
+        base_ids = [tc_id for tc_id in base_ids if tc_id not in set(dropped)]
 
     skip_ids = (
         set(parse_tc_range(args.skip)) if args.skip else set(parse_tc_range(DEFAULT_SKIP_IDS))
