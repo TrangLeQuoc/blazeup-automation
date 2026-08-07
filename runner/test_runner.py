@@ -206,20 +206,26 @@ _RERUN_PATTERNS = (
     "Timeout .* exceeded",
     "did not render",  # MFE cold-load readiness assertion
     "Failed to fetch dynamically imported module",
-    "502",
-    "503",
-    "504",
+    # Gateway 5xx. ANCHORED (\b) on purpose: the bare substrings "502"/"503"/"504"
+    # matched any digits anywhere in the failure repr, so a real assertion failure
+    # whose message merely contained a mongo id like ...0158503 — or a duration like
+    # 5502ms — was silently retried. Anchoring keeps "got 502:" matching while
+    # "…0158503" and "5502ms" no longer do.
+    r"\b50[234]\b",
     "Bad Gateway",
     "ECONNREFUSED",
     "ECONNRESET",
-    # Slow-staging API transients: httpx transport timeouts + the response-time SLA
-    # breach. A one-off spike passes on retry; a consistently-slow endpoint fails
-    # every retry and stays flagged (a real perf signal, not hidden).
+    # Transport-level transients only.
     "ReadTimeout",
     "ConnectTimeout",
     "PoolTimeout",
     "WriteTimeout",
-    "exceeded limit",  # base_client response-time assertion ("response time … exceeded limit …")
+    # NOTE: the response-time SLA breach ("response time … exceeded limit …") is
+    # deliberately NOT retried. Retrying it hides exactly the regression it exists to
+    # catch: an INTERMITTENTLY slow endpoint goes green on a retry and the signal is
+    # lost. (Only a permanently slow one would survive retries.) The SLA is already
+    # generous — 30s for a normal call, 45s for setup — so a breach is a real finding,
+    # not a spike. base_client also logs a "SLOW:" warning on every breach.
 )
 
 

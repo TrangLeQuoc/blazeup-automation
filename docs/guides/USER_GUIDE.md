@@ -991,6 +991,31 @@ Run stability check:
 python -m runner.run_test --execute 10 11 12 --repeat 5 --repeat-mode batch
 ```
 
+#### Auto-retry of transient failures (off by default)
+
+The runner can re-run a failed test, but **only** when the failure matches a whitelist of
+transient signatures (`_RERUN_PATTERNS` in `runner/test_runner.py`) — a genuine assertion
+failure is never retried.
+
+```powershell
+$env:BLAZEUP_UI_RERUNS = "2"    # 0 = disabled (the default)
+$env:BLAZEUP_RERUN_DELAY = "3"  # seconds between attempts
+```
+
+Retried: Playwright timeouts · `did not render` (MFE cold load) · `Failed to fetch
+dynamically imported module` · gateway `502/503/504` · `ECONNREFUSED` / `ECONNRESET` ·
+httpx `ReadTimeout` / `ConnectTimeout` / `PoolTimeout` / `WriteTimeout`.
+
+**Deliberately NOT retried — do not add it back:** the response-time SLA breach
+(`response time … exceeded limit …`). Retrying it hides the very regression it exists to
+catch — an *intermittently* slow endpoint would go green on a retry, and only a
+permanently slow one would survive. The SLA is already generous (30 s normal, 45 s setup),
+so a breach is a finding, not noise; `base_client` also logs a `SLOW:` warning on every one.
+
+The 5xx patterns are anchored (`\b50[234]\b`) so they match `got 502:` but not digits that
+merely happen to appear inside a mongo id (`…0158503`) or a duration (`5502ms`) — with the
+bare substrings, real assertion failures carrying such ids were being retried.
+
 ---
 
 ### Allure not opening
