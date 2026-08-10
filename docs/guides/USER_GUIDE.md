@@ -288,8 +288,9 @@ python -m pytest tests/ -x -s
 Open `runner/run_test.py` and edit these constants at the top — no CLI flags needed:
 
 ```python
-# Which TCs to run when no --execute / --mode is passed
-DEFAULT_EXECUTE_IDS: list[str] = ["1010101-1010103"]
+# Which TCs to run when no --execute / --mode is passed.
+# EMPTY = every registered TC (API + UI). This is the default and should stay that way.
+DEFAULT_EXECUTE_IDS: list[str] = []
 
 # IDs to always skip (blacklist)
 DEFAULT_SKIP_IDS: list[str] = []
@@ -297,6 +298,16 @@ DEFAULT_SKIP_IDS: list[str] = []
 # Export Excel report by default (True/False)
 REPORT_EXCEL: bool = True
 ```
+
+> **Do not narrow the default here.** It used to hold an API-only range, so a plain
+> run quietly skipped all 32 UI test cases and a green result meant "every API test
+> passed" — a scope limit invisible in the output. Scope a run on the command line
+> instead, where it is visible in the summary header:
+>
+> ```powershell
+> python -m runner.blazeup.run_test --execute 2060101-2061211   # API only
+> python -m runner.blazeup.run_test --type ui                   # UI only
+> ```
 
 ---
 

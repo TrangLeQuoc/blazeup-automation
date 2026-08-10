@@ -50,9 +50,14 @@ async def test_partner_ui_sa_partner_module_014(sa_cleanup, make_page, created_r
 
     async with async_step("[1/3] The Members tab shows the Portal Users list (empty)"):
         await detail.open_members()
-        text = await detail.detail_text()
-        assert "Portal Users" in text, "the Members tab must show the 'Portal Users' list"
-        assert "Add User" in text or "Add First User" in text, "an Add-User control must exist"
+        assert await detail.members_heading().is_visible(), (
+            "the Members tab must show the 'Portal Users' list"
+        )
+        # The OR here is legitimate — the control is labelled differently when the list
+        # is empty — but it is asserted on the BUTTONS, not on a scan of the page text.
+        assert await detail.add_user_button().is_visible(), (
+            "an Add-User control must exist (either 'Add User' or 'Add First User')"
+        )
         logger.info("CHECK Members tab → OK (Portal Users list + Add control)")
 
     async with async_step("[2/3] Add a portal user"):
@@ -72,8 +77,9 @@ async def test_partner_ui_sa_partner_module_014(sa_cleanup, make_page, created_r
         )
         row_text = " ".join((await row.inner_text()).split())
         assert "Active" in row_text, "the new portal user's status must be Active"
-        assert "Portal Users (1)" in await detail.detail_text(), (
-            "the Portal Users count must reflect the added user"
+        heading = " ".join((await detail.members_heading().inner_text()).split())
+        assert "(1)" in heading, (
+            f"the Portal Users count must reflect the added user; heading reads {heading!r}"
         )
         logger.info("CHECK new member row → OK (Active, count=1)")
 

@@ -45,14 +45,20 @@ async def test_partner_ui_sa_partner_module_013(sa_cleanup, make_page, created_r
         logger.info("CHECK tabs → OK ({})", ", ".join(PartnerDetailPage.TABS))
 
     async with async_step("[2/3] The Overview sections + partner info render"):
-        text = await detail.detail_text()
         for name in PartnerDetailPage.SECTIONS:
             assert await detail.section(name).is_visible(), (
                 f"partner-detail section '{name}' must be visible"
             )
-        assert company in text, "the partner company name must be shown on the detail"
-        assert "Channel" in text, "the partner Type (Channel) must be shown"
-        assert "PAR-" in text, "the partner ID (PAR-…) must be shown"
+        # Anchored to elements: "Channel" and the PAR- code render as their own text
+        # nodes (probed live 2026-08-10), so an exact/regex match proves the field is
+        # present rather than proving the word occurs somewhere in <main>.
+        assert await detail.info_value(company).is_visible(), (
+            "the partner company name must be shown on the detail"
+        )
+        assert await detail.info_value("Channel").is_visible(), (
+            "the partner Type (Channel) must be shown"
+        )
+        assert await detail.partner_code().is_visible(), "the partner ID (PAR-…) must be shown"
         logger.info(
             "CHECK sections + info → OK ({} + partner info)", ", ".join(PartnerDetailPage.SECTIONS)
         )

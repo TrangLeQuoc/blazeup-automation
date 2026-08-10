@@ -45,7 +45,8 @@ async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_r
         created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
         await detail.open_partner(company)
         await detail.approve_partner()
-        assert "Active" in await detail.detail_text(), "precondition: partner must be Active"
+        status = await detail.status()
+        assert status == "Active", f"precondition: partner must be Active, got {status!r}"
         logger.info("SETUP → partner {} is Active", company)
 
     async with async_step("[1/2] Deactivate (suspend) the active partner"):
@@ -62,8 +63,14 @@ async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_r
             "empty / must be a string / must be <= 2000 chars). No SA can suspend a "
             "partner via the UI. confirm with BE"
         )
-        assert "Active" not in banner or "Suspended" in banner or "Inactive" in banner, (
-            "the partner should no longer be Active after Deactivate (Suspended/Inactive). "
-            "confirm with BE"
+        # Read the status BADGE, not the page text. The previous check was
+        #   "Active" not in banner or "Suspended" in banner or "Inactive" in banner
+        # — three OR'd substring scans of all of <main>, so almost any page satisfied
+        # one of them. ("Inactive" never renders on this build at all: verified live
+        # 2026-08-10, so that third branch could not ever have been the reason it passed.)
+        status = await detail.status()
+        assert status in ("Suspended", "Inactive"), (
+            f"the partner should no longer be Active after Deactivate — status badge "
+            f"still reads {status!r}. confirm with BE"
         )
-        logger.info("RESULT: partner suspended via UI")
+        logger.info("RESULT: partner suspended via UI (status={})", status)

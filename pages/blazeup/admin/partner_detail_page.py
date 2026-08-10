@@ -5,6 +5,7 @@ on staging), opens its detail, and reads the tabs / sections / partner-actions m
 """
 
 import contextlib
+import re
 import time
 
 from loguru import logger
@@ -132,6 +133,29 @@ class PartnerDetailPage(BasePage):
     async def detail_text(self) -> str:
         return " ".join((await self._main().inner_text()).split())
 
+    def info_value(self, value: str) -> Locator:
+        """A partner-info value rendered as its own text node (company name, 'Channel')."""
+        return self._main().get_by_text(value, exact=True).first
+
+    def partner_code(self) -> Locator:
+        """The PAR-NNNNNN code shown in the header."""
+        return self._main().get_by_text(re.compile(r"^PAR-\d+$")).first
+
+    async def status(self) -> str:
+        """Return the partner's status badge text ("" when none is shown).
+
+        Anchored to the badge element with an EXACT text match, rather than asking
+        whether the word appears somewhere in <main>. A substring scan cannot tell a
+        status badge from a column header or a metric label, so it answers a different
+        question than the one the caller is asking — and it answers "yes" far too often.
+        """
+        main = self._main()
+        for value in L.STATUS_VALUES:
+            badge = main.get_by_text(value, exact=True).first
+            if await badge.count() and await badge.is_visible():
+                return value
+        return ""
+
     # ── Partner-actions workflow (Approve → Deactivate) ───────────────────────
     async def open_actions_menu(self, timeout: int = 15_000) -> None:
         """Open the 'Partner actions' kebab menu (Radix dropdown)."""
@@ -199,6 +223,17 @@ class PartnerDetailPage(BasePage):
         logger.warning("Deactivate produced neither a closed dialog nor an error banner")
 
     # ── Members tab (Portal Users) ────────────────────────────────────────────
+    def members_heading(self) -> Locator:
+        """The 'Portal Users (N)' heading — the element that carries the count."""
+        return self._main().get_by_text(L.MEMBERS_HEADING, exact=False).first
+
+    def add_user_button(self) -> Locator:
+        """The Add-User control. Labelled 'Add First User' while the list is empty."""
+        add = self.page.get_by_role("button", name=L.MEMBERS_ADD_USER, exact=True).first
+        return add.or_(
+            self.page.get_by_role("button", name=L.MEMBERS_ADD_FIRST_USER, exact=True).first
+        )
+
     async def open_members(self, timeout: int = 20_000) -> None:
         """Switch to the Members tab and wait for the Portal Users list to render."""
         await self.tab("Members").click()

@@ -23,8 +23,15 @@ from runner.blazeup.registry import TC_REGISTRY  # noqa: E402
 # ---------------------------------------------------------------------------
 
 # TC IDs to run when no --execute / --mode flag is passed.
-# (empty until BlazeUp Admin test cases are added to the registry)
-DEFAULT_EXECUTE_IDS: list[str] = ["2060101-2061211"]
+# EMPTY = run every registered TC (API + UI).
+#
+# This used to hard-code ["2060101-2061211"], which is an API-only range — so the
+# default run silently skipped all 32 UI test cases and "everything passed" meant
+# "every API test passed". A scope limit that is invisible in the output is worse
+# than no limit at all; scope a run explicitly instead:
+#   --execute 2060101-2061211   (API only)
+#   --type ui                   (UI only)
+DEFAULT_EXECUTE_IDS: list[str] = []
 
 # TC IDs to always skip
 DEFAULT_SKIP_IDS: list[str] = []

@@ -22,6 +22,14 @@ class PartnerDetailLocators:
     TABS = ("Overview", "Deals", "Commission", "Members")
     SECTIONS = ("Tier & Performance", "Territory Assignments")
 
+    # Status badge in the header. Probed live 2026-08-10 on an active and a suspended
+    # partner: the badge is a standalone text node, so an EXACT match hits exactly one
+    # element, and the losing values appear nowhere else on the page (an Active partner
+    # has 0 occurrences of "Suspended" and vice versa). That is what makes
+    # `PartnerDetailPage.status()` a real check instead of a substring scan of <main>.
+    # "Inactive" was never observed on this build — kept only in case the FE adds it.
+    STATUS_VALUES = ("Active", "Suspended", "Pending", "Inactive")
+
     # ── Partner actions (state-gated menu items) ──────────────────────────────
     # Pending → "Approve Partner"; Active → "Deactivate" (= suspend) + tier upgrades;
     # Deactivated → "Reactivate"/"Activate". Live label is "Deactivate", NOT "Suspend".
