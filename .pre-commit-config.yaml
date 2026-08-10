@@ -53,3 +53,18 @@ repos:
         language: system
         pass_filenames: false
         files: ^(utils/validate_test_plan\.py|docs/.*\.xlsx|runner/.*/registry\.py)$
+
+      # ── Framework selftests (runner/registry logic) ────────────────────────
+      # Blocks the commit when a change breaks the code that decides WHICH test
+      # cases exist and whether a red test is a defect or an environment block.
+      # Those breakages keep the product suite GREEN while making its verdicts
+      # wrong, so CI-after-push is too late — especially when committing straight
+      # to main. ~0.7s, no staging, no browser, no secrets.
+      #   -o addopts=  : pytest.ini's --alluredir needs allure-pytest (unused here)
+      #   --confcutdir : keep the project conftest (Playwright fixtures) out
+      - id: selftest
+        name: framework selftests
+        entry: python -m pytest selftests/ -o addopts= --confcutdir=selftests -q
+        language: system
+        pass_filenames: false
+        files: ^(runner/|utils/|selftests/|config/.*config\.yaml)

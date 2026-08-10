@@ -37,6 +37,16 @@ ui:
 list:
 	$(RUN) --list
 
+# Framework selftests — the runner/registry logic itself. No staging, no browser,
+# no secrets; runs in about a second. Same command CI uses (selftest.yml).
+#   -o addopts=   : pytest.ini's --alluredir needs allure-pytest, not used here
+#                   (write it WITHOUT quotes — PowerShell passes `""` through literally)
+#   --confcutdir  : keep the project conftest (Playwright fixtures) out
+# No make on Windows? Run the same line directly:
+#   python -m pytest selftests/ -o addopts= --confcutdir=selftests -q
+selftest:
+	python -m pytest selftests/ -o addopts= --confcutdir=selftests -q
+
 # Regenerate runner/{domain}/registry.py from tests/{domain}/ (all domains).
 sync:
 	python utils/sync_registry.py

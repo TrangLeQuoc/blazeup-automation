@@ -1,0 +1,87 @@
+name: Framework selftests
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tests for the FRAMEWORK's own logic — the code that decides which test cases
+# exist and whether a red test is reported as a defect or as an environment
+# block. Those decisions are plain string matching, and until now nothing
+# checked them: a parsing change could drop a test case from the registry, or a
+# classification change could file a real bug as "staging was flaky", and both
+# would pass review unnoticed.
+#
+# Unlike test.yml this needs NO secrets, NO staging and NO browser — it is pure
+# logic — so it can gate every push instead of being run by hand.
+#
+# Local equivalent:  make selftest
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    paths:
+      - "runner/**"
+      - "utils/**"
+      - "selftests/**"
+      - "config/**/config.yaml"
+      - ".github/workflows/selftest.yml"
+  pull_request:
+    paths:
+      - "runner/**"
+      - "utils/**"
+      - "selftests/**"
+      - "config/**/config.yaml"
+      - ".github/workflows/selftest.yml"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Only what the modules under test import at module scope. Deliberately NOT
+      # requirements.txt: Playwright (and its browser download) is the slow part and
+      # nothing here drives a browser. Versions match requirements.txt.
+      - name: Install (no Playwright, no browsers)
+        run: pip install pytest==9.0.3 loguru==0.7.3 pyyaml==6.0.3 httpx==0.28.1 openpyxl==3.1.5
+
+      # -o addopts= : pytest.ini adds --alluredir, which needs allure-pytest. Written
+#               without quotes so the same line works in PowerShell too.
+      # --confcutdir: keeps the project conftest.py (Playwright/httpx fixtures) out.
+      - name: Run framework selftests
+        run: pytest selftests/ -o addopts= --confcutdir=selftests -q
+
+      # Fires ONLY on failure. Deliberately worded differently from test.yml: a red
+      # here does not mean a product test failed — it means the code that JUDGES the
+      # tests is wrong, so every report it produces is suspect until this is fixed.
+      # Silent when no bot token / chat id is configured, and never fails the job.
+      - name: Notify via Telegram on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Legacy per-domain secret, same fallback order as test.yml.
+          TELEGRAM_CHAT_ID_BLAZEUP_ADMIN: ${{ secrets.TELEGRAM_CHAT_ID_BLAZEUP_ADMIN }}
+          ACTOR: ${{ github.actor }}
+          REF: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          CHAT_ID="${TELEGRAM_CHAT_ID_BLAZEUP_ADMIN:-$TELEGRAM_CHAT_ID}"
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
+            echo "::warning::No Telegram bot token / chat id — skipping notice."
+            exit 0
+          fi
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MSG=$(printf '🧪 <b>Framework selftests FAILED</b>\n\nThe test framework itself is broken — the runner/registry logic that decides which TCs exist and whether a failure is a DEFECT or an environment BLOCK.\n\n<b>Until this is fixed, treat every test report as unreliable.</b>\n\nBranch: <code>%s</code>\nBy: <code>%s</code>\nCommit: <code>%s</code>\n\n🔗 <a href="%s">View run</a>' \
+            "$REF" "$ACTOR" "${SHA:0:8}" "$RUN_URL")
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${CHAT_ID}" \
+            -d parse_mode=HTML \
+            -d disable_web_page_preview=true \
+            --data-urlencode "text=${MSG}" >/dev/null \
+            || echo "::warning::Telegram sendMessage failed (non-blocking)."
