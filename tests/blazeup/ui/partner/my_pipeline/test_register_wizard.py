@@ -447,7 +447,6 @@ _INVALID_EMAILS = ("notanemail", "abc@", "abc@x", "a b@x.com")
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap
 async def test_partner_ui_my_pipeline_007(make_partner_page):
     """PARTNER_UI_MY_PIPELINE_007: a malformed contact email must be rejected with a format error.
 

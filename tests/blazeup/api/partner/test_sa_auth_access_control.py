@@ -241,7 +241,6 @@ async def test_partner_api_auth_access_control_009(sa_partners_client, settings,
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BE returns 400 for cross-partner access; should be 404 (preferred) or 403
 async def test_partner_api_auth_access_control_003(
     sa_partners_client, sa_deals_client, settings, created_resources
 ):

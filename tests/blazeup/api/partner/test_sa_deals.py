@@ -364,7 +364,6 @@ async def test_partner_api_deal_registration_pipeline_022(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # step [3/3]: rate/rateTableVersion not exposed yet — confirm with BE
 async def test_partner_api_deal_registration_pipeline_008(
     sa_partners_client, sa_deals_client, created_resources
 ):
@@ -631,7 +630,6 @@ async def test_partner_api_deal_registration_pipeline_013(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost planId currently accepted (201) — confirm with BE
 async def test_partner_api_deal_registration_pipeline_021(
     sa_partners_client, sa_deals_client, created_resources
 ):
@@ -702,7 +700,6 @@ async def test_partner_api_deal_registration_pipeline_021(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_028(
     sa_partners_client, sa_deals_client, created_resources
 ):
@@ -764,7 +761,6 @@ async def test_partner_api_deal_registration_pipeline_028(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_029(
     sa_partners_client, sa_deals_client, created_resources
 ):
@@ -912,7 +908,6 @@ async def test_partner_api_deal_registration_pipeline_016(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_030(sa_deals_client):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_030: extend-protection invalid input - rejected with the correct code.
 
@@ -1119,7 +1114,6 @@ async def test_partner_api_deal_registration_pipeline_020(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_031(sa_deals_client):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_031: get deal by invalid id - rejected (correct 4xx, never 5xx).
 
@@ -1204,7 +1198,6 @@ async def test_partner_api_deal_registration_pipeline_019(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_registration_pipeline_032(
     sa_partners_client, sa_deals_client, created_resources
 ):
@@ -1301,7 +1294,6 @@ async def test_partner_api_deal_approval_queue_001(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_deal_approval_queue_011(
     sa_partners_client, sa_deals_client, created_resources
 ):

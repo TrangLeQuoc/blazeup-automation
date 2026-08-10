@@ -225,7 +225,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. `abc@x` (không TLD) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
 4. `a b@x.com` (có space) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
 **Expected (tổng):** Email malformed bị từ chối với format error rõ ràng; không tạo deal.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — verified 2026-07-27 (TC 12060207). Register wizard **không validate email format**: mọi email malformed (kể cả `notanemail` / `a b@x.com` có space) đều được chấp nhận — field giữ giá trị, "Next" vẫn enabled, field không bao giờ bị flag (`aria-invalid` không set). Cùng loại gap với _003 (domain). **Confirm với FE** — thêm validate email-format ở field contact email. Positive sibling: _001. Idempotency: N/A (không submit).
+**Ghi chú:** PASSED — verify lại 2026-08-10 (TC 12060207); trước đây FAILED có chủ đích (`be_gap`, **BUG-UI-004**, nay đã Closed). FE đã bổ sung validation, nên marker `be_gap` được gỡ và TC này quay lại trong merge gate. Gap gốc, giữ lại để tra cứu: Register wizard **không validate email format**: mọi email malformed (kể cả `notanemail` / `a b@x.com` có space) đều được chấp nhận — field giữ giá trị, "Next" vẫn enabled, field không bao giờ bị flag (`aria-invalid` không set). Cùng loại gap với _003 (domain). **Confirm với FE** — thêm validate email-format ở field contact email. Positive sibling: _001. Idempotency: N/A (không submit).
 #### PARTNER_UI_MY_PIPELINE_008
 **Mô tả test:** Chọn referral deal type: trên wizard này deal type là Referral (mặc định) và persist tới Summary. Chỉ UI (không submit).
 **Chuẩn bị (điều kiện tiên quyết):** Mở wizard; hoàn tất step 1 (company/domain/country/contact).
@@ -531,7 +531,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 1. Partner B gọi GET /partner/portal/deals/{A_deal_id}.
    → Expected: bị từ chối với **404** (ưu tiên — giấu sự tồn tại) hoặc **403** — không bao giờ 400 — và deal của A KHÔNG có trong body.
 **Expected (tổng):** Một partner không truy cập được deal của partner khác — bị từ chối, không lộ dữ liệu.
-**Ghi chú:** PASSED — verified 2026-07-23. Case cross-entity của rule-5. BE giờ trả **404** cho cross-partner access (giấu sự tồn tại của resource); lỗ hổng cũ (gán nhầm 400) đã được fix. Tenant isolation vẫn đúng (không lộ dữ liệu). Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. Case cross-entity của rule-5. BE giờ trả **404** cho cross-partner access (giấu sự tồn tại của resource); lỗ hổng cũ (gán nhầm 400) đã được fix. Tenant isolation vẫn đúng (không lộ dữ liệu). Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
 **Ghi chú (BLOCKED):** Enforce MFA phía partner — một protected action phải bắt buộc MFA cho phạm vi quy định (PRD §9.1: role `PARTNER_ORG_ADMIN` và/hoặc tier Advanced/Premier). BLOCKED do quyết định sản phẩm: OQ-14 chưa chốt — trục MFA mâu thuẫn giữa PRD §9.1 (theo tier, Advanced+) và sa-portal-architecture §14.8 (theo role, `PARTNER_ORG_ADMIN`); chưa biết cái nào authoritative (chờ Renil) thì expected (ai/action nào phải qua MFA) chưa xác định → không viết assertion được. Ngoài ra MFA enforcement còn gated theo Auth Hardening Phase 0 (PRs #633–641 phải merge trước khi bật live auth). Endpoint MFA phía BE ĐÃ có (partner: /v1/partner/auth/mfa/setup, /totp/enroll, /email-otp/send, /verify, /disable; sa-auth: /two-factors/otp, /sign-in/verify-otp) — nên KHÔNG phải bị chặn do thiếu endpoint. Khi unblock, build còn cần OTP/TOTP xác định (secret cố định hoặc test-only bypass) từ BE để hoàn tất bước challenge trong automation.
@@ -666,7 +666,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: có rate + rateTableVersion trong response. **Hiện FAIL** — cả hai đều không được expose.
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Deal được duyệt + reviewer đóng dấu; việc đóng dấu rate / rate-table-version chờ BE.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap: rate/rateTableVersion KHÔNG có trong response của deal API và không có commission nào được tạo khi approve. Xác nhận với BE: đóng dấu nội bộ (không serialize) / stage khác (deal win) / chưa implement.
+**Ghi chú:** PASSED — verify lại 2026-08-10 (TC 2060208); trước đây FAILED có chủ đích (`be_gap`, **BUG-API-002**, nay đã Closed). Marker `be_gap` đã gỡ, TC quay lại trong merge gate. Gap gốc, giữ lại để tra cứu: rate/rateTableVersion KHÔNG có trong response của deal API và không có commission nào được tạo khi approve. Xác nhận với BE: đóng dấu nội bộ (không serialize) / stage khác (deal win) / chưa implement.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_009
 **Mô tả test:** Giải quyết conflict của một deal bị flag (POST /v1/sa/deals/{id}/resolve-conflict): decision + reasoning được đóng dấu và bất biến.
@@ -795,7 +795,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 12. Ghost planId ('no-such-plan-qa', đã verify không tồn tại ở trên) → **404**, message đề cập "plan".
 **Teardown:** xóa partner cha (gỡ mọi deal vô tình tạo bởi gap planId).
 **Expected (tổng):** Mọi payload register không hợp lệ bị từ chối với một message rõ ràng và không tạo deal nào; planId nên được validate với catalog.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap (case 12): một planId không tồn tại giờ bị từ chối với **404** (trước đây được chấp nhận 201). Cả 12 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap (case 12): một planId không tồn tại giờ bị từ chối với **404** (trước đây được chấp nhận 201). Cả 12 case đều pass. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
 **Mô tả test:** Đối trọng idempotency/duplicate của _001: CÙNG partner đăng ký CÙNG prospect hai lần bị từ chối (không có deal thứ hai).
@@ -820,7 +820,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 3. Deal đã approved (illegal transition) → **400** 'cannot transition' (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận).
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; illegal transition → 400/409. Không bao giờ 5xx.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_029
 **Mô tả test:** Đối trọng negative của _009 (resolve-conflict): sáu input không hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng. Tất cả case đều chạy (thu thập failure).
@@ -834,7 +834,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 6. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message "not found".
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Lỗi validation/format/state → 400; id không tồn tại → 404. Không bao giờ 5xx.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 6): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 6 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 6): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 6 case đều pass. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_030
 **Mô tả test:** Đối trọng negative của _016 (extend-protection): tám input không hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng. BE validate body TRƯỚC khi lookup deal, nên các case field tự chứng minh trên một ghost id (không cần deal thật). Tất cả case đều chạy (thu thập failure).
@@ -849,7 +849,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 7. Malformed id ('not-an-id') → **400** "invalid id".
 8. Ghost deal id (body hợp lệ, đúng định dạng nhưng không tồn tại) → **404** Not Found, message "not found".
 **Expected (tổng):** Validation body / boundary / format / malformed → 400; id không tồn tại → 404. Không bao giờ 5xx. Ràng buộc spec: addedDays ∈ 1..180; reasoning bắt buộc + không rỗng.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 8): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 8 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 8): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 8 case đều pass. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_031
 **Mô tả test:** Đối trọng negative của _020 (get-by-id): hai ngữ nghĩa từ chối riêng biệt — một malformed id là bad request (400), một ghost id là missing resource (404). Tự chứng minh; GET → không lo idempotency. Tất cả case đều chạy (thu thập failure).
@@ -857,7 +857,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → **404** Not Found, message đề cập "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message đề cập "invalid id".
 **Expected (tổng):** Một malformed id → 400; một id đúng định dạng nhưng không tồn tại → 404. Không bao giờ 5xx, không trả record.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400, status mâu thuẫn message). Cả 2 case đều pass. Đây là TC root-cause của lỗ hổng ghost→404 mang tính hệ thống. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400, status mâu thuẫn message). Cả 2 case đều pass. Đây là TC root-cause của lỗ hổng ghost→404 mang tính hệ thống. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_032
 **Mô tả test:** Đối trọng negative của _019 (lose): ba target lose bất hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng (không bao giờ 5xx). Tất cả case đều chạy (thu thập failure).
@@ -868,7 +868,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 3. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Illegal transition → 400/409; malformed id → 400; id không tồn tại → 404. Không bao giờ 5xx.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 2): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 2): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
 **Mô tả test:** Đối trọng idempotency của _016 (extend-protection): một gia hạn lặp lại là CỘNG DỒN, không phải no-op hay cap.
@@ -923,7 +923,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 3. Deal đã rejected (illegal transition) → **400** 'cannot transition' (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận).
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; illegal transition → 400/409. Không bao giờ 5xx.
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã cũ, cần gỡ khỏi code; entry trong Bug_Tracker có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap ghost-id (case 1): một id đúng định dạng nhưng không tồn tại giờ trả **404** "not found" (trước là 400). Cả 3 case đều pass. Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 ### API · DEAL_COLLABORATION
 
@@ -1471,7 +1471,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: đúng 1 user cho email E.
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Re-invite không được tạo một user duplicate-email (email là login identity).
-**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap duplicate-invite: re-invite cùng email không còn tạo user thứ hai (list hiện đúng 1). Marker `be_gap` đã cũ, cần gỡ khỏi code; Bug_Tracker BUG-API-004 có thể đóng.
+**Ghi chú:** PASSED — verified 2026-07-23. BE đã fix gap duplicate-invite: re-invite cùng email không còn tạo user thứ hai (list hiện đúng 1). Marker `be_gap` đã gỡ 2026-08-10 — TC quay lại trong merge gate, entry Bug_Tracker đã Closed.
 
 #### PARTNER_API_PARTNER_USERS_014
 **Mô tả test:** Đối trọng negative của _003 (reset password): id không hợp lệ bị từ chối với code đúng (không bao giờ 5xx). Tự chứng minh; tất cả case đều chạy (thu thập failure).

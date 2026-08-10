@@ -259,7 +259,6 @@ async def test_partner_api_partner_users_012(sa_partners_client, created_resourc
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # re-inviting the same email creates a 2nd user — confirm with BE
 async def test_partner_api_partner_users_013(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_USERS_013: invite the same email twice - must not create a duplicate user.
 

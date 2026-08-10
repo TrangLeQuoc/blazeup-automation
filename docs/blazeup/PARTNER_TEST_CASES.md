@@ -225,7 +225,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. `abc@x` (no TLD) → Expected: rejected. **Currently FAILS** — accepted.
 4. `a b@x.com` (space) → Expected: rejected. **Currently FAILS** — accepted.
 **Expected (overall):** A malformed email is rejected with a clear format error; no deal is created.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-07-27 (TC 12060207). The register wizard performs **no email-format validation**: every malformed email (even `notanemail` / `a b@x.com` with a space) is accepted — the field keeps the value, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset). Same class of gap as _003 (domain). **Confirm with FE** — add email-format validation on the contact email field. Positive sibling: _001. Idempotency: N/A (no submit).
+**Note:** PASSED — re-verified 2026-08-10 (TC 12060207); previously FAILED by design (`be_gap`, **BUG-UI-004**, now Closed). The FE added the missing validation, so the `be_gap` marker was removed and this TC is back inside the merge gate. Original gap, kept for history: The register wizard performs **no email-format validation**: every malformed email (even `notanemail` / `a b@x.com` with a space) is accepted — the field keeps the value, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset). Same class of gap as _003 (domain). **Confirm with FE** — add email-format validation on the contact email field. Positive sibling: _001. Idempotency: N/A (no submit).
 #### PARTNER_UI_MY_PIPELINE_008
 **Test Description:** Choosing the referral deal type: on this wizard the deal type is Referral (default), and it persists to the Summary. UI-only (no submit).
 **Setup (precondition):** Open the wizard; complete step 1 (company/domain/country/contact).
@@ -531,7 +531,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 1. Partner B calls GET /partner/portal/deals/{A_deal_id}.
    → Expected: refused with **404** (preferred — hides existence) or **403** — never 400 — and A's deal is NOT in the body.
 **Expected (overall):** A partner cannot access another partner's deal — refused, no data leak.
-**Note:** PASSED — verified 2026-07-23. Rule-5 cross-entity case. BE now returns **404** for cross-partner access (hides the resource's existence); the earlier gap (400 mislabel) is fixed. Tenant isolation holds (no data leak). Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. Rule-5 cross-entity case. BE now returns **404** for cross-partner access (hides the resource's existence); the earlier gap (400 mislabel) is fixed. Tenant isolation holds (no data leak). `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_004
 **Note (BLOCKED):** Enforce partner MFA policy — a protected action must require MFA for the mandated scope (PRD §9.1: `PARTNER_ORG_ADMIN` role and/or Advanced/Premier tier). BLOCKED on a product decision: OQ-14 is unresolved — the MFA axis conflicts between PRD §9.1 (tier-based, Advanced+) and sa-portal-architecture §14.8 (role-based, `PARTNER_ORG_ADMIN`); until Renil decides which is authoritative, the expected result (who/which action must be MFA-gated) is undefined, so no assertion can be written. Also MFA enforcement is gated on Auth Hardening Phase 0 (PRs #633–641 must land before live auth). BE-side MFA endpoints already exist (partner: /v1/partner/auth/mfa/setup, /totp/enroll, /email-otp/send, /verify, /disable; sa-auth: /two-factors/otp, /sign-in/verify-otp) — so it is NOT endpoint-blocked. When unblocked, building also needs a deterministic OTP/TOTP (a fixed secret or a test-only bypass) from BE to complete the challenge in automation.
@@ -666,7 +666,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: rate + rateTableVersion present in the response. **Currently FAILS** — neither is exposed.
 **Teardown:** delete the parent partner.
 **Expected (overall):** Deal approved + reviewer stamped; rate / rate-table-version stamping pending BE.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap: rate/rateTableVersion are NOT in the deal API response and no commission is created at approve. Confirm with BE: stamped internally (not serialized) / different stage (deal win) / unimplemented.
+**Note:** PASSED — re-verified 2026-08-10 (TC 2060208); previously FAILED by design (`be_gap`, **BUG-API-002**, now Closed). The `be_gap` marker was removed and this TC is back inside the merge gate. Original gap, kept for history: rate/rateTableVersion are NOT in the deal API response and no commission is created at approve. Confirm with BE: stamped internally (not serialized) / different stage (deal win) / unimplemented.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_009
 **Test Description:** Resolve a flagged deal conflict (POST /v1/sa/deals/{id}/resolve-conflict): decision + reasoning are stamped and immutable.
@@ -795,7 +795,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 12. Ghost planId ('no-such-plan-qa', verified absent above) → **404**, message mentions "plan".
 **Teardown:** delete the parent partner (removes any deal accidentally created by the planId gap).
 **Expected (overall):** Every invalid register payload is rejected with a clear message and no deal is created; planId should be validated against the catalog.
-**Note:** PASSED — verified 2026-07-23. BE fixed the gap (case 12): a non-existent planId is now rejected with **404** (was accepted 201). All 12 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the gap (case 12): a non-existent planId is now rejected with **404** (was accepted 201). All 12 cases pass. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_022
 **Test Description:** Idempotency/duplicate counterpart of _001: the SAME partner registering the SAME prospect twice is rejected (no second deal).
@@ -820,7 +820,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 3. Already-approved deal (illegal transition) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted).
 **Teardown:** delete the parent partner.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
-**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_029
 **Test Description:** Negative counterpart of _009 (resolve-conflict): six invalid inputs, each rejected with its own code + a clear message. All cases run (failures collected).
@@ -834,7 +834,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 6. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message "not found".
 **Teardown:** delete the parent partner.
 **Expected (overall):** Validation/format/state errors → 400; non-existent id → 404. Never 5xx.
-**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 6): a well-formed non-existent id now returns **404** "not found" (was 400). All 6 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 6): a well-formed non-existent id now returns **404** "not found" (was 400). All 6 cases pass. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_030
 **Test Description:** Negative counterpart of _016 (extend-protection): eight invalid inputs, each rejected with its own code + a clear message. BE validates the body BEFORE the deal lookup, so field cases are self-proving on a ghost id (no real deal needed). All cases run (failures collected).
@@ -849,7 +849,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 7. Malformed id ('not-an-id') → **400** "invalid id".
 8. Ghost deal id (valid body, well-formed but non-existent) → **404** Not Found, message "not found".
 **Expected (overall):** Body-validation / boundary / format / malformed → 400; non-existent id → 404. Never 5xx. Spec constraint: addedDays ∈ 1..180; reasoning required + non-empty.
-**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 8): a well-formed non-existent id now returns **404** "not found" (was 400). All 8 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 8): a well-formed non-existent id now returns **404** "not found" (was 400). All 8 cases pass. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_031
 **Test Description:** Negative counterpart of _020 (get-by-id): two distinct rejection semantics — a malformed id is a bad request (400), a ghost id is a missing resource (404). Self-proving; GET → no idempotency concern. All cases run (failures collected).
@@ -857,7 +857,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 1. Ghost id (well-formed but non-existent, 000000000000000000000000) → **404** Not Found, message mentions "not found".
 2. Malformed id ('not-an-id') → **400** Bad Request, message mentions "invalid id".
 **Expected (overall):** A malformed id → 400; a well-formed but non-existent id → 404. Never 5xx, no record returned.
-**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400, status contradicting the message). Both cases pass. This was the root-cause TC for the systemic ghost→404 gap. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400, status contradicting the message). Both cases pass. This was the root-cause TC for the systemic ghost→404 gap. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_032
 **Test Description:** Negative counterpart of _019 (lose): three illegal lose targets, each rejected with its own code + a clear message (never 5xx). All cases run (failures collected).
@@ -868,7 +868,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 3. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Teardown:** delete the parent partner.
 **Expected (overall):** Illegal transition → 400/409; malformed id → 400; non-existent id → 404. Never 5xx.
-**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 2): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 2): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_033
 **Test Description:** Idempotency counterpart of _016 (extend-protection): a repeat extension is ADDITIVE, not a no-op or a cap.
@@ -923,7 +923,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 3. Already-rejected deal (illegal transition) → **400** 'cannot transition' (409 Conflict would be more precise, but 400 is accepted).
 **Teardown:** delete the parent partner.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
-**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. Stale `be_gap` marker to be removed from code; Bug_Tracker entry can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the ghost-id gap (case 1): a well-formed non-existent id now returns **404** "not found" (was 400). All 3 cases pass. `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 ### API · DEAL_COLLABORATION
 
@@ -1471,7 +1471,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: exactly 1 user for email E.
 **Teardown:** delete the parent partner.
 **Expected (overall):** Re-invite must not create a duplicate-email user (email is the login identity).
-**Note:** PASSED — verified 2026-07-23. BE fixed the duplicate-invite gap: re-inviting the same email no longer creates a second user (list shows exactly 1). Stale `be_gap` marker to be removed from code; Bug_Tracker BUG-API-004 can be closed.
+**Note:** PASSED — verified 2026-07-23. BE fixed the duplicate-invite gap: re-inviting the same email no longer creates a second user (list shows exactly 1). `be_gap` marker removed 2026-08-10 — this TC is back inside the merge gate, and its Bug_Tracker entry is Closed.
 
 #### PARTNER_API_PARTNER_USERS_014
 **Test Description:** Negative counterpart of _003 (reset password): invalid id is rejected with the correct code (never 5xx). Self-proving; all cases run (failures collected).
