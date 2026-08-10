@@ -4,10 +4,12 @@ Onboards a throwaway partner (self-seeding fixture — the Directory list is unr
 on staging), opens its detail, and reads the tabs / sections / partner-actions menu.
 """
 
+import contextlib
 import time
 
 from loguru import logger
 from playwright.async_api import Locator
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from locators.blazeup.admin.partner_detail_locators import PartnerDetailLocators as L
 from locators.blazeup.admin.shell_locators import ShellLocators
@@ -52,13 +54,39 @@ class PartnerDetailPage(BasePage):
         cta = main.get_by_role("button", name=L.ONBOARD_BUTTON, exact=False).first
         await cta.wait_for(state="visible", timeout=ready_timeout)
         await cta.click()
-        await self.page.wait_for_timeout(1500)
+        # Wait for the FIELD, not for a guessed number of milliseconds: the form mounts
+        # either in a dialog or inline, and on a cold staging load that takes far longer
+        # than any fixed sleep we would be willing to pay on a fast one.
+        await self.page.locator(L.ONBOARD_COMPANY).first.wait_for(
+            state="visible", timeout=ready_timeout
+        )
         dlg = self.page.locator("[role=dialog]").first
         scope = dlg if await dlg.count() else main
         await scope.locator(L.ONBOARD_COMPANY).fill(company)
         await scope.locator(L.ONBOARD_EMAIL).fill(email)
         await scope.get_by_role("button", name=L.ONBOARD_BUTTON, exact=True).first.click()
-        await self.page.wait_for_timeout(3000)
+        await self._wait_onboard_settled()
+
+    async def _wait_onboard_settled(self, timeout: int = 30_000) -> None:
+        """Wait until the onboard request finished, however it finished.
+
+        Two equally valid end states: the success toast shows, or the form closes.
+        Polling for either is what makes this adapt — a fixed sleep is simultaneously
+        too short on a slow staging write and pure waste on a fast one.
+        """
+        toast = self.page.get_by_text(L.ONBOARD_SUCCESS, exact=False).first
+        field = self.page.locator(L.ONBOARD_COMPANY).first
+        deadline = time.perf_counter() + timeout / 1000
+        while time.perf_counter() < deadline:
+            if await toast.count() and await toast.is_visible():
+                return
+            if not await field.count() or not await field.is_visible():
+                return
+            await self.page.wait_for_timeout(250)
+        raise AssertionError(
+            f"Onboard Partner did not settle within {timeout} ms "
+            "(no success toast and the form is still open)."
+        )
 
     async def open_partner(self, company: str, timeout: int = 60_000) -> None:
         """Open the just-onboarded partner's detail: back to the Directory, find its row, click it."""
@@ -105,10 +133,12 @@ class PartnerDetailPage(BasePage):
         return " ".join((await self._main().inner_text()).split())
 
     # ── Partner-actions workflow (Approve → Deactivate) ───────────────────────
-    async def open_actions_menu(self) -> None:
+    async def open_actions_menu(self, timeout: int = 15_000) -> None:
         """Open the 'Partner actions' kebab menu (Radix dropdown)."""
         await self.actions_button().click()
-        await self.page.wait_for_timeout(900)
+        # Radix portals the menu in asynchronously — wait for a real menu item to exist
+        # instead of sleeping and hoping. The caller clicks one immediately after.
+        await self.page.get_by_role("menuitem").first.wait_for(state="visible", timeout=timeout)
 
     def menu_item(self, name: str) -> Locator:
         return self.page.get_by_role("menuitem", name=name, exact=False).first
@@ -136,18 +166,47 @@ class PartnerDetailPage(BasePage):
         logger.log("STEP", "Actions → Deactivate (confirm)")
         await self.open_actions_menu()
         await self.menu_item(L.ACTION_DEACTIVATE).click()
-        await self.page.wait_for_timeout(1000)
+        # (No sleep here: the dialog wait below IS the wait for the menu item to act.)
         dlg = self.page.get_by_role("dialog").filter(has_text="Deactivate Partner").first
         await dlg.wait_for(state="visible", timeout=10_000)
         await dlg.get_by_role("button", name=L.ACTION_DEACTIVATE, exact=True).first.click()
-        await self.page.wait_for_timeout(3000)
+        await self._wait_deactivate_outcome(dlg)
         return await self.detail_text()
 
+    async def _wait_deactivate_outcome(self, dialog, timeout: int = 20_000) -> None:
+        """Return as soon as the request resolved — EITHER way. Never raise.
+
+        Two outcomes, and both have to end the wait:
+          * accepted → the confirm dialog closes;
+          * rejected → an error banner appears and the dialog STAYS open.
+
+        Waiting only for the close is wrong on both counts: on the rejection path it
+        burns the whole timeout, and by the time it gives up the error toast has
+        auto-hidden — so the caller reads a page with no error on it and asserts
+        something vaguer. That toast IS the evidence PARTNER_UI_SA_PARTNER_MODULE_015
+        exists to capture (a be_gap TC whose value is the BE's rejection message).
+
+        Tolerant on timeout for the same reason: the caller owns the assertion.
+        """
+        banner = self._main().get_by_text(L.ACTION_FAILED_BANNER, exact=False).first
+        deadline = time.perf_counter() + timeout / 1000
+        while time.perf_counter() < deadline:
+            if await banner.count() and await banner.is_visible():
+                return
+            if not await dialog.count() or not await dialog.is_visible():
+                return
+            await self.page.wait_for_timeout(250)
+        logger.warning("Deactivate produced neither a closed dialog nor an error banner")
+
     # ── Members tab (Portal Users) ────────────────────────────────────────────
-    async def open_members(self) -> None:
-        """Switch to the Members tab (Portal Users list)."""
+    async def open_members(self, timeout: int = 20_000) -> None:
+        """Switch to the Members tab and wait for the Portal Users list to render."""
         await self.tab("Members").click()
-        await self.page.wait_for_timeout(1500)
+        await (
+            self._main()
+            .get_by_text(L.MEMBERS_HEADING, exact=False)
+            .first.wait_for(state="visible", timeout=timeout)
+        )
 
     async def add_portal_user(self, first: str, last: str, email: str, password: str) -> str:
         """Add a portal user via the Members tab; return the resulting <main> text.
@@ -162,21 +221,57 @@ class PartnerDetailPage(BasePage):
         if not (await add.count() and await add.is_visible()):
             add = self.page.get_by_role("button", name=L.MEMBERS_ADD_FIRST_USER, exact=True).first
         await add.click()
-        await self.page.wait_for_timeout(1000)
         form = self.page.locator("form").filter(has_text=L.MEMBER_CREATE_BUTTON).first
+        # Wait for the form itself; on a slow render the old 1s sleep let the fills
+        # race the mount and fail on a field that did not exist yet.
+        await form.wait_for(state="visible", timeout=20_000)
         await form.locator(L.MEMBER_FIRST_NAME).fill(first)
         await form.locator(L.MEMBER_LAST_NAME).fill(last)
         await form.locator(L.MEMBER_EMAIL).fill(email)
         logger.log("STEP", "Fill  [member password] = ***")
         await form.locator(L.MEMBER_PASSWORD).fill(password)
         await form.get_by_role("button", name=L.MEMBER_CREATE_BUTTON, exact=True).click()
-        await self.page.wait_for_timeout(2500)
-        text = await self.detail_text()
         done = self.page.get_by_role("button", name=L.MEMBER_DONE_BUTTON, exact=True).first
+        await self._wait_member_created(done)
+        # Read AFTER the outcome is on screen — the caller asserts on this text, so a
+        # premature read used to make a slow-but-successful create look like a failure.
+        text = await self.detail_text()
         if await done.count() and await done.is_visible():
             await done.click()
-            await self.page.wait_for_timeout(2000)
+            with contextlib.suppress(PlaywrightTimeoutError):
+                await done.wait_for(state="hidden", timeout=15_000)
+        # Dismissing the panel is NOT the same thing as the table having refreshed:
+        # the caller asserts on the new row, so wait for that row — the actual end
+        # state. (Waiting only for "Done" to detach made this flaky: the panel closes
+        # before the list re-renders, and the assertion then ran against a stale table.)
+        await self._wait_member_row(email)
         return text
+
+    async def _wait_member_row(self, email: str, timeout: int = 20_000) -> None:
+        """Wait for the newly added user's row to appear. Tolerant: the caller asserts."""
+        row = self.member_row(email)
+        deadline = time.perf_counter() + timeout / 1000
+        while time.perf_counter() < deadline:
+            if await row.count() and await row.is_visible():
+                return
+            await self.page.wait_for_timeout(250)
+        logger.warning("Portal-user row for {} not listed after {} ms", email, timeout)
+
+    async def _wait_member_created(self, done_button, timeout: int = 25_000) -> None:
+        """Wait for the create-user request to land: success toast or the Done panel.
+
+        Tolerant on timeout for the same reason as :meth:`_wait_dialog_dismissed` — the
+        caller asserts on the resulting text and its message is the useful evidence.
+        """
+        toast = self.page.get_by_text(L.MEMBER_CREATED_TOAST, exact=False).first
+        deadline = time.perf_counter() + timeout / 1000
+        while time.perf_counter() < deadline:
+            if await toast.count() and await toast.is_visible():
+                return
+            if await done_button.count() and await done_button.is_visible():
+                return
+            await self.page.wait_for_timeout(250)
+        logger.warning("Create-portal-user did not confirm within {} ms — reading anyway", timeout)
 
     def member_row(self, email: str) -> Locator:
         return self._main().locator("tbody tr").filter(has_text=email).first

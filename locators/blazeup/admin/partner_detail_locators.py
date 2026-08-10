@@ -28,6 +28,10 @@ class PartnerDetailLocators:
     ACTION_APPROVE = "Approve"
     ACTION_DEACTIVATE = "Deactivate"
     ACTION_REACTIVATE = "Reactivate"
+    # Shown when the BE rejects the deactivate call (the FE sends no `reason`, which the
+    # API requires — BUG-UI-008). The page object polls for this so the rejection path
+    # ends as promptly as the success path, and the banner is read before it auto-hides.
+    ACTION_FAILED_BANNER = "Failed to deactivate"
 
     # ── Members tab (Portal Users) — Add User flow ────────────────────────────
     # Columns: USER | ROLE | STATUS | LAST LOGIN | USER ID | (Reset Password).

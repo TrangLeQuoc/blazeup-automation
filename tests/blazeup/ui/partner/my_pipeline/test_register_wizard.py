@@ -29,6 +29,22 @@ from utils.login_helpers import login_api
 
 _fake_company = "QA-AUTO Wizard Co"
 
+
+async def _wait_captured(page, captured: dict, timeout_ms: int = 30_000) -> None:
+    """Wait until the response listener filled *captured*, instead of sleeping.
+
+    The register POST is captured by a ``page.on("response")`` handler, so the test has
+    a precise signal for "the answer arrived" — a flat sleep was both a guess and a
+    guaranteed cost. Tolerant on timeout: the caller asserts on *captured* and its
+    message is the useful evidence.
+    """
+    deadline = time.perf_counter() + timeout_ms / 1000
+    while time.perf_counter() < deadline:
+        if captured:
+            return
+        await page.wait_for_timeout(200)
+
+
 # Subdomain labels to probe for a RESERVED one (check-domain available=false).
 _DOMAIN_CANDIDATES = ("test", "demo", "acme", "staging", "sales", "production")
 
@@ -280,7 +296,7 @@ async def test_partner_ui_my_pipeline_004(make_partner_page, settings):
 
     async with async_step("[2/2] Enter an AVAILABLE domain → no warning (control)"):
         await wiz.fill_domain(available)
-        await wiz.page.wait_for_timeout(4000)  # let check-domain settle for the free label
+        await wiz.wait_domain_warning_cleared()
         assert await wiz.domain_warning_text() == "", (
             f"an available domain ({available!r}) must not show the reserved/active-deal warning"
         )
@@ -351,7 +367,7 @@ async def test_partner_ui_my_pipeline_005(make_partner_page, partner_authenticat
 
     async with async_step("[3/3] Submit the deal"):
         label = await wiz.submit()
-        await page.wait_for_timeout(5000)
+        await _wait_captured(page, submitted)
         if submitted:
             assert submitted["status"] in (200, 201, 202), f"deal submit failed: {submitted}"
             data = submitted.get("body") or {}
@@ -630,7 +646,7 @@ async def test_partner_ui_my_pipeline_012(make_partner_page, partner_authenticat
 
     async with async_step("[1/2] Submit the deal"):
         await wiz.submit()
-        await page.wait_for_timeout(6000)  # allow the register response to arrive + be captured
+        await _wait_captured(page, result)
         assert result, "no register POST response was captured after submit"
         deal_id = (result.get("body") or {}).get("data", {}).get("_id")
         logger.info(
@@ -703,7 +719,7 @@ async def test_partner_ui_my_pipeline_013(make_partner_page, partner_authenticat
 
     async with async_step("[3/3] Mobile: submit → flow finishes under 90s"):
         await wiz.submit()
-        await page.wait_for_timeout(6000)
+        await _wait_captured(page, result)
         assert result, (
             "no register POST response captured after submit (mobile flow did not finish)"
         )

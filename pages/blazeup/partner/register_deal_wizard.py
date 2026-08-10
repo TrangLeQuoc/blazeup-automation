@@ -8,6 +8,7 @@ text). Navigation to /deals + shell readiness come from PartnerShellPage.
 
 import contextlib
 import re
+import time
 
 from loguru import logger
 from playwright.async_api import Locator
@@ -88,6 +89,32 @@ class RegisterDealWizard(BasePage):
             return " ".join((await loc.inner_text()).split())
         return ""
 
+    async def wait_domain_warning_cleared(
+        self, timeout: int = 15_000, stable_ms: int = 1_000
+    ) -> None:
+        """Wait until no domain warning is shown AND it stays that way.
+
+        For proving a domain is AVAILABLE — an assertion about something being absent,
+        which cannot be waited on directly. Two parts:
+
+        * poll until the warning is gone (a previously reserved domain leaves one on
+          screen, so its disappearance is the signal the new ``check-domain`` answered);
+        * then hold ``stable_ms`` and re-check, because the field clears the old warning
+          on input BEFORE the check returns — without the hold this would read the gap
+          between "old warning removed" and "new warning painted" as "domain is free".
+
+        Still far tighter than a flat sleep: it exits as soon as the state is settled
+        instead of always paying the worst case.
+        """
+        deadline = time.perf_counter() + timeout / 1000
+        while time.perf_counter() < deadline:
+            if not await self.domain_warning_text():
+                await self.page.wait_for_timeout(stable_ms)
+                if not await self.domain_warning_text():
+                    return
+            await self.page.wait_for_timeout(250)
+        logger.warning("Domain warning still present after {} ms — caller will assert", timeout)
+
     async def domain_warning_text(self) -> str:
         """Return the current inline domain warning text ("" if none) — no waiting."""
         loc = self.dialog().get_by_text(_DOMAIN_WARNING_RE).first
@@ -150,9 +177,30 @@ class RegisterDealWizard(BasePage):
         that always exists and is in the future).
         """
         await self.dialog().get_by_text("Select expected close date", exact=False).first.click()
+        calendar = self.page.locator("[role=dialog]").last
+        before = " ".join((await calendar.inner_text()).split())
         await self.page.get_by_role("button", name="Go to the Next Month").first.click()
-        await self.page.wait_for_timeout(400)
+        await self._wait_calendar_repainted(calendar, before)
         await self.page.locator("[role=dialog] button", has_text=re.compile(r"^15$")).first.click()
+
+    async def _wait_calendar_repainted(self, calendar, before: str, timeout: int = 5_000) -> None:
+        """Wait until the month grid actually changed after 'Go to the Next Month'.
+
+        Clicking day 15 before the repaint picks the PREVIOUS month's 15th — a date that
+        may already be in the past, so the wizard rejects it and the test fails for a
+        reason that has nothing to do with what it is testing. The old fixed 400 ms was
+        a bet that the re-render always fits in 400 ms.
+
+        Compares the calendar's own text instead of needing a month-caption locator, so
+        it works whether the picker renders in its own popover or inside the wizard
+        dialog. Tolerant on timeout: the click below then fails loudly on its own.
+        """
+        deadline = time.perf_counter() + timeout / 1000
+        while time.perf_counter() < deadline:
+            if " ".join((await calendar.inner_text()).split()) != before:
+                return
+            await self.page.wait_for_timeout(100)
+        logger.warning("Calendar did not repaint after advancing the month")
 
     async def submit(self) -> str:
         """On the summary step, click the primary submit/confirm button. Returns its label."""
