@@ -26,7 +26,7 @@ Every test is located by 3 axes, mapping directly onto the directory structure:
 tests/<domain>/
   api/<module>/   # group by RESOURCE/feature → api/partner/test_sa_deals.py, test_sa_partners.py
   ui/<module>/    # group by PAGE            → ui/dashboard/test_dashboard.py · ui/shell/test_page_loads.py
-  e2e/            # group by JOURNEY (multi-step, stateful) → test_partner_onboarding.py (add when needed)
+  e2e/            # RESERVED — does not exist yet, see the note below
 ```
 
 - **API grouped by feature/resource**, NOT by page (1 API serves many pages).
@@ -36,7 +36,15 @@ tests/<domain>/
   keeps modules separate as the suite grows; API clients mirror it under
   `api_clients/<domain>/<module>/`. (`sync_registry` scans recursively, so the subfolder
   never affects TC IDs.)
-- **`e2e/`** is the ONLY place for multi-step scenarios that depend on each other (see §3).
+- **`e2e/` does not exist yet** — nothing lives there, and a multi-step TC does **not**
+  need it. A test with several steps stays with its own feature/page as long as it is one
+  function that sets itself up and cleans up after itself (the `async_step` pattern, §3).
+  That is how `PARTNER_UI_SA_PARTNER_MODULE_014` (onboard → approve → add member → verify)
+  correctly lives in `ui/partner_sa/`.
+  Create `e2e/` only for a journey with **no single owning feature** — one that crosses
+  actors and modules (e.g. partner self-registers on the portal → SA approves on stgsa →
+  deal is won → commission is computed), so filing it under any one page or resource
+  would be arbitrary. No such TC exists today.
 
 ---
 
@@ -46,14 +54,16 @@ tests/<domain>/
 |------|----------|----------|------|
 | **Atomic contract** | Check 1 endpoint / 1 behavior | Independent, self setup+cleanup, can run in parallel | `api/`, `ui/` |
 | **Negative / validation** | Wrong input → correctly rejected | Like atomic, but asserts errors (400/403/409…) | next to atomic, same feature |
-| **E2E scenario** | End-to-end business flow | Multiple steps **sharing state**, sequential | `e2e/` |
+| **Multi-step (same feature)** | A flow inside one feature | One function, `async_step` per step, self setup+cleanup | with its feature: `api/`, `ui/` |
+| **Cross-feature journey** | Spans actors/modules, no single owner | Same rules, just nowhere natural to file it | `e2e/` — **none yet** |
 
 **Decision rule:**
 
 - Check "does this API return the correct contract?" → **atomic**.
 - Check "is garbage input blocked?" → **negative** (a separate TC, do not cram into positive).
-- Check "partner registers → SA approves → creates deal → computes commission" (each step
-  uses the result of the previous step) → **E2E** in `e2e/`.
+- Check a flow whose steps build on each other → still **one function** with `async_step`
+  per step. File it with the feature it belongs to; reach for `e2e/` only when it belongs
+  to no feature in particular (see §1).
 
 > ⚠️ **DO NOT** turn an atomic API test into a chain of interdependent steps. Implicit
 > dependency = cannot run alone/in parallel, one failure drags along a mass of "false
@@ -62,14 +72,14 @@ tests/<domain>/
 
 ---
 
-## 3. E2E scenario — when & how to write it
+## 3. Multi-step TC — one function, one TC
 
-Only use when the steps **truly depend on state** (a record created in step 1 is used by
-step 4). Still **1 function = 1 TC**, the steps are `async_step` (not split into multiple
-interdependent functions).
+The pattern for ANY test whose steps build on each other — it is not specific to `e2e/`.
+Steps are `async_step` blocks inside **one** function, never separate interdependent
+functions, so the TC stays independent and self-cleaning.
 
 ```python
-async def test_partner_onboarding_e2e(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_030(sa_partners_client, created_resources):
     async with async_step("[1/4] Register partner (pending)"):
         partner = await sa_partners_client.create_partner(make_partner())
         created_resources.add(lambda: sa_partners_client.delete_partner(partner.partner_id))
@@ -129,7 +139,7 @@ separate directories by type.
 | `@pytest.mark.regression` | Full suite, run before release | Most TCs |
 | `@pytest.mark.api` | HTTP-layer test | Every test in `api/` |
 | `@pytest.mark.ui` | Browser test | Every test in `ui/` |
-| `@pytest.mark.slow` | Slow / multi-step E2E | E2E, scheduled jobs |
+| `@pytest.mark.mobile` | Runs in a 375×812 viewport | A responsive check; the fixture sizes the context **and** the video to match |
 | `@pytest.mark.be_gap` | Known BE gap, **intentionally red** until BE fixes it (per §6 rule 4) | A TC whose main check step fails because the BE lacks logic |
 
 > **Separate the pass/fail signal:** a TC marked `be_gap` still FAILs to report the gap
@@ -156,7 +166,7 @@ On CI (`.github/workflows/test.yml`) this is the **`suite`** input:
 ```bash
 python -m runner.<domain>.run_test --mode smoke        # smoke only
 python -m runner.<domain>.run_test --type api          # API only
-pytest -m "regression and not slow"                    # filter directly
+pytest -m "regression and not be_gap"                  # filter directly
 ```
 
 Application convention: **each test ≥ 1 layer marker (`api`/`ui`) + 1 scope marker

@@ -44,7 +44,7 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
                              │ pytest subprocess
 ┌────────────────────────────▼────────────────────────────────────────┐
 │                          pytest                                    │
-│ conftest.py → fixtures.py (auth_state session-scoped: login once) │
+│ conftest.py → fixtures.py (session: api_token, partner_auth_state)│
 │ tests/{domain}/{api|ui}/{module}/**                               │
 └────────┬──────────────────────────────────────┬────────────────────┘
          │                                      │
@@ -124,9 +124,9 @@ pip install -r requirements.txt
 # 4. Install Playwright browser
 python -m playwright install chromium
 
-# 5. Create your .env file
-copy .env.example .env              # Windows
-# cp .env.example .env              # macOS / Linux
+# 5. Create your .env file  (it lives under config/blazeup/, NOT the repo root)
+copy .env.example config/blazeup/.env      # Windows
+# cp .env.example config/blazeup/.env      # macOS / Linux
 
 # 6. Edit .env with real credentials (see Section 3)
 
@@ -141,57 +141,76 @@ python -m runner.run_test --list
 
 ## 3. Configuration Reference
 
-One `.env` file drives everything: `config/blazeup/.env` (never committed).
-`config/settings.py` always loads it and exposes `ADMIN_*` + `PARTNER_*` fields
-(the generic `settings.base_url` / `test_email` / `test_password` aliases resolve
-to the `ADMIN_*` values).
+One `.env` file drives everything: **`config/blazeup/.env`** (gitignored, never committed).
+Copy the template and edit it:
 
-### BlazeUp Admin (.env)
+```powershell
+copy .env.example config/blazeup/.env
+```
+
+`config/settings.py` is the single authority — the table below is generated from it. Two
+fields are **required**; a missing one makes `get_settings()` fail fast on the first test.
+
+### The one .env file
+
 ```env
-BASE_URL=https://stgsa.blazeup.ai
-API_BASE_URL=https://api.stg.blazeup.ai
-TEST_EMAIL=ceo@mailinator.com
-TEST_PASSWORD=12345678@Tc
+# ── Required ─────────────────────────────────────────────────────────────────
+API_BASE_URL=https://api.stg.blazeup.ai      # shared gateway for BOTH actors
+ADMIN_BASE_URL=https://stgsa.blazeup.ai      # SA/admin UI origin
+
+# ── SA / admin actor ─────────────────────────────────────────────────────────
+ADMIN_EMAIL=your-sa-user@example.com
+ADMIN_PASSWORD=your-password
+
+# ── Partner actor (only for partner-portal tests) ────────────────────────────
+PARTNER_BASE_URL=https://stgpartners.blazeup.ai
+PARTNER_EMAIL=your-partner-user@example.com
+PARTNER_PASSWORD=your-password
+PARTNER_TOTP_SECRET=                          # base32 setup key; the portal now has 2FA
+
+# ── Browser / timing ─────────────────────────────────────────────────────────
 HEADLESS=true
 BROWSER=chromium
 SLOW_MO=0
-DEFAULT_RESPONSE_TIME_MS=2000
+DEFAULT_RESPONSE_TIME_MS=30000
+
+# ── AI failure triage (optional) ─────────────────────────────────────────────
+AI_PROVIDER=gemini
+AI_MODEL=gemini-2.0-flash
+GEMINI_API_KEY=
 ```
 
-### BlazeUp Partner (.env)
-```env
-BASE_URL=https://partner.stgsa.blazeup.ai
-API_BASE_URL=https://api.stg.blazeup.ai
-TEST_EMAIL=ceo@mailinator.com
-TEST_PASSWORD=12345678@Tc
-HEADLESS=true
-BROWSER=chromium
-SLOW_MO=0
-DEFAULT_RESPONSE_TIME_MS=2000
-```
-
-> **All domains use the SAME env keys** (`TEST_EMAIL` / `TEST_PASSWORD`). Login
-> fixtures read `settings.test_email` / `settings.test_password`, so adding a
-> domain needs no fixture/test changes — only its own `config/<domain>/.env`.
+> **One domain, two actors.** There is no separate partner `.env`. SA/admin and partner
+> share one API gateway and one suite; they are told apart by the `ADMIN_*` / `PARTNER_*`
+> keys in this single file. The generic aliases `settings.base_url` / `test_email` /
+> `test_password` resolve to the **`ADMIN_*`** values, since most setup runs as the SA actor.
 
 ### Settings reference
 
-| Variable | Example | Purpose |
-|----------|---------|---------|
-| `BASE_URL` | `https://stgsa.blazeup.ai` | UI root; used as browser base_url & Origin header |
-| `API_BASE_URL` | `https://api.stg.blazeup.ai` | API root (no trailing slash, no service path) |
-| `TEST_EMAIL` | `ceo@mailinator.com` | Login email — **same key for every domain** |
-| `TEST_PASSWORD` | `12345678@Tc` | Login password — **same key for every domain** |
-| `HEADLESS` | `true` / `false` | false = visible browser (good for debugging) |
-| `BROWSER` | `chromium` | chromium / firefox / webkit |
-| `SLOW_MO` | `0` | ms delay between Playwright actions (0 = full speed) |
-| `DEFAULT_RESPONSE_TIME_MS` | `2000` | Soft SLA for API responses (warning, not failure) |
-| `VIEWPORT_WIDTH` | `1440` | Browser viewport width |
-| `VIEWPORT_HEIGHT` | `900` | Browser viewport height |
+| Variable | Required | Default | Purpose |
+|----------|----------|---------|---------|
+| `API_BASE_URL` | **yes** | — | API root, shared by both actors. Must NOT equal a UI origin — `settings.py` rejects that to catch pointing API calls at a UI server |
+| `ADMIN_BASE_URL` | **yes** | — | SA UI origin; browser `base_url` + `Origin` header |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | no | `None` | SA login. Unset → SA tests skip as BLOCKED |
+| `PARTNER_BASE_URL` | no | `None` | Partner-portal origin. Unset → partner UI tests skip as BLOCKED |
+| `PARTNER_EMAIL` / `PARTNER_PASSWORD` | no | `None` | Partner-portal login |
+| `PARTNER_TOTP_SECRET` | no | `None` | Base32 enrolment key for the portal's 2FA step (`pyotp` generates the code). Leave empty if the account has no 2FA |
+| `HEADLESS` | no | `true` | `false` = visible browser |
+| `BROWSER` | no | `chromium` | `chromium` / `firefox` / `webkit` |
+| `SLOW_MO` | no | `0` | ms delay between Playwright actions |
+| `DEFAULT_RESPONSE_TIME_MS` | no | `30000` | Per-call response-time SLA. A breach **fails** the call (setup calls raise it to 45 s instead of disabling it) |
+| `VIEWPORT_WIDTH` / `VIEWPORT_HEIGHT` | no | `1440` / `900` | Browser viewport (the `mobile` marker overrides it to 375×812) |
+| `AI_PROVIDER` | no | `gemini` | `gemini` / `groq` / `ollama` — only the selected provider's key is needed |
+| `AI_MODEL` | no | `gemini-2.0-flash` | Model for `utils/ai_triage.py` |
+| `GEMINI_API_KEY` / `GROQ_API_KEY` | no | `None` | Key for the selected AI provider |
+| `OLLAMA_BASE_URL` | no | `http://localhost:11434` | Local Ollama endpoint |
 
-> **Tip:** Set `HEADLESS=false` and `SLOW_MO=500` when writing new UI tests to watch the browser in real time.
+> `DEFAULT_RESPONSE_TIME_MS` is a **hard** check, not a warning: exceeding it fails the
+> call. It is deliberately generous, and the breach is deliberately **not** retried —
+> see [Auto-retry of transient failures](#flaky-tests).
 
-> **Tip:** Set `HEADLESS=false` and `SLOW_MO=500` while writing a new UI test to watch the browser in real time.
+> **Tip:** `HEADLESS=false` + `SLOW_MO=500` while writing a new UI test, to watch the
+> browser in real time.
 
 ---
 
@@ -324,16 +343,17 @@ It is **auto-generated** by `utils/sync_registry.py` — do not edit it manually
 
 ### 5.2 ID ranges
 
-| ID range | Type | Module | Source |
-|----------|------|--------|--------|
-| 1 – 4 | API | attendance | `tests/api/test_attendance_api.py` |
-| 5 – 9 | API | auth | `tests/api/test_auth_api.py` |
-| 10 – 13 | UI | login | `tests/ui/test_login.py` |
-| 1 010 101 + | UI | partner | `tests/ui/partner_portal_shell/…` |
+IDs are **derived from the function name**, never assigned sequentially — so the ranges
+below are a consequence of the formula in §5.3, not a registry to maintain.
 
-**Legacy TCs (1–13):** Assigned sequential IDs in file/line order. `tc_string = "demo"` — not linked to an Excel row.
+| ID shape | Type | Count today | Example |
+|----------|------|-------------|---------|
+| 7 digits, starts `2` | API (type digit `0` is dropped by `int()`) | 92 | `2060101` = `PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001` |
+| 8 digits, starts `12` | UI | 32 | `12010101` = `SHELL_UI_LOAD_TIME_PAGE_001` |
 
-**Partner Platform TCs:** Encoded IDs using the scheme below.
+Every TC in the registry today belongs to the `blazeup` domain (project digit `2`). The
+demo/legacy `test_tc*` numbering the scanner still supports is no longer used by any test
+— `sync_registry` reports `0 legacy TCs found`.
 
 ### 5.3 Partner Platform ID encoding
 
@@ -498,7 +518,7 @@ async def test_partner_ui_dashboard_001(page):
     ...
 ```
 
-Available markers (defined in `pytest.ini`): `smoke`, `regression`, `ui`, `api`, `slow`.
+Available markers (defined in `pytest.ini`): `smoke`, `regression`, `ui`, `api`, `be_gap`, `mobile`.
 
 After adding a marker, re-run `python utils/sync_registry.py` — the marker is stored in the registry.
 
@@ -694,7 +714,7 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 | `settings` | `Settings` | Pydantic config loaded from `config/blazeup/.env` |
 | `result_dir` | `Path` | Timestamped run folder; configures loguru sinks |
 | `fake` | `Faker` | Faker instance for generating test data |
-| `auth_state` | `dict` | **NEW**: Playwright storage state (cookies + localStorage) cached from one login; injected into every `authenticated_page` context |
+| `partner_auth_state` | `dict` | Partner-portal storage state from ONE login (incl. the 2FA step). Only the partner side caches a snapshot — see the note below |
 | `api_token` | `str` | **Session-scoped**: One JWT per session; reused across all API tests. Avoids repeated login. |
 
 ### Function-scoped (created fresh per test)
@@ -705,11 +725,22 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 | `page` | `Page` | Fresh unauthenticated Playwright page; takes screenshot on finish |
 | `test_user` | `dict` | Generated user dict (`first_name`, `last_name`, `email`, `department`) |
 | `auth_client` | `AuthClient` | Authenticated API client (token from session `api_token`); auto-closed |
-| `attendance_client` | `AttendanceClient` | Authenticated attendance client (token from session `api_token`); auto-closed |
-| `authenticated_page` | `Page` | Fresh isolated page context per test, pre-authenticated via `auth_state` storage injection (no per-test login) |
-| `make_page` | factory | Build an authenticated page object without boilerplate: `make_page(ShellPage)` |
+| `sa_partners_client` | `SaPartnersClient` | SA partner-module API client (token from session `api_token`); auto-closed |
+| `sa_deals_client` | `SaDealsClient` | SA deals API client; auto-closed |
+| `sa_commissions_client` | `SaCommissionsClient` | SA commissions API client; auto-closed |
+| `sa_cleanup` | `SaCleanup` | Deletes records a UI test created. Logs in **lazily** and never blocks the test — see `utils/ui_cleanup.py` |
+| `authenticated_page` | `Page` | SA page, **freshly logged in for every test** (not a cached snapshot — see the note below) |
+| `partner_authenticated_page` | `Page` | Partner-portal page; fresh context per test, reusing the cached `partner_auth_state`. Honours the `mobile` marker (375×812) |
+| `make_page` | factory | Build an SA page object without boilerplate: `make_page(ShellPage)` |
+| `make_partner_page` | factory | Same, bound to the partner-portal origin |
 | `created_resources` | registry | Track resources a test creates → auto-delete on teardown (LIFO), pass or fail |
-| `tc_logger` *(autouse)* | — | Emits START / PASSED / FAILED banners; binds TC ID to logs |
+| `tc_logger` *(autouse)* | — | Emits START / PASSED / FAILED / SKIPPED banners; binds the TC ID to every log line |
+
+> **Why the two sides differ:** stgsa's SA auth uses a rotating, single-use refresh
+> cookie — replaying one captured `storage_state` in a second context 401s and the SA
+> micro-frontend never renders. So the SA side logs in fresh per test, while the partner
+> portal (which does not rotate) shares one cached snapshot. See the docstrings in
+> `pytest_support/fixtures.py`.
 
 ### Usage examples
 
@@ -749,11 +780,17 @@ async def test_create_tenant_001(auth_client, created_resources):
 
 | File | Class | Key methods |
 |------|-------|-------------|
-| `base_client.py` | `BaseClient` | `request()`, `get()`, `post()` |
-| `auth_client.py` | `AuthClient` | `login()`, `me()`, `raw_login()` |
-| `attendance_client.py` | `AttendanceClient` | `status()`, `today()`, `raw_status()` |
-| `expense_client.py` | `ExpenseClient` | expense endpoints |
-| `user_client.py` | `UserClient` | user management endpoints |
+| `base_client.py` | `BaseClient` | `request()`, `get()`, `post()`, `put()`, `patch()`, `delete()` — retry on 5xx for idempotent methods only, response-time SLA, Pydantic schema validation, secret masking |
+| `auth_base.py` | `BaseAuthClient` | `login()`, `logout()`, `me()` — shared login mechanics |
+| `blazeup/admin/auth_client.py` | `AuthClient` | SA login + current-user (sa-auth-api) |
+| `blazeup/admin/partner/sa_partners_client.py` | `SaPartnersClient` | `list_partners()`, `create_partner()`, `approve_partner()`, `deactivate_partner()`, `delete_partner()`, partner-users, certifications, territories, audit logs |
+| `blazeup/admin/partner/sa_deals_client.py` | `SaDealsClient` | `register_deal()`, `approve_deal()`, `extend_protection()`, `win_deal()`, `lose_deal()`, `resolve_conflict()` |
+| `blazeup/admin/partner/sa_commissions_client.py` | `SaCommissionsClient` | `list_commissions()`, `list_rate_table()`, `upsert_rate()` |
+| `blazeup/partner/auth_client.py` | `PartnerAuthClient` | Partner-portal login (separate JWT issuer, TOTP) |
+| `blazeup/partner/deal_registration_client.py` | `DealRegistrationClient` | Partner-side deal registration (**scaffold**) |
+
+> Every write method has a `raw_*` twin (`raw_create_partner`, `raw_approve_deal`, …) that
+> skips schema/status assertions, so negative tests can inspect a 400 body directly.
 
 `BaseClient` automatically:
 - Adds `Authorization`, `Origin`, `Referer`, `X-PLATFORM` headers.
@@ -948,7 +985,7 @@ python -m playwright install chromium   # or firefox / webkit
 ### Credentials / login failures
 
 **Problem:** All UI tests fail at login step.  
-**Fix:** Check `.env` has correct `TEST_EMAIL` and `TEST_PASSWORD`. Test manually:
+**Fix:** Check `config/blazeup/.env` has correct `ADMIN_EMAIL` / `ADMIN_PASSWORD` (and `PARTNER_*` if the failing test is a portal one). Test manually:
 ```powershell
 python -c "
 import asyncio
