@@ -37,6 +37,17 @@ ui:
 list:
 	$(RUN) --list
 
+# Regenerate the dependency locks after editing requirements.txt.
+# requirements.txt stays the human-readable source (16 direct pins + comments); the
+# locks add the ~25 transitive packages that would otherwise float free and can turn
+# CI red on a day nothing changed.
+#   --python-platform linux : CI runs ubuntu-latest. Locking on Windows without this
+#                             produces a lock that fails to install on the runner.
+# No make on Windows? Run the two uv lines directly.
+lock:
+	uv pip compile requirements.txt -o requirements.lock --python-platform linux --python-version 3.13 --no-header
+	uv pip compile requirements-selftest.txt -o requirements-selftest.lock --python-platform linux --python-version 3.13 --no-header
+
 # Framework selftests — the runner/registry logic itself. No staging, no browser,
 # no secrets; runs in about a second. Same command CI uses (selftest.yml).
 #   -o addopts=   : pytest.ini's --alluredir needs allure-pytest, not used here

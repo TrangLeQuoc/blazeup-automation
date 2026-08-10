@@ -14,7 +14,7 @@ Covers both **HTTP API** (httpx + Pydantic) and **Browser UI** (Playwright async
 
 | Tool | Version | Install |
 |------|---------|---------|
-| Python | 3.11+ | [python.org](https://python.org) |
+| Python | 3.13 | [python.org](https://python.org) |
 | Git | any | [git-scm.com](https://git-scm.com) |
 | Allure CLI | optional | `scoop install allure` / `brew install allure` |
 
@@ -173,7 +173,10 @@ blazeup_automation/
 ├── pytest.ini                            #   Markers, asyncio mode, HTML/Allure paths
 ├── pyproject.toml                        #   Ruff lint + format config
 ├── .pre-commit-config.yaml               #   Local pre-commit hooks (ruff + registry sync)
-├── requirements.txt                      #   Python dependencies (to run tests)
+├── requirements.txt                      #   Python dependencies (to run tests) — EDIT THIS
+├── requirements.lock                      #   Generated: the 16 direct pins + 25 transitive
+├── requirements-selftest.txt             #   Light set for selftests/ (no Playwright)
+├── requirements-selftest.lock             #   Generated
 ├── requirements-dev.txt                  #   Dev tooling (ruff, pre-commit)
 ├── .gitignore                            #   Git ignore rules
 ├── .gitattributes                        #   Line ending & binary file rules
@@ -438,6 +441,33 @@ Secret names match the `.env` keys 1:1 (CI writes them straight to the environme
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram notifications |
 
 > Store all of these as **Secrets** (not Variables) so credentials are masked in logs.
+
+---
+
+## Dependencies (locked)
+
+`requirements.txt` is the file **you** edit — 16 direct pins with a comment on each.
+The two `.lock` files are **generated** and hold the full resolved set (41 and 15
+packages): the ~25 transitive dependencies that `requirements.txt` never mentions, and
+that would otherwise install a different version on every CI run. A breaking release of
+one of them (`pluggy`, `greenlet`, `anyio`, …) turns CI red on a day the diff is empty —
+locking is what removes that failure mode.
+
+CI installs the locks. After changing `requirements.txt`, regenerate and commit both:
+
+```bash
+make lock
+# or, without make:
+uv pip compile requirements.txt -o requirements.lock --python-platform linux --python-version 3.13 --no-header
+uv pip compile requirements-selftest.txt -o requirements-selftest.lock --python-platform linux --python-version 3.13 --no-header
+```
+
+`--python-platform linux` matters: CI runs `ubuntu-latest`, so a lock resolved on
+Windows without it can fail to install on the runner.
+
+`requirements-selftest.txt` carries **no versions of its own** — it constrains against
+`requirements.txt` (`-c requirements.txt`), so bumping a version in one place cannot
+leave the selftest job pinned to the old one.
 
 ---
 

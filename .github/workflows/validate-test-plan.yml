@@ -50,8 +50,10 @@ jobs:
       # openpyxl is the validator's ONLY third-party dependency (the TC registry
       # it cross-checks is pure-stdlib), so the full requirements.txt / Playwright
       # install is unnecessary here — keeping this job seconds-fast.
+      # et-xmlfile is openpyxl's only transitive dependency; pinning it too makes this
+      # install fully reproducible without needing a lock file of its own.
       - name: Install dependency (openpyxl only)
-        run: pip install openpyxl==3.1.5
+        run: pip install openpyxl==3.1.5 et-xmlfile==2.0.0
 
       # Single merged domain. A domain with no plan exits 0 with "nothing to
       # validate", so this stays future-proof if more domains are ever added.

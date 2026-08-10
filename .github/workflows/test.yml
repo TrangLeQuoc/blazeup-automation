@@ -65,14 +65,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.lock') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install dependencies
+      # Installs the LOCK, not requirements.txt. requirements.txt pins only the 16
+      # direct dependencies; the other 25 arrive transitively and would float free, so
+      # a breaking release of something nobody here has heard of (pluggy, greenlet,
+      # anyio…) could turn CI red on a day the diff is empty. Regenerate with:
+      #   make lock
+      - name: Install dependencies (locked)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.lock
           python -m playwright install --with-deps
 
       - name: Validate registry is up-to-date

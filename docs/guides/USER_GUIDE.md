@@ -97,7 +97,7 @@ The shared runner merges all domain registries at runtime.
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Python | 3.11+ | 3.13 used in CI |
+| Python | 3.13 | pinned in all 3 CI workflows; Ruff targets `py313` |
 | Git | any | |
 | Allure CLI | any | For viewing Allure dashboards |
 

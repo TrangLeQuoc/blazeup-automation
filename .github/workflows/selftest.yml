@@ -44,15 +44,19 @@ jobs:
         with:
           python-version: "3.13"
 
-      # Only what the modules under test import at module scope. Deliberately NOT
-      # requirements.txt: Playwright (and its browser download) is the slow part and
-      # nothing here drives a browser. Versions match requirements.txt.
-      - name: Install (no Playwright, no browsers)
-        run: pip install pytest==9.0.3 loguru==0.7.3 pyyaml==6.0.3 httpx==0.28.1 openpyxl==3.1.5
+      # A lock, and no Playwright — see requirements-selftest.txt for what is in it and
+      # why. The versions used to be written out here in YAML, which quietly duplicated
+      # requirements.txt: bumping pytest there left this job pinned to the old one
+      # forever. Now they are constrained by requirements.txt and locked.
+      - name: Install (locked, no Playwright, no browsers)
+        run: pip install -r requirements-selftest.lock
 
       # -o addopts= : pytest.ini adds --alluredir, which needs allure-pytest. Written
 #               without quotes so the same line works in PowerShell too.
       # --confcutdir: keeps the project conftest.py (Playwright/httpx fixtures) out.
+      # Expect two harmless PytestConfigWarnings here: pytest.ini sets asyncio_mode and
+      # asyncio_default_fixture_loop_scope, which are unknown without pytest-asyncio.
+      # That plugin is not installed on purpose — every selftest is a plain sync function.
       - name: Run framework selftests
         run: pytest selftests/ -o addopts= --confcutdir=selftests -q
 

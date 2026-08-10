@@ -1,0 +1,15 @@
+# ── Minimal set for the framework's own tests (selftests/) ────────────────────
+# Only what the modules under test import at module scope. Deliberately EXCLUDES
+# Playwright: nothing in selftests/ drives a browser, and skipping the browser
+# download is what keeps that CI job seconds-fast.
+#
+# NO VERSIONS HERE ON PURPOSE. They are constrained by requirements.txt below, so
+# requirements.txt stays the single source of truth — bump a version there and this
+# file follows automatically instead of drifting behind.
+-c requirements.txt
+
+pytest        # test runner
+loguru        # runner/test_runner.py, utils/ui_cleanup.py
+pyyaml        # utils/sync_registry.py reads config/*/config.yaml
+httpx         # utils/preflight.py
+openpyxl      # utils/sync_registry.py reads the Excel test plan

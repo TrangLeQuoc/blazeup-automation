@@ -1,0 +1,44 @@
+anyio==4.14.2
+    # via httpx
+certifi==2026.7.22
+    # via
+    #   httpcore
+    #   httpx
+et-xmlfile==2.0.0
+    # via openpyxl
+h11==0.16.0
+    # via httpcore
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
+idna==3.18
+    # via
+    #   anyio
+    #   httpx
+iniconfig==2.3.0
+    # via pytest
+loguru==0.7.3
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
+openpyxl==3.1.5
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
+packaging==26.3
+    # via pytest
+pluggy==1.6.0
+    # via pytest
+pygments==2.20.0
+    # via pytest
+pytest==9.0.3
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
+pyyaml==6.0.3
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
