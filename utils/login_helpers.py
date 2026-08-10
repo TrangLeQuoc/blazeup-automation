@@ -29,8 +29,14 @@ from playwright.async_api import expect as pw_expect
 
 from api_clients.auth_base import BaseAuthClient
 from api_clients.blazeup.admin.auth_client import AuthClient
-from pages.base_page import BasePage
 from pages.blazeup.admin.login_page import LoginPage
+from pages.blazeup.partner.login_page import PartnerLoginPage
+
+# The login page classes this helper accepts. NOT `type[BasePage]`: BasePage has
+# neither `open()` nor `login()`, so that annotation described something this code
+# cannot actually use — and it hid a real asymmetry between the two pages, namely
+# that only PartnerLoginPage takes `totp_secret` (the SA login has no 2FA step).
+LoginPageCls = type[LoginPage] | type[PartnerLoginPage]
 
 
 # Single merged BlazeUp domain. The default actor is SA/admin; the partner actor
@@ -41,7 +47,7 @@ def _auth_client_for_domain() -> type[BaseAuthClient]:
     return AuthClient
 
 
-def _login_page_for_domain() -> type[BasePage]:
+def _login_page_for_domain() -> LoginPageCls:
     """Default login page (SA/admin, two-step)."""
     return LoginPage
 
@@ -52,7 +58,7 @@ async def login_ui(
     email: str,
     password: str,
     timeout: int = 30_000,
-    login_page_cls: "type[BasePage] | None" = None,
+    login_page_cls: "LoginPageCls | None" = None,
     totp_secret: str | None = None,
 ) -> Page:
     """Log in through the BlazeUp UI login page (domain-aware).
@@ -70,19 +76,34 @@ async def login_ui(
         login_page_cls: Login page object class to use. Defaults to the admin
                         (SA) two-step login; pass ``PartnerLoginPage`` for the
                         single-step partner portal login.
+        totp_secret:    Base32 TOTP secret. Only ``PartnerLoginPage`` has a 2FA step,
+                        so passing this with the SA login page is a programming error
+                        and raises ``TypeError`` rather than being silently ignored.
 
     Returns:
         The same ``Page`` object, now authenticated.
 
     Raises:
+        TypeError: If *totp_secret* is given for a login page with no 2FA step.
         AssertionError: If the browser is still on ``/login`` after *timeout*.
     """
     login_page = (login_page_cls or _login_page_for_domain())(page, base_url)
-    await login_page.open()
-    # Only the partner login supports a TOTP step; pass it through when provided.
+
+    # Two straight-line branches rather than one call with an optional kwarg: the two
+    # page objects genuinely have different login() signatures (only the partner portal
+    # has a 2FA step), and writing it out makes that visible instead of hiding it behind
+    # a conditional kwarg. The guard runs BEFORE open() so a wrong class fails before we
+    # spend a page load on it.
     if totp_secret is not None:
+        if not isinstance(login_page, PartnerLoginPage):
+            raise TypeError(
+                f"totp_secret was given but {type(login_page).__name__} has no 2FA step "
+                "— only PartnerLoginPage supports it."
+            )
+        await login_page.open()
         await login_page.login(email, password, totp_secret=totp_secret)
     else:
+        await login_page.open()
         await login_page.login(email, password)
     await pw_expect(page).not_to_have_url(re.compile(r".*/login.*"), timeout=timeout)
     return page

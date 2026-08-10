@@ -47,6 +47,7 @@ list:
 lock:
 	uv pip compile requirements.txt -o requirements.lock --python-platform linux --python-version 3.13 --no-header
 	uv pip compile requirements-selftest.txt -o requirements-selftest.lock --python-platform linux --python-version 3.13 --no-header
+	uv pip compile requirements-dev.txt -o requirements-dev.lock --python-platform linux --python-version 3.13 --no-header
 
 # Framework selftests — the runner/registry logic itself. No staging, no browser,
 # no secrets; runs in about a second. Same command CI uses (selftest.yml).

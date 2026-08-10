@@ -79,11 +79,13 @@ def test_is_blocked_handles_empty_and_none():
         # A dotted type is reduced to the bare class name.
         ("FAILED", "playwright._impl._errors.TimeoutError", "", "TimeoutError"),
         ("FAILED", "AssertionError", "", "AssertionError"),
-        # No type given → sniff it out of the message.
-        # Known limitation: the fallback regex only recognises names ending in
-        # Error/Exception, so "ReadTimeout" falls through to the default. Encoded
-        # as-is — this label is cosmetic (summary column only).
-        ("FAILED", "", "httpx.ReadTimeout: timed out", "AssertionError"),
+        # No type given → sniff it out of the message. httpx timeout names end in
+        # "Timeout", not "Error", and used to be mislabelled "AssertionError".
+        ("FAILED", "", "httpx.ReadTimeout: timed out", "ReadTimeout"),
+        ("FAILED", "", "httpx.ConnectTimeout", "ConnectTimeout"),
+        ("FAILED", "", "httpx.PoolTimeout: pool is full", "PoolTimeout"),
+        # A bare "Timeout" is not a class name — needs a word part in front of it.
+        ("FAILED", "", "Locator.wait_for: Timeout 60000ms exceeded", "AssertionError"),
         # Nothing to go on → default rather than an empty column.
         ("FAILED", "", "something went sideways", "AssertionError"),
     ],

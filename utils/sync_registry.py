@@ -398,7 +398,12 @@ def _get_test_files(domain: str | None = None) -> list[Path]:
     )
 
 
-def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = None) -> list[dict]:
+# `domain` is REQUIRED, not optional-with-None. The name is looked up in
+# MODULES[domain], and `MODULES.get(None, {})` returns {} — so a None domain makes
+# _func_name_to_tc_string() reject every function and this returns ZERO TCs with no
+# error, no warning, nothing in the diff. A signature that invites that call is a trap;
+# `sync()` already expands "all domains" into a loop of concrete names before calling.
+def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str) -> list[dict]:
     """Scan test files for implemented Partner Platform test functions.
 
     Discovers functions named:
@@ -484,7 +489,8 @@ def scan_implemented_tcs(excel_lookup: dict[str, dict], domain: str | None = Non
 # ---------------------------------------------------------------------------
 
 
-def scan_legacy_tcs(domain: str | None = None) -> list[dict]:
+# `domain` REQUIRED for the same reason as scan_implemented_tcs() above.
+def scan_legacy_tcs(domain: str) -> list[dict]:
     """Scan test files for old-style test_tc* / test_tca* functions.
 
     These are legacy demo tests.

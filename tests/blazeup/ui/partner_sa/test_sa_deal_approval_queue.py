@@ -16,7 +16,6 @@ from utils.log_helper import async_step
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # deal-list fetch 400s ("Invalid id: 'pro-v1'") — no rows load. Confirm with BE.
 async def test_partner_ui_sa_partner_module_007(make_page):
     """PARTNER_UI_SA_PARTNER_MODULE_007: the SA deal approval queue loads its deals.
 
@@ -24,11 +23,10 @@ async def test_partner_ui_sa_partner_module_007(make_page):
     Deal Type + Conflicts-only filters and the deals table header — then that the
     queue actually LOADS its deals (no backend error).
 
-    Live status: the queue shell renders, but the deal-list fetch fails with
-    "Server Error / Invalid id: 'pro-v1'" (a backend defect) — so no deal rows load
-    even though partners have open deals. Step [1] PASSES (shell/filters/header);
-    step [2] FAILS with "confirm with BE" on the server error, surfacing the real
-    defect rather than faking a green.
+    History: this was `be_gap` until 2026-08-10. The deal-list fetch used to fail with
+    "Server Error / Invalid id: 'pro-v1'" (BUG-UI-005), so no rows loaded even though
+    partners had open deals — step [2] failed by design to surface it. BE fixed it; the
+    marker was removed and the TC is back inside the merge gate.
     """
     queue = make_page(DealApprovalQueuePage)
 

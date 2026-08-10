@@ -439,7 +439,11 @@ def _error_type_label(status: str, err_type: str, message: str) -> str:
         return ""
     if err_type:
         return err_type.rsplit(".", 1)[-1]  # strip module path → bare class name
-    m = re.search(r"\b(\w+(?:Error|Exception|TimeoutError))\b", message or "")
+    # `Timeout` is in the alternation because httpx names its timeouts ReadTimeout /
+    # ConnectTimeout / PoolTimeout / WriteTimeout — none of which ends in "Error", so
+    # they used to fall through and get mislabelled "AssertionError" in the summary.
+    # (`TimeoutError` needs no entry of its own: \w+ takes "Timeout", "Error" matches.)
+    m = re.search(r"\b(\w+(?:Error|Exception|Timeout))\b", message or "")
     return m.group(1) if m else "AssertionError"
 
 
