@@ -15,7 +15,6 @@ deals-list BE defect blocking _024/_025).
 import asyncio
 import time
 
-import httpx
 import pytest
 from loguru import logger
 
@@ -26,6 +25,7 @@ from pages.blazeup.partner.register_deal_wizard import RegisterDealWizard
 from utils.data_factory import unique_domain, unique_email
 from utils.log_helper import async_step
 from utils.login_helpers import login_api
+from utils.partner_portal import portal_client
 
 _fake_company = "QA-AUTO Wizard Co"
 
@@ -66,19 +66,20 @@ async def _classify_domains(settings: Settings) -> tuple[str | None, str | None]
         auth_cls=PartnerAuthClient,
         totp_secret=settings.partner_totp_secret,
     )
-    headers = {"Authorization": f"Bearer {token}", "Origin": pbase}
+    # Origin = the PARTNER app: this call is made on behalf of the portal UI, not the
+    # SA app that portal_client() defaults to.
+    client = portal_client(settings, token, app_origin=pbase)
     taken = available = None
-    async with httpx.AsyncClient(timeout=30) as h:
+    try:
         for label in _DOMAIN_CANDIDATES:
-            resp = await h.get(
-                f"{api}/sa-partners-api/v1/partner/portal/check-domain?domain={label}",
-                headers=headers,
-            )
+            resp = await client.check_domain(label, expected_status=None)
             data = resp.json().get("data") or {}
             if data.get("available") is False and taken is None:
                 taken = label
             if data.get("available") is True and available is None:
                 available = label
+    finally:
+        await client.close()
     return taken, available
 
 

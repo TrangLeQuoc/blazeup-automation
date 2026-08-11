@@ -32,6 +32,28 @@ red, and read as a product bug.
 When a test needs something the page object cannot express, **add the method** — that is
 the missing piece, not a reason to reach past it.
 
+### The same rule on the API side
+
+`api_clients/` is to endpoints what `locators/` is to selectors:
+
+```
+api_clients/<domain>/<x>_client.py   →  DATA + BEHAVIOR: paths + methods
+tests/<domain>/api/test_<x>.py       →  SCENARIO: calls the client, asserts
+```
+
+| | Example | Why |
+|---|---|---|
+| ❌ banned | `_BASE = "/sa-partners-api/v1/partner/portal"` then `portal.get(f"{_BASE}/deals")` | the path lives in the test; four modules once declared this same prefix under three names |
+| ✅ allowed | `portal.list_deals(params={"limit": 20})` | the path is in the client, declared once |
+
+One method serves both the positive and the negative case — pass `expected_status=None` to
+get the raw response back and assert the code yourself. No `raw_*` twin needed.
+
+Enforced by `selftests/test_layer_boundaries.py` (no service-path literals, no bare
+`client.get(...)` without a named path) and `selftests/test_client_endpoints.py`, which
+pins every client method to the exact path it sends by stubbing the HTTP layer — so a
+typo'd path fails locally in milliseconds instead of as a 404 on staging.
+
 ## Naming conventions (MANDATORY)
 
 | Type | File | Class | Example |

@@ -991,10 +991,8 @@ async def test_partner_api_partner_account_management_016(
     async with async_step(
         "[1/3] Update with a valid field + end-client price → valid field applies, price stripped"
     ):
-        r = await sa_deals_client.patch(
-            f"/sa-partners-api/v1/sa/deals/{deal_id}",
-            json={"notes": "QA-AUTO update note", **_END_CLIENT_PRICE_FIELDS},
-            expected_status=None,
+        r = await sa_deals_client.raw_update_deal(
+            deal_id, {"notes": "QA-AUTO update note", **_END_CLIENT_PRICE_FIELDS}
         )
         assert r.status_code == 200, f"update with a valid field must succeed, got {r.status_code}"
         d = r.json().get("data") or {}
@@ -1009,11 +1007,7 @@ async def test_partner_api_partner_account_management_016(
     async with async_step(
         "[2/3] Update with ONLY end-client price fields → 400 (not a recognized editable field)"
     ):
-        r = await sa_deals_client.patch(
-            f"/sa-partners-api/v1/sa/deals/{deal_id}",
-            json=dict(_END_CLIENT_PRICE_FIELDS),
-            expected_status=None,
-        )
+        r = await sa_deals_client.raw_update_deal(deal_id, dict(_END_CLIENT_PRICE_FIELDS))
         msg = str(r.json().get("message") or "")
         assert r.status_code == 400 and "no editable fields" in msg.lower(), (
             f"price-only update must be rejected 400 'No editable fields provided', got {r.status_code} {msg!r}"

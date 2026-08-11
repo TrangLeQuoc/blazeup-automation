@@ -41,6 +41,27 @@ RAW_PAGE_SELECTOR_RE = re.compile(
     r"\b(?:page|\w+\.page)\.(?:locator|get_by_\w+|query_selector|query_selector_all)\("
 )
 
+# The API-side twin of the same rule: a service path literal ("/sa-partners-api/v1/...").
+# Those belong to a client in api_clients/, which declares the path and exposes a method.
+# Measured 2026-08-11 before the fix: the partner-portal prefix was declared in four test
+# modules under three names (_BASE, _PORTAL, _DASHBOARD_PATH) plus once inline in a UI
+# test, because no client existed for that surface — five copies of one string.
+RAW_ENDPOINT_RE = re.compile(r"""['"](/[a-z][a-z0-9-]*-api/[^'"]*)['"]""")
+
+# A bare HTTP verb on a client (`await portal.get(...)`) instead of a named method. After
+# the endpoints moved into the clients there is exactly ONE legitimate case left: a test
+# hitting a partner path with a NON-partner client to prove it is refused, which passes a
+# declared constant. So the first argument must be a NAME, never a literal and never a
+# keyword.
+#
+# This is not theoretical: rewriting the call sites, one line came out as
+# `await portal.get(params={"limit": 20, ...})` — the method name dropped and the endpoint
+# argument went missing. ruff passed, collection passed; it would only have failed against
+# a live backend. Caught by reading the diff, which is not a control.
+CLIENT_VERB_CALL_RE = re.compile(r"\bawait\s+\w+\.(?:get|post|patch|put|delete)\(")
+_BAD_FIRST_ARG = (")", '"', "'", 'f"', "f'")  # no "" here: startswith("") is always True
+_KEYWORD_FIRST_ARG_RE = re.compile(r"\w+\s*=[^=]")
+
 TEST_FILES = sorted(TESTS_DIR.rglob("*.py"))
 
 
@@ -60,4 +81,38 @@ def test_no_raw_page_selectors_in_tests(path):
         "a test called a Playwright selector directly on the Page, which puts the selector "
         "in the wrong layer — add a method to the page object (and the string to "
         "locators/) and call that instead:\n  " + "\n  ".join(offenders)
+    )
+
+
+@pytest.mark.parametrize("path", TEST_FILES, ids=lambda p: p.name)
+def test_no_raw_endpoint_paths_in_tests(path):
+    offenders = [
+        f"{path.relative_to(PROJECT_ROOT).as_posix()}:{n}: {line.strip()}"
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
+        if RAW_ENDPOINT_RE.search(line)
+    ]
+    assert not offenders, (
+        "a test spelled out an API service path, which puts the endpoint in the wrong layer "
+        "— declare it in the matching api_clients/ client and add a method (pass "
+        "expected_status=None for the negative case) instead:\n  " + "\n  ".join(offenders)
+    )
+
+
+@pytest.mark.parametrize("path", TEST_FILES, ids=lambda p: p.name)
+def test_client_verb_calls_pass_a_named_path(path):
+    """`await client.get(...)` must take a declared path NAME as its first argument."""
+    text = path.read_text(encoding="utf-8")
+    offenders = []
+    for match in CLIENT_VERB_CALL_RE.finditer(text):
+        rest = text[match.end() :].lstrip()
+        bad = not rest or rest.startswith(_BAD_FIRST_ARG) or bool(_KEYWORD_FIRST_ARG_RE.match(rest))
+        if not bad:
+            continue
+        line_no = text.count("\n", 0, match.start()) + 1
+        line = text.splitlines()[line_no - 1].strip()
+        offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_no}: {line}")
+    assert not offenders, (
+        "a test called an HTTP verb on a client without a named endpoint — either the "
+        "method name is missing (the endpoint argument silently became a keyword) or the "
+        "path is a literal. Call the client's named method instead:\n  " + "\n  ".join(offenders)
     )

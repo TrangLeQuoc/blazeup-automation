@@ -14,6 +14,7 @@ embeds its own negative aspect (rejection / invalidation).
 import pytest
 from loguru import logger
 
+from api_clients.blazeup.partner.partner_portal_client import PartnerPortalClient
 from utils.data_factory import make_deal, make_prospect
 from utils.log_helper import async_step
 from utils.partner_portal import (
@@ -23,8 +24,6 @@ from utils.partner_portal import (
     provision_partner_user,
 )
 
-_AUTH = "/sa-partners-api/v1/partner/auth"
-_PORTAL = "/sa-partners-api/v1/partner/portal"
 _NEW_PASSWORD = "QA-Auto-New-9!xZ"
 
 
@@ -56,7 +55,7 @@ async def test_partner_api_auth_access_control_001(sa_partners_client, settings,
         )
 
     async with async_step("[1/1] A partner-scoped request with the JWT succeeds"):
-        resp = await portal.get(f"{_AUTH}/me", expected_status=200)
+        resp = await portal.me()
         body = resp.json()  # /me returns the identity at the top level (no `data` wrapper)
         assert body.get("userId") and body.get("email"), (
             "/me must return the authenticated identity"
@@ -77,12 +76,12 @@ async def test_partner_api_auth_access_control_002(sa_partners_client, settings,
     async with async_step("[1/2] No token → 401"):
         anon = portal_client(settings)
         created_resources.add(lambda: anon.close())
-        r = await anon.get(f"{_AUTH}/me", expected_status=None)
+        r = await anon.me(expected_status=None)
         assert r.status_code == 401, f"a no-token request must be 401, got {r.status_code}"
         logger.info("CHECK no-token → OK (401)")
 
     async with async_step("[2/2] Non-partner (SA admin) token → 401"):
-        r = await sa_partners_client.get(f"{_AUTH}/me", expected_status=None)
+        r = await sa_partners_client.get(PartnerPortalClient.AUTH_ME_PATH, expected_status=None)
         assert r.status_code == 401, f"a non-partner token must be 401, got {r.status_code}"
         logger.info("CHECK non-partner token → OK (401)")
 
@@ -112,7 +111,7 @@ async def test_partner_api_auth_access_control_007(sa_partners_client, settings,
         )
 
     async with async_step("[1/3] Refresh → a new access token (different from the original)"):
-        r = await anon.post(f"{_AUTH}/refresh", json={"refreshToken": refresh}, expected_status=200)
+        r = await anon.refresh(refresh)
         new_access = r.json().get("accessToken")
         assert new_access, "refresh must return a new accessToken"
         assert new_access != access, "the refreshed access token must differ from the original"
@@ -121,14 +120,12 @@ async def test_partner_api_auth_access_control_007(sa_partners_client, settings,
     async with async_step("[2/3] The new access token authorizes a request"):
         refreshed = portal_client(settings, new_access)
         created_resources.add(lambda: refreshed.close())
-        me = await refreshed.get(f"{_AUTH}/me", expected_status=200)
+        me = await refreshed.me()
         assert me.json().get("userId"), "the refreshed token must authorize /me"
         logger.info("CHECK new-token works → OK (200)")
 
     async with async_step("[3/3] An invalid refresh token is rejected (401)"):
-        bad = await anon.post(
-            f"{_AUTH}/refresh", json={"refreshToken": "not-a-valid-token"}, expected_status=None
-        )
+        bad = await anon.refresh("not-a-valid-token", expected_status=None)
         assert bad.status_code == 401, (
             f"an invalid refresh token must be 401, got {bad.status_code}"
         )
@@ -162,13 +159,11 @@ async def test_partner_api_auth_access_control_008(sa_partners_client, settings,
         )
 
     async with async_step("[1/2] Logout the active session"):
-        r = await portal.post(f"{_AUTH}/logout", json={}, expected_status=(200, 204))
+        r = await portal.logout()
         logger.info("CHECK logout → OK ({})", r.status_code)
 
     async with async_step("[2/2] The refresh token is now invalidated (401)"):
-        r = await anon.post(
-            f"{_AUTH}/refresh", json={"refreshToken": refresh}, expected_status=None
-        )
+        r = await anon.refresh(refresh, expected_status=None)
         assert r.status_code == 401, (
             f"refresh after logout must be rejected (401), got {r.status_code}"
         )
@@ -200,39 +195,23 @@ async def test_partner_api_auth_access_control_009(sa_partners_client, settings,
         )
 
     async with async_step("[1/4] Wrong currentPassword is rejected"):
-        r = await portal.post(
-            f"{_AUTH}/change-password",
-            json={"currentPassword": "WrongPass-0!xZ", "newPassword": _NEW_PASSWORD},
-            expected_status=None,
-        )
+        r = await portal.change_password("WrongPass-0!xZ", _NEW_PASSWORD, expected_status=None)
         assert r.status_code == 401, f"wrong currentPassword must be 401, got {r.status_code}"
         logger.info("CHECK wrong-current → OK (401)")
 
     async with async_step("[2/4] Correct currentPassword updates the password (204)"):
-        r = await portal.post(
-            f"{_AUTH}/change-password",
-            json={"currentPassword": creds["password"], "newPassword": _NEW_PASSWORD},
-            expected_status=(200, 204),
-        )
+        r = await portal.change_password(creds["password"], _NEW_PASSWORD)
         logger.info("CHECK change → OK ({})", r.status_code)
 
     async with async_step("[3/4] The NEW password logs in"):
-        r = await anon.post(
-            f"{_AUTH}/login",
-            json={"email": creds["email"], "password": _NEW_PASSWORD},
-            expected_status=None,
-        )
+        r = await anon.login(creds["email"], _NEW_PASSWORD, expected_status=None)
         assert r.status_code in (200, 201) and r.json().get("accessToken"), (
             f"new password must log in, got {r.status_code}"
         )
         logger.info("CHECK new-password login → OK")
 
     async with async_step("[4/4] The OLD password is rejected (401)"):
-        r = await anon.post(
-            f"{_AUTH}/login",
-            json={"email": creds["email"], "password": creds["password"]},
-            expected_status=None,
-        )
+        r = await anon.login(creds["email"], creds["password"], expected_status=None)
         assert r.status_code == 401, f"old password must be rejected (401), got {r.status_code}"
         logger.info("CHECK old-password rejected → OK (401)")
 
@@ -262,11 +241,7 @@ async def test_partner_api_auth_access_control_003(
         created_resources.add(lambda: portal_a.close())
         created_resources.add(lambda: sa_partners_client.delete_partner(pid_a))
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        created_a = await portal_a.post(
-            f"{_PORTAL}/deals",
-            json=make_deal(None, plan_id, **make_prospect()),
-            expected_status=(200, 201),
-        )
+        created_a = await portal_a.register_deal(make_deal(None, plan_id, **make_prospect()))
         a_deal_id = (created_a.json().get("data") or {}).get("_id")
         assert a_deal_id, "precondition: partner A must have a deal"
         logger.info("SETUP: partner A ({}) registered deal {}", pid_a, a_deal_id)
@@ -278,7 +253,7 @@ async def test_partner_api_auth_access_control_003(
         logger.info("SETUP: ready — A={} deal={} ; B={}", pid_a, a_deal_id, pid_b)
 
     async with async_step("[1/1] Partner B requests partner A's deal → refused, no leak"):
-        r = await portal_b.get(f"{_PORTAL}/deals/{a_deal_id}", expected_status=None)
+        r = await portal_b.get_deal(a_deal_id, expected_status=None)
         assert r.status_code in (403, 404), (
             f"cross-partner access should be 404 (preferred) or 403, got {r.status_code} "
             "— BE returns 400 (a valid request, not a bad one); confirm with BE"

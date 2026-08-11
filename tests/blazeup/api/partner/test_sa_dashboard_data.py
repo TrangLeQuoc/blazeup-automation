@@ -14,7 +14,6 @@ from loguru import logger
 from utils.log_helper import async_step
 from utils.partner_portal import mint_partner_session
 
-_DASHBOARD_PATH = "/sa-partners-api/v1/partner/portal/dashboard"
 _SENSITIVE = ("password", "token", "secret", "pwd", "credential")
 
 
@@ -41,7 +40,7 @@ async def test_partner_api_dashboard_data_001(sa_partners_client, settings, crea
         logger.info("SETUP: partner-portal session for partner {}", pid)
 
     async with async_step("[1/2] GET the partner dashboard"):
-        resp = await portal.get(_DASHBOARD_PATH, expected_status=200)
+        resp = await portal.get_dashboard()
         body = resp.json()
         assert body.get("statusCode") == 200, (
             f"expected body statusCode 200, got {body.get('statusCode')}"

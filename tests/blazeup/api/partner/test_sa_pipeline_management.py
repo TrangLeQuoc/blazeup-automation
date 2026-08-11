@@ -14,16 +14,10 @@ from utils.data_factory import make_deal, make_prospect
 from utils.log_helper import async_step
 from utils.partner_portal import mint_partner_session
 
-_BASE = "/sa-partners-api/v1/partner/portal"
-
 
 async def _register_own_deal(portal, sa_deals_client) -> str:
     plan_id = await sa_deals_client.pick_billing_plan_id()
-    r = await portal.post(
-        f"{_BASE}/deals",
-        json=make_deal(None, plan_id, **make_prospect()),
-        expected_status=(200, 201),
-    )
+    r = await portal.register_deal(make_deal(None, plan_id, **make_prospect()))
     return (r.json().get("data") or {}).get("_id")
 
 
@@ -46,7 +40,7 @@ async def test_partner_api_pipeline_management_001(
         logger.info("SETUP: partner {} + deal {}", pid, deal_id)
 
     async with async_step("[1/2] GET own deals list"):
-        resp = await portal.get(f"{_BASE}/deals", params={"limit": 20}, expected_status=200)
+        resp = await portal.list_deals(params={"limit": 20})
         deals = resp.json().get("data") or []
         assert isinstance(deals, list) and deals, "deals `data` must be a non-empty list"
         logger.info("CHECK list → OK ({} deal(s))", len(deals))
@@ -81,9 +75,7 @@ async def test_partner_api_pipeline_management_002(
         assert deal_id, "precondition: deal must be registered"
 
     async with async_step("[1/1] Filter by status=registered"):
-        resp = await portal.get(
-            f"{_BASE}/deals", params={"limit": 20, "status": "registered"}, expected_status=200
-        )
+        resp = await portal.list_deals(params={"limit": 20, "status": "registered"})
         deals = resp.json().get("data") or []
         assert deals, "status=registered must return the registered deal"
         assert all(d.get("status") == "registered" for d in deals), (
@@ -121,7 +113,7 @@ async def test_partner_api_pipeline_management_011(sa_partners_client, settings,
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
         async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}"):
-            r = await portal.get(f"{_BASE}/deals", params=params, expected_status=None)
+            r = await portal.list_deals(params=params, expected_status=None)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)

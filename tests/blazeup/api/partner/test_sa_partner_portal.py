@@ -18,7 +18,6 @@ from utils.data_factory import make_deal, make_prospect, make_territory
 from utils.log_helper import async_step
 from utils.partner_portal import mint_partner_session
 
-_BASE = "/sa-partners-api/v1/partner/portal"
 _SENSITIVE = ("password", "token", "secret", "pwd", "credential")
 _GHOST_ID = "000000000000000000000000"
 
@@ -40,7 +39,7 @@ async def test_partner_api_partner_portal_001(sa_partners_client, settings, crea
         logger.info("SETUP: partner-portal session for partner {}", pid)
 
     async with async_step("[1/1] GET own profile"):
-        resp = await portal.get(f"{_BASE}/profile", expected_status=200)
+        resp = await portal.get_profile()
         d = resp.json().get("data") or {}
         assert isinstance(d, dict) and d, "profile `data` must be a non-empty object"
         assert (d.get("_id") or d.get("id")) == pid, (
@@ -71,7 +70,7 @@ async def test_partner_api_partner_portal_004(sa_partners_client, settings, crea
         created_resources.add(lambda: sa_partners_client.delete_partner(pid))
 
     async with async_step("[1/1] GET own commission summary"):
-        resp = await portal.get(f"{_BASE}/commissions/summary", expected_status=200)
+        resp = await portal.get_commissions_summary()
         d = resp.json().get("data") or {}
         assert isinstance(d, dict) and d, "summary `data` must be a non-empty object"
         for f in ("totalEarnedCents", "totalPendingCents", "totalPaidCents"):
@@ -107,7 +106,7 @@ async def test_partner_api_partner_portal_005(sa_partners_client, settings, crea
         logger.info("SETUP: partner {} + territory {}", pid, tid)
 
     async with async_step("[1/1] GET own territories"):
-        resp = await portal.get(f"{_BASE}/territories", expected_status=200)
+        resp = await portal.get_territories()
         terrs = resp.json().get("data") or []
         assert isinstance(terrs, list) and terrs, "territories `data` must be a non-empty list"
         mine = next((t for t in terrs if (t.get("_id") or t.get("id")) == tid), None)
@@ -132,7 +131,7 @@ async def test_partner_api_partner_portal_006(sa_partners_client, settings, crea
         created_resources.add(lambda: sa_partners_client.delete_partner(pid))
 
     async with async_step("[1/1] GET own commission rates"):
-        resp = await portal.get(f"{_BASE}/rates", expected_status=200)
+        resp = await portal.get_rates()
         rates = resp.json().get("data")
         assert isinstance(rates, list), "rates `data` must be a list"
         if rates:
@@ -165,7 +164,7 @@ async def test_partner_api_partner_portal_003(sa_partners_client, settings, crea
         logger.info("SETUP: partner {} user {} granted '{}'", pid, uid, cert_type)
 
     async with async_step("[1/2] GET own certifications"):
-        resp = await portal.get(f"{_BASE}/certifications", expected_status=200)
+        resp = await portal.get_certifications()
         certs = resp.json().get("data") or []
         assert isinstance(certs, list) and certs, "certifications `data` must be a non-empty list"
         logger.info("CHECK list → OK ({} cert(s))", len(certs))
@@ -207,7 +206,7 @@ async def test_partner_api_partner_portal_013(sa_partners_client, settings, crea
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
         async with async_step(f"[{idx}/{len(cases)}] Reject invalid cert filter: {label}"):
-            r = await portal.get(f"{_BASE}/certifications", params=params, expected_status=None)
+            r = await portal.get_certifications(params=params, expected_status=None)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)
@@ -234,17 +233,13 @@ async def test_partner_api_partner_portal_002(
         created_resources.add(lambda: portal.close())
         created_resources.add(lambda: sa_partners_client.delete_partner(pid))
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        created = await portal.post(
-            f"{_BASE}/deals",
-            json=make_deal(None, plan_id, **make_prospect()),
-            expected_status=(200, 201),
-        )
+        created = await portal.register_deal(make_deal(None, plan_id, **make_prospect()))
         deal_id = (created.json().get("data") or {}).get("_id")
         assert deal_id, "precondition: the partner must be able to register a deal"
         logger.info("SETUP: partner {} + deal {}", pid, deal_id)
 
     async with async_step("[1/1] GET the own deal by id"):
-        resp = await portal.get(f"{_BASE}/deals/{deal_id}", expected_status=200)
+        resp = await portal.get_deal(deal_id)
         d = resp.json().get("data") or {}
         assert (d.get("_id") or d.get("id")) == deal_id, "GET by id must return the same deal"
         assert str(d.get("partnerId")) == str(pid), "the deal must belong to the logged-in partner"
@@ -280,7 +275,7 @@ async def test_partner_api_partner_portal_012(sa_partners_client, settings, crea
     gaps: list[str] = []
     for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
         async with async_step(f"[{idx}/{len(cases)}] Reject get own deal: {label} → {want_status}"):
-            r = await portal.get(f"{_BASE}/deals/{did}", expected_status=None)
+            r = await portal.get_deal(did, expected_status=None)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
                 logger.info("CHECK {} → OK ({}, msg~'{}')", label, r.status_code, hint)

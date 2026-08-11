@@ -10,7 +10,7 @@ Usage in a test::
     portal, pid = await mint_partner_session(sa_partners_client, settings)
     created_resources.add(lambda: portal.close())
     created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-    resp = await portal.get("/sa-partners-api/v1/partner/portal/dashboard", expected_status=200)
+    resp = await portal.get_dashboard()
 """
 
 import asyncio
@@ -19,11 +19,9 @@ import contextlib
 import pytest
 from loguru import logger
 
-from api_clients.base_client import BaseClient
+from api_clients.blazeup.partner.partner_portal_client import PartnerPortalClient
 from utils.data_factory import make_partner, make_partner_user
 from utils.helpers import blocked_reason
-
-_PARTNER_LOGIN_PATH = "/sa-partners-api/v1/partner/auth/login"
 
 # A user created via invite (201) is occasionally not yet visible to the login read
 # (DB replication lag) → login returns 400 "partner_users … not found". That is a
@@ -34,7 +32,9 @@ _LOGIN_RETRY_ATTEMPTS = 4
 _LOGIN_RETRY_DELAY_S = 0.75
 
 
-async def partner_login(anon: BaseClient, email: str, password: str, *, expected=(200, 201)):
+async def partner_login(
+    anon: PartnerPortalClient, email: str, password: str, *, expected=(200, 201)
+):
     """POST the partner login, absorbing the transient just-invited 'user not found'.
 
     Returns the httpx.Response — a 2xx on success, or the last response once retries
@@ -44,11 +44,7 @@ async def partner_login(anon: BaseClient, email: str, password: str, *, expected
     """
     resp = None
     for attempt in range(1, _LOGIN_RETRY_ATTEMPTS + 1):
-        resp = await anon.post(
-            _PARTNER_LOGIN_PATH,
-            json={"email": email, "password": password},
-            expected_status=None,
-        )
+        resp = await anon.login(email, password, expected_status=None)
         if resp.status_code in expected:
             return resp
         transient = resp.status_code == 400 and "not found" in (resp.text or "").lower()
@@ -64,16 +60,20 @@ async def partner_login(anon: BaseClient, email: str, password: str, *, expected
     return resp
 
 
-def portal_client(settings, token: str | None = None) -> BaseClient:
-    """A BaseClient pointed at the API gateway, optionally carrying a partner JWT.
+def portal_client(
+    settings, token: str | None = None, *, app_origin: str | None = None
+) -> PartnerPortalClient:
+    """A partner-portal client at the API gateway, optionally carrying a partner JWT.
 
     Generous timeout (setup/auth, not the assertion under test). Caller closes it.
+    ``app_origin`` overrides the Origin/Referer headers — pass the PARTNER base url
+    when the call is made on behalf of the portal UI rather than the SA app.
     """
-    return BaseClient(
+    return PartnerPortalClient(
         str(settings.api_base_url),
         token=token,
         max_response_time_ms=settings.default_response_time_ms * 5,
-        app_origin=str(settings.base_url),
+        app_origin=app_origin or str(settings.base_url),
     )
 
 
@@ -106,7 +106,9 @@ async def provision_partner_user(sa_partners_client) -> dict:
     return creds
 
 
-async def mint_partner_session(sa_partners_client, settings) -> tuple[BaseClient, str, str]:
+async def mint_partner_session(
+    sa_partners_client, settings
+) -> tuple[PartnerPortalClient, str, str]:
     """Return ``(partner_portal_client, partner_id, user_id)`` — authed as a partner user.
 
     Steps: SA creates a partner, approves it (pending → active so the user can log

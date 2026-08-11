@@ -114,6 +114,23 @@ class SaDealsClient(BaseClient):
         response = await self.get(f"{_DEALS_PATH}/{deal_id}", expected_status=expected_status)
         return DealWriteResponse.model_validate(response.json())
 
+    async def raw_update_deal(
+        self,
+        deal_id: str,
+        payload: dict[str, Any],
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """Raw PATCH a deal — no schema validation.
+
+        Raw because the interesting cases are what the BE REFUSES: an unrecognised
+        field is stripped from the response, and a body of only non-editable fields is
+        rejected 400 "No editable fields provided". Both need the response as-is.
+        """
+        return await self.patch(
+            f"{_DEALS_PATH}/{deal_id}", json=payload, expected_status=expected_status
+        )
+
     async def approve_deal(
         self,
         deal_id: str,
