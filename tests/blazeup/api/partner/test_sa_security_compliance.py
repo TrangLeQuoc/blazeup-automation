@@ -25,7 +25,7 @@ _UUID_RE = re.compile(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_security_compliance_001(sa_partners_client, created_resources):
+async def test_partner_api_security_compliance_001(sa_partners_client, seeded_partner):
     """PARTNER_API_SECURITY_COMPLIANCE_001: SA action is audited - entry carries actor, action, reasoning, correlation ID.
 
     Every SA action must write a well-formed, correlated audit entry. This performs a
@@ -35,12 +35,9 @@ async def test_partner_api_security_compliance_001(sa_partners_client, created_r
     acted-on entity, and leaks no sensitive field.
     """
     async with async_step("Setup: create a partner (the SA action target)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
         code = partner.data.get("code")
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         reason = f"QA-AUTO SECURITY_COMPLIANCE_001 tier-change reason for {code}"
         logger.info("SETUP: partner {} created; will change tier with reason='{}'", code, reason)
 
@@ -116,9 +113,7 @@ _UNNECESSARY_PII = {
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_security_compliance_002(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_security_compliance_002(sa_deals_client, seeded_partner):
     """PARTNER_API_SECURITY_COMPLIANCE_002: prospect data minimization - unnecessary PII is not persisted.
 
     Data-minimization control: registering a deal with extra, unnecessary PII fields
@@ -132,11 +127,8 @@ async def test_partner_api_security_compliance_002(
     Idempotency N/A (duplicate register is _022).
     """
     async with async_step("Setup: partner + plan + a deal payload carrying unnecessary PII"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="referral", **_UNNECESSARY_PII)
         logger.info(

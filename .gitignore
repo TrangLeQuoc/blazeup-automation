@@ -5,6 +5,7 @@ config/**/.env
 
 # -- Python
 .venv/
+.venv-selftest/          # throwaway env built by `make selftest-ci`
 __pycache__/
 *.py[cod]
 *.pyo

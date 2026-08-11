@@ -24,6 +24,7 @@ from api_clients.blazeup.admin.partner.sa_deals_client import SaDealsClient
 from api_clients.blazeup.admin.partner.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
 from pages.blazeup.partner.login_page import PartnerLoginPage
+from pytest_support.seeding import seed_partner
 from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui
 from utils.screenshot_on_fail import attach_screenshot
@@ -786,3 +787,29 @@ async def created_resources() -> AsyncGenerator[_CleanupRegistry]:
             await cleanup()
         except Exception as exc:  # noqa: BLE001 — cleanup must never break teardown
             logger.warning("Resource cleanup failed (non-blocking): {}", exc)
+
+
+@pytest.fixture
+def seeded_partner(sa_partners_client: SaPartnersClient, created_resources: _CleanupRegistry):
+    """Create a partner with its cleanup ALREADY registered — impossible to forget.
+
+    Requests ``sa_partners_client`` before ``created_resources`` on purpose: that sets the
+    setup order, so at teardown the registered DELETEs run BEFORE the client closes.
+
+    Thin wrapper over ``pytest_support.seeding.seed_partner``, where the rules and the
+    reasoning live (that module is Playwright-free so the selftests cover it in CI)::
+
+        partner = await seeded_partner()                    # pending
+        active = await seeded_partner(approve=True)          # pending -> active
+        custom = await seeded_partner(payload=make_partner(type="referral"))
+
+    Returns the create response unchanged: call sites keep using ``partner.partner_id``
+    and ``partner.data``.
+    """
+
+    async def _seed(*, approve: bool = False, payload: dict[str, Any] | None = None):
+        return await seed_partner(
+            sa_partners_client, created_resources.add, approve=approve, payload=payload
+        )
+
+    return _seed

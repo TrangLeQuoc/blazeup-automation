@@ -13,3 +13,5 @@ loguru        # runner/test_runner.py, utils/ui_cleanup.py
 pyyaml        # utils/sync_registry.py reads config/*/config.yaml
 httpx         # utils/preflight.py
 openpyxl      # utils/sync_registry.py reads the test plan; selftests read Bug_Tracker.xlsx
+faker         # utils/data_factory.py (pulled in by pytest_support/seeding.py)
+pydantic      # api_clients/* response schemas (selftests import the clients directly)

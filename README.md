@@ -249,6 +249,11 @@ python -m runner.blazeup.run_test --execute 2060101 --no-preflight
 # Framework selftests (runner/registry logic + be_gap traceability; no staging, no browser, ~1s)
 python -m pytest selftests/ -o addopts= --confcutdir=selftests -q
 
+# Same selftests in a throwaway venv built from requirements-selftest.lock — what CI
+# installs. Run before pushing a NEW selftest: your working env has the full
+# requirements.txt, so a missing lock entry passes locally and only fails on push.
+make selftest-ci
+
 # Sync TC registry (after adding new test functions)
 python utils/sync_registry.py
 
@@ -468,6 +473,11 @@ Windows without it can fail to install on the runner.
 `requirements-selftest.txt` carries **no versions of its own** — it constrains against
 `requirements.txt` (`-c requirements.txt`), so bumping a version in one place cannot
 leave the selftest job pinned to the old one.
+
+It is a **deliberately short list**, and that is also its trap: your working env has the
+full `requirements.txt`, so a selftest importing something absent from this file passes
+locally and fails on push. After adding a selftest that imports a new module, add the
+package here, regenerate the lock, and verify with `make selftest-ci`.
 
 ---
 

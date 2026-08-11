@@ -22,9 +22,7 @@ _GHOST_ID = "000000000000000000000000"
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_001(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_001(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_001: register a partner deal - deal is created (registered).
 
     Happy-path deal registration on ``POST /sa-partners-api/v1/sa/deals``: a valid
@@ -35,11 +33,8 @@ async def test_partner_api_deal_registration_pipeline_001(
     a follow-up GET.
     """
     async with async_step("Setup: create a partner + pick a published billing plan"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="referral")
         logger.info(
@@ -104,9 +99,7 @@ async def test_partner_api_deal_registration_pipeline_001(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_002(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_002(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_002: register reseller deal - billing model 'reseller' is stored.
 
     Registers a deal with ``dealType="reseller"`` and verifies the reseller billing
@@ -118,11 +111,8 @@ async def test_partner_api_deal_registration_pipeline_002(
     ``dealType == "reseller"`` IS the stored billing model.
     """
     async with async_step("Setup: create a partner + pick a published billing plan"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="reseller")
         logger.info("SETUP: reseller deal payload ready (partner {})", partner.data.get("code"))
@@ -174,9 +164,7 @@ async def test_partner_api_deal_registration_pipeline_002(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_003(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_003(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_003: register co-sell deal - co-sell metadata is stored.
 
     Registers a deal with ``dealType="co_sell"`` and verifies the co-sell model is
@@ -190,11 +178,8 @@ async def test_partner_api_deal_registration_pipeline_003(
     job), out of scope here.
     """
     async with async_step("Setup: create a partner + pick a published billing plan"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="co_sell")
         logger.info("SETUP: co-sell deal payload ready (partner {})", partner.data.get("code"))
@@ -248,9 +233,7 @@ async def test_partner_api_deal_registration_pipeline_003(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_004(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_004(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_004: register deal for an existing prospect - conflict raised.
 
     Deal protection: when a SECOND partner registers a deal for a prospect that a
@@ -261,13 +244,8 @@ async def test_partner_api_deal_registration_pipeline_004(
     duplicate instead — a separate behavior, not this TC.)
     """
     async with async_step("Setup: two partners + a shared prospect identity"):
-        p1 = await sa_partners_client.create_partner(make_partner())
-        p2 = await sa_partners_client.create_partner(make_partner())
-        for p in (p1, p2):
-            if p.partner_id:
-                created_resources.add(
-                    lambda pid=p.partner_id: sa_partners_client.delete_partner(pid)
-                )
+        p1 = await seeded_partner()
+        p2 = await seeded_partner()
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, shared by both partners
@@ -307,9 +285,7 @@ async def test_partner_api_deal_registration_pipeline_004(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_022(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_022(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_022: duplicate deal by the SAME partner - rejected, no second deal.
 
     Idempotency / duplicate counterpart of _001 (register). When the SAME partner
@@ -320,11 +296,8 @@ async def test_partner_api_deal_registration_pipeline_022(
     returned, no conflict path.
     """
     async with async_step("Setup: one partner + a published plan + a unique prospect identity"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, reused for both register calls
         logger.info(
@@ -364,9 +337,7 @@ async def test_partner_api_deal_registration_pipeline_022(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_008(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_008(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_008: internal deal approve - approved + rate/rate-table version stamped.
 
     Approving a registered deal (POST /v1/sa/deals/{id}/approve) flips status
@@ -380,11 +351,8 @@ async def test_partner_api_deal_registration_pipeline_008(
     (not serialized), stamped at a different stage (e.g. deal win), or unimplemented.
     """
     async with async_step("Setup: create partner + register a deal (status 'registered')"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         registered = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         deal_id = registered.deal_id
@@ -423,9 +391,7 @@ async def test_partner_api_deal_registration_pipeline_008(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_009(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_009(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_009: resolve conflict - decision and reasoning are immutable.
 
     Resolving a flagged deal conflict (POST /v1/sa/deals/{id}/resolve-conflict)
@@ -437,13 +403,8 @@ async def test_partner_api_deal_registration_pipeline_009(
     reasoning = "QA-AUTO original reasoning — confirmed partner wins"
 
     async with async_step("Setup: create a flagged conflict (two partners, same prospect)"):
-        p1 = await sa_partners_client.create_partner(make_partner())
-        p2 = await sa_partners_client.create_partner(make_partner())
-        for p in (p1, p2):
-            if p.partner_id:
-                created_resources.add(
-                    lambda pid=p.partner_id: sa_partners_client.delete_partner(pid)
-                )
+        p1 = await seeded_partner()
+        p2 = await seeded_partner()
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, shared by both partners
@@ -501,7 +462,7 @@ async def test_partner_api_deal_registration_pipeline_009(
 @pytest.mark.api
 @pytest.mark.regression
 async def test_partner_api_deal_registration_pipeline_010(
-    sa_partners_client, sa_deals_client, created_resources
+    sa_partners_client, sa_deals_client, seeded_partner
 ):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_010: deal approved event - published (CRM sync is downstream).
 
@@ -515,11 +476,8 @@ async def test_partner_api_deal_registration_pipeline_010(
     Integration TCs).
     """
     async with async_step("Setup: create partner + register a deal (status 'registered')"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal_id = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
         logger.info("SETUP: deal {} registered", deal_id)
@@ -562,9 +520,7 @@ async def test_partner_api_deal_registration_pipeline_010(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_013(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_013(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_013: resolve conflict (prospect confirmation) - confirmed partner wins.
 
     When two partners register the same prospect, resolving the FLAGGED deal FOR
@@ -575,13 +531,8 @@ async def test_partner_api_deal_registration_pipeline_013(
     immutability is covered by _009; negative resolve inputs by _029.
     """
     async with async_step("Setup: two partners register the SAME prospect (deal B flagged)"):
-        p1 = await sa_partners_client.create_partner(make_partner())
-        p2 = await sa_partners_client.create_partner(make_partner())
-        for p in (p1, p2):
-            if p.partner_id:
-                created_resources.add(
-                    lambda pid=p.partner_id: sa_partners_client.delete_partner(pid)
-                )
+        p1 = await seeded_partner()
+        p2 = await seeded_partner()
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, shared by both partners
@@ -630,9 +581,7 @@ async def test_partner_api_deal_registration_pipeline_013(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_021(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_021(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_021: register deal invalid/missing fields - rejected with 400.
 
     Negative counterpart of _001 (register). Each invalid or incomplete payload
@@ -645,11 +594,8 @@ async def test_partner_api_deal_registration_pipeline_021(
     accidentally created is removed via the parent-partner cleanup.
     """
     async with async_step("Setup: create a partner + pick a published plan (valid baseline)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         base = make_deal(pid, plan_id, dealType="referral")
         # Prove the fixture ids used in negative cases are genuinely absent, so the
@@ -700,9 +646,7 @@ async def test_partner_api_deal_registration_pipeline_021(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_028(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_028(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_028: approve invalid/illegal-state deal - rejected with the correct code.
 
     Negative counterpart of _008 (approve). Three distinct rejections, each with its
@@ -718,11 +662,8 @@ async def test_partner_api_deal_registration_pipeline_028(
     the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: create partner + register + approve a deal (now 'approved')"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         approved = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         await sa_deals_client.approve_deal(approved.deal_id)
@@ -761,9 +702,7 @@ async def test_partner_api_deal_registration_pipeline_028(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_029(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_029(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_029: resolve-conflict invalid input - rejected with the correct code.
 
     Negative counterpart of _009 (resolve conflict). Each invalid input is rejected
@@ -781,11 +720,8 @@ async def test_partner_api_deal_registration_pipeline_029(
     the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: create a registered (non-flagged) deal as the target"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         did = deal.deal_id
@@ -839,9 +775,7 @@ async def test_partner_api_deal_registration_pipeline_029(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_016(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_016(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_016: extend deal protection (SA manual action) - window pushed out + reasoning recorded.
 
     SA manually extends a registered deal's protection window via
@@ -861,11 +795,8 @@ async def test_partner_api_deal_registration_pipeline_016(
         return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
 
     async with async_step("Setup: partner + plan + a registered deal (has a protection window)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         deal_id = deal.deal_id
@@ -995,9 +926,7 @@ async def test_partner_api_deal_registration_pipeline_030(sa_deals_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_033(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_033(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_033: extend-protection repeat is ADDITIVE (idempotency probe).
 
     Idempotency counterpart of _016. extend-protection is a parameterized mutating
@@ -1013,11 +942,8 @@ async def test_partner_api_deal_registration_pipeline_033(
 
     added_days = 30
     async with async_step("Setup: partner + plan + a registered deal (has a protection window)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         deal_id = deal.deal_id
@@ -1060,20 +986,15 @@ async def test_partner_api_deal_registration_pipeline_033(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_020(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_020(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_020: SA retrieves a single deal by id - full record returned.
 
     GET /v1/sa/deals/{id} returns the full deal record (id matches, required fields
     present, status 'registered', protection window + conflictStatus).
     """
     async with async_step("Setup: partner + plan + a registered deal"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         deal_id = deal.deal_id
@@ -1158,20 +1079,15 @@ async def test_partner_api_deal_registration_pipeline_031(sa_deals_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_019(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_019(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_019: SA marks an approved deal as lost - status 'lost'.
 
     Losing requires the deal to be ``approved`` first. POST /v1/sa/deals/{id}/lose
     flips ``approved`` → ``lost`` (partner notification is downstream, out of scope).
     """
     async with async_step("Setup: partner + plan + register + approve a deal"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
         deal_id = deal.deal_id
@@ -1198,9 +1114,7 @@ async def test_partner_api_deal_registration_pipeline_019(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_registration_pipeline_032(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_032(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_032: lose deal invalid/illegal-state - rejected (correct 4xx).
 
     Negative counterpart of _019. Three distinct rejections, each with its own code:
@@ -1215,11 +1129,8 @@ async def test_partner_api_deal_registration_pipeline_032(
     returns the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: a registered (not approved) deal"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
         logger.info("SETUP: registered (non-approved) deal {}", did)
@@ -1256,20 +1167,15 @@ async def test_partner_api_deal_registration_pipeline_032(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_approval_queue_001(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_approval_queue_001(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_APPROVAL_QUEUE_001: SA rejects a registered deal - rejection persisted.
 
     POST /v1/sa/deals/{id}/reject (body ReviewDealDto{reviewNotes}) flips a
     ``registered`` deal to ``rejected``; the status persists via a follow-up GET.
     """
     async with async_step("Setup: partner + plan + a registered deal"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal_id = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
         logger.info("SETUP: deal {} registered", deal_id)
@@ -1294,9 +1200,7 @@ async def test_partner_api_deal_approval_queue_001(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_deal_approval_queue_011(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_approval_queue_011(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_APPROVAL_QUEUE_011: reject invalid/illegal-state deal - rejected with the correct code.
 
     Negative counterpart of _001. Three distinct rejections, each with its own code:
@@ -1311,11 +1215,8 @@ async def test_partner_api_deal_approval_queue_011(
     the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: register + reject a deal (now 'rejected')"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
         await sa_deals_client.reject_deal(did, review_notes="QA-AUTO first reject")
@@ -1356,7 +1257,7 @@ async def test_partner_api_deal_approval_queue_011(
 @pytest.mark.api
 @pytest.mark.regression
 async def test_partner_api_deal_registration_pipeline_018(
-    sa_partners_client, sa_deals_client, created_resources
+    sa_partners_client, sa_deals_client, seeded_partner
 ):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_018: SA marks an approved deal as won - status 'won' + provisioning/commission events emitted.
 
@@ -1369,11 +1270,8 @@ async def test_partner_api_deal_registration_pipeline_018(
     /v1/sa/commissions), out of scope here (cf. DEAL_010 pattern).
     """
     async with async_step("Setup: partner + plan + register + approve a deal (status 'approved')"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
         deal_id = deal.deal_id
@@ -1471,9 +1369,7 @@ async def test_partner_api_deal_registration_pipeline_018(
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-020: WinDealDto required fields not enforced (empty body → 201) — confirm with BE
-async def test_partner_api_deal_registration_pipeline_034(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_034: win invalid/illegal-state - rejected with the correct code.
 
     Negative counterpart of _018 (win). Illegal transitions and bad ids are rejected
@@ -1489,11 +1385,8 @@ async def test_partner_api_deal_registration_pipeline_034(
     (mutating action, repeat rejected - not a create).
     """
     async with async_step("Setup: partner + plan (fresh approved deals are built per case)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         full = {
             "companyWebsite": "https://qa-auto.example.com",

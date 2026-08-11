@@ -62,6 +62,19 @@ CLIENT_VERB_CALL_RE = re.compile(r"\bawait\s+\w+\.(?:get|post|patch|put|delete)\
 _BAD_FIRST_ARG = (")", '"', "'", 'f"', "f'")  # no "" here: startswith("") is always True
 _KEYWORD_FIRST_ARG_RE = re.compile(r"\w+\s*=[^=]")
 
+# Seeding a throwaway partner goes through the `seeded_partner` fixture, which registers
+# the DELETE before the precondition assert. Calling create_partner in a test body means
+# re-implementing that ordering by hand — which is exactly what 40 test bodies used to do.
+# `raw_create_partner` is NOT matched: negative tests need the unvalidated call, and a
+# rejected create persists nothing to clean up.
+CREATE_PARTNER_RE = re.compile(r"\.create_partner\(")
+
+# The single legitimate exception: the TC whose SUBJECT is the create call itself. It
+# asserts on the response (status, message, echoed fields, initial status), so the call
+# has to be visible in the test. Listed by name so a second exception cannot appear
+# quietly — adding one means editing this line.
+CREATE_PARTNER_ALLOWED = {"test_partner_api_partner_account_management_002"}
+
 TEST_FILES = sorted(TESTS_DIR.rglob("*.py"))
 
 
@@ -115,4 +128,26 @@ def test_client_verb_calls_pass_a_named_path(path):
         "a test called an HTTP verb on a client without a named endpoint — either the "
         "method name is missing (the endpoint argument silently became a keyword) or the "
         "path is a literal. Call the client's named method instead:\n  " + "\n  ".join(offenders)
+    )
+
+
+@pytest.mark.parametrize("path", TEST_FILES, ids=lambda p: p.name)
+def test_partners_are_seeded_through_the_fixture(path):
+    """`create_partner` in a test body means its cleanup ordering is hand-rolled again."""
+    text = path.read_text(encoding="utf-8")
+    current = ""
+    offenders = []
+    for n, line in enumerate(text.splitlines(), start=1):
+        func = re.match(r"async def (test_\w+)", line)
+        if func:
+            current = func.group(1)
+        if not CREATE_PARTNER_RE.search(line) or "raw_create_partner" in line:
+            continue
+        if current in CREATE_PARTNER_ALLOWED:
+            continue
+        offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{n}: {line.strip()}")
+    assert not offenders, (
+        "a test created a partner directly. Use the `seeded_partner` fixture — it registers "
+        "the DELETE before the precondition assert, so a later failure still cleans up:\n  "
+        + "\n  ".join(offenders)
     )

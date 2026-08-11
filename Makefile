@@ -60,6 +60,22 @@ lock:
 selftest:
 	python -m pytest selftests/ -o addopts= --confcutdir=selftests -q
 
+# Same selftests, but in a THROWAWAY venv built from requirements-selftest.lock — i.e.
+# what selftest.yml actually installs. Run this before pushing a new selftest.
+#
+# Why it exists: your working env has the full requirements.txt, so a selftest that
+# imports something missing from the LOCK still passes locally and only turns red on
+# push. That happened twice — `pydantic` (the API clients' schemas) was absent from the
+# lock, and separately a module-level `importorskip` silently took 17 Playwright-FREE
+# tests out of the CI run while the local count looked unchanged.
+#
+# Expect exactly ONE skip: test_shared_session_wait_ready.py needs a page object.
+# No make on Windows? Run these three lines directly.
+selftest-ci:
+	python -m venv .venv-selftest
+	.venv-selftest/Scripts/python -m pip install -q -r requirements-selftest.lock
+	.venv-selftest/Scripts/python -m pytest selftests/ -o addopts= --confcutdir=selftests -q -rs
+
 # Regenerate runner/{domain}/registry.py from tests/{domain}/ (all domains).
 sync:
 	python utils/sync_registry.py

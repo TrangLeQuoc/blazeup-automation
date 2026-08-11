@@ -18,7 +18,7 @@ _GHOST_ID = "000000000000000000000000"
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_territories_001(sa_partners_client, created_resources):
+async def test_partner_api_territories_001(sa_partners_client, seeded_partner, created_resources):
     """PARTNER_API_TERRITORIES_001: SA assigns a territory to a partner - saved with fields + effective dates.
 
     Contract on ``POST /sa-partners-api/v1/sa/territories``: a valid assignment
@@ -27,11 +27,8 @@ async def test_partner_api_territories_001(sa_partners_client, created_resources
     dates), and is retrievable via GET by id.
     """
     async with async_step("Setup: create a partner"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         payload = make_territory(pid, countries=["US", "CA"], exclusivityType="preferred")
         logger.info(
             "SETUP: partner {}; territory label='{}'", partner.data.get("code"), payload["label"]
@@ -77,7 +74,7 @@ async def test_partner_api_territories_001(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_territories_011(sa_partners_client, created_resources):
+async def test_partner_api_territories_011(sa_partners_client, seeded_partner):
     """PARTNER_API_TERRITORIES_011: assign territory invalid/missing fields - rejected with 400.
 
     Negative counterpart of _001. Each invalid/incomplete payload must be rejected
@@ -85,11 +82,8 @@ async def test_partner_api_territories_011(sa_partners_client, created_resources
     endpoint returns "Partner ... not found"). All cases run (failures collected).
     """
     async with async_step("Setup: create a partner (valid baseline)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         base = make_territory(pid)
 
     def without(field: str) -> dict:
@@ -126,7 +120,7 @@ async def test_partner_api_territories_011(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_territories_012(sa_partners_client, created_resources):
+async def test_partner_api_territories_012(sa_partners_client, seeded_partner, created_resources):
     """PARTNER_API_TERRITORIES_012: exclusive territory conflict - a 2nd partner can't take a held exclusive country.
 
     Duplicate/conflict counterpart of _001 (assign). When one partner holds an
@@ -136,13 +130,8 @@ async def test_partner_api_territories_012(sa_partners_client, created_resources
     """
     country = "IS"  # uncommon ISO code to minimise collisions with leftover data
     async with async_step("Setup: two partners"):
-        p1 = await sa_partners_client.create_partner(make_partner())
-        p2 = await sa_partners_client.create_partner(make_partner())
-        for p in (p1, p2):
-            if p.partner_id:
-                created_resources.add(
-                    lambda pid=p.partner_id: sa_partners_client.delete_partner(pid)
-                )
+        p1 = await seeded_partner()
+        p2 = await seeded_partner()
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
 
     async with async_step(f"[1/3] Partner 1 takes an EXCLUSIVE territory on {country}"):
@@ -183,7 +172,7 @@ async def test_partner_api_territories_012(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_territories_002(sa_partners_client, created_resources):
+async def test_partner_api_territories_002(sa_partners_client, seeded_partner, created_resources):
     """PARTNER_API_TERRITORIES_002: SA lists territories with filters - paginated, scoped, filterable.
 
     Contract on ``GET /sa-partners-api/v1/sa/territories``: returns 200 with the
@@ -191,11 +180,8 @@ async def test_partner_api_territories_002(sa_partners_client, created_resources
     schema; and the exclusivityType filter returns only matching rows.
     """
     async with async_step("Setup: partner + an assigned territory"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         terr = await sa_partners_client.assign_territory(
             make_territory(pid, countries=["US"], exclusivityType="preferred")
         )
@@ -269,18 +255,15 @@ async def test_partner_api_territories_013(sa_partners_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_territories_003(sa_partners_client, created_resources):
+async def test_partner_api_territories_003(sa_partners_client, seeded_partner, created_resources):
     """PARTNER_API_TERRITORIES_003: SA retrieves a single territory by id - full detail.
 
     Contract on ``GET /sa-partners-api/v1/sa/territories/{id}``: returns 200 with the
     full territory (id matches; partnerId/label/countries/exclusivityType present).
     """
     async with async_step("Setup: partner + an assigned territory"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         terr = await sa_partners_client.assign_territory(make_territory(pid, countries=["US"]))
         tid = terr.data.get("_id") or terr.data.get("id")
         if tid:
@@ -347,7 +330,7 @@ async def test_partner_api_territories_014(sa_partners_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_territories_004(sa_partners_client, created_resources):
+async def test_partner_api_territories_004(sa_partners_client, seeded_partner):
     """PARTNER_API_TERRITORIES_004: SA removes a territory assignment - removed and no longer retrievable.
 
     Contract on ``DELETE /sa-partners-api/v1/sa/territories/{id}``: removing a
@@ -355,11 +338,8 @@ async def test_partner_api_territories_004(sa_partners_client, created_resources
     → 4xx not-found).
     """
     async with async_step("Setup: partner + an assigned territory"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         terr = await sa_partners_client.assign_territory(make_territory(pid, countries=["US"]))
         tid = terr.data.get("_id") or terr.data.get("id")
         assert tid, "precondition: territory must be created"
@@ -383,7 +363,7 @@ async def test_partner_api_territories_004(sa_partners_client, created_resources
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-018: ghost / already-removed id returns 400, should be 404 — confirm with BE
-async def test_partner_api_territories_015(sa_partners_client, created_resources):
+async def test_partner_api_territories_015(sa_partners_client, seeded_partner):
     """PARTNER_API_TERRITORIES_015: delete territory invalid/already-removed - rejected with the correct code.
 
     Negative counterpart of _004. A GHOST id (well-formed but non-existent) and an
@@ -397,11 +377,8 @@ async def test_partner_api_territories_015(sa_partners_client, created_resources
     returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: partner + a territory to delete"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         terr = await sa_partners_client.assign_territory(make_territory(pid, countries=["US"]))
         tid = terr.data.get("_id") or terr.data.get("id")
         assert tid, "precondition: territory must be created"

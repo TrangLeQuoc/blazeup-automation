@@ -118,6 +118,9 @@ async def test_partner_api_partner_account_management_002(sa_partners_client, cr
     )
 
     async with async_step(f"[1/5] Call API: POST /v1/sa/partners (create '{payload['name']}')"):
+        # Deliberately NOT the `seeded_partner` fixture: creating a partner is what this
+        # TC asserts on (status, message, echoed fields, initial status), so the call has
+        # to be visible here. Every other test seeds through the fixture.
         resp = await sa_partners_client.create_partner(payload)
         partner_id = resp.partner_id
         # Register cleanup FIRST (before assertions) so a later failed assert
@@ -159,7 +162,7 @@ async def test_partner_api_partner_account_management_002(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_003(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_003(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_003: POST partner approve - activation + approval event are created.
 
     State-transition contract check on ``POST /sa-partners-api/v1/sa/partners/{id}/approve``:
@@ -175,11 +178,8 @@ async def test_partner_api_partner_account_management_003(sa_partners_client, cr
     """
     async with async_step("Setup: create a PENDING partner (approval precondition)"):
         payload = make_partner(type="channel")
-        created = await sa_partners_client.create_partner(payload)
+        created = await seeded_partner(payload=payload)
         partner_id = created.partner_id
-        if partner_id:
-            created_resources.add(lambda: sa_partners_client.delete_partner(partner_id))
-        assert partner_id, "precondition: partner must be created"
         assert created.data.get("status") == "pending", "precondition: partner must start pending"
         logger.info("CHECK precondition → OK (partner {} is pending)", created.data.get("code"))
 
@@ -215,7 +215,7 @@ async def test_partner_api_partner_account_management_003(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_004(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_004(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_004: partner application decline - mandatory reason is audit logged.
 
     Security check on declining a partner. The plan calls this "PATCH decline";
@@ -230,12 +230,9 @@ async def test_partner_api_partner_account_management_004(sa_partners_client, cr
     step that fails now is a real BE regression.
     """
     async with async_step("Setup: create a PENDING partner to decline"):
-        created = await sa_partners_client.create_partner(make_partner())
+        created = await seeded_partner()
         pid = created.partner_id
         code = created.data.get("code")
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         reason = f"QA-AUTO decline reason for {code}"  # unique → findable in audit log
         logger.info("SETUP: pending partner {} created; decline reason='{}'", code, reason)
 
@@ -269,11 +266,7 @@ async def test_partner_api_partner_account_management_004(sa_partners_client, cr
         invalid_reasons = [("absent", None), ("empty string", ""), ("whitespace", "   ")]
         gaps: list[str] = []
         for label, bad in invalid_reasons:
-            victim = await sa_partners_client.create_partner(make_partner())
-            if victim.partner_id:
-                created_resources.add(
-                    lambda pid=victim.partner_id: sa_partners_client.delete_partner(pid)
-                )
+            victim = await seeded_partner()  # one per case; the fixture binds each id
             r = await sa_partners_client.deactivate_partner(
                 victim.partner_id, reason=bad, expected_status=None
             )
@@ -295,7 +288,7 @@ async def test_partner_api_partner_account_management_004(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_005(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_005(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_005: tier changed event - published so portal/analytics can refresh.
 
     Changing a partner's tier via POST /v1/sa/partners/{id}/upgrade-tier must
@@ -326,11 +319,9 @@ async def test_partner_api_partner_account_management_005(sa_partners_client, cr
         return None
 
     async with async_step("Setup: create a partner (tier defaults to 'registered')"):
-        created = await sa_partners_client.create_partner(make_partner())
+        created = await seeded_partner()
         pid = created.partner_id
         code = created.data.get("code")
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
         assert created.data.get("tier") == "registered", (
             "new partner should start at tier 'registered'"
         )
@@ -493,7 +484,7 @@ async def test_partner_api_partner_account_management_011(sa_partners_client):
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-012: ghost (absent) partner id returns 400, should be 404 — confirm with BE
-async def test_partner_api_partner_account_management_013(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_013(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with the correct code.
 
     Negative counterpart of _003 (approve). Three distinct rejections, each with its
@@ -509,10 +500,7 @@ async def test_partner_api_partner_account_management_013(sa_partners_client, cr
     the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: create + approve a partner so it is already 'active'"):
-        active = await sa_partners_client.create_partner(make_partner())
-        if active.partner_id:
-            created_resources.add(lambda: sa_partners_client.delete_partner(active.partner_id))
-        await sa_partners_client.approve_partner(active.partner_id)
+        active = await seeded_partner(approve=True)
         logger.info("SETUP: partner {} is now active", active.data.get("code"))
 
     # (label, id, expected_status, message hint)
@@ -554,7 +542,7 @@ async def test_partner_api_partner_account_management_013(sa_partners_client, cr
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-013: ghost (absent) partner id returns 400, should be 404 — confirm with BE
-async def test_partner_api_partner_account_management_014(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_014(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
 
     Negative counterpart of _004 (deactivate). A GHOST id (well-formed but
@@ -591,9 +579,7 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, cr
     async with async_step(
         "[3/3] Deactivating an already-suspended partner (idempotency observation)"
     ):
-        p = await sa_partners_client.create_partner(make_partner())
-        if p.partner_id:
-            created_resources.add(lambda: sa_partners_client.delete_partner(p.partner_id))
+        p = await seeded_partner()
         await sa_partners_client.deactivate_partner(p.partner_id, reason="first")
         r = await sa_partners_client.deactivate_partner(
             p.partner_id, reason="again", expected_status=None
@@ -617,7 +603,7 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, cr
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-014: ghost (absent) partner id returns 400, should be 404 — confirm with BE
-async def test_partner_api_partner_account_management_015(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_015(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with the correct code.
 
     Negative counterpart of _005 (tier change). The upgrade-tier endpoint must reject
@@ -633,11 +619,8 @@ async def test_partner_api_partner_account_management_015(sa_partners_client, cr
     the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: create a partner to target with valid id"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         logger.info("SETUP: partner {} ready (tier 'registered')", partner.data.get("code"))
 
     # (label, partner_id, tier-to-send, expected_status, expected message hint)
@@ -676,7 +659,7 @@ async def test_partner_api_partner_account_management_015(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_010(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_010(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_010: certification earned - granted, listed, and event published.
 
     Granting a certification to a partner user (POST /v1/sa/partner-users/{userId}/
@@ -689,11 +672,8 @@ async def test_partner_api_partner_account_management_010(sa_partners_client, cr
     cert_type = "sales_certified"
 
     async with async_step("Setup: create a partner + invite a portal user"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         user_id = invited.data.get("userId")
         assert user_id, "precondition: partner user must be invited (userId present)"
@@ -748,7 +728,7 @@ async def test_partner_api_partner_account_management_010(sa_partners_client, cr
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-015: ghost (absent) userId returns 400, should be 404 — confirm with BE
-async def test_partner_api_partner_account_management_020(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_020(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with the correct code.
 
     Negative counterpart of _010. Granting a certification must reject invalid input
@@ -763,10 +743,8 @@ async def test_partner_api_partner_account_management_020(sa_partners_client, cr
     BE returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: create a partner + invite a portal user (valid userId)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         user_id = invited.data.get("userId")
         assert user_id, "precondition: partner user must be invited"
@@ -806,7 +784,7 @@ async def test_partner_api_partner_account_management_020(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_021(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_021(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021: duplicate partner (same email) - rejected, no second account.
 
     Idempotency / duplicate counterpart of _002 (create). Creating a second partner
@@ -815,11 +793,8 @@ async def test_partner_api_partner_account_management_021(sa_partners_client, cr
     """
     async with async_step("Setup: create a partner with a unique email"):
         payload = make_partner()
-        first = await sa_partners_client.create_partner(payload)
+        first = await seeded_partner(payload=payload)  # payload kept: the duplicate re-uses it
         pid = first.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: first partner must be created"
         logger.info(
             "SETUP: partner {} created with email '{}'", first.data.get("code"), payload["email"]
         )
@@ -847,7 +822,7 @@ async def test_partner_api_partner_account_management_021(sa_partners_client, cr
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-001: re-grant creates a duplicate active cert (count=2) — confirm with BE
-async def test_partner_api_partner_account_management_022(sa_partners_client, created_resources):
+async def test_partner_api_partner_account_management_022(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022: re-grant same certification - must not duplicate (idempotent or 409).
 
     Idempotency / duplicate counterpart of _010 (certification earned). Granting the
@@ -861,11 +836,8 @@ async def test_partner_api_partner_account_management_022(sa_partners_client, cr
     de-dupes — confirm with BE whether re-grant should renew or reject.
     """
     async with async_step("Setup: partner + invited user"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         host = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         uid = host.data.get("userId")
         assert uid, "precondition: partner user must be invited"
@@ -902,9 +874,7 @@ async def test_partner_api_partner_account_management_022(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_006(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_partner_account_management_006(sa_deals_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_006: reseller sell price - end-client price is NOT stored.
 
     Enforcement / data-minimization: a reseller sets its own price to the end client,
@@ -921,11 +891,8 @@ async def test_partner_api_partner_account_management_006(
     async with async_step(
         "Setup: partner + plan + a RESELLER deal payload carrying end-client pricing"
     ):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="reseller", **_END_CLIENT_PRICE_FIELDS)
         logger.info(
@@ -962,9 +929,7 @@ async def test_partner_api_partner_account_management_006(
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_account_management_016(
-    sa_partners_client, sa_deals_client, created_resources
-):
+async def test_partner_api_partner_account_management_016(sa_deals_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016: reseller sell price - end-client price cannot be SET via update.
 
     Negative counterpart of _006 — same enforcement ("BlazeUp does not store the
@@ -976,11 +941,8 @@ async def test_partner_api_partner_account_management_016(
     recognized editable field. Verified 2026-07-22.
     """
     async with async_step("Setup: partner + plan + a registered (open, editable) reseller deal"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal_id = (
             await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="reseller"))

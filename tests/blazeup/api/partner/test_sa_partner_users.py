@@ -23,7 +23,7 @@ _GHOST_ID = "000000000000000000000000"
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_001(sa_partners_client, created_resources):
+async def test_partner_api_partner_users_001(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_USERS_001: SA lists portal users for a partner - users with roles, no secret leak.
 
     Contract on ``GET /sa-partners-api/v1/sa/partner-users?partnerId=``: returns HTTP
@@ -32,11 +32,8 @@ async def test_partner_api_partner_users_001(sa_partners_client, created_resourc
     sensitive field (password/tempPassword) is exposed.
     """
     async with async_step("Setup: create a partner + invite a portal user"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         uid = invited.data.get("userId")
         assert uid, "precondition: partner user must be invited"
@@ -149,7 +146,7 @@ async def test_partner_api_partner_users_011(sa_partners_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_002(sa_partners_client, created_resources):
+async def test_partner_api_partner_users_002(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_USERS_002: SA invites a partner-portal user - user created with role + hand-off credential.
 
     Contract on ``POST /sa-partners-api/v1/sa/partner-users``: a valid invite
@@ -163,11 +160,8 @@ async def test_partner_api_partner_users_002(sa_partners_client, created_resourc
     with BE which model is intended.
     """
     async with async_step("Setup: create a partner"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         payload = make_partner_user(pid, role="sales")
         logger.info(
             "SETUP: partner {}; invite email='{}' role='{}'",
@@ -210,7 +204,7 @@ async def test_partner_api_partner_users_002(sa_partners_client, created_resourc
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_012(sa_partners_client, created_resources):
+async def test_partner_api_partner_users_012(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_USERS_012: invite partner-user invalid/missing fields - rejected with 400.
 
     Negative counterpart of _002. Each invalid/incomplete payload must be rejected
@@ -218,11 +212,8 @@ async def test_partner_api_partner_users_012(sa_partners_client, created_resourc
     endpoint returns "Partner ... not found"). All cases run (failures collected).
     """
     async with async_step("Setup: create a partner (valid baseline)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         base = make_partner_user(pid, role="admin")
 
     def without(field: str) -> dict:
@@ -259,7 +250,7 @@ async def test_partner_api_partner_users_012(sa_partners_client, created_resourc
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_013(sa_partners_client, created_resources):
+async def test_partner_api_partner_users_013(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_USERS_013: invite the same email twice - must not create a duplicate user.
 
     Idempotency/duplicate counterpart of _002. Inviting the SAME email to the SAME
@@ -272,11 +263,8 @@ async def test_partner_api_partner_users_013(sa_partners_client, created_resourc
     confirm with BE (reject duplicate email or make invite idempotent).
     """
     async with async_step("Setup: create a partner + invite a user"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         payload = make_partner_user(pid, role="sales")
         first = await sa_partners_client.invite_partner_user(payload)
         assert first.data.get("userId"), "precondition: first invite must create a user"
@@ -308,7 +296,7 @@ async def test_partner_api_partner_users_013(sa_partners_client, created_resourc
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_003(sa_partners_client, created_resources):
+async def test_partner_api_partner_users_003(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_USERS_003: SA resets a partner-portal user's password - fresh credential, repeatable.
 
     Contract on ``POST /sa-partners-api/v1/sa/partner-users/{userId}/reset-password``:
@@ -324,11 +312,8 @@ async def test_partner_api_partner_users_003(sa_partners_client, created_resourc
     async with async_step(
         "Setup: create a partner + invite a user (capture the invite credential)"
     ):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         uid = invited.data.get("userId")
         assert uid, "precondition: partner user must be invited"

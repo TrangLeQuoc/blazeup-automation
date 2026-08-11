@@ -1,3 +1,5 @@
+annotated-types==0.8.0
+    # via pydantic
 anyio==4.14.2
     # via httpx
 certifi==2026.7.22
@@ -6,6 +8,10 @@ certifi==2026.7.22
     #   httpx
 et-xmlfile==2.0.0
     # via openpyxl
+faker==40.15.0
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
 h11==0.16.0
     # via httpcore
 httpcore==1.0.9
@@ -32,6 +38,12 @@ packaging==26.3
     # via pytest
 pluggy==1.6.0
     # via pytest
+pydantic==2.13.4
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
+pydantic-core==2.46.4
+    # via pydantic
 pygments==2.20.0
     # via pytest
 pytest==9.0.3
@@ -42,3 +54,10 @@ pyyaml==6.0.3
     # via
     #   -c requirements.txt
     #   -r requirements-selftest.txt
+typing-extensions==4.16.0
+    # via
+    #   pydantic
+    #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.3
+    # via pydantic

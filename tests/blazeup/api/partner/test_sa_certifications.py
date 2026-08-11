@@ -21,7 +21,7 @@ _GHOST_ID = "000000000000000000000000"
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_certifications_sa_002(sa_partners_client, created_resources):
+async def test_partner_api_certifications_sa_002(sa_partners_client, seeded_partner):
     """PARTNER_API_CERTIFICATIONS_SA_002: SA revokes a partner certification - cert becomes 'revoked'.
 
     Contract on ``DELETE /sa-partners-api/v1/sa/partner-users/{userId}/certifications/{type}``
@@ -34,11 +34,8 @@ async def test_partner_api_certifications_sa_002(sa_partners_client, created_res
     """
     cert_type = "sales_certified"
     async with async_step("Setup: partner + user + an active certification"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         uid = invited.data.get("userId")
         assert uid, "precondition: partner user must be invited"
@@ -73,7 +70,7 @@ async def test_partner_api_certifications_sa_002(sa_partners_client, created_res
 @pytest.mark.api
 @pytest.mark.regression
 @pytest.mark.be_gap  # BUG-API-019: not-found targets (ghost user / not-held / revoked) return 400, want 404
-async def test_partner_api_certifications_sa_012(sa_partners_client, created_resources):
+async def test_partner_api_certifications_sa_012(sa_partners_client, seeded_partner):
     """PARTNER_API_CERTIFICATIONS_SA_012: revoke certification invalid input/state - rejected with the correct code.
 
     Negative counterpart of _002 (revoke). Each case has its own code + a clear message:
@@ -91,11 +88,8 @@ async def test_partner_api_certifications_sa_012(sa_partners_client, created_res
     returns the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
     """
     async with async_step("Setup: partner + user + an active sales_certified cert"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         uid = invited.data.get("userId")
         assert uid, "precondition: partner user must be invited"
@@ -166,7 +160,7 @@ async def test_partner_api_certifications_sa_012(sa_partners_client, created_res
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_certifications_sa_003(sa_partners_client, created_resources):
+async def test_partner_api_certifications_sa_003(sa_partners_client, seeded_partner):
     """PARTNER_API_CERTIFICATIONS_SA_003: SA lists a partner team's certifications - well-formed, filterable, scoped.
 
     Contract on ``GET /sa-partners-api/v1/sa/partners/{partnerId}/certifications``:
@@ -177,11 +171,8 @@ async def test_partner_api_certifications_sa_003(sa_partners_client, created_res
     """
     cert_type = "sales_certified"
     async with async_step("Setup: partner + user + an active certification"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
         invited = await sa_partners_client.invite_partner_user(make_partner_user(pid))
         uid = invited.data.get("userId")
         assert uid, "precondition: partner user must be invited"
@@ -235,7 +226,7 @@ async def test_partner_api_certifications_sa_003(sa_partners_client, created_res
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_certifications_sa_013(sa_partners_client, created_resources):
+async def test_partner_api_certifications_sa_013(sa_partners_client, seeded_partner):
     """PARTNER_API_CERTIFICATIONS_SA_013: list partner certifications invalid filter/pagination - graceful, never 5xx.
 
     Negative counterpart of _003. Out-of-enum filters, oversized limit, and a
@@ -243,11 +234,8 @@ async def test_partner_api_certifications_sa_013(sa_partners_client, created_res
     partnerId returns 200 empty; page=0 is leniently defaulted (200). Never 5xx.
     """
     async with async_step("Setup: create a partner (baseline)"):
-        partner = await sa_partners_client.create_partner(make_partner())
+        partner = await seeded_partner()
         pid = partner.partner_id
-        if pid:
-            created_resources.add(lambda: sa_partners_client.delete_partner(pid))
-        assert pid, "precondition: partner must be created"
 
     robustness = [
         ("bad status enum", {"status": "bogus"}, "status must be one of"),
