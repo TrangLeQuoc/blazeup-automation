@@ -499,11 +499,28 @@ async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
     logger.log("FINISH", "Logout UI (partner) - shared partner session closed")
 
 
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def partner_session_started_at(partner_auth_state: dict) -> float:
+    """When the shared partner snapshot was captured (``time.monotonic``).
+
+    A separate fixture rather than a field on the state dict: that dict is handed
+    straight to Playwright as ``storage_state``, so it must stay exactly what Playwright
+    produced. Depending on ``partner_auth_state`` means this is stamped right after the
+    login, once per session.
+
+    Its only job is the diagnostic in ``partner_authenticated_page``: when the session
+    turns out to be dead, the log says how long it had been alive, which is the number
+    you need to decide "token TTL" vs "invalidated server-side".
+    """
+    return time.monotonic()
+
+
 @pytest_asyncio.fixture
 async def partner_authenticated_page(
     request: pytest.FixtureRequest,
     settings: Settings,
     partner_auth_state: dict,
+    partner_session_started_at: float,
     result_dir: Path,
 ) -> AsyncGenerator[Page]:
     """Pre-authenticated PARTNER-portal page — fresh context per test, login once.
@@ -511,7 +528,15 @@ async def partner_authenticated_page(
     Tests marked ``@pytest.mark.mobile`` get a mobile-sized context (375×812) so the
     viewport AND the recorded video match — no need to resize at runtime (which would
     leave the video canvas at the desktop size with a grey dead margin).
+
+    Logs the age of the shared session on every test. Measured on run_20260810_170831
+    the snapshot was reused across 358 s, comfortably inside a normal token lifetime —
+    but that window grows with every partner TC added, and when it finally crosses the
+    TTL the age printed here is what turns "the page did not render" into "the session
+    aged out at N minutes" (``PartnerShellPage.wait_ready`` raises the matching error).
     """
+    age_s = time.monotonic() - partner_session_started_at
+    logger.info("shared partner session age: {:.0f}m{:02.0f}s", age_s // 60, age_s % 60)
     trace_name = request.node.name.replace("/", "_").replace("\\", "_")
     viewport = {"width": 375, "height": 812} if request.node.get_closest_marker("mobile") else None
     async with async_playwright() as playwright:

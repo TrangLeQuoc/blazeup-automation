@@ -110,20 +110,35 @@ class PartnerShellPage(BasePage):
         marker = self.marker_text(section)
         return self.page.locator(PartnerShellLocators.MAIN).get_by_text(marker, exact=True).first
 
+    def signed_out(self) -> bool:
+        """True when the portal has bounced us to the login screen.
+
+        Cheap (reads the current URL, no round trip) and unambiguous. Used to tell an
+        expired SESSION apart from a page that failed to render — the two look
+        identical to a readiness wait, and the shared partner session (one login for
+        the whole run, see the ``partner_auth_state`` fixture) is what expires.
+        """
+        return PartnerShellLocators.is_login_url(self.page.url)
+
     async def wait_ready(self, section: str, timeout: int = 90_000, poll_ms: int = 500) -> None:
         """Wait until a section is READY, distinguishing 'broken' from 'slow'.
 
-        Polls two signals: the MFE error panel ("Something went wrong") → raise
-        IMMEDIATELY (broken, no point waiting); and the section's READY_MARKER
-        visible in <main> → return. Only if neither happens within *timeout* does
-        it raise "did not render". The large timeout protects slow staging cold
-        loads; a broken page is still reported in ~1-2 s because the error panel is
+        Polls three signals: bounced to the login screen → raise IMMEDIATELY (the
+        session is gone, the page never had a chance); the MFE error panel ("Something
+        went wrong") → raise IMMEDIATELY (broken, no point waiting); and the section's
+        READY_MARKER visible in <main> → return. Only if none happens within *timeout*
+        does it raise "did not render". The large timeout protects slow staging cold
+        loads; a broken page is still reported in ~1-2 s because the other signals are
         polled every ``poll_ms``.
+
+        Why the login check earns its place: 21 partner TCs share ONE cached session.
+        Without it, an expired session makes every one of them sit out the full 90 s and
+        then blame the page — 21 x 90 s of misdirection from a single root cause.
         """
         marker = self.marker_text(section)
         logger.log(
             "STEP",
-            "Wait ready [{}] = marker '{}' in <main> (fast-fail on error panel)",
+            "Wait ready [{}] = marker '{}' in <main> (fast-fail on login redirect / error panel)",
             section,
             marker,
         )
@@ -131,6 +146,14 @@ class PartnerShellPage(BasePage):
         error_loc = self.page.locator(PartnerShellLocators.ERROR_PANEL).first
         deadline = time.perf_counter() + timeout / 1000
         while True:
+            if self.signed_out():
+                raise AssertionError(
+                    f"Partner Portal section '{section}' is not authenticated: the portal "
+                    f"redirected to '{self.page.url}'. The SHARED partner session (one login "
+                    "per run) is no longer valid — expired, or invalidated server-side. This is "
+                    "a session problem, NOT a defect in this page. The run log line 'shared "
+                    "partner session age' above says how old the session was."
+                )
             if await error_loc.is_visible():
                 raise AssertionError(
                     f"Partner Portal section '{section}' failed to load: the MFE error panel "

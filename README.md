@@ -394,7 +394,7 @@ Two workflows under `.github/workflows/`:
 |----------|---------|--------------|
 | `test.yml` | **manual** (workflow_dispatch) | Runs the actual test suites against staging (needs secrets + a live backend) |
 | `validate-test-plan.yml` | **automatic** on every push / PR | Lints the Excel test plan — fast, no secrets, no services |
-| `selftest.yml` | **automatic** on push / PR touching `runner/`, `utils/`, `selftests/`, `tests/`, `docs/blazeup/` | Tests the framework's own logic (TC registry, PASS/FAIL/BLOCKED classification), the `be_gap` traceability chain (code marker ↔ test-case docs ↔ Bug_Tracker) and the layer boundaries (no raw Playwright selectors or API paths in tests; every client method pinned to its endpoint) — no secrets, no staging, no browser |
+| `selftest.yml` | **automatic** on push / PR touching `runner/`, `utils/`, `selftests/`, `tests/`, `docs/blazeup/` | Tests the framework's own logic (TC registry, PASS/FAIL/BLOCKED classification), the `be_gap` traceability chain (code marker ↔ test-case docs ↔ Bug_Tracker) the layer boundaries (no raw Playwright selectors or API paths in tests; every client method pinned to its endpoint) and the shared-partner-session signal — no secrets, no staging, no browser |
 
 ### Test suite — `test.yml` (manual)
 

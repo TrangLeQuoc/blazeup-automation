@@ -64,6 +64,32 @@ class PartnerShellLocators:
     SIDEBAR = "aside"
     SIDEBAR_EXPAND_TRIGGER = "button[aria-label='Expand sidebar']"
 
+    # ── Signed-out signal ─────────────────────────────────────────────────────
+    # The portal sends an unauthenticated request to /login. A section's readiness
+    # wait uses this to fail FAST with the real reason instead of burning its full
+    # 90 s timeout on "the page did not render" while a login form is on screen.
+    LOGIN_ROUTE = "/login"
+
+    @staticmethod
+    def is_login_url(url: str | None) -> bool:
+        """True when *url* is the portal's login screen.
+
+        Kept here, as a pure string test, so it is covered by the framework selftests —
+        `locators/` imports nothing, while anything in `pages/` needs Playwright and the
+        selftest job deliberately does not install it.
+
+        Matches the login PATH only, and only as a whole segment: a section route that
+        merely CONTAINS the word (say `/deals?ref=login-flow`, or a hypothetical
+        `/logins`) must not read as signed-out. A purely client-side guard that renders
+        the login form WITHOUT changing the URL would slip past this — there is no
+        evidence the portal does that, and probing the DOM for a password field would
+        mis-fire on any legitimate password screen.
+        """
+        if not url:
+            return False
+        path = url.split("?", 1)[0].split("#", 1)[0]
+        return path.rstrip("/").endswith(PartnerShellLocators.LOGIN_ROUTE)
+
     # ── Shell chrome (renders on every section, even a broken one) ────────────
     # Asserting on these proves the SHELL loaded; it says nothing about the section,
     # which is exactly why section readiness uses SECTIONS[...]["marker"] in <main>.
