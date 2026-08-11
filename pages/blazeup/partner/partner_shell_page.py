@@ -61,6 +61,29 @@ class PartnerShellPage(BasePage):
         link = self.page.get_by_role("link", name=label, exact=False).first
         await link.click(timeout=15_000)
 
+    def nav_link(self, section: str):
+        """Locator for a section's sidebar link, built from its declared route.
+
+        Use this instead of writing ``aside a[href='/commissions']`` in a test: the
+        route already lives in SECTIONS, so a route change is one edit here.
+        Works while the sidebar is collapsed (the <a> is present, only its label is
+        not) — unlike click_nav, which needs the labels expanded.
+        """
+        route = self._meta(section)["route"]
+        return self.page.locator(f"{PartnerShellLocators.SIDEBAR} a[href='{route}']").first
+
+    # -- shell chrome ---------------------------------------------------------
+    # Present on every section, including a broken one. Proving the chrome rendered
+    # is a different claim from proving a section rendered (marker_locator).
+
+    def brand(self):
+        """Locator for the portal brand text in the shell chrome."""
+        return self.page.get_by_text(PartnerShellLocators.BRAND_TEXT, exact=False).first
+
+    def profile_button(self):
+        """Locator for the profile-menu control in the shell chrome."""
+        return self.page.get_by_role("button", name=PartnerShellLocators.PROFILE_BUTTON_NAME).first
+
     # -- readiness marker -----------------------------------------------------
 
     def _meta(self, section: str) -> dict[str, str]:
@@ -143,6 +166,34 @@ class PartnerShellPage(BasePage):
                     f"issue for this page — confirm with BE."
                 )
         logger.log("STEP", "Content OK [{}] (no error banner)", section)
+
+    # -- text snapshots + phrase checks ---------------------------------------
+
+    async def main_text(self) -> str:
+        """Whitespace-normalised text of <main> — the section's OWN content."""
+        return " ".join((await self.page.locator(PartnerShellLocators.MAIN).inner_text()).split())
+
+    async def page_text(self) -> str:
+        """Whitespace-normalised text of the whole page, chrome included.
+
+        Only for things that can render OUTSIDE <main> — a toast, for instance.
+        Prefer main_text(): the chrome is always present, so a page-wide match can
+        pass on a section that never rendered.
+        """
+        return " ".join((await self.page.locator(PartnerShellLocators.BODY).inner_text()).split())
+
+    async def error_phrases_found(self, phrases=None) -> list[str]:
+        """Return which of *phrases* are present anywhere on the page (default: auth).
+
+        Page-wide on purpose — an authorization banner renders outside <main>. For a
+        section's CONTENT load failure use assert_content_loaded() instead, which is
+        scoped to <main> and carries the "confirm with BE" wording.
+        """
+        found = []
+        for phrase in phrases if phrases is not None else PartnerShellLocators.AUTH_ERROR_TEXTS:
+            if await self.page.get_by_text(phrase, exact=False).count():
+                found.append(phrase)
+        return found
 
     async def horizontal_overflow_px(self) -> int:
         """Return how many px the page content overflows the viewport horizontally.

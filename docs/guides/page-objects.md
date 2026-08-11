@@ -14,6 +14,24 @@ tests/<domain>/ui/test_<x>.py       →  SCENARIO: calls the page object, assert
 Principle: **a test never hard-codes selectors** — selectors live only in
 `locators/`. The test calls page object methods, and the page object uses locators.
 
+### Where the line actually is
+
+The rule is about the **root** a selector starts from, not about the word `get_by_text`:
+
+| | Example | Why |
+|---|---|---|
+| ❌ banned | `shell.page.locator("main")` · `page.get_by_role("button", name="Open profile menu")` | starts from the Page → the whole document is in scope and the selector had to be invented in the test. It now lives in two layers |
+| ✅ allowed | `wiz.dialog().get_by_text("Referral")` · `summary.get_by_text(value)` | the **root** came from a page object; only the expected text is in the test — and that text is what the test is asserting |
+
+`selftests/test_layer_boundaries.py` enforces the banned form (runs locally in ~1s, no
+browser). It is a real fix, not a style preference: `test_dashboard.py` used to assert the
+literal `"Tier & Performance"` while `partner_shell_locators.py` already declared it as the
+dashboard READY_MARKER — renaming the heading would fix the page object, leave the test
+red, and read as a product bug.
+
+When a test needs something the page object cannot express, **add the method** — that is
+the missing piece, not a reason to reach past it.
+
 ## Naming conventions (MANDATORY)
 
 | Type | File | Class | Example |

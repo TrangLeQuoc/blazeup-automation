@@ -380,7 +380,7 @@ async def test_partner_ui_my_pipeline_005(make_partner_page, partner_authenticat
                 deal_id,
             )
         else:
-            txt = " ".join((await page.locator("body").inner_text()).split()).lower()
+            txt = (await shell.page_text()).lower()
             assert any(
                 k in txt for k in ("success", "registered", "submitted", "conflict", "pending")
             ), "no submission-success indicator found after submit"

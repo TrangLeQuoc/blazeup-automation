@@ -67,7 +67,7 @@ async def test_partner_ui_partner_portal_shell_002(make_partner_page, request):
     logger.log("STEP", "Exercise mobile nav: tap sidebar link → 'commissions'")
     await shell.open("dashboard")
     await shell.wait_ready("dashboard")
-    link = shell.page.locator("aside a[href='/commissions']").first
+    link = shell.nav_link("commissions")
     await link.click(timeout=15_000)
     await shell.wait_ready("commissions")
     logger.info("Mobile nav tap → 'commissions' routed and rendered")

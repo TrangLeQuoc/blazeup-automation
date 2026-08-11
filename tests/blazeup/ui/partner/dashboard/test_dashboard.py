@@ -131,7 +131,7 @@ async def test_partner_ui_dashboard_007(make_partner_page):
     async with async_step("Setup: open the Dashboard"):
         await shell.open("dashboard")
         await shell.wait_ready("dashboard")
-        main_text = " ".join((await shell.page.locator("main").inner_text()).split())
+        main_text = await shell.main_text()
 
     async with async_step("[1/3] Only actionable/decision-supporting KPI metrics are shown"):
         for label in DashboardPage.KPI_CARDS:
@@ -239,13 +239,11 @@ async def test_partner_ui_dashboard_001(make_partner_page):
         await shell.wait_ready("dashboard")  # Dashboard is the default active page
 
     async with async_step("[1/3] Partner shell chrome renders (brand + nav + profile)"):
-        assert await shell.page.get_by_text("PARTNER PORTAL", exact=False).first.is_visible(), (
-            "the 'PARTNER PORTAL' brand must render in the shell"
-        )
+        assert await shell.brand().is_visible(), "the portal brand must render in the shell"
         assert await shell.visible_nav_link_count() >= 5, "the partner sidebar nav must render"
-        assert await shell.page.get_by_role(
-            "button", name="Open profile menu"
-        ).first.is_visible(), "the profile control must render in the shell"
+        assert await shell.profile_button().is_visible(), (
+            "the profile control must render in the shell"
+        )
         logger.info("CHECK shell chrome → OK (brand + nav + profile)")
 
     async with async_step("[2/3] Only partner navigation is exposed (no SA/tenant-only routes)"):
@@ -257,17 +255,11 @@ async def test_partner_ui_dashboard_001(make_partner_page):
         logger.info("CHECK nav → OK (partner routes present; no SA-only routes)")
 
     async with async_step("[3/3] Dashboard content loads with no error/authorization banner"):
-        for bad in (
-            "Something went wrong",
-            "not authorized",
-            "Unauthorized",
-            "403",
-            "Access denied",
-        ):
-            assert await shell.page.get_by_text(bad, exact=False).count() == 0, (
-                f"no error/auth banner expected, found {bad!r}"
-            )
-        assert await shell.page.locator("main").get_by_text("Tier & Performance").first.is_visible()
+        found = await shell.error_phrases_found()  # AUTH_ERROR_TEXTS, page-wide
+        assert not found, f"no error/auth banner expected, found {found}"
+        assert await shell.marker_locator("dashboard").is_visible(), (
+            f"the Dashboard content ('{shell.marker_text('dashboard')}') must be visible"
+        )
         logger.info("CHECK dashboard content → OK (visible, no error/auth banner)")
 
     logger.info("RESULT: partner shell loads for the channel partner with the Dashboard active")
