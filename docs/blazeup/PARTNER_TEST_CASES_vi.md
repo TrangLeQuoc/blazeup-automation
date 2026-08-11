@@ -110,7 +110,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. Progress bar hướng tới threshold hiển thị.
    → Expected: có element `role=progressbar` / `<progress>`. **(Sẽ FAIL — không render.)**
 **Expected (tổng):** Threshold + remaining delta + progress bar của tier-qualification hiển thị.
-**Ghi chú:** FAILED by design (`be_gap`) — verified 2026-07-28 (TC 12060405). Build hiện chỉ render current tier, copy "Working towards \<next tier\>", current ARR (USD 0), và deal/win-rate ("0/0 deals") — KHÔNG render bất kỳ ARR threshold, remaining-delta, hay progress bar (không có `role=progressbar`). Assertion fail với "confirm with BE". Bổ trợ cho DASHBOARD_003 (chỉ assert cái UI *có* render); TC này ghim phần tier-qualification math còn thiếu như một gap được track. Loại khỏi merge gate (`be_gap`). Negative: N/A — view calc read-only. Idempotency: N/A.
+**Ghi chú:** FAILED by design (`be_gap`, loại khỏi merge gate; **BUG-UI-007**) — verified 2026-07-28 (TC 12060405). Build hiện chỉ render current tier, copy "Working towards \<next tier\>", current ARR (USD 0), và deal/win-rate ("0/0 deals") — KHÔNG render bất kỳ ARR threshold, remaining-delta, hay progress bar (không có `role=progressbar`). Assertion fail với "confirm with BE". Bổ trợ cho DASHBOARD_003 (chỉ assert cái UI *có* render); TC này ghim phần tier-qualification math còn thiếu như một gap được track. Loại khỏi merge gate (`be_gap`). Negative: N/A — view calc read-only. Idempotency: N/A.
 #### PARTNER_UI_DASHBOARD_006 — BLOCKED (cần fixture trạng thái downgrade)
 **Intent:** Cảnh báo **tier downgrade pending** — dashboard hiện notice 30 ngày + thông tin grace-quarter (PRD §2.1/§5.5).
 **Lý do block:** Partner test không ở trạng thái **tier-downgrade-pending**, và không có đường seed (downgrade suy ra từ T12M ARR tụt dưới threshold của tier hiện tại qua 1 grace quarter). Không có partner ở trạng thái đó → không trigger/verify được notice 30 ngày + grace quarter. Cũng phụ thuộc tier-qualification math mà _005 đã cho thấy UI chưa render đủ. Unblock với partner fixture ở trạng thái downgrade-pending (+ UI cảnh báo).
@@ -182,7 +182,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. `notadomain` (không TLD) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
 4. `http://x.com` (có scheme, không phải bare domain) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
 **Expected (tổng):** Domain malformed bị từ chối với format error rõ ràng; không tạo deal.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — verified 2026-07-24 (TC 12060203). Register wizard **không validate domain format**: mọi domain malformed (kể cả `@@@` / `ab cd`) đều được chấp nhận — field Domain **giữ nguyên giá trị rác**, "Next" vẫn enabled, và field không bao giờ bị flag (`aria-invalid` không set), nên deal có thể tiếp tục với domain rác (mà domain "derive tenant subdomain"). **Confirm với FE** — thêm validate domain-format ở field Domain. Positive sibling: _001. Idempotency: N/A (không submit).
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; **BUG-UI-003**) — verified 2026-07-24 (TC 12060203). Register wizard **không validate domain format**: mọi domain malformed (kể cả `@@@` / `ab cd`) đều được chấp nhận — field Domain **giữ nguyên giá trị rác**, "Next" vẫn enabled, và field không bao giờ bị flag (`aria-invalid` không set), nên deal có thể tiếp tục với domain rác (mà domain "derive tenant subdomain"). **Confirm với FE** — thêm validate domain-format ở field Domain. Positive sibling: _001. Idempotency: N/A (không submit).
 #### PARTNER_UI_MY_PIPELINE_004
 **Mô tả test:** Trong register wizard, nhập domain (subdomain label) đã bị reserve bởi 1 deal active khác → hiện inline warning active-account/conflict; domain free → không warning. Chỉ UI (không submit).
 **Chuẩn bị (điều kiện tiên quyết):** Chứng minh qua API partner `check-domain` label ứng viên nào reserved (`available=false`) vs free (`available=true`) — để assertion UI không vòng vo. Mở wizard với company/country/contact hợp lệ. LƯU Ý: field "Domain" là **subdomain label** (lowercase/số/gạch nối, KHÔNG dấu chấm) — placeholder "acme.com" gây nhầm; giá trị có dấu chấm → check-domain trả 400.
@@ -319,7 +319,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 4. Resources → `/resources` → Expected: **"Resources"** hiện + không banner lỗi. → **PASS**
 5. My Apps → `/apps` → Expected: **"My Apps"** hiện + không banner lỗi. → **FAIL** — shell render được (title "My Apps" + tabs + nút Submit) nhưng data-fetch danh sách apps lỗi, hiện banner đỏ **"Failed to load your apps. Please refresh and try again."**
 **Expected (tổng):** Cả 5 trang chính render được module VÀ content (không MFE panel, không banner lỗi content); trang lỗi sẽ fast-fail nêu rõ trang nào.
-**Ghi chú:** FAILED (by design) — verified 2026-07-23 (TC 12060101). 4/5 trang pass; **`/apps` (My Apps) FAIL**: shell render được nhưng data-fetch danh sách apps lỗi → banner "Failed to load your apps. Please refresh and try again." (lỗi backend/data-load của trang này — **confirm với BE**). Đã reproduce live, không phải flap một lần. **TC này cũng siết lại readiness check:** chỉ dựa marker (title) cho FALSE PASS vì tiêu đề vẫn render dù data lỗi — đã thêm assertion bắt banner lỗi content sau marker, nhờ đó `/apps` đúng là đỏ. **Mapping plan-vs-live:** plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế là Deals / Resources / My Apps ("My Pipeline" = trang Deals, title "Deal Pipeline"). Test UI partner-portal đầu tiên — tạo bản đồ route live để các content-test sau dùng lại. Negative: N/A (smoke page-load không có bề mặt input sai; case trang lỗi/content-error đã built-in). Idempotency: N/A (điều hướng read-only).
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; **BUG-UI-001**) — verified 2026-07-23 (TC 12060101). 4/5 trang pass; **`/apps` (My Apps) FAIL**: shell render được nhưng data-fetch danh sách apps lỗi → banner "Failed to load your apps. Please refresh and try again." (lỗi backend/data-load của trang này — **confirm với BE**). Đã reproduce live, không phải flap một lần. **TC này cũng siết lại readiness check:** chỉ dựa marker (title) cho FALSE PASS vì tiêu đề vẫn render dù data lỗi — đã thêm assertion bắt banner lỗi content sau marker, nhờ đó `/apps` đúng là đỏ. **Mapping plan-vs-live:** plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế là Deals / Resources / My Apps ("My Pipeline" = trang Deals, title "Deal Pipeline"). Test UI partner-portal đầu tiên — tạo bản đồ route live để các content-test sau dùng lại. Negative: N/A (smoke page-load không có bề mặt input sai; case trang lỗi/content-error đã built-in). Idempotency: N/A (điều hướng read-only).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_002
 **Mô tả test:** Mở partner portal ở mobile viewport phổ biến (375×812) và xác nhận shell vẫn dùng được trên mọi trang nav chính — trang render, sidebar nav vẫn truy cập được, và layout KHÔNG tràn ngang (không bị cắt nội dung / cuộn ngang) — rồi tap một link sidebar để chứng minh điều hướng mobile hoạt động. Một test lặp thu thập failure theo trang → một verdict.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập một lần bằng user channel-partner đã cấu hình; resize page về 375×812; warm up SPA (mở Dashboard một lần).
@@ -331,7 +331,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 5. My Apps `/apps` → Expected: không tràn ngang. → **FAIL** — tràn **+263px**.
 6. Tap link sidebar ở mobile → Commissions điều hướng + render. → **PASS** (nav mobile dùng được).
 **Expected (tổng):** Mọi trang chính fit mobile viewport (không tràn ngang) và nav truy cập được; tap nav điều hướng đúng.
-**Ghi chú:** FAILED (by design) — verified 2026-07-24 (TC 12060102). 3/5 trang fit + nav mobile hoạt động, nhưng **Deals (+162px) và My Apps (+263px) tràn ngang ở 375px** = lỗi responsive-layout (nội dung không fit màn nhỏ → cuộn ngang; **confirm với FE**). Sidebar mobile vẫn là icon-bar (không ẩn) và tap nav điều hướng đúng, nên bản thân navigation dùng được — lỗi nằm ở độ rộng nội dung trang Deals/My Apps. Đã reproduce live. Negative: N/A (responsive smoke không có bề mặt input sai; case "layout không fit" chính là điều đang kiểm). Idempotency: N/A (điều hướng/resize read-only).
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; **BUG-UI-002**) — verified 2026-07-24 (TC 12060102). 3/5 trang fit + nav mobile hoạt động, nhưng **Deals (+162px) và My Apps (+263px) tràn ngang ở 375px** = lỗi responsive-layout (nội dung không fit màn nhỏ → cuộn ngang; **confirm với FE**). Sidebar mobile vẫn là icon-bar (không ẩn) và tap nav điều hướng đúng, nên bản thân navigation dùng được — lỗi nằm ở độ rộng nội dung trang Deals/My Apps. Đã reproduce live. Negative: N/A (responsive smoke không có bề mặt input sai; case "layout không fit" chính là điều đang kiểm). Idempotency: N/A (điều hướng/resize read-only).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Ghi chú (BLOCKED):** Partner dual-account chuyển đổi giữa dashboard **Pack** và **Channel**. Không thể tự động hóa — tính năng lẫn test data đều chưa có trên staging (verify live 2026-07-24): (a) **không có account-switcher** trong portal shell — chữ "Select" ở header là badge **tier** (tier=`select`), không phải công tắc đổi account; profile menu chỉ có Profile/Logout; (b) partner đang đăng nhập là **single account** — `GET /v1/partner/auth/me` trả về 1 `partnerId`, `type:"channel"`, `tier:"select"`, không có mảng accounts; (c) **không có khái niệm "Pack"** — enum partner `type` là channel/referral/msp/system_integrator (không có "pack"), nên không thể biểu diễn dual-account Pack↔Channel. Unblock khi BE ship multi-account membership (1 user → 1 account Pack + 1 Channel) + account switcher ở shell, VÀ có test partner dual-account.
 ### UI · PARTNER_TEAM
@@ -423,7 +423,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. Data analytics load không server error.
    → Expected: không lỗi backend. **(FAIL.)**
 **Expected (tổng):** Dashboard analytics hiện funnel + KPIs + sections với data đã load.
-**Ghi chú:** FAILED — BE defect thật, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). Dashboard shell render (KPIs + funnel + tier distribution + top-partners đều pass), nhưng 1 query analytics phân trang fail với **"Server Error — Invalid pagination: limit must not exceed 100"** (defect backend: frontend request page size > 100 bị API từ chối). Deterministic. Assertion fail với "confirm with BE". Lưu ý: KPI set live khác plan một chút (Approval Rate / Avg Deal Velocity / line-item commission chi tiết không render) — test assert đúng cái UI render. Negative: N/A — dashboard read-only. Idempotency: N/A.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — BE defect thật, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). Dashboard shell render (KPIs + funnel + tier distribution + top-partners đều pass), nhưng 1 query analytics phân trang fail với **"Server Error — Invalid pagination: limit must not exceed 100"** (defect backend: frontend request page size > 100 bị API từ chối). Deterministic. Assertion fail với "confirm with BE". Lưu ý: KPI set live khác plan một chút (Approval Rate / Avg Deal Velocity / line-item commission chi tiết không render) — test assert đúng cái UI render. Negative: N/A — dashboard read-only. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory chưa deploy)
 **Ở đâu:** stgsa → Partners → Territory (và từ Partner detail). **Design:** Territory PN021, ready-for-dev.
 **Intent:** Assign Territory (regions, verticals, exclusivity type, effective dates) cho partner; hiện warning conflict exclusivity; territory exclusive auto-route deal conflict.
@@ -898,7 +898,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 8. Re-win một deal đã won → **400** 'cannot transition from won to won' (repeat bị từ chối; mutating action, không phải create).
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Missing required intake → 400; non-approved/already-won → 400; ghost id → 404; malformed id → 400.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1–4): WinDealDto khai companyWebsite/industry/adminFirstName/adminLastName là required, nhưng BE nhận win khi thiếu bất kỳ/tất cả (kể cả empty body → 201, deal won) — required-intake validation không được enforce. Case 5–8 đúng (lưu ý: win trả 404 cho ghost id, khác các SA endpoint khác). Confirm với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-020**). Gap (case 1–4): WinDealDto khai companyWebsite/industry/adminFirstName/adminLastName là required, nhưng BE nhận win khi thiếu bất kỳ/tất cả (kể cả empty body → 201, deal won) — required-intake validation không được enforce. Case 5–8 đúng (lưu ý: win trả 404 cho ghost id, khác các SA endpoint khác). Confirm với BE.
 
 ### API · DEAL_APPROVAL_QUEUE
 
@@ -1299,7 +1299,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 3. Partner đã active (illegal transition) → **400** 'cannot be approved' (409 Conflict sẽ chính xác hơn, nhưng 400 được chấp nhận).
 **Teardown:** xóa partner.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; illegal transition → 400/409. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 & 3 đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-012**). Gap (case 1): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 & 3 đúng. Xác nhận với BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014
 **Mô tả test:** Đối trọng negative của _004 (deactivate): id không hợp lệ bị từ chối với code đúng; một deactivate lặp lại là idempotent. Tất cả case invalid-id đều chạy (thu thập failure).
@@ -1310,7 +1310,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: không bao giờ 5xx; giữ 'suspended' (idempotent no-op, hiện tại 201).
 **Teardown:** xóa các partner đã tạo.
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; deactivate lặp lại là một idempotent no-op (không bao giờ 5xx).
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 và quan sát idempotency đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-013**). Gap (case 1): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 và quan sát idempotency đúng. Xác nhận với BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015
 **Mô tả test:** Đối trọng negative của _005 (tier change): sáu input không hợp lệ, mỗi cái bị từ chối với code riêng + một message rõ ràng (không phát event). Tất cả case đều chạy (thu thập failure).
@@ -1324,7 +1324,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 6. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400.
 **Teardown:** xóa partner.
 **Expected (tổng):** Validation / same-tier / malformed → 400; id không tồn tại → 404. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 6): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1–5 đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-014**). Gap (case 6): một partner id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1–5 đúng. Xác nhận với BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016
 **Mô tả test:** Đối trọng negative của _006 (cùng enforcement — BlazeUp không lưu giá end-client của reseller) qua entry-point UPDATE/PATCH: không thể SET giá end-client lên một reseller deal đang mở.
@@ -1359,7 +1359,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 4. Ghost userId (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400 ("User 000… not found").
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Validation / malformed → 400; userId không tồn tại → 404. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 4): một userId đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1–3 đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-015**). Gap (case 4): một userId đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1–3 đúng. Xác nhận với BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021
 **Mô tả test:** Đối trọng idempotency/duplicate của _002 (create): tạo một partner với cùng email hai lần bị từ chối (không có account thứ hai).
@@ -1479,7 +1479,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 1. Ghost userId (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400 ("User 000… not found").
 2. Malformed userId ('not-an-id') → **400** Bad Request, message "invalid id".
 **Expected (tổng):** userId không tồn tại → 404; malformed userId → 400; không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một userId đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-016**). Gap (case 1): một userId đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 đúng. Xác nhận với BE.
 ### API · TERRITORIES
 
 #### PARTNER_API_TERRITORIES_001
@@ -1579,7 +1579,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 1. Ghost id (đúng định dạng nhưng không tồn tại, 000000000000000000000000) → kỳ vọng **404** Not Found, message "not found". **Hiện FAIL** — BE trả 400 ("Territory 000… not found").
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Expected (tổng):** Id không tồn tại → 404; malformed id → 400; không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-017**). Gap (case 1): một id đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 đúng. Xác nhận với BE.
 
 #### PARTNER_API_TERRITORIES_015
 **Mô tả test:** Đối trọng negative của _004 (delete): không hợp lệ/đã-gỡ bị từ chối với code đúng. Tất cả case đều chạy (thu thập failure).
@@ -1590,7 +1590,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 3. Territory đã-gỡ (xóa nó, rồi xóa lại) → kỳ vọng **404** Not Found (target không còn tồn tại). **Hiện FAIL** — BE trả 400 ("Territory … not found").
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Target không tồn tại / đã-gỡ → 404; malformed id → 400. (Đã-gỡ ghi lại hành vi lặp của delete; mutating action, không phải duplicate-create.)
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 1 & 3): một target not-found trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 (malformed) đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-018**). Gap (case 1 & 3): một target not-found trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 (malformed) đúng. Xác nhận với BE.
 ### API · CERTIFICATIONS_SA
 
 #### PARTNER_API_CERTIFICATIONS_SA_001
@@ -1643,7 +1643,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 5. Cert đã-revoke (revoke, rồi revoke lại) → kỳ vọng **404** Not Found (không có active cert). **Hiện FAIL** — BE trả 400.
 **Teardown:** xóa partner cha.
 **Expected (tổng):** Thiếu reason / malformed id → 400; mọi target not-found → 404. Không bao giờ 5xx.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker). Gap (case 2, 3, 5): một target not-found trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1 & 4 đúng. Xác nhận với BE.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-019**). Gap (case 2, 3, 5): một target not-found trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 1 & 4 đúng. Xác nhận với BE.
 
 #### PARTNER_API_CERTIFICATIONS_SA_013
 **Mô tả test:** Đối trọng negative của _003 (list cert theo partner): filter/pagination không hợp lệ được xử lý với code đúng — case đã validate 4xx, một ghost partner scope 200-empty — không bao giờ 5xx. Tất cả case đều chạy (thu thập failure).

@@ -12,6 +12,11 @@ name: Framework selftests
 # logic — so it can gate every push instead of being run by hand.
 #
 # Local equivalent:  make selftest
+#
+# The trigger list must include the files the selftests READ, not just the ones they
+# import. test_bug_traceability.py compares be_gap markers in tests/ against the docs
+# and the Bug_Tracker — leave those paths out and the guard stays silent on exactly
+# the commits that can break it.
 # ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
@@ -19,6 +24,8 @@ on:
       - "runner/**"
       - "utils/**"
       - "selftests/**"
+      - "tests/**"
+      - "docs/blazeup/**"
       - "config/**/config.yaml"
       - ".github/workflows/selftest.yml"
   pull_request:
@@ -26,6 +33,8 @@ on:
       - "runner/**"
       - "utils/**"
       - "selftests/**"
+      - "tests/**"
+      - "docs/blazeup/**"
       - "config/**/config.yaml"
       - ".github/workflows/selftest.yml"
 

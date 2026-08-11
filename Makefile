@@ -49,7 +49,8 @@ lock:
 	uv pip compile requirements-selftest.txt -o requirements-selftest.lock --python-platform linux --python-version 3.13 --no-header
 	uv pip compile requirements-dev.txt -o requirements-dev.lock --python-platform linux --python-version 3.13 --no-header
 
-# Framework selftests — the runner/registry logic itself. No staging, no browser,
+# Framework selftests — the runner/registry logic itself, plus the be_gap traceability
+# chain (marker id <-> TEST_CASES docs <-> Bug_Tracker). No staging, no browser,
 # no secrets; runs in about a second. Same command CI uses (selftest.yml).
 #   -o addopts=   : pytest.ini's --alluredir needs allure-pytest, not used here
 #                   (write it WITHOUT quotes — PowerShell passes `""` through literally)

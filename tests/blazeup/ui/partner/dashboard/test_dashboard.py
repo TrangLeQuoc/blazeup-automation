@@ -159,7 +159,7 @@ async def test_partner_ui_dashboard_007(make_partner_page):
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap
+@pytest.mark.be_gap  # BUG-UI-007: tier-qualification math (ARR threshold / next-tier delta) not rendered
 async def test_partner_ui_dashboard_005(make_partner_page):
     """PARTNER_UI_DASHBOARD_005: tier-qualification math (T12M ARR threshold + next-tier delta).
 

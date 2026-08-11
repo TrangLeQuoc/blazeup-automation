@@ -17,7 +17,7 @@ from utils.log_helper import async_step
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # paginated analytics query 400s ("limit must not exceed 100"). Confirm with BE.
+@pytest.mark.be_gap  # BUG-UI-006: analytics query 400s ("limit must not exceed 100"). Confirm with BE.
 async def test_partner_ui_sa_partner_module_011(make_page):
     """PARTNER_UI_SA_PARTNER_MODULE_011: the SA partner-programme analytics dashboard.
 

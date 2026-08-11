@@ -146,6 +146,46 @@ separate directories by type.
 > (rule 4), but the **gate run excludes it** so 100% green = no regression. A separate run
 > tracks the BE gaps (allowed to be red). This way "known reds" do not mask "new reds".
 
+#### `be_gap` must be traceable — three places, one bug id
+
+Because the marker takes a TC **out of the merge gate**, nothing in a run tells you it is
+there. So it is only allowed with a bug id attached, in all three places:
+
+```python
+@pytest.mark.be_gap  # BUG-API-017: ghost (absent) id returns 400, should be 404 — confirm with BE
+```
+
+| Place | What it must say |
+|---|---|
+| the marker line in `tests/` | `# BUG-XXX-NNN: <one line why>` |
+| `docs/blazeup/<MODULE>_TEST_CASES.md` **and** `_vi.md` | the words `be_gap` **and** the same bug id, in the TC's `**Note:**` |
+| `docs/blazeup/Bug_Tracker.xlsx` | a row for that TC with that id, status `Open` |
+
+`selftests/test_bug_traceability.py` enforces all of it, plus **the bug must still be
+Open** — a `CLOSE`d bug with the marker left behind turns the selftests red, which is what
+catches a stale marker. Without it, a marker survived a closed bug by three weeks.
+
+When BE closes the bug: re-run the TC, then remove the marker from the code **and** the
+`be_gap` wording from both docs — the selftests will tell you if you miss one.
+
+##### Adding a module: the docs pair is derived, not configured
+
+A TC string starts with its module (`PARTNER_UI_DASHBOARD_005` → `PARTNER`), and each
+module documents itself in a pair of files named after it:
+
+```
+docs/blazeup/PARTNER_TEST_CASES.md   +  PARTNER_TEST_CASES_vi.md   <- PARTNER_*
+docs/blazeup/PLANS_TEST_CASES.md     +  PLANS_TEST_CASES_vi.md     <- PLANS_*
+```
+
+The selftest derives the pair from the TC name, so **a new module needs no edit to it** —
+drop in the two files and every check above applies to them, including EN↔VI parity. Name
+them wrong and it fails saying exactly which file it looked for.
+
+Bug ids stay **one sequence in one `Bug_Tracker.xlsx`** across all modules (`BUG-API-NNN` /
+`BUG-UI-NNN`): the sheet's "Test Case Name" column already says which module a bug belongs
+to, so putting the module in the id too would just duplicate it.
+
 The runner hands pytest explicit **node ids**, so `-m "not be_gap"` is not passed through to
 pytest — the equivalent is `--exclude-marker`, applied to the selection before the node list
 is built (it works in every mode, including `--execute`, and prints which TCs it dropped):

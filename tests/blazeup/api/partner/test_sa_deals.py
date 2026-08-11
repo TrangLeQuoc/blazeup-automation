@@ -1470,7 +1470,7 @@ async def test_partner_api_deal_registration_pipeline_018(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # WinDealDto required fields (companyWebsite/industry/adminFirstName/adminLastName) not enforced — confirm with BE
+@pytest.mark.be_gap  # BUG-API-020: WinDealDto required fields not enforced (empty body → 201) — confirm with BE
 async def test_partner_api_deal_registration_pipeline_034(
     sa_partners_client, sa_deals_client, created_resources
 ):

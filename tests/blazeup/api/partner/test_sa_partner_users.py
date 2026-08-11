@@ -361,7 +361,7 @@ async def test_partner_api_partner_users_003(sa_partners_client, created_resourc
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) userId returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-016: ghost (absent) userId returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_users_014(sa_partners_client):
     """PARTNER_API_PARTNER_USERS_014: reset password with invalid id - rejected with the correct code.
 

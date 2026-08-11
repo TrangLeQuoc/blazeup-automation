@@ -72,7 +72,7 @@ async def test_partner_api_certifications_sa_002(sa_partners_client, created_res
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # not-found targets (ghost user / cert-not-held / already-revoked) return 400, should be 404
+@pytest.mark.be_gap  # BUG-API-019: not-found targets (ghost user / not-held / revoked) return 400, want 404
 async def test_partner_api_certifications_sa_012(sa_partners_client, created_resources):
     """PARTNER_API_CERTIFICATIONS_SA_012: revoke certification invalid input/state - rejected with the correct code.
 

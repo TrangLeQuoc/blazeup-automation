@@ -25,7 +25,7 @@ _BE_ERROR_MARKERS = ("Failed to deactivate", "Server Error", "reason should not 
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # Deactivate dialog sends no 'reason'; BE requires it -> suspend fails. Confirm with BE.
+@pytest.mark.be_gap  # BUG-UI-008: Deactivate dialog sends no 'reason'; BE requires it -> suspend fails.
 async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_015: suspend (deactivate) an active partner.
 

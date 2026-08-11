@@ -110,7 +110,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. A progress bar toward the next-tier threshold is shown.
    → Expected: a `role=progressbar` / `<progress>` element is present. **(Would FAIL — none rendered.)**
 **Expected (overall):** The tier-qualification threshold + remaining delta + progress bar are visible.
-**Note:** FAILED by design (`be_gap`) — verified 2026-07-28 (TC 12060405). The live build renders only the current tier, "Working towards \<next tier\>" copy, current ARR (USD 0), and deal/win-rate counts ("0/0 deals") — it does NOT render any ARR threshold amount, any remaining-delta amount, or a progress bar (no `role=progressbar`). Assertion fails with "confirm with BE". Complements DASHBOARD_003 (which asserts only what the UI *does* render); this TC pins the missing tier-qualification math as a tracked gap. Excluded from the merge gate (`be_gap`). Negative counterpart: N/A — read-only calc view. Idempotency: N/A.
+**Note:** FAILED by design (`be_gap`, excluded from merge gate; **BUG-UI-007**) — verified 2026-07-28 (TC 12060405). The live build renders only the current tier, "Working towards \<next tier\>" copy, current ARR (USD 0), and deal/win-rate counts ("0/0 deals") — it does NOT render any ARR threshold amount, any remaining-delta amount, or a progress bar (no `role=progressbar`). Assertion fails with "confirm with BE". Complements DASHBOARD_003 (which asserts only what the UI *does* render); this TC pins the missing tier-qualification math as a tracked gap. Excluded from the merge gate (`be_gap`). Negative counterpart: N/A — read-only calc view. Idempotency: N/A.
 #### PARTNER_UI_DASHBOARD_006 — BLOCKED (needs downgrade-state fixture)
 **Intent:** Warn of a pending **tier downgrade** — the dashboard shows a 30-day notice + the grace-quarter info (PRD §2.1/§5.5).
 **Block reason:** The test partner is not in a **tier-downgrade-pending** state, and there is no way to seed one (tier downgrade is derived from T12M ARR falling below the current tier's threshold over a grace quarter). With no partner in that state, the 30-day-notice / grace-quarter warning cannot be triggered or verified. Also depends on the tier-qualification math that _005 showed is not fully rendered. Unblock with a partner fixture in the downgrade-pending state (+ the warning UI).
@@ -182,7 +182,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. `notadomain` (no TLD) → Expected: rejected. **Currently FAILS** — accepted.
 4. `http://x.com` (scheme, not a bare domain) → Expected: rejected. **Currently FAILS** — accepted.
 **Expected (overall):** A malformed domain is rejected with a clear format error; no deal is created.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-07-24 (TC 12060203). The register wizard performs **no domain-format validation**: every malformed domain (even `@@@` / `ab cd`) is accepted — the Domain field **keeps the garbage value**, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset), so the deal can proceed with a garbage domain (which "derives the tenant subdomain"). **Confirm with FE** — add domain-format validation on the Domain field. Positive sibling: _001. Idempotency: N/A (no submit).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; **BUG-UI-003**) — verified 2026-07-24 (TC 12060203). The register wizard performs **no domain-format validation**: every malformed domain (even `@@@` / `ab cd`) is accepted — the Domain field **keeps the garbage value**, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset), so the deal can proceed with a garbage domain (which "derives the tenant subdomain"). **Confirm with FE** — add domain-format validation on the Domain field. Positive sibling: _001. Idempotency: N/A (no submit).
 #### PARTNER_UI_MY_PIPELINE_004
 **Test Description:** In the register wizard, entering a domain (subdomain label) already reserved by another active deal shows an inline active-account/conflict warning; a free domain shows none. UI-only (no submit).
 **Setup (precondition):** Prove via the partner `check-domain` API which candidate label is reserved (`available=false`) vs free (`available=true`) — so the UI assertion is not circular. Open the wizard with valid company/country/contact. NOTE: the "Domain" field is a **subdomain label** (lowercase/numbers/hyphens, no dots) — placeholder "acme.com" is misleading; a value with dots returns 400 from check-domain.
@@ -319,7 +319,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 4. Resources → `/resources` → Expected: **"Resources"** visible + no error banner. → **PASS**
 5. My Apps → `/apps` → Expected: **"My Apps"** visible + no error banner. → **FAILS** — the shell renders (title "My Apps" + tabs + Submit button) but the app list data-fetch fails, showing the red banner **"Failed to load your apps. Please refresh and try again."**
 **Expected (overall):** All 5 primary pages render their module AND their content (no MFE panel, no content-load error banner); a broken page fast-fails naming which one.
-**Note:** FAILED (by design) — verified 2026-07-23 (TC 12060101). 4/5 pages pass; **`/apps` (My Apps) FAILS**: the section shell renders but the app-list data-fetch fails → persistent banner "Failed to load your apps. Please refresh and try again." (a backend/data-load defect for this page — **confirm with BE**). Reproduced live; not a one-off flap. **This TC also hardened the readiness check:** marker-only (page title) gave a FALSE PASS because the heading renders even when data fails — added a content-error-banner assertion after the marker, which correctly turns `/apps` red. **Plan-vs-live mapping:** the plan named "My Pipeline / My Clients / Training", but the live primary nav is Deals / Resources / My Apps ("My Pipeline" = the Deals page, title "Deal Pipeline"). First partner-portal UI test — establishes the live route map reused by later content tests. Negative counterpart: N/A (page-load smoke has no invalid-input surface; broken-page/content-error cases are built in). Idempotency: N/A (read-only navigation).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; **BUG-UI-001**) — verified 2026-07-23 (TC 12060101). 4/5 pages pass; **`/apps` (My Apps) FAILS**: the section shell renders but the app-list data-fetch fails → persistent banner "Failed to load your apps. Please refresh and try again." (a backend/data-load defect for this page — **confirm with BE**). Reproduced live; not a one-off flap. **This TC also hardened the readiness check:** marker-only (page title) gave a FALSE PASS because the heading renders even when data fails — added a content-error-banner assertion after the marker, which correctly turns `/apps` red. **Plan-vs-live mapping:** the plan named "My Pipeline / My Clients / Training", but the live primary nav is Deals / Resources / My Apps ("My Pipeline" = the Deals page, title "Deal Pipeline"). First partner-portal UI test — establishes the live route map reused by later content tests. Negative counterpart: N/A (page-load smoke has no invalid-input surface; broken-page/content-error cases are built in). Idempotency: N/A (read-only navigation).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_002
 **Test Description:** Open the partner portal at a common mobile viewport (375×812) and confirm the shell stays usable on every primary nav page — the section renders, the sidebar nav stays reachable, and the layout does NOT overflow horizontally (no content cut off / sideways scroll) — then tap a sidebar link to prove mobile navigation works. One looping test soft-collects per-page failures → single verdict.
 **Setup (precondition):** Log in once as the configured channel-partner user; resize the page to 375×812; warm up the SPA (open Dashboard once).
@@ -331,7 +331,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 5. My Apps `/apps` → Expected: no h-overflow. → **FAILS** — overflows by **+263px**.
 6. Tap sidebar link at mobile → Commissions routes + renders. → **PASS** (mobile nav is usable).
 **Expected (overall):** Every primary page fits the mobile viewport (no horizontal overflow) with the nav reachable; tapping nav routes correctly.
-**Note:** FAILED (by design) — verified 2026-07-24 (TC 12060102). 3/5 pages fit + mobile nav works, but **Deals (+162px) and My Apps (+263px) overflow horizontally at 375px** = responsive-layout defects (content doesn't fit small screens → sideways scroll; **confirm with FE**). The mobile sidebar stays an icon-bar (not hidden) and nav taps route correctly, so navigation itself is usable — the defect is page-content width on Deals/My Apps. Reproduced live. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; **BUG-UI-002**) — verified 2026-07-24 (TC 12060102). 3/5 pages fit + mobile nav works, but **Deals (+162px) and My Apps (+263px) overflow horizontally at 375px** = responsive-layout defects (content doesn't fit small screens → sideways scroll; **confirm with FE**). The mobile sidebar stays an icon-bar (not hidden) and nav taps route correctly, so navigation itself is usable — the defect is page-content width on Deals/My Apps. Reproduced live. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Note (BLOCKED):** Dual-account partner switching between **Pack** and **Channel** dashboards. Cannot automate — the feature and the test data do not exist on staging (verified live 2026-07-24): (a) **no account-switcher control** in the portal shell — the header "Select" is the tier badge (tier=`select`), not an account switcher, and the profile menu only offers Profile/Logout; (b) the logged-in partner is a **single account** — `GET /v1/partner/auth/me` returns one `partnerId` with `type:"channel"`, `tier:"select"`, no accounts array; (c) **no "Pack" concept** — the partner `type` enum is channel/referral/msp/system_integrator (no "pack"), so a Pack↔Channel dual-account cannot even be represented. Unblock when BE ships multi-account membership (one user → a Pack + a Channel account) + a shell account switcher, AND a dual-account test partner is provisioned.
 ### UI · PARTNER_TEAM
@@ -423,7 +423,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The analytics data loads without a server error.
    → Expected: no backend error. **(FAILS.)**
 **Expected (overall):** The analytics dashboard shows the funnel + KPIs + sections with data loaded.
-**Note:** FAILED — real BE defect, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). The dashboard shell renders (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — real BE defect, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). The dashboard shell renders (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory page not deployed)
 **Where:** stgsa → Partners → Territory (and from Partner detail). **Design:** Territory PN021, ready-for-dev.
 **Intent:** Assign a Territory (regions, verticals, exclusivity type, effective dates) to a partner; shows an exclusivity-conflict warning; the exclusive territory auto-routes conflicting deals.
@@ -898,7 +898,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 8. Re-win an already-won deal → **400** 'cannot transition from won to won' (repeat rejected; mutating action, not a create).
 **Teardown:** delete the parent partner.
 **Expected (overall):** Missing required intake → 400; non-approved/already-won → 400; ghost id → 404; malformed id → 400.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (cases 1–4): WinDealDto declares companyWebsite/industry/adminFirstName/adminLastName as required, but the BE accepts a win with any/all missing (even an empty body → 201, deal won) — required-intake validation is not enforced. Cases 5–8 are correct (note: win returns 404 for a ghost id, unlike other SA endpoints). Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-020**). Gap (cases 1–4): WinDealDto declares companyWebsite/industry/adminFirstName/adminLastName as required, but the BE accepts a win with any/all missing (even an empty body → 201, deal won) — required-intake validation is not enforced. Cases 5–8 are correct (note: win returns 404 for a ghost id, unlike other SA endpoints). Confirm with BE.
 
 ### API · DEAL_APPROVAL_QUEUE
 
@@ -1299,7 +1299,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 3. Already-active partner (illegal transition) → **400** 'cannot be approved' (409 Conflict would be more precise, but 400 is accepted).
 **Teardown:** delete the partner.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; illegal transition → 400/409. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 2 & 3 are correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-012**). Gap (case 1): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 2 & 3 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014
 **Test Description:** Negative counterpart of _004 (deactivate): invalid id rejected with the correct code; a repeat deactivate is idempotent. All invalid-id cases run (failures collected).
@@ -1310,7 +1310,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: never 5xx; stays 'suspended' (idempotent no-op, currently 201).
 **Teardown:** delete the created partners.
 **Expected (overall):** Non-existent id → 404; malformed id → 400; repeat deactivate is an idempotent no-op (never 5xx).
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 and the idempotency observation are correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-013**). Gap (case 1): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 and the idempotency observation are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015
 **Test Description:** Negative counterpart of _005 (tier change): six invalid inputs, each rejected with its own code + a clear message (no event emitted). All cases run (failures collected).
@@ -1324,7 +1324,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 6. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400.
 **Teardown:** delete the partner.
 **Expected (overall):** Validation / same-tier / malformed → 400; non-existent id → 404. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 6): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–5 are correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-014**). Gap (case 6): a well-formed non-existent partner id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–5 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_016
 **Test Description:** Negative counterpart of _006 (same enforcement — BlazeUp does not store the reseller's end-client price) via the UPDATE/PATCH entry point: the end-client price cannot be SET on an open reseller deal.
@@ -1359,7 +1359,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 4. Ghost userId (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400 ("User 000… not found").
 **Teardown:** delete the parent partner.
 **Expected (overall):** Validation / malformed → 400; non-existent userId → 404. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 4): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–3 are correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-015**). Gap (case 4): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1–3 are correct. Confirm with BE.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_021
 **Test Description:** Idempotency/duplicate counterpart of _002 (create): creating a partner with the same email twice is rejected (no second account).
@@ -1479,7 +1479,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 1. Ghost userId (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400 ("User 000… not found").
 2. Malformed userId ('not-an-id') → **400** Bad Request, message "invalid id".
 **Expected (overall):** Non-existent userId → 404; malformed userId → 400; never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-016**). Gap (case 1): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
 ### API · TERRITORIES
 
 #### PARTNER_API_TERRITORIES_001
@@ -1579,7 +1579,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 1. Ghost id (well-formed but non-existent, 000000000000000000000000) → expected **404** Not Found, message "not found". **Currently FAILS** — BE returns 400 ("Territory 000… not found").
 2. Malformed id ('not-an-id') → **400** Bad Request, message "invalid id".
 **Expected (overall):** Non-existent id → 404; malformed id → 400; never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-017**). Gap (case 1): a well-formed non-existent id returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
 
 #### PARTNER_API_TERRITORIES_015
 **Test Description:** Negative counterpart of _004 (delete): invalid/already-removed rejected with the correct code. All cases run (failures collected).
@@ -1590,7 +1590,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 3. Already-removed territory (delete it, then delete again) → expected **404** Not Found (target no longer exists). **Currently FAILS** — BE returns 400 ("Territory … not found").
 **Teardown:** delete the parent partner.
 **Expected (overall):** Non-existent / already-removed target → 404; malformed id → 400. (Already-removed documents delete's repeat behavior; mutating action, not a duplicate-create.)
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (cases 1 & 3): a not-found target returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 (malformed) is correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-018**). Gap (cases 1 & 3): a not-found target returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 (malformed) is correct. Confirm with BE.
 ### API · CERTIFICATIONS_SA
 
 #### PARTNER_API_CERTIFICATIONS_SA_001
@@ -1643,7 +1643,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 5. Already-revoked cert (revoke, then revoke again) → expected **404** Not Found (no active cert). **Currently FAILS** — BE returns 400.
 **Teardown:** delete the parent partner.
 **Expected (overall):** Missing reason / malformed id → 400; every not-found target → 404. Never 5xx.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker). Gap (cases 2, 3, 5): a not-found target returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1 & 4 are correct. Confirm with BE.
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-019**). Gap (cases 2, 3, 5): a not-found target returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Cases 1 & 4 are correct. Confirm with BE.
 
 #### PARTNER_API_CERTIFICATIONS_SA_013
 **Test Description:** Negative counterpart of _003 (list certs by partner): invalid filter/pagination handled with the correct code — validated cases 4xx, a ghost partner scope 200-empty — never 5xx. All cases run (failures collected).

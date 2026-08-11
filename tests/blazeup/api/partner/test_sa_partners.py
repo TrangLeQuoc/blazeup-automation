@@ -492,7 +492,7 @@ async def test_partner_api_partner_account_management_011(sa_partners_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) partner id returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-012: ghost (absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_013(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with the correct code.
 
@@ -553,7 +553,7 @@ async def test_partner_api_partner_account_management_013(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) partner id returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-013: ghost (absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_014(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
 
@@ -616,7 +616,7 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) partner id returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-014: ghost (absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_015(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with the correct code.
 
@@ -747,7 +747,7 @@ async def test_partner_api_partner_account_management_010(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) userId returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-015: ghost (absent) userId returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_020(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with the correct code.
 
@@ -846,7 +846,7 @@ async def test_partner_api_partner_account_management_021(sa_partners_client, cr
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # re-grant creates a duplicate active cert (count=2) — confirm with BE
+@pytest.mark.be_gap  # BUG-API-001: re-grant creates a duplicate active cert (count=2) — confirm with BE
 async def test_partner_api_partner_account_management_022(sa_partners_client, created_resources):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022: re-grant same certification - must not duplicate (idempotent or 409).
 

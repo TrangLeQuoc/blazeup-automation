@@ -218,7 +218,7 @@ _INVALID_DOMAINS = ("@@@", "ab cd", "notadomain", "http://x.com")
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap
+@pytest.mark.be_gap  # BUG-UI-003: no domain-format validation — garbage domains accepted. Confirm with FE.
 async def test_partner_ui_my_pipeline_003(make_partner_page):
     """PARTNER_UI_MY_PIPELINE_003: an invalid domain must be rejected with a format error.
 

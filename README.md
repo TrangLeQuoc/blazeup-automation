@@ -246,7 +246,7 @@ python -m pytest tests/ --co                          # Collect tests (show disc
 # Skip the pre-run environment gate (it runs by default; exits 6 when staging is down)
 python -m runner.blazeup.run_test --execute 2060101 --no-preflight
 
-# Framework selftests (runner/registry logic; no staging, no browser, ~1s)
+# Framework selftests (runner/registry logic + be_gap traceability; no staging, no browser, ~1s)
 python -m pytest selftests/ -o addopts= --confcutdir=selftests -q
 
 # Sync TC registry (after adding new test functions)
@@ -394,7 +394,7 @@ Two workflows under `.github/workflows/`:
 |----------|---------|--------------|
 | `test.yml` | **manual** (workflow_dispatch) | Runs the actual test suites against staging (needs secrets + a live backend) |
 | `validate-test-plan.yml` | **automatic** on every push / PR | Lints the Excel test plan — fast, no secrets, no services |
-| `selftest.yml` | **automatic** on push / PR touching `runner/`, `utils/`, `selftests/` | Tests the framework's own logic (TC registry, PASS/FAIL/BLOCKED classification) — no secrets, no staging, no browser |
+| `selftest.yml` | **automatic** on push / PR touching `runner/`, `utils/`, `selftests/`, `tests/`, `docs/blazeup/` | Tests the framework's own logic (TC registry, PASS/FAIL/BLOCKED classification) and the `be_gap` traceability chain (code marker ↔ test-case docs ↔ Bug_Tracker) — no secrets, no staging, no browser |
 
 ### Test suite — `test.yml` (manual)
 

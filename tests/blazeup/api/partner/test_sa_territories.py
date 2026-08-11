@@ -302,7 +302,7 @@ async def test_partner_api_territories_003(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost (well-formed, absent) id returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-017: ghost (absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_territories_014(sa_partners_client):
     """PARTNER_API_TERRITORIES_014: get territory with invalid id - rejected with the correct code.
 
@@ -382,7 +382,7 @@ async def test_partner_api_territories_004(sa_partners_client, created_resources
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # ghost / already-removed (well-formed, absent) id returns 400, should be 404 — confirm with BE
+@pytest.mark.be_gap  # BUG-API-018: ghost / already-removed id returns 400, should be 404 — confirm with BE
 async def test_partner_api_territories_015(sa_partners_client, created_resources):
     """PARTNER_API_TERRITORIES_015: delete territory invalid/already-removed - rejected with the correct code.
 
