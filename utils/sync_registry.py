@@ -49,6 +49,30 @@ New-style:
     SAME module name (e.g. both have a "PARTNERS" module) — so the merged
     registry never silently overwrites across projects.
 
+    ``seq`` carries NO meaning beyond order — decided 2026-09-16
+    ---------------------------------------------------------------
+    An oral convention held that a negative test lived at ``positive + 10``
+    (``TERRITORIES_001`` <-> ``_011``). Measured across the 13 API families:
+    THREE follow it. ``AUDIT_LOG`` puts its negatives at 005-007,
+    ``DEAL_REGISTRATION_PIPELINE`` scatters them over 4, 9, 12-14, 17, 21-22,
+    28-33, and ``AUTH_ACCESS_CONTROL`` interleaves them — correctly, because
+    "a partner JWT must not reach another partner" is a security REQUIREMENT,
+    not the edge case of some positive test.
+
+    A rule that holds 3 times in 13 is not a rule a reader can trust, and the
+    number was actively harmful: seven Excel rows in the ``_01X`` block carry
+    Action text copied verbatim from their ``_00X`` counterpart, because a slot
+    that means "the negative of 002" invites pasting 002 and editing later.
+
+    So: allocate the next free seq, whatever the test asserts. What a TC does
+    lives in its NAME and its Action text, which can say it exactly; a number
+    can only imply it, and implied it got copied instead of written.
+
+    Several families (``PARTNER_ACCOUNT_MANAGEMENT`` 1-22,
+    ``DEAL_REGISTRATION_PIPELINE`` 1-34) have no room left below 10 anyway —
+    note that a seq is reserved by any row in the Excel test plan, not only by
+    a registered test, so check both before allocating.
+
     Examples
     PARTNERS_UI_DASHBOARD_001       (partner) -> 1 1 01 02 01 -> 11010201
     PARTNERS_API_..._001            (partner) -> 0 1 01 .. ..  -> 0101.... (7 digits)

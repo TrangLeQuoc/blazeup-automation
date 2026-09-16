@@ -112,7 +112,9 @@ blazeup_automation/
 │   │   ├── test-data.md                  #     Faker factories + cleanup conventions
 │   │   └── test-organization.md          #     Test taxonomy: layers, naming, markers, e2e
 │   ├── api-snapshots/blazeup/            #   Swagger baselines + CHANGELOG (drift detector)
+│   │   └── be-commit.txt                 #     Backend commit this suite is reconciled to
 │   └── blazeup/                          #   Partner Platform reference + test plan
+│       ├── tools/BE/                     #     Dated output of the backend tools (see its README)
 │       ├── Partner_Platform_Test_Plan.xlsx
 │       ├── partner_product_backlog.vi.md
 │       ├── partner_requirement.xlsx
@@ -260,6 +262,80 @@ python utils/sync_registry.py
 # Lint the Excel test plan (well-formed + in sync with code; read-only)
 python utils/validate_test_plan.py            # --strict = warnings fail too
 ```
+
+### Backend source cross-check
+
+Needs a local clone of `blazeupai/blazeup-microservice-sa-partners` — no staging, no
+secrets. Point `BLAZEUP_BE_REPO` at it, once, in `config/blazeup/.env`:
+
+```
+BLAZEUP_BE_REPO="C:/Users/you/Desktop/blazeup/blazeup-microservice-sa-partners"
+```
+
+An environment variable of the same name overrides it, for a one-off run or CI:
+
+```bash
+export BLAZEUP_BE_REPO="/c/Users/you/Desktop/blazeup/blazeup-microservice-sa-partners"
+```
+
+Leave it unset and nothing else changes — only these three commands use it.
+
+| Command (no `make` on Windows) | What it answers |
+|---|---|
+| `make be-coverage`<br>`python -m utils.be_coverage` | Which of the backend's 101 endpoints have a BE unit test, a QA API test, both, or **neither** |
+| `make be-drift`<br>`python -m utils.be_drift` | What changed in the backend since the recorded baseline → **which TCs to re-run**, plus any new endpoint with no TC |
+| `make be-drift-save`<br>`python -m utils.be_drift --save` | Record the clone's HEAD as the new baseline, after reconciling a deploy |
+| `make be-audit`<br>`python -m utils.be_unit_audit` | Are the backend's unit tests protecting anything? Four heuristics — not-found answered `400`, tests that assert what they stubbed, controller specs with no error path, guards no spec exercises |
+| `python -m utils.be_test_blame --json <jest.json>` | Why is a backend unit test red: which commit introduced the difference, whether that commit updated the other specs but missed this one, and how long it has been red |
+
+`be_test_blame` defaults to reading a saved `jest --json` file so it stays read-only over
+the clone; `--run` lets it run their suite first (~2 min, writes nothing to their repo).
+It needs a distinctive **string** in the diff — numeric-only failures, timeouts and
+environment problems give the `git log -S` search nothing, and it says so rather than
+guessing.
+
+Every run archives its output to `docs/blazeup/tools/BE/YYYYMMDD-HHMMSS_<tool>.md` — the
+coverage map included, so nothing is overwritten and the folder shows how the numbers
+moved. `docs/blazeup/tools/BE/README.md` documents each command's purpose, input and
+output.
+
+`be-audit` reads **source only** — no Bug_Tracker lookup — so a brand-new API is audited
+the same as an old one. It explains a real puzzle: the backend runs 1052 green unit tests
+and none of them notices the ghost-id `400`-vs-`404` defects this suite has reported since
+July. None of its findings proves a test is *wrong*; that needs the PRD and a person.
+
+Run them from **this** repo, not the backend clone — they are modules here and need
+`api_clients/` + `runner/tc_registry` to name the TCs. The backend clone is only input,
+and is never written to.
+
+A full pass after a backend deploy:
+
+```powershell
+cd <the path in BLAZEUP_BE_REPO>; git pull   # HEAD only moves on a pull; all four read files
+cd <this repo>; python -m utils.be_drift
+# run the TC list it prints, then:
+python -m utils.be_drift --save
+```
+
+Substitute your own paths. Pull first or `be_drift` prints `Nothing to re-run.` — a false
+all-clear, since an unpulled clone has no changes to find. It warns when the clone is behind
+its upstream; `--check-remote` adds a `git fetch` (~3 s) so that warning is current.
+
+This is a different axis from `make swagger`. Swagger drift compares the live OpenAPI spec
+to a saved baseline, so it sees **contract** changes (paths, params, schemas) — it cannot
+see a change that leaves the contract intact, and it says nothing about what is tested.
+
+Why a baseline file rather than asking the service: `sa-partners-api` exposes no `/version`
+endpoint and its deploy tag lives in a shared CI repo, so there is no way to ask staging
+which commit it runs. `docs/api-snapshots/blazeup/be-commit.txt` is our own bookmark —
+same pattern as the Swagger baseline. `utils/be_drift.record_baseline` is the one place to
+change if a `/version` endpoint ever appears.
+
+**Known blind spot:** changes inside `@blazeupai/blazeup-global-common` and
+`@blazeupai/hr-os-global-factory` live in other repos and are invisible to the import
+graph. That is not academic — the shared `Method.findById` raising `BadRequestException`
+for a missing document is the root cause behind the ghost-id 400-vs-404 bug family.
+`be-drift` flags it when either package version is bumped, but cannot map it to endpoints.
 
 ---
 

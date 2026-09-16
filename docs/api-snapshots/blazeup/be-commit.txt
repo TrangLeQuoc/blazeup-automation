@@ -1,0 +1,5 @@
+501cf7a
+# Backend commit this suite was last reconciled against.
+# branch v26 · committed 2026-08-10 · recorded by utils/be_drift.py
+# NOT necessarily what staging runs: the service exposes no /version endpoint,
+# so this is our own bookmark. Update it after reconciling a deploy.

@@ -23,6 +23,24 @@ build/
 # -- Test run artifacts
 results/
 allure-results/
+# docs/blazeup/tools/BE/ holds tool OUTPUT, not source: one dated file per run of
+# be_coverage / be_drift / be_unit_audit / be_test_blame, plus the raw jest json. Nothing
+# reads this folder, every file is re-derivable by running the tool again, and four new ones
+# appear on every pass — so they are local history, not repo content.
+#
+# Ignore the directory and re-admit only the two hand-written READMEs. Written this way round
+# rather than as a timestamp glob so a tool added later is covered without touching this file.
+docs/blazeup/tools/BE/*
+!docs/blazeup/tools/BE/README.md
+!docs/blazeup/tools/BE/README_vi.md
+
+# Working notes for the in-flight "which endpoints has nobody automated" pass — a coverage
+# analysis, a build checklist and a TC draft. They overlap each other on purpose while the
+# work is live and are meant to be consolidated (and mostly deleted) once the TCs land, so
+# they would only go stale in the repo. Local-only until then.
+docs/blazeup/BE_COVERAGE_ACTION_PLAN.md
+docs/blazeup/ENDPOINT_BUILD_LIST.md
+docs/blazeup/NEW_TC_PROPOSAL.md
 allure-report/
 allure_report_test/
 playwright-report/
