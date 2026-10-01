@@ -451,3 +451,64 @@ def test_a_path_that_is_not_the_backend_repo_is_rejected(fake_be, tmp_path, monk
     monkeypatch.setenv(be_coverage.ENV_KEY, str(tmp_path / "not-the-repo"))
     with pytest.raises(SystemExit, match="has no src/"):
         be_coverage.be_repo()
+
+
+# ── one file, several @Controller ───────────────────────────────────────────
+
+
+_TWO_CONTROLLERS = """
+@Controller('v1/sa/partner-users')
+export class PartnerUsersSaController {
+  @Get()
+  async list() {}
+
+  @Post()
+  async invite() {}
+}
+
+@Controller('v1/partner/auth')
+export class PartnerAuthLegacySaController {
+  @Get('users')
+  async list() {}
+
+  @Post('invite')
+  async invite() {}
+}
+"""
+
+
+def test_a_second_controller_in_the_same_file_gets_its_own_prefix():
+    """Reading only the FIRST @Controller invented paths that do not exist.
+
+    Measured 2026-09-17 on partner-users.sa.controller.ts, which declares
+    `v1/sa/partner-users` and `v1/partner/auth` in one file. Every route took the first
+    prefix, so the three legacy auth routes were reported as
+    `/v1/sa/partner-users/{users,invite,users/:userId/reset-password}` — paths the service
+    does not serve. Three rows of the build plan were written against them before the live
+    OpenAPI spec disagreed.
+
+    Nothing flagged it: the count stayed at 101 and `unpaired` stayed 0, because the routes
+    were found, just mis-prefixed. A wrong path reads as an untested endpoint, which is the
+    same shape as real work.
+    """
+    endpoints, unpaired = extract_be_endpoints_from({"x.controller.ts": _TWO_CONTROLLERS}, {})
+
+    assert not unpaired
+    by_path = {(e.method, e.path) for e in endpoints}
+    assert ("GET", "/v1/sa/partner-users") in by_path
+    assert ("POST", "/v1/sa/partner-users") in by_path
+    assert ("GET", "/v1/partner/auth/users") in by_path, (
+        f"the second controller's prefix was not applied: {sorted(by_path)}"
+    )
+    assert ("POST", "/v1/partner/auth/invite") in by_path
+    assert ("GET", "/v1/sa/partner-users/users") not in by_path, (
+        "the first controller's prefix leaked onto the second controller's route"
+    )
+
+
+def test_each_route_is_attributed_to_its_own_class():
+    """The class drives which spec files count as 'own', so it must follow the route too."""
+    endpoints, _ = extract_be_endpoints_from({"x.controller.ts": _TWO_CONTROLLERS}, {})
+    by_path = {e.path + "|" + e.method: e.cls for e in endpoints}
+    assert by_path["/v1/sa/partner-users|GET"] == "PartnerUsersSaController"
+    assert by_path["/v1/partner/auth/users|GET"] == "PartnerAuthLegacySaController"

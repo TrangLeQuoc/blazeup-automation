@@ -23,6 +23,7 @@ _PARTNERS_PATH = "/sa-partners-api/v1/sa/partners"
 _PARTNER_USERS_PATH = "/sa-partners-api/v1/sa/partner-users"
 _CERTIFICATIONS_PATH = "/sa-partners-api/v1/sa/certifications"  # SA-wide cert list
 _TERRITORIES_PATH = "/sa-partners-api/v1/sa/territories"
+_ATTRIBUTIONS_PATH = "/sa-partners-api/v1/sa/partner-attributions"  # SA-wide, every partner
 
 
 class PartnerListResponse(BaseModel):
@@ -186,6 +187,32 @@ class SaPartnersClient(BaseClient):
         response = await self.get(f"{_PARTNERS_PATH}/{partner_id}", expected_status=expected_status)
         return PartnerWriteResponse.model_validate(response.json())
 
+    async def update_partner(
+        self,
+        partner_id: str,
+        payload: dict,
+        *,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """PATCH a partner (``UpdatePartnerDto``).
+
+        Returns the raw response rather than the parsed model so one method serves the
+        positive case and the negative one (``expected_status=None`` → assert the code in the
+        test). Every field in the DTO is optional, so an empty body is a legitimate no-op.
+        """
+        return await self.patch(
+            f"{_PARTNERS_PATH}/{partner_id}", json=payload, expected_status=expected_status
+        )
+
+    async def raw_get_partner(
+        self,
+        partner_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """GET a partner without parsing — for negatives and for reading raw stored fields."""
+        return await self.get(f"{_PARTNERS_PATH}/{partner_id}", expected_status=expected_status)
+
     async def deactivate_partner(
         self,
         partner_id: str,
@@ -308,6 +335,29 @@ class SaPartnersClient(BaseClient):
     ) -> httpx.Response:
         """Raw POST invite for negative/idempotency tests — arbitrary payload, no validation."""
         return await self.post(_PARTNER_USERS_PATH, json=payload, expected_status=expected_status)
+
+    async def unlock_partner_user(
+        self,
+        user_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """POST clear a partner user's lockouts, SA-side — BOTH login and MFA at once.
+
+        The SA twin of the portal's ``unlock_team_member``: that one lets a partner admin
+        unlock someone in their OWN org, this one lets SA unlock any partner user. Measured
+        2026-09-24: calling it on a user who is NOT locked still answers 200, so the response
+        code alone proves nothing — a test has to lock the account first and then show the
+        login works again.
+
+        ⚠️ Use a THROWAWAY user. Locking the shared portal account blocks every other partner
+        test for 30 minutes.
+        """
+        return await self.post(
+            f"{_PARTNER_USERS_PATH}/{user_id}/unlock",
+            json={},
+            expected_status=expected_status,
+        )
 
     async def reset_partner_user_password(
         self,
@@ -560,6 +610,38 @@ class SaPartnersClient(BaseClient):
             expected_status=expected_status,
             max_response_time_ms=SETUP_RESPONSE_TIME_MS,
             timeout=SETUP_HTTP_TIMEOUT_S,
+        )
+
+    async def list_attributions(
+        self,
+        *,
+        params: dict[str, Any] | None = None,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """GET partner-tenant attributions across EVERY partner (SA-wide).
+
+        A row is written only once a won deal's tenant is provisioned, so a partner cannot
+        create one on demand. Tests use this to DISCOVER an attribution id belonging to some
+        other partner at run time — the input needed to prove that the partner-portal detail
+        route refuses a foreign id exactly as it refuses one that does not exist. Never used
+        to assert the portal's own contract; that is the portal client's job.
+        """
+        return await self.get(_ATTRIBUTIONS_PATH, params=params, expected_status=expected_status)
+
+    async def get_attribution(
+        self,
+        attribution_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """GET one attribution by id, SA-wide.
+
+        Unlike the partner-portal twin this is NOT partner-scoped — the controller calls
+        ``findByIdScoped(id)`` with no scope argument, so an SA operator legitimately reads
+        any partner's row. That difference is the point of the TC that pairs the two.
+        """
+        return await self.get(
+            f"{_ATTRIBUTIONS_PATH}/{attribution_id}", expected_status=expected_status
         )
 
     async def list_audit_logs(

@@ -33,13 +33,13 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Note:** PASSED — verified 2026-07-28 (TC 12060302). First COMMISSIONS content test — establishes the `CommissionsPage` page-object (summary cards, ledger tabs). Empty ledger shows "No commissions yet" (partner has no won deals). Negative counterpart: N/A — read-only view. Idempotency: N/A — read-only.
 #### PARTNER_UI_COMMISSIONS_003 — BLOCKED (no ledger data)
 **Intent:** Trace a commission row — open a row and verify the full lifecycle fields (deal → close → rate/version → approval → payout → clawback/waiver → payment status); totals reconcile to the visible rows.
-**Block reason:** The commission ledger is **empty** — the test partner has no **Won** deals, so no commission rows exist ("No commissions yet"). Nothing to open / verify. Data-dependency chain: rate configured (SA_PARTNER_MODULE_009, not deployed) → deal approved (SA deal queue blocked by BUG-UI-005) → deal Won → commission row. Unblock once at least one commission exists in the ledger.
+**Block reason:** The commission ledger is **empty** — no commission rows exist ("No commissions yet"). **v1 creates a commission by ACCRUAL, not by winning a deal** (LLD `commission-recurring-accrual`): a `payment.gateway.payment.succeeded` event on a WON referral/co-sell deal (with `goLiveAt`, inside the eligibility window) creates an `ACCRUED` row. Note the trace's "clawback/waiver" lifecycle fields: v1 clawback is refund-driven (adjustment), and **waiver is NOT built in v1** — assert only the fields v1 renders. **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + a WON referral/co-sell deal + a payment-succeeded event → at least one accrued row in the ledger.
 #### PARTNER_UI_COMMISSIONS_004 — BLOCKED (no ledger data)
 **Intent:** Submit a commission dispute from a single text field on a commission row.
-**Block reason:** Same as _003 — no commission rows in the ledger to dispute (partner has no Won deals → empty ledger). Needs a real commission entry first (rate → approved deal → Won).
+**Block reason:** Same as _003 — no commission rows to dispute (empty ledger). **v1: a disputable row is an `ACCRUED` row created by a `payment.succeeded` accrual** (not a Won deal). **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + WON referral/co-sell deal + payment-succeeded event → an accrued row to dispute.
 #### PARTNER_UI_COMMISSIONS_005 — BLOCKED (no ledger data)
 **Intent:** Submit a product-failure waiver request with evidence linked to a commission/clawback row.
-**Block reason:** Same as _003/_004 — no clawback-eligible commission row exists (empty ledger). Needs a commission in a clawback-eligible state first.
+**Block reason (v1 — feature not built):** The **product-failure waiver path is NOT in v1** (LLD `commission-recurring-accrual` §12: waiver/`clawback_waiver_credit` belong to the not-yet-built payout phase; the adjustment `reason` enum has only `clawback|refund|manual`). Separately the ledger is empty. → Stays BLOCKED on the waiver feature, not just on data. **Unblock:** BE ships the waiver path AND an accrued/clawed-back row exists (accrual flow, see _003).
 #### PARTNER_UI_COMMISSIONS_006 — BLOCKED (UI + data not available) — Security
 **Intent:** Approve a commission payout **> $10K** — two-eye approval is enforced (one person cannot approve a large payout alone).
 **Block reason:** Needs (a) a payout > $10K pending approval — which requires a Won deal → commission → payout (empty ledger, blocked as _003), and (b) the two-eye approval UI (SA-side, design PN012) which is **not deployed** on staging. Unblock when both the payout data + the two-eye approval UI exist.
@@ -55,13 +55,13 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Block reason:** No payout/banking-details edit UI found on the partner build — `/commissions` is a read-only ledger; a payout-details/settings screen (per region) was not located. Needs the payout-details UI + region fixtures. Unblock when the payout-details screen is available.
 #### PARTNER_UI_COMMISSIONS_010 — BLOCKED (no commission data + no clawback-processing UI)
 **Intent:** Process a commission clawback when a client churns within the clawback window → the commission is adjusted to Clawback, the partner is notified, and the product-failure waiver path is available.
-**Block reason:** Verified live 2026-07-31 on the SA commission ledger (stgsa `/partners/commissions`): the ledger is **empty** ("No Data Found", 0 commissions) so there is no commission to clawback, and there is **no process-clawback action** in the UI (only a "Clawback Exposure" summary card + a Clawback status filter tab — no per-row "process clawback" control; design PN013 not deployed). Needs the full chain — rate configured → deal approved (blocked by BUG-UI-005) → deal Won → commission — plus the process-clawback UI. Unblock when a churned-client commission exists + the process-clawback UI ships.
+**Block reason (v1 — clawback model changed + no UI):** The intent (manual "process clawback on churn within the window" + waiver path) does **not** match v1. **v1 clawback is automated + refund-driven** (LLD `commission-recurring-accrual` §6.1): a `payment.refunded` event writes a `partner_commission_adjustments` debit (100%); there is **no manual per-row "process clawback"** action and **no waiver** in v1. UI-wise, `/partners/commissions` shows only a "Clawback Exposure" card + a Clawback filter tab (design PN013 not deployed). → Re-scope to "a refund produces a clawback adjustment visible in the ledger/exposure", OR keep blocked. **Unblock:** accrual flow (see _003) + a `payment.refunded` trigger + (for any manual action) the PN013 UI.
 #### PARTNER_UI_COMMISSIONS_011 — BLOCKED (needs reseller partner + Won reseller deal)
 **Intent:** For a Won **reseller** deal, the commission shows the configured **reseller rate** (not the referral/co-sell rate), clearly labelled as reseller commission.
-**Block reason:** Needs a **Reseller-type partner** with a **Won reseller deal** and a reseller rate configured. The test partner is type Channel, the register wizard fixes deal type to Referral, and there is no configured rate / Won deal — so no reseller commission entry exists to verify. Unblock with a reseller partner + Won reseller deal + rate.
+**Block reason (SUPERSEDED by v1 — reseller has no commission row):** **v1 excludes reseller from accrual** — `ACCRUABLE_DEAL_TYPES = {REFERRAL, CO_SELL}`, reseller is the margin model (LLD `commission-recurring-accrual` §7). So a reseller deal produces **no commission row at all**, and there is no "reseller commission rate" shown in the ledger to verify. → This TC's premise no longer holds; either DROP, or re-scope to the API assertion in `COMMISSIONS_PAYOUTS_011` ("reseller WON + payment → no ACCRUED row"). Reseller economics = margin at invoice, outside the accrual ledger.
 #### PARTNER_UI_COMMISSIONS_012 — BLOCKED (needs reseller partner + Won reseller deal)
 **Intent:** On reseller-deal close, an invoice is generated **for the partner entity** (not the end-client); amount = reseller rate × deal value; no end-client billing details are exposed.
-**Block reason:** Same dependency as _010 — needs a reseller partner + Won reseller deal that has passed commission processing, plus the invoice/billing UI (not seen on the partner build). Unblock with the reseller data + invoice UI.
+**Block reason (out of v1 accrual scope):** This is reseller **invoicing/billing**, not the commission-accrual engine (which excludes reseller — see _011). v1 `commission-recurring-accrual` does not cover reseller invoice generation, and no invoice/billing UI is on the partner build. → Not addressable via the accrual flow; keep BLOCKED on the reseller invoice/billing feature (separate from commission accrual). Payout/billing pipeline is explicitly not-yet-built (LLD §12).
 ### UI · DASHBOARD
 
 #### PARTNER_UI_DASHBOARD_001
@@ -174,15 +174,15 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Expected (overall):** A blank required field (company name) prevents advancing; filling it allows advancing.
 **Note:** PASSED — verified 2026-07-24 (TC 12060202). **Plan-vs-live:** the plan says "required field error is shown", but this build shows NO inline error text — it enforces required fields by **disabling "Next"**, so the test asserts the disabled→enabled transition instead of an error message. Idempotency: N/A (negative validation, no submit).
 #### PARTNER_UI_MY_PIPELINE_003
-**Test Description:** Negative (fail-by-design): an invalid/malformed domain in the register wizard must be rejected with a domain-format error (block advancing or flag the field). All cases run (collected).
+**Test Description:** Negative: a domain that breaks the Domain-field rule (letters, numbers, hyphens only — no dots or symbols, e.g. `my-company`) must be rejected with a format error (block advancing or flag the field). All cases run (collected).
 **Setup (precondition):** Open the Register-a-Deal wizard (step 1) with valid company name, country, and primary contact; vary only the Domain field.
 **Test Steps:** (each = enter a malformed domain, blur, check it is rejected)
-1. `@@@` → Expected: rejected (Next disabled or field flagged). **Currently FAILS** — accepted (Next stays enabled, field not flagged).
-2. `ab cd` (space) → Expected: rejected. **Currently FAILS** — accepted.
-3. `notadomain` (no TLD) → Expected: rejected. **Currently FAILS** — accepted.
-4. `http://x.com` (scheme, not a bare domain) → Expected: rejected. **Currently FAILS** — accepted.
+1. `@@@` (symbols) → Expected: rejected (Next disabled or field flagged, inline "Use letters, numbers, and hyphens only — no dots or symbols").
+2. `ab cd` (space) → Expected: rejected.
+3. `acme.com` (contains a dot) → Expected: rejected.
+4. `http://x.com` (scheme + dot + symbols) → Expected: rejected.
 **Expected (overall):** A malformed domain is rejected with a clear format error; no deal is created.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; **BUG-UI-003**) — verified 2026-07-24 (TC 12060203). The register wizard performs **no domain-format validation**: every malformed domain (even `@@@` / `ab cd`) is accepted — the Domain field **keeps the garbage value**, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset), so the deal can proceed with a garbage domain (which "derives the tenant subdomain"). **Confirm with FE** — add domain-format validation on the Domain field. Positive sibling: _001. Idempotency: N/A (no submit).
+**Note:** PASSED — verified 2026-09-30 (TC 12060203). FE now validates the Domain field (BUG-UI-003 fixed). Input set revised 2026-09-30: `notadomain` was removed — it is a VALID subdomain label under the rule (no dots/symbols), so listing it as invalid made the TC fail falsely; replaced with `acme.com` (dot). Positive sibling: _001. Idempotency: N/A (no submit).
 #### PARTNER_UI_MY_PIPELINE_004
 **Test Description:** In the register wizard, entering a domain (subdomain label) already reserved by another active deal shows an inline active-account/conflict warning; a free domain shows none. UI-only (no submit).
 **Setup (precondition):** Prove via the partner `check-domain` API which candidate label is reserved (`available=false`) vs free (`available=true`) — so the UI assertion is not circular. Open the wizard with valid company/country/contact. NOTE: the "Domain" field is a **subdomain label** (lowercase/numbers/hyphens, no dots) — placeholder "acme.com" is misleading; a value with dots returns 400 from check-domain.
@@ -293,7 +293,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 - PARTNER_UI_MY_PIPELINE_019 — BLOCKED (enrich on blur valid domain: no enrichment feature — verified live 2026-07-30, Headcount is a manual "Select range" dropdown + Logo is a manual URL field; blur only derives the tenant subdomain)
 - PARTNER_UI_MY_PIPELINE_020 — BLOCKED (choose modules of interest: no modules-of-interest selection in the wizard — verified live 2026-07-30, step 2 has deal type/plan/seats/region/close date only)
 - PARTNER_UI_MY_PIPELINE_021 — BLOCKED (register conflict-lost prospect after 90 days: needs a conflict-lost deal aged 90 days — time-based data not available)
-- PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: no registration by either partner → commission not awarded: behavioural/backend outcome, no partner-UI action to exercise)
+- PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: no registration → commission not awarded — behavioural/backend outcome, no partner-UI action). v1 mechanism (LLD `commission-recurring-accrual` §6.1): no registration → no WON deal with `wonTenantId` → a `payment.succeeded` for that tenant hits `accrual_no_won_deal` and skips → no `ACCRUED` row. This is an API/log-observable assertion (no ACCRUED row after a payment for an unattributed tenant), not a partner-UI one → better placed as an API accrual-negative TC than a UI TC.
 - PARTNER_UI_MY_PIPELINE_023 — BLOCKED (reseller deal → end-client price field absent: reseller deal type not offered in the wizard; feature absent)
 #### PARTNER_UI_MY_PIPELINE_024
 **Note (BLOCKED):** Click a pipeline deal card so the deal detail opens. Blocked by a BE defect (verified live 2026-07-24): the partner-portal deals-list endpoint `GET /v1/partner/portal/deals` returns **400 "Invalid id: 'pro-v1'"**, so the pipeline **never renders any deal row/card** (the UI falls back to the "No deals found" empty state even when the partner HAS deals). Root cause = the plan-reference contract drift: older deals store a plan **slug** (`planId:"pro-v1"`) while the BE now resolves plans by Mongo **_id** (ObjectId), so listing a partner whose deals include any slug-referenced plan throws "Invalid id" and the whole list fails. Confirmed a freshly SA-registered deal for the partner still does not appear (list stays 400 for ~40 s). With no deal card to click, the "open deal detail" flow cannot be exercised. **Same blocker applies to the other deal-list/detail pipeline TCs** (_015 detail, _025/_026/_027 filter, _033 card tag). Unblock when BE fixes the deals-list endpoint (tolerate/migrate legacy slug plan refs, or resolve by _id) so the pipeline renders deal cards. **Related:** register now requires the plan **_id** (slug → 400) — `pick_billing_plan_id` updated accordingly.
@@ -312,31 +312,31 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
 **Test Description:** Open every primary nav route of the partner portal shell and confirm each page's content module renders (correct page content shown, no micro-frontend error). One looping test walks all pages via direct URL and soft-collects failures → a single verdict naming any bad page.
 **Setup (precondition):** Log in once as the configured channel-partner user (session-cached partner UI login). Warm up the SPA (open Dashboard once) so the first page in the loop isn't charged the one-off bootstrap.
-**Test Steps:** (each page = one `page.goto(route)`; wait for its READY_MARKER in `<main>` — fast-fail on the "Something went wrong" MFE panel — **then** assert the content loaded: no "Failed to load"/"Please refresh and try again" banner in `<main>`) — primary nav verified live 2026-07-23:
+**Test Steps:** (each page = one `page.goto(route)`; wait for its READY_MARKER in `<main>` — fast-fail on the "Something went wrong" MFE panel — **then** assert the content loaded: no "Failed to load"/"Please refresh and try again" banner in `<main>`) — primary nav re-verified live 2026-09-30:
 1. Dashboard → `/dashboard` → Expected: title **"Tier & Performance"** visible + no error banner. → **PASS**
 2. Deals → `/deals` → Expected: **"Deal Pipeline"** visible + no error banner. → **PASS**
 3. Commissions → `/commissions` → Expected: **"Commissions"** visible + no error banner. → **PASS**
-4. Resources → `/resources` → Expected: **"Resources"** visible + no error banner. → **PASS**
-5. My Apps → `/apps` → Expected: **"My Apps"** visible + no error banner. → **FAILS** — the shell renders (title "My Apps" + tabs + Submit button) but the app list data-fetch fails, showing the red banner **"Failed to load your apps. Please refresh and try again."**
+4. Directory → `/directory` → Expected: **"Directory"** visible + no error banner. → **PASS**
+5. Resources → `/resources` → Expected: **"Resources"** visible + no error banner. → **PASS**
 **Expected (overall):** All 5 primary pages render their module AND their content (no MFE panel, no content-load error banner); a broken page fast-fails naming which one.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; **BUG-UI-001**) — verified 2026-07-23 (TC 12060101). 4/5 pages pass; **`/apps` (My Apps) FAILS**: the section shell renders but the app-list data-fetch fails → persistent banner "Failed to load your apps. Please refresh and try again." (a backend/data-load defect for this page — **confirm with BE**). Reproduced live; not a one-off flap. **This TC also hardened the readiness check:** marker-only (page title) gave a FALSE PASS because the heading renders even when data fails — added a content-error-banner assertion after the marker, which correctly turns `/apps` red. **Plan-vs-live mapping:** the plan named "My Pipeline / My Clients / Training", but the live primary nav is Deals / Resources / My Apps ("My Pipeline" = the Deals page, title "Deal Pipeline"). First partner-portal UI test — establishes the live route map reused by later content tests. Negative counterpart: N/A (page-load smoke has no invalid-input surface; broken-page/content-error cases are built in). Idempotency: N/A (read-only navigation).
+**Note:** PASSED — verified 2026-09-30 (TC 12060101), 5/5 pages. **My Apps removed (2026-09-30):** the portal no longer has a "My Apps" nav item and `/apps` renders a 404 page, so the section was dropped from the test (BUG-UI-001 — My Apps "Failed to load your apps" — is moot/closable). The readiness check keeps the content-error-banner assertion after the marker (marker-only gave a FALSE PASS when the heading rendered but data failed). **Plan-vs-live mapping:** the plan named "My Pipeline / My Clients / Training", but the live primary nav is Dashboard / Deals / Commissions / Directory / Resources ("My Pipeline" = the Deals page, title "Deal Pipeline"). Negative counterpart: N/A (page-load smoke has no invalid-input surface; broken-page/content-error cases are built in). Idempotency: N/A (read-only navigation).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_002
 **Test Description:** Open the partner portal at a common mobile viewport (375×812) and confirm the shell stays usable on every primary nav page — the section renders, the sidebar nav stays reachable, and the layout does NOT overflow horizontally (no content cut off / sideways scroll) — then tap a sidebar link to prove mobile navigation works. One looping test soft-collects per-page failures → single verdict.
 **Setup (precondition):** Log in once as the configured channel-partner user; resize the page to 375×812; warm up the SPA (open Dashboard once).
-**Test Steps:** (per page at mobile width: shell READY_MARKER visible + ≥1 nav link visible + horizontal overflow ≤ 5px scrollbar allowance) — verified live 2026-07-24:
-1. Dashboard `/dashboard` → Expected: renders, nav reachable, no h-overflow. → **PASS** (overflow 0px).
-2. Deals `/deals` → Expected: no h-overflow. → **FAILS** — content overflows the 375px viewport by **+162px** (tabs/filter/view controls don't fit → sideways scroll).
-3. Commissions `/commissions` → Expected: no h-overflow. → **PASS** (0px).
-4. Resources `/resources` → Expected: no h-overflow. → **PASS** (0px).
-5. My Apps `/apps` → Expected: no h-overflow. → **FAILS** — overflows by **+263px**.
+**Test Steps:** (per page at mobile width: shell READY_MARKER visible + ≥1 nav link visible + horizontal overflow ≤ 5px scrollbar allowance) — re-verified live 2026-09-30:
+1. Dashboard `/dashboard` → Expected: renders, nav reachable, no h-overflow. → **PASS**
+2. Deals `/deals` → Expected: no h-overflow. → **PASS** (was +162px on 2026-07-24 — fixed).
+3. Commissions `/commissions` → Expected: no h-overflow. → **PASS**
+4. Directory `/directory` → Expected: no h-overflow. → **FAILS** — overflows the 375px viewport by **+93px**: the "Invite User" button sticks out 93px and the member table (MEMBER / ROLE / STATUS / LAST LOGIN) is ~607px wider than the viewport with no horizontal scroll container, so the whole page scrolls sideways (`scrollWidth` 468 vs 375).
+5. Resources `/resources` → Expected: no h-overflow. → **PASS**
 6. Tap sidebar link at mobile → Commissions routes + renders. → **PASS** (mobile nav is usable).
 **Expected (overall):** Every primary page fits the mobile viewport (no horizontal overflow) with the nav reachable; tapping nav routes correctly.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; **BUG-UI-002**) — verified 2026-07-24 (TC 12060102). 3/5 pages fit + mobile nav works, but **Deals (+162px) and My Apps (+263px) overflow horizontally at 375px** = responsive-layout defects (content doesn't fit small screens → sideways scroll; **confirm with FE**). The mobile sidebar stays an icon-bar (not hidden) and nav taps route correctly, so navigation itself is usable — the defect is page-content width on Deals/My Apps. Reproduced live. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-09-30 (TC 12060102). 4/5 pages fit + mobile nav works; **only `/directory` overflows (+93px)** = responsive-layout defect (**confirm with FE**; new bug **BUG-UI-010** — distinct from BUG-UI-002, which was Deals and is now fixed). **My Apps removed (2026-09-30):** no nav item, `/apps` → 404, so it was dropped from the test. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Note (BLOCKED):** Dual-account partner switching between **Pack** and **Channel** dashboards. Cannot automate — the feature and the test data do not exist on staging (verified live 2026-07-24): (a) **no account-switcher control** in the portal shell — the header "Select" is the tier badge (tier=`select`), not an account switcher, and the profile menu only offers Profile/Logout; (b) the logged-in partner is a **single account** — `GET /v1/partner/auth/me` returns one `partnerId` with `type:"channel"`, `tier:"select"`, no accounts array; (c) **no "Pack" concept** — the partner `type` enum is channel/referral/msp/system_integrator (no "pack"), so a Pack↔Channel dual-account cannot even be represented. Unblock when BE ships multi-account membership (one user → a Pack + a Channel account) + a shell account switcher, AND a dual-account test partner is provisioned.
 ### UI · PARTNER_TEAM
 
-**Correction (2026-07-30):** the partner portal nav has **6 items** — Dashboard, Deals, Commissions, **Directory**, Resources, My Apps. An earlier note here wrongly said "5 nav / no team UI" — that was a false negative from a too-short probe wait (see the `probe-mfe-with-long-wait` learning). `/directory` IS the partner team-members page.
+**Correction (2026-07-30):** the partner portal nav has **6 items** — Dashboard, Deals, Commissions, **Directory**, Resources, My Apps (**update 2026-09-30:** My Apps removed → 5 items). An earlier note here wrongly said "5 nav / no team UI" — that was a false negative from a too-short probe wait (see the `probe-mfe-with-long-wait` learning). `/directory` IS the partner team-members page.
 #### PARTNER_UI_PARTNER_TEAM_001 — PASSED
 **Test Description:** Invite a partner team member. On the partner Directory (`/directory`), open "Invite User", fill the new member's email + name + role, send the invite, and confirm the invitation is created (one-time credential shown) and the member appears in the team table with its role.
 **Setup (precondition):** Log in as the channel-partner user (stgpartners, 2FA); open `/directory` and wait for the "Directory" READY_MARKER.
@@ -412,7 +412,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Where:** stgsa → Partners → Commission → (Commission configuration → SPIFF Program). **Design:** PN020 (SPIFF section), ready-for-dev.
 **Intent:** Create a SPIFF bonus programme (name, bonus %, regions, tiers, valid dates) → appears in Active SPIFF Programmes; reflected in partner commission projection.
 **Block reason:** Same as _009 — the SPIFF configuration lives in the same Commission configuration view, which is not deployed on staging. Unblock when FE deploys it.
-#### PARTNER_UI_SA_PARTNER_MODULE_011 — FAILED (app bug · BE defect)
+#### PARTNER_UI_SA_PARTNER_MODULE_011 — PASSED
 **Test Description:** The SA Partner Programme Analytics dashboard (stgsa `/partners/analytics`, PRD §7) — funnel + KPI + tier-distribution + top-partners render and load with no backend error.
 **Setup (precondition):** Log in as super-admin (stgsa); open `/partners/analytics` and wait for the "Deal Funnel" section.
 **Test Steps:**
@@ -421,9 +421,9 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 2. The Tier Distribution + Top Partners sections render.
    → Expected: Deal Funnel, Tier Distribution, Top Partners by ARR sections visible. **(PASSES.)**
 3. The analytics data loads without a server error.
-   → Expected: no backend error. **(FAILS.)**
+   → Expected: no backend error. **(PASSES.)**
 **Expected (overall):** The analytics dashboard shows the funnel + KPIs + sections with data loaded.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — real BE defect, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). The dashboard shell renders (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
+**Note:** PASSED — re-verified 2026-10-01 (TC 12060511): data loads with no server error; **BUG-UI-006 fixed**, `be_gap` removed (TC back inside the merge gate). History: until 2026-07-29 the dashboard shell rendered (KPIs + funnel + tier distribution + top-partners all pass), but a paginated analytics query fails with **"Server Error — Invalid pagination: limit must not exceed 100"** (a backend defect: the frontend requests a page size > 100 that the API rejects). Deterministic. Assertion fails with "confirm with BE". Note the live KPI set differs slightly from the plan (Approval Rate / Avg Deal Velocity / detailed commission line-items not rendered) — the test asserts what the UI renders. Negative counterpart: N/A — read-only dashboard. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory page not deployed)
 **Where:** stgsa → Partners → Territory (and from Partner detail). **Design:** Territory PN021, ready-for-dev.
 **Intent:** Assign a Territory (regions, verticals, exclusivity type, effective dates) to a partner; shows an exclusivity-conflict warning; the exclusive territory auto-routes conflicting deals.
@@ -439,7 +439,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The Partner-actions control renders.
    → Expected: the **Partner actions** kebab control is visible on the header. **(PASSES.)**
 **Expected (overall):** The SA Partner Detail loads with tabs, sections, partner info, and the actions control.
-**Note:** PASSED, verified 2026-07-31 (TC 12060513). Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-021**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+**Note:** PASSED, verified 2026-07-31 (TC 12060513). Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-022**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate not in UI)
 **Test Description:** From the SA Partner Detail → **Members** tab, an SA adds a portal user (member) to an active partner; the new user appears in the Portal Users list with **Active** status.
 **Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active), open the Members tab.
@@ -451,17 +451,17 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The new user appears as an Active row.
    → Expected: the new user's row shows the email + **Viewer** role + **Active** status; the header reads **Portal Users (1)**. **(PASSES.)**
 **Expected (overall):** An SA can add a portal user to a partner; it appears Active in the Portal Users list.
-**Note:** PASSED, verified 2026-08-03 (TC 12060514). Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email). **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-021**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
-#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-UI-008, FE↔BE contract)
+**Note:** PASSED, verified 2026-08-03 (TC 12060514). Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email). **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-022**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+#### PARTNER_UI_SA_PARTNER_MODULE_015 — PASSED
 **Test Description:** From the SA Partner Detail page, an Active partner is suspended via **Partner actions → Deactivate**. Expected: the partner transitions out of Active (Suspended/Inactive) and portal access is revoked.
-**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active).
+**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner (Onboard), find it in the Directory with the **Status filter = Pending** (the Directory defaults to Status = Active), open it and **Approve** it (Pending → Active).
 **Test Steps:**
-1. Deactivate (suspend) the active partner — Partner actions → Deactivate → confirm the "Deactivate Partner" dialog.
-   → Expected: the request succeeds. **(FAILS.)**
+1. Deactivate (suspend) the active partner — Partner actions → Deactivate → fill the required **Reason** in the "Deactivate Partner" dialog → confirm.
+   → Expected: the request succeeds (dialog closes, no "Failed to deactivate partner" banner).
 2. The partner is suspended and no error is shown.
-   → Expected: no error banner; partner is no longer Active (Suspended/Inactive). **(FAILS.)**
+   → Expected: no error banner; the status badge changes to Suspended/Inactive (polled — the badge refetches a few seconds after the action).
 **Expected (overall):** An SA can suspend an Active partner from the UI; the partner loses portal access.
-**Note:** FAILED — real app bug, verified 2026-07-31 (TC 12060515, **BUG-UI-008**, marked `be_gap`). The **"Deactivate Partner" confirm dialog collects NO reason** (only Cancel / Deactivate buttons), but the deactivate API **requires** a non-empty reason string. The FE sends the request without one, so the BE rejects it — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — the UI shows **"Failed to deactivate partner"** and the partner **stays Active**. Deterministic FE↔BE contract mismatch: **no SA can suspend a partner via the UI**. Fix: add a required Reason field to the dialog (and send it), or make `reason` optional on the API. This also blocks _016 (reactivate — cannot reach the Suspended state). Negative counterpart: N/A (single state-transition action). Idempotency: N/A — action never succeeds. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-021**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+**Note:** PASSED — verified 2026-09-30 (TC 12060515). **BUG-UI-008 fixed by FE:** the Deactivate dialog now has a required Reason textarea (Deactivate stays disabled until filled) and the request succeeds. Also updated 2026-09-30: the Directory now defaults to **Status = Active**, so the just-onboarded (Pending) partner is found by switching the Status filter to Pending first. History: until 2026-07-31 the dialog had no reason field and the BE rejected the call ("reason should not be empty"). Unblocks _016 (reactivate). Negative counterpart: N/A (single state-transition action). Idempotency: N/A. **Cleanup:** registered (SA API delete at teardown) but still only a soft-delete (**BUG-API-022**, `CLEANUP LEAK` in the run log).
 #### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (depends on BUG-UI-008)
 **Test Description:** From the SA Partner Detail page, a **Suspended** partner is reactivated via **Partner actions → Reactivate**; the partner returns to Active and regains portal access.
 **Intent:** Verify the Suspended → Active transition (the mirror of _015).
@@ -580,6 +580,34 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: 401.
 **Expected (overall):** Password change rejects a wrong current; new credentials work, old are rejected.
 **Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+#### PARTNER_API_AUTH_ACCESS_CONTROL_010
+**Test Description:** A partner user requests a self-service password reset (POST /sa-partners-api/v1/partner/auth/forgot-password). Proven by effect, no mailbox needed: the password that worked a moment ago must stop working.
+**Setup (precondition):** An ACTIVE partner and a THROWAWAY user on it. Spends ONE call against the shared per-IP rate budget.
+**Test Steps:**
+1. Log in with the invite tempPassword.
+   -> Expected: HTTP 200 — otherwise the fixture is broken, not the endpoint.
+2. POST forgot-password for that email.
+   -> Expected: the fixed generic message "If an account exists for that email, we've sent password-reset instructions."; the body carries no tempPassword/accessToken/refreshToken/newPassword.
+3. Log in again with the OLD password.
+   -> Expected: refused — the credential was rotated before the mail was sent.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the reset actually rotates the credential and leaks nothing.
+**Note:** PASSED, old password → 401. This endpoint was recorded "không build được — không đọc được inbox" on 2026-09-16; that was wrong. `forgotPassword` rotates the password and only THEN mails it (`partner-auth.service.ts:798` → `generateTempPassword` → `updateUserPassword`), so the effect is observable exactly as PARTNER_TEAM_005 proves the admin-driven reset. A reset endpoint that echoed the new credential back would be worse than useless, which is why step 2 checks the body rather than only the status.
+
+#### PARTNER_API_AUTH_ACCESS_CONTROL_011
+**Test Description:** Negative/security counterpart of _010: user enumeration, malformed input, and the rate limit.
+**Setup (precondition):** An ACTIVE partner and a THROWAWAY user on it. Spends up to 8 calls against the per-IP budget.
+**Test Steps:**
+1. POST forgot-password with email='not-an-email'.
+   -> Expected: HTTP 400 from DTO validation.
+2. POST for a REGISTERED email, then for an unknown one, and compare.
+   -> Expected: the same status code AND the same body — any observable difference is a user-enumeration oracle. The service returns early for an unknown user ("silent no-op: no email, no write, no audit") and the controller never branches on the outcome.
+3. Repeat the request for one address until it is refused.
+   -> Expected: HTTP 429 within the documented 5-per-email window.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the endpoint reveals no accounts and cannot be used to flood an address.
+**Note:** PASSED — 429 after 5 requests; registered and unknown emails indistinguishable. WARNING for whoever runs this: the quota is ALSO per client IP (20 per 15 minutes) and shared by everything behind that address. This module spends ~9 calls a run, so two back-to-back runs fit but a third inside the same window starts seeing 429s. The TC is written to treat an early 429 as proof the limit exists rather than as a failure, and reports UNPROVEN for step 2 if the budget ran out before it could compare.
+
 ### API · DEAL_REGISTRATION_PIPELINE
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_001
@@ -900,6 +928,62 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Expected (overall):** Missing required intake → 400; non-approved/already-won → 400; ghost id → 404; malformed id → 400.
 **Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-020**). Gap (cases 1–4): WinDealDto declares companyWebsite/industry/adminFirstName/adminLastName as required, but the BE accepts a win with any/all missing (even an empty body → 201, deal won) — required-intake validation is not enforced. Cases 5–8 are correct (note: win returns 404 for a ghost id, unlike other SA endpoints). Confirm with BE.
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_035
+**Test Description:** SA lists deals: GET /sa-partners-api/v1/sa/deals returns the SA-wide deal list and every filter actually narrows it — partnerId, status, dealType and limit.
+**Setup (precondition):** An ACTIVE partner with a portal session registers one deal, so the TC owns a row it can find again. The unfiltered list holds 1406 rows on staging, so nothing may be assumed about it.
+**Test Steps:**
+1. GET the list with limit=5.
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; total an int > 0; at most 5 rows.
+2. Filter by partnerId.
+   → Expected: every row belongs to that partner, and the deal registered in setup is present.
+3. Verify the deal row.
+   → Expected: _id/partnerId/dealType/status/prospectName/createdAt present; status within the enum (registered|approved|in_progress|won|lost|expired|rejected); dealType within (referral|reseller|co_sell); no password/token/secret/credential key.
+4. Filter by status.
+   → Expected: every row carries that status.
+5. Filter by dealType.
+   → Expected: every row carries that type.
+6. Compare limit=1 against limit=50.
+   → Expected: exactly 1 row, and `total` unchanged — it counts the result set, not the page.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the SA deal list is well-formed and every filter narrows the result.
+**Note:** PASSED. Written against a specific failure mode: a filter that is accepted and then ignored. BUG-API-023 is exactly that on `/directory/users/{userId}/deals`, so each filter here is asserted to narrow rather than merely to return 200.
+
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_036
+**Test Description:** Negative counterpart of _035: values outside an enum, a malformed id, bad pagination, and a well-formed id that matches nothing.
+**Setup (precondition):** None — read-only.
+**Test Steps:**
+1. status='bogus', then dealType='bogus'.
+   → Expected: HTTP 400 on both, each body listing every allowed value.
+2. partnerId='not-an-id'.
+   → Expected: HTTP 400.
+3. limit=-1, limit=0, page='abc'.
+   → Expected: HTTP 400 on all three — a nonsensical page size is refused, never resolved to unbounded.
+4. partnerId=<ghost, well-formed>.
+   → Expected: HTTP 200 with total=0 — an empty result is not an error.
+**Teardown:** none.
+**Expected (overall):** every invalid filter is refused with a 4xx that names the problem, and an empty result is distinguished from an error.
+**Note:** FAILED by design at step 3 — **BUG-API-025**. `limit=-1` IS refused with 400, so the guard exists; `limit=0` and `page='abc'` slip past it and the endpoint answers 200 with **all 1406 rows in one page**. The impact is a full-table dump per request rather than a mere validation gap. Steps 1, 2 and 4 all pass. Worth checking whether other list endpoints share the same guard.
+
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_037
+**Test Description:** SA remediation POST /sa-partners-api/v1/sa/deals/{id}/link-tenant, walked guard by guard. Each case sends a payload valid in every other respect, so the refusal can only come from the guard under test.
+**Setup (precondition):** One partner owning a REGISTERED deal (for the wrong-state case) and a WON deal (for the guards past it). NEGATIVE ONLY — see the note.
+**Test Steps:**
+1. Link a deal that is still `registered`.
+   -> Expected: 4xx — only a won deal has a tenant to link.
+2. Link the WON deal to a tenantId that does not exist.
+   -> Expected: 4xx naming the unknown tenant.
+3. Link with tenantId = the platform tenant `blazeup-platform`, then with a 9-character reason.
+   -> Expected: HTTP 400 on both — the DTO carries @NotEquals(PLATFORM_TENANT_ID) and requires a 10-500 char reason.
+4. Link with goLiveAt in the future, before `closedAt`, and not a date at all.
+   -> Expected: HTTP 400 each time — goLiveAt is the commission-eligibility anchor.
+5. Link using a ghost deal id, then a malformed one.
+   -> Expected: 4xx on both, never 5xx.
+6. Re-read the WON deal.
+   -> Expected: still no `wonTenantId`, and `provisioningState` still `awaited`.
+**Teardown:** delete the parent partner.
+**Expected (overall):** every invalid link is refused and none of them writes anything.
+**Note:** PASSED. NEGATIVE-ONLY by necessity, not by omission: Guard 3 calls `tenantExists()` against the real tenants collection so a fabricated tenantId is always a 400, and Guard 7 lets one tenant back only ONE won deal — so borrowing a real staging tenant would consume it and corrupt an existing attribution. There is no positive counterpart to pair with under rule 1. Measured 2026-09-24: non-WON 400, ghost tenant 400, platform tenant 400, short reason 400, all three goLiveAt cases 400, ghost deal id 404, malformed deal id 400. Step 6 is the one the others cannot cover — a guard that returns an error but writes anyway is worse than no guard, and nothing else in the suite would notice.
+
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001
@@ -966,6 +1050,38 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Invalid filter/pagination is rejected (4xx), never 5xx.
 **Note:** PASSED. BE validates both (returns 400) — not lenient.
+#### PARTNER_API_PIPELINE_MANAGEMENT_012
+**Test Description:** SA reads deal-pipeline KPIs across every partner (GET /sa-partners-api/v1/sa/deals/stats) — the SA-wide twin of DASHBOARD_DATA_002, with the provisioning-watchdog block that belongs only here.
+**Setup (precondition):** None for steps 1-3 (read-only). Step 4 creates one partner with exactly one deal.
+**Test Steps:**
+1. GET the SA aggregate.
+   -> Expected: HTTP 200; the same scalars and buckets as the portal twin, all `int` and >= 0; total > 0 (staging holds well over a thousand deals).
+2. Check `byProvisioningState`.
+   -> Expected: PRESENT here, carrying all four states (awaited|overdue|resolved|legacy_unknown), each an int >= 0. This is the only surface allowed to expose it.
+3. Cross-check against GET /v1/sa/deals.
+   -> Expected: stats total = list total = sum(byStatus).
+4. Mint a partner and register exactly one deal.
+   -> Expected: the deal is created.
+5. GET the aggregate filtered by that partnerId, then by a ghost partnerId.
+   -> Expected: total = 1 and byStatus[<status>] = 1 for the real partner; total = 0 for the ghost.
+**Teardown:** delete the partner created in step 4.
+**Expected (overall):** the SA aggregate is platform-wide, carries the watchdog block, agrees with the list, and narrows on partnerId.
+**Note:** PASSED. Measured 2026-09-24: total 1412, byProvisioningState {awaited 0, overdue 81, resolved 0, legacy_unknown 0}. Step 3 is the assertion worth the most — two views of one collection disagreeing means the stats match stage has drifted from the list query, which nothing else would catch. Step 5 guards the BUG-API-023 failure mode: an SA figure that accepted `partnerId` and ignored it would report platform-wide numbers on a single partner's page. NOTE: the requirement row for this endpoint is §5.5 SA Analytics, but its TCs live in the PIPELINE_MANAGEMENT registry section — requirement taxonomy and test-registry taxonomy differ here by design.
+
+#### PARTNER_API_PIPELINE_MANAGEMENT_013
+**Test Description:** Negative counterpart of _012: every enum filter, a malformed id, and a well-formed id that matches nothing.
+**Setup (precondition):** None — read-only.
+**Test Steps:**
+1. Filter by status, dealType, conflictStatus and provisioningState, each set to 'bogus'.
+   -> Expected: HTTP 400 each time, and each body lists that filter's allowed values.
+2. Filter with partnerId='not-an-id'.
+   -> Expected: HTTP 400.
+3. Filter with a ghost partnerId.
+   -> Expected: HTTP 200, total = 0, and byStatus/byType/byProvisioningState all still present.
+**Teardown:** none.
+**Expected (overall):** every invalid filter is refused and an empty match stays fully zero-filled.
+**Note:** PASSED. Step 3's bucket check is deliberate: zero-filling has to survive an empty match, or an SA dashboard filtered to a quiet partner renders blanks where it should render zeros.
+
 ### API · TENANT_PROVISIONING_ATTRIBUTION
 
 > Note: this section's TC ids group several features (close→provision→commission→attribution). Per the user's decision the grouping is kept as-is for now; some rows really belong to co-sell / commissions / CRM.
@@ -974,7 +1090,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note (BLOCKED):** Co-sell split accept/lock endpoint POST /v1/partner/deals/:id/cosell-split-accept not in dev build. (Mis-grouped — really a co-sell case.) Unblock when BE ships it.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002
-**Note (BLOCKED):** Depends on the deal win/close flow (DEAL_018, deferred) + downstream tenant-provisioning & commission/event surfaces not reachable from this domain. Unblock when win is safely runnable + those surfaces are exposed.
+**Note (BLOCKED — split trigger in v1):** Chains close→provision→commission. **Provisioning** is still win-driven (needs DEAL_018, deferred) and stamps `goLiveAt` on the WON deal (LLD `commission-recurring-accrual` §6.3). **Commission is NO LONGER earned at provisioning** — the one-shot `earnOnProvisioning` was cut over; a commission now **accrues later** from `payment.gateway.payment.succeeded`. So verifying the commission leg additionally needs `COMMISSION_ACCRUAL_ENABLED=true` + a payment-succeeded event. Unblock when win is safely runnable AND the accrual flow (flag + payment trigger) is available.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_003
 **Note (BLOCKED):** Depends on win/close + downstream billing/invoice ("reseller close → invoice targets the reseller"). Unblock when win + billing verification are available.
@@ -983,10 +1099,10 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note (BLOCKED):** Depends on win/close + a pre-provisioned tenant + billing line-items downstream. Unblock when expansion-close + billing verification are exposed.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_005
-**Note (BLOCKED):** Commission-calc engine is downstream with no API to read the computed commission ("expansion NN → full rate"). Same family as COMMISSIONS_PAYOUTS_001. Unblock when BE exposes computed commissions.
+**Note (SUPERSEDED by v1 — REWRITE):** Original intent "expansion NN → full rate" tested the NN/EN/EE lifecycle **band** rate. **v1 SHIPPED dropped bands entirely** (LLD `commission-recurring-accrual` §13): there is a single **flat, deal-stamped rate** applied to the full payment, gated only by a binary eligibility window (`goLiveAt + COMMISSION_ELIGIBILITY_WINDOW_MONTHS`, default 12mo, exclusive). No NN band exists to assert. → Re-scope to: "an accrued commission on an in-window payment uses the deal-stamped `commissionRate` (flat, not a lifecycle band)". **Unblock:** commission now accrues from `payment.gateway.payment.succeeded` (NOT deal-win) — needs `COMMISSION_ACCRUAL_ENABLED=true` on staging + a WON referral/co-sell deal with `goLiveAt` + a way to emit a payment-succeeded event.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_006
-**Note (BLOCKED):** Same as _005 — commission-calc downstream, no read API ("expansion EN → lower rate"). Unblock when BE exposes computed commissions.
+**Note (SUPERSEDED by v1 — REWRITE):** Original "expansion EN → lower rate" also tested a lifecycle band (EN). **v1 has no EN band** — same flat deal-stamped rate as _005 (LLD §13). → Re-scope to: "a second in-window payment on the same deal accrues a separate `ACCRUED` row at the SAME flat rate (billing-cadence produces N rows, not band-tapered rates — LLD §7.1)". Same unblock as _005 (accrual flow + flag + payment-event trigger).
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_007
 **Note (BLOCKED):** Depends on the deal-win flow (DEAL_018, deferred) + a downstream CRM connector to verify "deal won → CRM closes won with tenant id". Unblock when win is safely runnable.
@@ -1002,6 +1118,43 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_011
 **Note (NOT_STARTED — redundant / cross-ref):** "Validate invalid expectedCloseDate → 400" is already exercised by **DEAL_REGISTRATION_PIPELINE_021** (its bad-date case: `expectedCloseDate` not ISO-8601 → 400, and missing expectedCloseDate → 400). _021 currently PASSES, so this validation is covered. NOT blocked — there is simply no distinct assertion to add if built standalone. Do NOT build a duplicate; treat as covered by _021. (If a standalone line is ever needed, point it at the same POST /v1/sa/deals date validation.)
+
+#### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_012
+**Test Description:** SA reads the tenant↔partner attribution ledger (GET /sa-partners-api/v1/sa/partner-attributions) and one row by id. Asserts the envelope, the row schema, that the `partnerId` and `status` filters actually narrow, that the detail route returns the row asked for, and — the load-bearing one — that the SA view spans MORE THAN ONE partner, which is the exact opposite of the partner-portal twin.
+**Setup (precondition):** The ledger holds at least one row. Automation cannot create an attribution (it is written only once a won deal's tenant is provisioned), so rows are read, never seeded; every id is discovered at run time and nothing is written.
+**Test Steps:**
+1. GET the ledger with limit=50.
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; at least one row — an empty ledger fails the precondition loudly rather than passing on an empty set.
+2. Check every row.
+   → Expected: each carries _id/partnerId/partnerName/clientTenantId/status/clientLifecycleState/source/arrCents/currency/attachedAt; `status` within (active|terminated); `clientLifecycleState` within (active|suspended|churned); `arrCents` an int; no password/token/secret/credential key.
+3. Count the distinct `partnerId` on the page.
+   → Expected: more than one — the SA ledger must not be partner-scoped; that scoping belongs to the portal route.
+4. Filter by the `partnerId` of the first row.
+   → Expected: a non-empty result, every row carrying that partnerId, and a `total` lower than the unfiltered one.
+5. Filter by that row's `status`.
+   → Expected: only rows with that status.
+6. GET /partner-attributions/{id} for the first row.
+   → Expected: the SAME _id and partnerId as the list row — not merely any row.
+**Teardown:** none — read-only.
+**Expected (overall):** the SA ledger is SA-wide, its filters narrow rather than being accepted and ignored, and the detail route is exact.
+**Note:** PASSED. Measured 2026-09-23: total=10 across **6 distinct partners**; the partnerId filter narrowed 10 → 1; the detail route returned the requested row. Step 3 is the load-bearing assertion and pairs with CLIENT_HEALTH_MSP_010 step 4 — together they pin both halves of the scope boundary: SA reads every partner's row here, a partner reading a foreign row there gets the same "not found" as for an id that does not exist. Step 4 is written against the BUG-API-023 failure mode (a filter accepted then ignored); it does not occur here.
+
+#### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_013
+**Test Description:** Negative counterpart of _012: values outside an enum, a malformed id on both the filter and the path, a well-formed id that matches nothing, and nonsensical pagination.
+**Setup (precondition):** None — read-only.
+**Test Steps:**
+1. Filter with status='bogus', then clientLifecycleState='bogus'.
+   → Expected: HTTP 400 on both, each body listing every allowed value.
+2. Filter with partnerId='not-an-id'; GET /partner-attributions/not-an-id.
+   → Expected: HTTP 400 on both.
+3. Filter with a ghost partnerId; GET /partner-attributions/{ghost id}.
+   → Expected: the filter answers 200 with total = 0 (no match is not an error); the detail route refuses with a 4xx, never 200 and never 5xx.
+4. GET the ledger with limit=-1, limit=0, page='abc'.
+   → Expected: HTTP 400 on all three.
+**Teardown:** none — read-only.
+**Expected (overall):** every invalid filter and id is refused, and an empty result is distinguished from an error.
+**Note (FAILED — by design, BUG-API-028):** Steps 1–3 pass in full. Step 4 fails — `limit=-1` is correctly refused with 400 ("Invalid pagination: limit must be a positive integer"), but `limit=0` and `page='abc'` both answer 200 with the entire 10-row ledger. Unlike the portal twin this list is NOT empty, so a caller really does receive the whole SA-wide ledger in one page. This is the **fourth** endpoint with the identical root cause after BUG-API-025 (/v1/sa/deals), BUG-API-026 (/portal/modules) and BUG-API-027 (/portal/clients) — every one of them refuses `limit=-1` and accepts `limit=0`/`page=abc`, which points at one shared pagination validator rather than four separate misses. Recommend one fix at that layer closing all four. Confirm with BE.
+
 ### API · REFERRAL_ATTRIBUTION
 
 #### PARTNER_API_REFERRAL_ATTRIBUTION_001
@@ -1018,10 +1171,43 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 
 ### API · CLIENT_HEALTH_MSP
 
-> All BLOCKED — the My Clients / Client Health / MSP module (`/v1/partner/clients/*`) is absent from the deployed spec (confirmed 2026-06-30: sa-partners-api = 68 paths, 0 /client* paths). Unblock when BE ships the module.
+> Partly shipped. The 2026-06-30 note recorded the whole module BLOCKED against `/v1/partner/clients/*`; it shipped under **`/v1/partner/portal/clients`** instead. Re-probed 2026-09-21: the old path is a 404, the portal path answers 200, and the BE controller declares exactly two routes — `GET /` and `GET /:id`. `/clients/:id/health`, `/clients/:id/tickets`, consent, provisioning and handoff do not exist in the BE source, so _002.._009 stay BLOCKED for the original reason.
+>
+> A row here is a **partner-tenant attribution**, written only once a won deal's tenant is provisioned. Automation cannot reach that (see G1/G2), so the list is legitimately empty and no TC may assert rows.
 
 #### PARTNER_API_CLIENT_HEALTH_MSP_001
-**Note (BLOCKED):** GET /v1/partner/clients (My Clients — post-close tenants) not implemented.
+**Test Description:** A partner reads its own post-close tenants (GET /sa-partners-api/v1/partner/portal/clients). Proves the envelope, that an empty list is the correct answer rather than an error, and that the read is scoped by the JWT rather than by a query parameter. The detail route belongs to _010 — a partner cannot create an attribution, so it has no id of its own to fetch and the route has no positive case automation can reach.
+**Setup (precondition):** An ACTIVE partner with a portal session and no attributions.
+**Test Steps:**
+1. GET My Clients.
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; total = 0 and data = [] for a partner that has never won a deal; a non-empty `message`.
+2. Check every row returned against the portal mapper.
+   → Expected: each row carries id/clientTenantId/clientTenantName/arrCents/currency/clientLifecycleState/billingModel/source/attachedAt, and carries NONE of attributionHistory/commissionStructure/suspensionTrigger/partnerId, nor any password/token/secret/credential key.
+3. Mint a second partner, then repeat the GET passing `partnerId` = the second partner's id in the query.
+   → Expected: `total` unchanged — the scope comes from the JWT, never from the query string.
+4. GET with limit=5 and page=1.
+   → Expected: at most 5 rows and `total` unchanged — `total` counts the result set, not the page.
+**Teardown:** delete both partners.
+**Expected (overall):** the My Clients read is JWT-scoped, portal-safe, and treats an empty result as a valid 200.
+**Note:** PASSED. Step 2 is deliberately written to run over whatever rows exist rather than being skipped: the moment provisioning starts working, it is what proves the response is a mapped portal row and not a raw attribution document. Step 3 is the load-bearing one — the BE comment states `partnerId` "never comes from the query string", and this asserts it.
+
+#### PARTNER_API_CLIENT_HEALTH_MSP_010
+**Test Description:** Negative counterpart of _001, and where the per-client detail route (GET /portal/clients/{id}) is covered: an attribution id that does not exist, one that is not an id at all, a REAL one owned by another partner, and nonsensical pagination. The route has no reachable positive case — a partner cannot create an attribution — so every case it has is a refusal.
+**Setup (precondition):** An ACTIVE partner with a portal session.
+**Test Steps:**
+1. GET /portal/clients/{ghost id} using a well-formed id that cannot exist.
+   → Expected: a 4xx naming what was not found — never 200 with a record, never 5xx.
+2. GET /portal/clients/not-an-id.
+   → Expected: HTTP 400.
+3. Check the bodies of both refusals.
+   → Expected: neither carries client row fields.
+4. Discover an attribution owned by ANOTHER partner from the SA-wide list, then GET it through this partner's portal session.
+   → Expected: never 200; the SAME status code as the ghost id in step 1, and no row fields in the body — otherwise the difference tells a caller which ids exist and foreign ids can be probed for.
+5. GET /portal/clients with limit=-1, limit=0, page='abc'.
+   → Expected: HTTP 400 on all three.
+**Teardown:** delete the parent partner.
+**Expected (overall):** every invalid, foreign and nonsensical input is refused, and no refusal discloses whether a record exists.
+**Note (FAILED — by design, BUG-API-027):** Steps 1–4 pass. Step 4 is the load-bearing one and is now proven rather than assumed: attribution `6a72acaea5cf85c2f783548a` (partner `6a71c288a5cf85c2f7834bf8`) answers exactly the same 400 "not found" as a ghost id, so there is no existence oracle. The foreign id is discovered at run time from `GET /v1/sa/partner-attributions`, never hard-coded, and nothing is written to it; if staging ever holds no attribution, the step reports itself UNPROVEN instead of passing silently. Step 5 fails — `limit=-1` is correctly refused with 400, but `limit=0` and `page='abc'` both answer 200. Third endpoint with the same root cause after BUG-API-025 (/v1/sa/deals) and BUG-API-026 (/portal/modules) — one shared fix, not three. Confirm with BE.
 
 #### PARTNER_API_CLIENT_HEALTH_MSP_002
 **Note (BLOCKED):** GET /v1/partner/clients/:tenantId/health (usage/renewal/ticket metrics) not implemented.
@@ -1048,10 +1234,11 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note (BLOCKED):** MSP consent grant/revoke audit under /v1/partner/clients/* (event with actor + timestamps, immediate access change) not implemented.
 ### API · COMMISSIONS_PAYOUTS
 
-> Spec (confirmed 2026-06-30): commission endpoints EXIST (/v1/sa/commissions + /approve /mark-paid /dispute /clawback, /v1/partner/portal/commissions + /summary /dispute, /v1/sa/rate-table). ABSENT: waiver, spiff, approve-payout, payout/banking. Most lifecycle TCs still need a commission record, which is only created by the deferred win pipeline (DEAL_018). Only _002 and _006 are buildable now.
+> Spec (confirmed 2026-06-30): commission endpoints EXIST (/v1/sa/commissions + /approve /mark-paid /dispute /clawback, /v1/partner/portal/commissions + /summary /dispute, /v1/sa/rate-table). ABSENT: waiver, spiff, approve-payout, payout-batch.
+> **v1 commission-creation model (LLD `commission-recurring-accrual`, SHIPPED — updated 2026-09-30):** a commission row is created by **ACCRUAL from `payment.gateway.payment.succeeded`** (→ `ACCRUED` status), **NOT** by the deal-win pipeline. Preconditions to get any row: `COMMISSION_ACCRUAL_ENABLED=true` + a WON **referral/co-sell** deal (reseller excluded) with `goLiveAt` + a payment-succeeded event inside `goLiveAt + 12mo`. Clawback is **refund-driven 100%** (`payment.refunded` → adjustment), not "50% on churn". **Bands NN/EN/EE and waiver/payout-batch are NOT built in v1.** Lifecycle TCs below are blocked on this accrual flow (flag + payment-event trigger), not on DEAL_018.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_001
-**Note (BLOCKED):** Downstream commission-calc ("renewal EE → lowest rate"); needs the win→commission pipeline (deferred) and there's no API to read the computed rate. Unblock when a commission can be created + its rate is readable.
+**Note (SUPERSEDED by v1 — REWRITE):** Original "renewal EE → lowest rate" tested the EE lifecycle **band** — the lowest tier of the NN→EN→EE taper. **v1 SHIPPED has no bands** (LLD `commission-recurring-accrual` §13): a single flat deal-stamped rate, no EE tier, no rate tapering over the deal's life. There is no "lowest rate" to assert. → Either DROP, or re-scope to the flat-rate accrual already covered by TENANT_PROVISIONING_ATTRIBUTION_005/006. **Note:** commission is created by `payment.gateway.payment.succeeded` accrual, NOT the win pipeline.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_002
 **Test Description:** SA lists the commission ledger: GET /sa-partners-api/v1/sa/commissions returns a paginated, filterable, well-formed ledger.
@@ -1065,10 +1252,10 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 4. Verify a status filter returns only matching entries (data-dependent).
    → Expected: status=<first entry's status> returns only that status. WARN-skips if empty.
 **Expected (overall):** Commission-ledger list returns a correct, paginated, filterable, non-sensitive envelope.
-**Note:** PASSED. Read-only (no setup/cleanup). Commission rows are created downstream on deal-win (DEAL_018, deferred), so on staging the ledger is legitimately empty → steps 3–4 WARN-skip; the list contract still holds. Negative (invalid filter/pagination) counterpart is _017.
+**Note:** PASSED. Read-only (no setup/cleanup). **v1:** commission rows are created by **accrual** (`payment.gateway.payment.succeeded` → `ACCRUED`), not on deal-win — with the accrual flag off / no payment events on staging the ledger is legitimately empty → steps 3–4 WARN-skip; the list contract still holds. Note the status enum now includes `accrued` (add it to step 3's valid-status set). Negative (invalid filter/pagination) counterpart is _017.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_003
-**Note (BLOCKED, positive):** POST /v1/partner/portal/commissions/{id}/dispute exists, but disputing needs a real commission {id} (deferred win pipeline). The negative (dispute a ghost id → 4xx) is buildable now. Unblock when a commission record can be created.
+**Note (BLOCKED, positive — precondition updated to v1 accrual):** POST /v1/partner/portal/commissions/{id}/dispute exists, but disputing needs a real commission {id}. **v1: a commission {id} is created by ACCRUAL** (`payment.gateway.payment.succeeded` → `ACCRUED` row), NOT the deal-win pipeline (LLD `commission-recurring-accrual`). The negative (dispute a ghost id → 4xx) is buildable now. **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + a WON referral/co-sell deal with `goLiveAt` + a payment-succeeded event to produce an accrued row.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_004
 **Note (BLOCKED):** Product-failure waiver POST /v1/partner/commissions/:id/waiver absent from the spec (2026-06-30). Unblock when BE ships the waiver endpoint.
@@ -1102,10 +1289,10 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note (BLOCKED):** Referral-link endpoints absent (0 referral paths, 2026-06-30). "Referral-link signup → notification + commission trigger" needs the referral path.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_010
-**Note (BLOCKED):** POST /v1/sa/commissions/{id}/clawback exists, but a clawback needs an existing commission (deferred win pipeline) + 12-month timing control.
+**Note (REWRITE for v1 — clawback model changed):** Original assumed the PRD "50% clawback on churn within 12 months". **v1 SHIPPED replaced this** (LLD `commission-recurring-accrual` §6.1/§7): the automated clawback is **refund-driven** — a `payment.gateway.payment.refunded` event debits **100%** of the refunded amount (`CLAWBACK_REFUND_PCT = 1.0`) as an append-only `partner_commission_adjustments` row (negative, `reason=clawback`), and it emits **no** Kafka event. There is no 12-month-churn trigger and no 50% figure in v1. The manual `POST /v1/sa/commissions/{id}/clawback` still exists (pre-v1) but is a separate manual action. → Re-scope to: "refund event on an accrued invoice → one clawback adjustment = 100% of refund (rate-weighted across the invoice's rows); duplicate refund txn → no second adjustment". **Unblock:** accrued commission (see _003) + a way to emit `payment.refunded`.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_011
-**Note (BLOCKED):** Needs a reseller commission record + a churn event (both downstream/unavailable) to assert "reseller churn → NO clawback".
+**Note (REWRITE for v1 — reseller excluded from accrual):** Original: "reseller churn → NO clawback". **v1 excludes reseller from accrual entirely** — `ACCRUABLE_DEAL_TYPES = {REFERRAL, CO_SELL}`, reseller is the margin model (LLD `commission-recurring-accrual` §7). So a reseller deal never produces a commission row in the first place → there is nothing to claw back. → Re-scope to the stronger, cleaner assertion: "a WON **reseller** deal + a `payment.succeeded` event → **NO `ACCRUED` commission row** is created (log `accrual_skip {reason: not_accruable_deal_type}`)". **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + a WON reseller deal + payment-event trigger.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_012
 **Note (BLOCKED):** Waiver SLA/decision + ledger-credit endpoint absent (no waiver path, 2026-06-30). Pairs with _004/_005.
@@ -1117,10 +1304,27 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note (BLOCKED):** POST /v1/sa/rate-table exists (the update), but "Redis cached rates invalidated" is an internal side-effect with no API to observe. Re-scope to "update persists + reflected on next read" (overlaps _006), or keep blocked for the literal cache-invalidation assertion.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_015
-**Note (BLOCKED):** "Pack vs channel partner ledgers stay separate" needs existing commissions for both partner types (deferred win pipeline). The list endpoint exists; the data doesn't.
+**Note (BLOCKED — precondition updated to v1 accrual):** "Pack vs channel partner ledgers stay separate" needs existing commissions for both partner types. **v1: commissions are created by accrual** (`payment.succeeded` → `ACCRUED`), NOT the win pipeline. The list endpoint exists; the data needs the accrual flow. **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + WON referral/co-sell deals on both partner types + payment-event triggers.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_016
-**Note (BLOCKED):** "Payout banking details encrypted at rest" (CSFLE) is an internal storage property with no API to confirm; no payout/banking endpoint in the commissions area (banking lives on partner.payoutAccounts). Verify via DB/infra review, not API.
+**Test Description:** The full payout-account CRUD chain a partner admin owns — list, add, promote to primary, remove — with every response searched for the raw account number, routing number and IBAN that were sent. GET/POST /sa-partners-api/v1/partner/portal/bank-accounts, PATCH …/{accountId}/primary, DELETE …/{accountId}.
+**Setup (precondition):** An ACTIVE partner with an ADMIN portal session and no payout accounts. Self-contained: the TC creates everything it uses and removes it again.
+**Test Steps:**
+1. GET the payout accounts.
+   → Expected: HTTP 200, empty list — otherwise the adds below prove nothing.
+2. POST a complete US `bank_transfer` account (all required + optional fields).
+   → Expected: HTTP 201; every non-sensitive field echoed unchanged; `payoutMethod` within (bank_transfer|swift|wise|paypal); `status` = `unverified`; `accountNumberMasked` present, ending in the real last 4 and NOT equal to the full number.
+3. GET the list again.
+   → Expected: exactly 1 account and it is `isPrimary` — the sole account must be the payout destination. No raw `accountNumber`/`routingNumber`/`iban` field, and none of those VALUES anywhere in the body.
+4. POST a second, different account (SWIFT/IBAN), then PATCH it to primary.
+   → Expected: `ibanMasked` present and not the full IBAN; the PATCH returns BOTH accounts and exactly one carries `isPrimary` — the promoted one. The demotion happens in the same atomic write.
+5. DELETE the non-primary account.
+   → Expected: HTTP 200 with the remaining account only, still primary.
+6. DELETE the last (primary) account.
+   → Expected: HTTP 200, empty list — the primary may be removed when it is the last one.
+**Teardown:** delete the parent partner (the accounts are already gone).
+**Expected (overall):** the chain works end to end and no raw banking identifier is ever returned.
+**Note:** PASSED. **The old BLOCKED note was wrong on one point and right on another.** Wrong: it said there is "no payout/banking endpoint" — `/v1/partner/portal/bank-accounts` exists and ships all four routes. Right: CSFLE *encryption at rest* is a storage property and still cannot be confirmed through the API. What this TC proves is the API-observable half of §9.3 — the raw identifiers are never returned, asserted by searching each response body for the literal digits sent, not merely by checking the field name is absent (`toBankAccountView` strips `accountNumber`/`routingNumber`/`iban`). At-rest encryption still needs a DB/infra review. The 409 guard on removing a primary while others exist is covered by _021, the duplicate guard by _022.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_017
 **Test Description:** Negative counterpart of _002 (commission ledger): invalid filter/pagination is rejected with the correct code (never 5xx). All cases run (failures collected).
@@ -1149,6 +1353,99 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 10. Non-numeric rate ('abc') → **400** 'rate must be a number'.
 **Expected (overall):** Every invalid rate upsert is rejected with 400 and nothing is persisted (rate must be 0..1). No teardown needed (no write).
 **Note:** PASSED. New negative line paired with _006.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_021
+**Test Description:** Negative counterpart of _016, covering three refusal classes on the payout routes: DTO validation, state guards, and admin-only authorization proven with a real `viewer` session.
+**Setup (precondition):** An ACTIVE partner with an ADMIN portal session, plus a second user on the SAME partner invited with role `viewer` and logged in.
+**Test Steps:**
+1. POST an account with each required field (`label`, `accountHolderName`, `bankName`, `countryCode`, `currency`, `payoutMethod`) missing in turn.
+   → Expected: HTTP 400 each time, and the message names the missing field.
+2. POST with `payoutMethod='carrier_pigeon'`.
+   → Expected: HTTP 400 listing bank_transfer|swift|wise|paypal.
+3. Add two accounts, then DELETE the PRIMARY one while the other still exists.
+   → Expected: HTTP 409 — the partner must not be left without a chosen payout destination.
+4. DELETE and PATCH …/primary with a ghost account id.
+   → Expected: 4xx on both, never 2xx and never 5xx.
+5. Using the VIEWER session, call all four routes.
+   → Expected: HTTP 403 on every one, and no account created by the refused writes.
+**Teardown:** the TC removes the accounts it added; delete the parent partner.
+**Expected (overall):** every invalid payload, illegal state transition and non-admin caller is refused.
+**Note:** PASSED. Measured 2026-09-23: all six required-field omissions → 400 naming the field; bad enum → 400 listing all four methods; removing the primary while another exists → **409**; ghost id → **404** on both DELETE and PATCH; the viewer → **403** on all four routes. Step 5 is the rule-5 "different role" case and is proven with an actual login rather than by reading the guard.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_022
+**Test Description:** Rule-8 duplicate/idempotency as its own TC: adding the same payout account twice.
+**Setup (precondition):** An ACTIVE partner with an ADMIN portal session and one account already on file.
+**Test Steps:**
+1. POST the identical payload a second time.
+   → Expected: HTTP 400 saying the account is already on file, AND the partner still holds exactly ONE account.
+2. POST the same account number with different spacing (` 0001 2345 6789 `).
+   → Expected: also caught as a duplicate — the guard compares normalised values, not literal strings. If accepted, the partner must still not end up with two.
+3. POST a genuinely different account (SWIFT/IBAN).
+   → Expected: accepted, a new id, two accounts on file, and the primary still the first account.
+**Teardown:** delete the parent partner.
+**Expected (overall):** a repeat is rejected outright and never produces a second record, while a distinct account is still accepted.
+**Note:** PASSED. The backend's answer is REJECT (not idempotent no-op): 400 "This payout account is already on file for the partner". Step 2 confirms `normaliseAccountField` strips formatting before comparing. Step 3 exists so the guard is shown to be correct rather than merely over-broad — a duplicate check that refused everything would pass steps 1–2.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_019
+**Test Description:** GET /sa-partners-api/v1/sa/commissions/summary - the four SA-wide cents totals over every partner. Asserts the envelope, the types, the sign, and that the totals do not contradict the ledger they summarise.
+**Setup (precondition):** None - read-only.
+**Test Steps:**
+1. GET the summary.
+   -> Expected: HTTP 200; `data` carries totalEarnedCents, totalPendingCents, totalPaidCents, clawbackExposureCents; a non-empty `message`.
+2. Check each total.
+   -> Expected: an `int` (never a float - cents accumulating rounding error across a ledger is a real defect, and never a bool) and `>= 0`, including clawback exposure which is a positive magnitude.
+3. Check for credential material.
+   -> Expected: no password/token/secret/credential key.
+4. Cross-check against GET /v1/sa/commissions.
+   -> Expected: if the ledger is empty, every total is 0 - a figure with no rows behind it is invented. If it holds rows, at least one total is > 0 and totalPaidCents <= totalEarnedCents.
+**Teardown:** none.
+**Expected (overall):** the summary is well-formed, non-negative and derived from the ledger.
+**Note:** PASSED. Measured 2026-09-23: all four totals 0, and the ledger is empty - consistent. Asserting a specific figure is impossible (a commission only accrues after the provisioned tenant's first payment, see G1), which is exactly why step 4 exists: it is what would catch a summary that stopped reading the ledger, and it stays meaningful once real commissions appear.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_023
+**Test Description:** Negative counterpart of _019, and where GET /v1/sa/commissions/{id} is covered. Automation cannot create a commission (G1), so every case that route has is a refusal.
+**Setup (precondition):** None - read-only.
+**Test Steps:**
+1. GET /v1/sa/commissions/{ghost id}.
+   -> Expected: a 4xx - never 200 with a record, never 5xx.
+2. GET /v1/sa/commissions/not-an-id.
+   -> Expected: HTTP 400.
+3. GET /v1/sa/commissions/summary again, treating `summary` as a literal id.
+   -> Expected: HTTP 200 with the totals - `summary` is declared before `:id` and must never be swallowed by it.
+4. List with status='bogus', partnerId='not-an-id', then a ghost partnerId.
+   -> Expected: 400, 400, then 200 with total = 0.
+**Teardown:** none.
+**Expected (overall):** every invalid id and filter is refused, and an empty result is distinguished from an error.
+**Note:** PASSED. Measured 2026-09-23: ghost id -> 400, malformed id -> 400, `summary` still resolves to its own route, bad status -> 400, malformed partnerId -> 400, ghost partnerId -> 200 empty. Step 3 guards a route-ordering regression that would be invisible otherwise: if `:id` were declared first, `summary` would start answering "commission not found" and the SA dashboard would simply show nothing.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_020
+**Test Description:** A partner reads its own commission ledger (GET /sa-partners-api/v1/partner/portal/commissions). An empty ledger is the correct answer for every partner on staging, so the TC asserts the properties that survive that rather than the contents.
+**Setup (precondition):** An ACTIVE partner with a portal session.
+**Test Steps:**
+1. GET the ledger.
+   -> Expected: HTTP 200; envelope {statusCode, data[], total, message}; `total` not smaller than the page returned; no password/token/secret/credential key on any row.
+2. Filter by each of the eight statuses (earned, accrued, pending_approval, approved, paid, disputed, clawback, cancelled).
+   -> Expected: HTTP 200 on each, and any row returned carries the status asked for.
+3. GET /portal/commissions/summary and compare with step 1.
+   -> Expected: the four cents totals are present, and if the ledger is empty EVERY total is 0 — a figure with no rows behind it is invented. If the ledger has rows, at least one total is > 0.
+4. Repeat the list with `partnerId` set to a foreign id in the query.
+   -> Expected: `total` unchanged — the controller takes partnerId from the JWT twice over and never from the query.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the ledger is JWT-scoped, its enum is fully wired, and it agrees with its own summary.
+**Note:** PASSED. No commission exists anywhere on staging — a row only accrues after a provisioned tenant's first payment (G1) — so the ledger's CONTENTS are out of reach and this TC says so rather than pretending otherwise. Step 3 is the one that keeps its value once commissions appear: it compares two views of the same data instead of checking a constant, so an empty ledger with non-zero totals fails today and a drifted summary fails later. Step 2 cannot show that a filter NARROWS on an empty ledger, but it does show a legitimate status is not rejected — which is what breaks if the enum drifts from the schema.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_024
+**Test Description:** Negative counterpart of _020: a status outside the enum, and nonsensical pagination.
+**Setup (precondition):** An ACTIVE partner with a portal session.
+**Test Steps:**
+1. GET the ledger with status='bogus'.
+   -> Expected: HTTP 400 listing all eight allowed statuses.
+2. GET the ledger with limit=-1, limit=0, page='abc'.
+   -> Expected: HTTP 400 on all three.
+**Teardown:** delete the parent partner.
+**Expected (overall):** every invalid status and page value is refused.
+**Note (FAILED — by design, BUG-API-030):** Step 1 passes. Step 2 fails — `limit=-1` is correctly refused with 400 ("Invalid pagination: limit must be a positive integer") but `limit=0` and `page='abc'` both answer 200. Both returned 0 rows, but only because the ledger is empty: the value was ACCEPTED rather than rejected, so the row count proves nothing about the guard. This is the **fifth** endpoint with the identical root cause after BUG-API-025 (/v1/sa/deals), 026 (/portal/modules), 027 (/portal/clients) and 028 (/v1/sa/partner-attributions). Five independent misses of the same two values is not plausible — one shared pagination validator, one fix should close all five. Confirm with BE.
+
 ### API · PARTNER_ACCOUNT_MANAGEMENT
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001
@@ -1387,6 +1684,38 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Expected (overall):** Re-grant must not duplicate an active cert of the same type.
 **Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-API-001). Gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject (409). Confirm with BE.
 
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_023
+**Test Description:** SA updates a partner: PATCH /sa-partners-api/v1/sa/partners/{id} stores every field UpdatePartnerDto accepts, proven by reading the partner back rather than trusting the write response.
+**Setup (precondition):** A partner exists — created through the `seeded_partner` fixture so the DELETE is registered before any assert.
+**Test Steps:**
+1. PATCH the partner with 6 fields (name, legalName, website, taxId, internalNotes, type).
+   → Expected: HTTP 200; the response `_id` is the partner asked for.
+2. GET the partner back.
+   → Expected: all 6 fields hold exactly what was sent; `type` is within the enum (channel|referral|msp|system_integrator).
+3. Verify the record is well-formed.
+   → Expected: _id/code/email/status/tier present; no password/token/secret/credential key.
+4. Repeat the identical PATCH.
+   → Expected: idempotent — an update, not a create, so the record is unchanged.
+**Teardown:** the fixture deletes the partner.
+**Expected (overall):** every declared field persists, and repeating the same update changes nothing.
+**Note:** PASSED. Read-back is the point: asserting only the PATCH response would pass even if nothing were stored.
+
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_024
+**Test Description:** Negative counterpart of _023: a ghost id, a malformed id, an enum outside the spec, an empty body, and fields UpdatePartnerDto does not expose.
+**Setup (precondition):** A partner exists (`seeded_partner`), left PENDING — its status is what step 5 checks.
+**Test Steps:**
+1. PATCH a ghost id, then a malformed id.
+   → Expected: refused on both. Self-proving — this endpoint is the one that must report it.
+2. PATCH type='wizard'.
+   → Expected: HTTP 400 whose body lists every allowed value.
+3. PATCH an empty body.
+   → Expected: a no-op, not an error — UpdatePartnerDto declares no required field.
+4. PATCH `_id`, `code` and `status` one at a time (each is absent from the DTO).
+   → Expected: each is ignored or refused with a 4xx; never a 5xx, and never written.
+**Teardown:** the fixture deletes the partner.
+**Expected (overall):** every invalid update is refused, and no identifier or lifecycle field is writable through PATCH.
+**Note:** FAILED by design at step 4 — **BUG-API-024**, three distinct defects. (a) `_id` answers **HTTP 500** and the body leaks the storage engine's own text: *"Plan executor error during findAndModify :: caused by :: Performing an update on the path '_id' would modify the immutable field '_id'"*. (b) `code` is silently **written** — the partner's business code can be overwritten. (c) `status` is silently **written**, moving a PENDING partner straight to `active` without `POST /partners/{id}/approve`, which would skip the 3-stage FSM in PRD §12.1 B3 (SA Review → Legal Countersign → SA Final Approval). Steps 1–3 all pass. **(c) needs BE confirmation** — it may be an intentional SA override rather than a bypass; (a) and (b) are defects either way.
+
 ### API · PARTNER_USERS
 
 #### PARTNER_API_PARTNER_USERS_001
@@ -1480,6 +1809,38 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 2. Malformed userId ('not-an-id') → **400** Bad Request, message "invalid id".
 **Expected (overall):** Non-existent userId → 404; malformed userId → 400; never 5xx.
 **Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker **BUG-API-016**). Gap (case 1): a well-formed non-existent userId returns **400** ("not found") instead of **404** — same root cause as the deals get-by-id gap. Case 2 is correct. Confirm with BE.
+#### PARTNER_API_PARTNER_USERS_015
+**Test Description:** SA clears a partner user's lockouts (POST /sa-partners-api/v1/sa/partner-users/{userId}/unlock), proven by effect end to end rather than by status code.
+**Setup (precondition):** An ACTIVE partner and a THROWAWAY user on it — never the shared portal account, because locking that blocks every other partner test for 30 minutes.
+**Test Steps:**
+1. Log in as the throwaway user with its invite tempPassword.
+   -> Expected: HTTP 200 — otherwise the fixture is broken, not the endpoint.
+2. Send wrong passwords repeatedly until the account locks (cap 8 attempts).
+   -> Expected: the account locks; the TC records how many attempts it took rather than assuming a number.
+3. Try the CORRECT password while locked.
+   -> Expected: refused — a lockout that lets the right password through is cosmetic.
+4. SA calls unlock.
+   -> Expected: HTTP 200, `data.userId` is the user asked about, and a `message` is present.
+5. Log in again with the correct password.
+   -> Expected: HTTP 200.
+**Teardown:** delete the parent partner.
+**Expected (overall):** unlock actually clears the lockout, not merely reports success.
+**Note:** PASSED, locked at 4 consecutive wrong attempts (30-minute window). The status code proves nothing on this endpoint — measured 2026-09-24, unlock answers 200 even on a user who is not locked — which is exactly why step 5 exists. The threshold is DISCOVERED at run time, not pinned: it is unspecified in §9.1 and §5.1 (raised as OQ-28), so hard-coding 4 would turn a legitimate policy change into a red test, while as written the TC only goes red if the account stops locking at all.
+
+#### PARTNER_API_PARTNER_USERS_016
+**Test Description:** Negative counterpart of _015: a user id that does not exist, one that is not an id at all, and the repeat call.
+**Setup (precondition):** An ACTIVE partner and a THROWAWAY user on it.
+**Test Steps:**
+1. Unlock a well-formed user id that does not exist.
+   -> Expected: a 4xx naming the user — a silent success on an id that cannot exist hides typos from the SA operator.
+2. Unlock 'not-an-id'.
+   -> Expected: HTTP 400.
+3. Unlock a user who is NOT locked, twice in a row, then log in as that user.
+   -> Expected: both calls answer the same code (measured: 200), and the user can still log in afterwards.
+**Teardown:** delete the parent partner.
+**Expected (overall):** invalid targets are refused and a redundant unlock is harmless.
+**Note:** PASSED. Unlock is a mutating ACTION, not a create, so rule 8's 409-or-idempotent formula does not apply blindly — the real question is what the BE intends when there is nothing to clear, and the measured answer is a 200 no-op. Step 3 asserts that, plus the property that matters more than the code: after two redundant unlocks the account still works, so a no-op unlock does not damage an account that needed no change.
+
 ### API · TERRITORIES
 
 #### PARTNER_API_TERRITORIES_001
@@ -1670,13 +2031,156 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 7. page=0 → **400** 'non-negative'.
 **Expected (overall):** Every invalid filter/pagination rejected with 400; never 5xx. expiringWithinDays bounded 1..365.
 **Note:** PASSED.
-### API · TEAM_REFERRAL_LINKS
+### API · PARTNER_TEAM
 
-#### PARTNER_API_TEAM_REFERRAL_LINKS_001
-**Note (BLOCKED):** Referral endpoints absent from the deployed spec (confirmed 2026-06-30: 0 referral paths). GET /v1/partner/referral-links not implemented. Unblock when BE ships the referral-links API.
+PRD §4.10 "Partner Team Management + Referral Links" — the partner org managing its OWN
+members. NOT the SA-side "Partner Directory" (§5.1, where an SA operator browses partner
+ORGANISATIONS); that is `PARTNER_UI_SA_PARTNER_MODULE_*`. The backend path segment says
+`directory`, the feature is this org's own team list.
 
-#### PARTNER_API_TEAM_REFERRAL_LINKS_002
-**Note (BLOCKED):** Referral endpoints absent (0 referral paths, 2026-06-30). POST /v1/partner/referral-links (create campaign tracking link) not implemented.
+Renamed from `TEAM_REFERRAL_LINKS` on 2026-09-16: §4.10 is one feature with two halves, the
+team half is deployed and the referral half is not, and the old name covered only the half
+that does not exist. Same name as `UI · PARTNER_TEAM` on purpose — one feature, two layers.
+
+#### PARTNER_API_PARTNER_TEAM_001
+**Test Description:** Partner admin invites a team member and reads the team directory: POST /sa-partners-api/v1/partner/directory/users, then GET the list and GET the member by id return the same record, scoped to the caller's partnerId.
+**Setup (precondition):** SA creates + approves a partner (pending → active), a partner user logs in for a portal session.
+**Test Steps:**
+1. Invite a team member with every DTO field (email, firstName, lastName, role='sales').
+   → Expected: HTTP 201; body carries userId + email + role.
+2. Verify every field sent is echoed unchanged.
+   → Expected: email/firstName/lastName/role identical to what was sent; partnerId == the session partner; role within the spec enum (admin|sales|finance|viewer); status is a non-empty string.
+3. List the team (limit=50).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; total is an int ≥ 2 (session user + invited member); the invited member is present with _id/email/role/status/firstName/lastName.
+4. Verify partner scoping on the list.
+   → Expected: every row's partnerId == the session partner.
+5. Verify no credential material in the list.
+   → Expected: no password/token/secret/credential/tempPassword key in any row (the INVITE response carries tempPassword by design; the list must not).
+6. Read the session user back by id.
+   → Expected: HTTP 200 and data.userId == the id requested.
+**Teardown:** delete the parent partner (removes its members).
+**Expected (overall):** a partner admin can invite a member and read it back, scoped to its own partner, with no credential leak.
+**Note:** FAILED by design at step 6 — **BUG-API-022**. `GET /v1/partner/directory/users/{userId}` ignores the path parameter: asking for the session user returns the invited member instead, and a ghost id (`000000000000000000000000`) or a malformed id (`not-an-id`) both return HTTP 200 with that same record. Partner scoping still holds — a second partner asking for this partner's member gets its OWN user back, never this one — so it is wrong data, not a cross-partner leak (§9.1 intact). Steps 1–5 all pass. Confirm with BE.
+
+#### PARTNER_API_PARTNER_TEAM_002
+**Test Description:** Negative counterpart of _001: invalid invite payloads and invalid member ids on /sa-partners-api/v1/partner/directory/users.
+**Setup (precondition):** SA creates + approves a partner; a partner user logs in for a portal session.
+**Test Steps:**
+1. Invite without `email`.
+   → Expected: HTTP 400 (required by DirectoryInvitePartnerUserDto).
+2. Invite without `firstName`.
+   → Expected: HTTP 400.
+3. Invite without `lastName`.
+   → Expected: HTTP 400.
+4. Invite with role='wizard' (outside the spec enum).
+   → Expected: HTTP 400 naming the allowed values.
+5. Invite with email='not-an-email'.
+   → Expected: HTTP 400 "email must be an email".
+6. GET a ghost userId (well-formed ObjectId that does not exist).
+   → Expected: HTTP 404 not-found. Self-proving — the endpoint under test is the one that must report it, so no source-service GET is needed.
+7. GET a malformed userId ('not-an-id').
+   → Expected: HTTP 400 invalid-id.
+**Teardown:** delete the parent partner.
+**Expected (overall):** every invalid input refused with a 4xx that names the problem; never a 5xx.
+**Note:** FAILED by design at steps 6–7 — **BUG-API-022**, the same root cause as _001 step 6: both ids return HTTP 200 with a real member record. Steps 1–5 all pass, so the BE validates the DTO correctly; only the id lookup is broken. All cases run in one pass (failures collected). Duplicate-email is deliberately NOT here — it is _008 (rule 8). Confirm with BE.
+
+#### PARTNER_API_PARTNER_TEAM_003
+**Test Description:** The two per-member rollups: GET /sa-partners-api/v1/partner/directory/users/{userId}/deals and /commissions, both requiring a `partnerId` query. Asserts the envelope, that a registered deal is reachable, that the rollup discriminates between members, and that another partner cannot read these rows by passing this partner's id in the query.
+**Setup (precondition):** SA creates + approves a partner; a partner user logs in for a portal session; invite one member who registers nothing; the session user registers one deal.
+**Test Steps:**
+1. GET the session user's deals (partnerId required).
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; total an int; the deal just registered is present.
+2. Verify the deal row is well-formed and partner-scoped.
+   → Expected: _id/partnerId/dealType/status/prospectName present; partnerId == the session partner; status within the enum (registered|approved|in_progress|won|lost|expired|rejected); no password/token/secret/credential/tempPassword key.
+3. GET the member's commissions.
+   → Expected: HTTP 200; data[] a list; total an int. An EMPTY ledger is valid — commission rows are created downstream when a deal is WON.
+4. A SECOND partner passes THIS partnerId in the query.
+   → Expected: an empty list. The JWT must bound the result, not the query parameter.
+5. Compare the session user's rollup against the member's.
+   → Expected: different row sets — the member registered nothing.
+6. Pass another partner's id as `partnerId` from this session.
+   → Expected: an empty list.
+**Teardown:** delete both partners.
+**Expected (overall):** per-member rollups return that member's records, scoped by the JWT.
+**Note:** FAILED by design at step 5 — **BUG-API-023**. `GET /directory/users/{userId}/deals` ignores BOTH parameters: a member who registered nothing returns the partner's deals, a ghost userId returns them too, and passing another partner's `partnerId` still returns this partner's rows. The deal record carries **no registeredBy/createdBy field at all**, so per-member attribution may be missing from the data model rather than the filter being broken — ask BE which it is. **Step 4 PASSES**: partner scoping via the JWT holds, so there is no cross-partner leak. Steps 1–4 all pass. Confirm with BE.
+
+#### PARTNER_API_PARTNER_TEAM_004
+**Test Description:** Negative counterpart of _003: the required `partnerId` query missing, an invalid status enum, and ghost / malformed ids in both the path and the query.
+**Setup (precondition):** SA creates + approves a partner; a partner user logs in for a portal session. No deal is registered — this TC is about rejection, not data.
+**Test Steps:**
+1. GET deals, then commissions, omitting `partnerId`.
+   → Expected: HTTP 400 on both ("partnerId must be a mongodb id").
+2. GET deals with status='bogus'.
+   → Expected: HTTP 400 whose body lists every allowed value.
+3. GET deals with partnerId='not-an-id'.
+   → Expected: HTTP 400.
+4. GET deals for a ghost userId, then a malformed one.
+   → Expected: HTTP 404 and HTTP 400. Self-proving — the endpoint under test is the one that must report it.
+5. GET deals with a ghost `partnerId`.
+   → Expected: HTTP 404, and never this partner's rows.
+**Teardown:** delete the parent partner.
+**Expected (overall):** every invalid input refused with a 4xx that names the problem; never a 5xx.
+**Note:** FAILED by design at steps 4–5 — **BUG-API-023**, same root cause as _003. Both ids answer HTTP 200 instead of 404/400, so a member that does not exist reads as one that simply has no records. This partner has no deals, so nothing was disclosed in THIS test; _003 shows the same call returning another member's deals when there are any. Steps 1–3 pass, so the BE validates `partnerId` and the status enum correctly. Confirm with BE.
+
+#### PARTNER_API_PARTNER_TEAM_005
+**Test Description:** A partner admin resets a team member's password and unlocks a locked member: POST /sa-partners-api/v1/partner/directory/users/{userId}/reset-password and /unlock. Both are verified by their EFFECT on login, not by the 2xx alone — the invite's `tempPassword` is the member's real login password, so the suite can prove the old one stopped working and the new one works. No mailbox access is needed.
+**Setup (precondition):** SA creates + approves a partner; a partner user logs in for a portal session; invite a THROWAWAY member used by this TC alone (capture userId, email, tempPassword). Never the shared portal account — locking or resetting that one breaks every other partner test for 30 minutes.
+**Test Steps:**
+1. Log in as the invited member with the invite `tempPassword`.
+   → Expected: HTTP 200. A failure here is a broken precondition, not a defect in the feature.
+2. Reset the member's password.
+   → Expected: HTTP 200; body carries a `tempPassword` that DIFFERS from the invite one, and `userId` == the member asked for.
+3. Log in with the OLD password.
+   → Expected: HTTP 401 — the reset actually took effect.
+4. Log in with the NEW password.
+   → Expected: HTTP 200 — the credential handed back is usable.
+5. Send wrong passwords until the account locks.
+   → Expected: the account locks; measured 2026-09-17 the 4th consecutive wrong password answers "Too many failed login attempts. Try again in 30 minutes."
+6. Log in with the CORRECT password while locked.
+   → Expected: refused — the lockout is not cosmetic.
+7. Unlock the member.
+   → Expected: HTTP 200, `userId` == the member asked for.
+8. Log in with the correct password again.
+   → Expected: HTTP 200 — the lockout was cleared.
+**Teardown:** delete the parent partner (removes the throwaway member).
+**Expected (overall):** both actions do what they report: the old credential dies, the new one works, and a locked member can log in again only after unlock.
+**Note:** PASSED. Unlike the read endpoints in _001/_003, this pair HONOURS the `{userId}` path parameter. The lockout threshold is not specified in the PRD (§9.1 does not mention lockout) — 4 attempts / 30 minutes is what staging does today, so a change there will surface as a failure at step 5 rather than silently.
+
+#### PARTNER_API_PARTNER_TEAM_009
+**Test Description:** Negative counterpart of _005: a ghost userId, a malformed userId, and what a REPEAT of each action does.
+**Setup (precondition):** SA creates + approves a partner; a partner user logs in for a portal session; invite a throwaway member.
+**Test Steps:**
+1. reset-password and unlock with a ghost userId.
+   → Expected: refused with a not-found message on both. Self-proving — the endpoint under test is the one that must report it.
+2. reset-password and unlock with a malformed userId.
+   → Expected: HTTP 400 "Invalid id" on both.
+3. Reset twice in a row, then try the FIRST password.
+   → Expected: the two resets return different passwords, and the first no longer authenticates — a re-issued credential supersedes the previous one.
+4. Unlock twice on a member that is not locked.
+   → Expected: a no-op, never a 5xx and never a refusal — clearing nothing is not an error.
+**Teardown:** delete the parent partner.
+**Expected (overall):** invalid targets are refused, and repeating either action behaves as designed.
+**Note:** PASSED. Rule 8's 409-or-idempotent formula does **not** apply — neither endpoint creates a resource, so a repeat is a mutating action whose correct behaviour was probed rather than assumed (2026-09-17: reset re-issues, unlock no-ops). A ghost userId is refused with **400** rather than 404; that is the service-wide ghost-id convention (the shared `Method.findById` raises `BadRequestException`) and is tracked as a family, not re-filed per endpoint — this TC asserts the refusal and the not-found message, which is the part that protects the caller.
+
+#### PARTNER_API_PARTNER_TEAM_008
+**Test Description:** Inviting the same email twice is rejected and creates no second member (rule 8, duplicate/idempotency for a POST that creates a resource).
+**Setup (precondition):** SA creates + approves a partner; a partner user logs in for a portal session.
+**Test Steps:**
+1. Invite a team member.
+   → Expected: HTTP 201 with a userId.
+2. Invite the SAME email again.
+   → Expected: HTTP 409 Conflict, "A partner user with email ... already exists" (probed 2026-09-16).
+3. List the team and count members with that email.
+   → Expected: exactly 1 — a 409 that still wrote a row would be the worse bug.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the duplicate is refused with 409 and the directory is unchanged.
+**Note:** PASSED. Its own TC rather than a trailing step of _001: a duplicate failing there would paint the whole create path red and read like "invite is broken".
+
+#### PARTNER_API_PARTNER_TEAM_006
+**Note (BLOCKED):** Renamed from `PARTNER_API_TEAM_REFERRAL_LINKS_001`. Referral endpoints absent from the deployed spec (confirmed 2026-06-30: 0 referral paths; still absent in the 101 routes of `v26 @ 0b35609`, 2026-09-16). GET /v1/partner/referral-links not implemented. Unblock when BE ships the referral-links API.
+
+#### PARTNER_API_PARTNER_TEAM_007
+**Note (BLOCKED):** Renamed from `PARTNER_API_TEAM_REFERRAL_LINKS_002`. POST /v1/partner/referral-links (create campaign tracking link) not implemented. Note also that §3-E and §8.4 (Referral Attribution) are marked **Rejected / On Hold** in `partner_requirement.xlsx`, so this may not be built at all.
 
 ### API · RESOURCES_SANDBOX
 
@@ -1701,6 +2205,34 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Partner dashboard returns the well-formed KPI schema with no credential leak.
 **Note:** PASSED. PARTNER-PORTAL endpoint (needs a partner JWT, not the SA token; SA token → 401). No invalid-input negative (no params); 401 auth belongs to Auth & Access Control. Idempotency: GET read-only → N/A.
+#### PARTNER_API_DASHBOARD_DATA_002
+**Test Description:** A partner reads its own deal-pipeline KPIs (GET /sa-partners-api/v1/partner/portal/deals/stats). Proves the aggregate is scoped to the caller, is actually computed rather than stubbed, and does not carry the SA-only provisioning block.
+**Setup (precondition):** An ACTIVE partner with a portal session and no deals.
+**Test Steps:**
+1. GET the stats for a partner that has registered nothing.
+   -> Expected: HTTP 200; total/openCount/conflictedCount/wonEstimatedAcvCents all present, `int` and >= 0; byStatus carries all 7 statuses and byType all 4 types, every value 0 — the aggregate is documented as zero-filled, so an absent key is a defect.
+2. Check the payload for `byProvisioningState`.
+   -> Expected: ABSENT. It is SA-only (AC-19/AC-20, §2.1) and exposes the internal provisioning watchdog, including how many tenants are OVERDUE.
+3. Register one deal, then GET the stats again.
+   -> Expected: total = 1; byStatus[<the deal's status>] = 1; byType[<the deal's type>] = 1; sum(byStatus) = total.
+4. Filter by the deal's status, then by a different status.
+   -> Expected: total = 1 and total = 0 respectively.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the KPI aggregate is caller-scoped, correctly counted, and free of SA-only fields.
+**Note:** PASSED. Step 2 is the load-bearing assertion. The published Swagger example DOES show `byProvisioningState` on this route because both surfaces share one response DTO, so reading the spec would tell you the opposite of the rule; measured 2026-09-24 the implementation is right and the example is misleading. Step 3 is what proves the aggregate is computed rather than stubbed — reachable here only because the partner owns the data it is counting.
+
+#### PARTNER_API_DASHBOARD_DATA_003
+**Test Description:** Negative counterpart of _002: a status outside the enum, and a search term that matches nothing.
+**Setup (precondition):** An ACTIVE partner with a portal session.
+**Test Steps:**
+1. GET the stats with status='bogus'.
+   -> Expected: HTTP 400 listing all seven allowed statuses.
+2. GET the stats with a search term that matches no prospect.
+   -> Expected: HTTP 200 with total = 0 and the buckets still fully zero-filled — never an error.
+**Teardown:** delete the parent partner.
+**Expected (overall):** an invalid filter is refused and an empty result is distinguished from a failure.
+**Note:** PASSED. Step 2 matters more than it looks: a dashboard has to be able to tell "no results" from "request failed", and dropping the buckets on an empty match would make it render blanks instead of zeros.
+
 ### API · CRM_INTEGRATION
 
 > All BLOCKED — downstream CRM connector (events are consumed by the connectors/CRM service, not reachable from this domain). The API-observable events are covered by DEAL_010 / AUDIT_LOG_*; the CRM-side effects are out of scope here. Unblock when CRM verification is exposed to QA.
@@ -1792,6 +2324,40 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Tier-specific rates returned as a list.
 **Note:** PASSED. Rates list is empty for a registered-tier partner on staging (still a well-formed list). No params (no input-negative); GET → idempotency N/A.
+#### PARTNER_API_PARTNER_PORTAL_007
+**Test Description:** A partner reads the module catalogue (GET /sa-partners-api/v1/partner/portal/modules) and its team's certifications (GET .../portal/team/certifications). The certification leg is proven by effect: the list is empty, SA grants one, and the same call then returns it.
+**Setup (precondition):** An ACTIVE partner with a portal session and no certifications yet.
+**Test Steps:**
+1. GET the module catalogue.
+   → Expected: HTTP 200; envelope {statusCode, data[], total, message}; total > 0; every row carries a non-empty `_id` and `name`.
+2. Filter modules by `name` using a name taken from step 1.
+   → Expected: only rows with that name, and at least one row.
+3. GET the team certifications before any grant.
+   → Expected: total = 0 — otherwise the grant in step 4 would prove nothing.
+4. SA grants `sales_certified` to the session user, then GET the team certifications again.
+   → Expected: total = 1; the row carries _id/partnerId/userId/certificationType/status/earnedAt; certificationType matches; status within (active|expired|revoked); partnerId is the caller's; no password/token/secret/credential key.
+5. Filter by `status`, then by `certificationType`.
+   → Expected: each returns only matching rows, and not an empty page.
+**Teardown:** delete the parent partner.
+**Expected (overall):** both catalogue reads are partner-scoped, well-formed, and reflect state rather than merely answering 200.
+**Note:** PASSED. Step 3 exists so step 4 means something — asserting "a certification is listed" against a partner that already had one would pass without the grant working.
+
+#### PARTNER_API_PARTNER_PORTAL_008
+**Test Description:** Negative counterpart of _007: enum values outside the spec, a filter that matches nothing, bad pagination, and the `groupByCategory` view.
+**Setup (precondition):** An ACTIVE partner with a portal session.
+**Test Steps:**
+1. Team certifications with status='bogus', then certificationType='bogus'.
+   → Expected: HTTP 400 on both; the status body lists active|expired|revoked.
+2. Modules filtered by a name that matches nothing.
+   → Expected: HTTP 200 with an empty page — no match is not an error.
+3. Modules with limit=-1, limit=0, page='abc'.
+   → Expected: HTTP 400 on all three.
+4. Modules with groupByCategory=true.
+   → Expected: rows that can be used — a category name and its members.
+**Teardown:** delete the parent partner.
+**Expected (overall):** invalid input is refused, an empty result is distinguished from an error, and the grouped view is usable.
+**Note:** FAILED by design at steps 3–4 — **BUG-API-026**. (a) `groupByCategory=true` answers 200 with 10 rows that are each exactly `{"_id": "undefined"}` — the literal JavaScript string where an id belongs, no category name, no members; the view is unusable. (b) No pagination value is validated: `limit=-1`, `limit=0` and `page='abc'` all answer 200 with the whole catalogue. The pagination half is the same class as BUG-API-025 on `/v1/sa/deals`, but stricter here — `/sa/deals` at least refuses `limit=-1`, this endpoint refuses nothing. Steps 1–2 pass.
+
 #### PARTNER_API_PARTNER_PORTAL_012
 **Test Description:** Negative counterpart of _002 (own deal by id): a ghost / malformed deal id is rejected with the correct code. All cases run (failures collected).
 **Setup (precondition):** Mint a partner-portal session.
@@ -1812,6 +2378,40 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Teardown:** close the portal session; delete the partner.
 **Expected (overall):** Invalid cert filter rejected with 400; never 5xx.
 **Note:** PASSED.
+
+#### PARTNER_API_PARTNER_PORTAL_009
+**Test Description:** A partner reads the three catalogues the deal-registration wizard uses: GET /sa-partners-api/v1/partner/portal/plans, GET .../plans/{id} and GET .../countries. Proves the envelope, that every row is a PUBLISHED standard edition, that plan keys are unique, and that the detail route returns the same plan the list advertised.
+**Setup (precondition):** An ACTIVE partner with a portal session. The catalogue must hold at least one plan - automation cannot publish one.
+**Test Steps:**
+1. GET the catalogue.
+   -> Expected: HTTP 200, `data` a non-empty list.
+2. Check every row.
+   -> Expected: carries _id/planId/displayName/edition/billingCycle/currency/basePrice/status; `status` = `published`; `edition` within (starter|pro|enterprise) - custom/bespoke are excluded by the service, so a row outside that set means the filter regressed; no password/token/secret/credential key.
+3. Check the keys across the catalogue.
+   -> Expected: `_id` unique and `planId` unique - the picker must not be able to show a duplicate.
+4. GET .../plans/{_id} for the first row.
+   -> Expected: the same `_id`, and `planId`/`displayName`/`edition`/`billingCycle`/`currency` identical to the list row; `status` still `published`.
+5. GET the country lookup.
+   -> Expected: at least 200 entries (~250 ISO 3166-1 countries; a shorter list means the lookup is truncated and partners cannot register a deal for the missing markets); every row carries a non-blank _id/name/alpha2Code/alpha3Code; alpha2Code is 2 chars and alpha3Code 3; `_id` EQUALS alpha2Code, because the picker submits `_id`; no duplicate alpha2Code.
+6. Search countries for 'viet', 'VIET' and 'Viet'.
+   -> Expected: each returns at least one row, every returned name contains the term case-insensitively, and the result is shorter than the full list.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the catalogue exposes published standard plans only and the detail route is exact.
+**Note:** PASSED. Measured 2026-09-23: 3 plans, editions {starter, pro, enterprise}, all `published`. Step 2 is the load-bearing one - this list feeds the deal wizard, so an unpublished or bespoke plan leaking into it would be offered to partners.
+
+#### PARTNER_API_PARTNER_PORTAL_010
+**Test Description:** Negative counterpart of _009: the documented plan key, a key that matches nothing, and keys that are not ids at all.
+**Setup (precondition):** An ACTIVE partner with a portal session and one plan borrowed from the catalogue for its keys.
+**Test Steps:**
+1. GET .../plans/{planId slug} using the `planId` of a plan the catalogue just returned.
+   -> Expected: HTTP 200 - the route is declared `plans/:planId` and its @ApiParam documents a kebab-case slug.
+2. GET .../plans/{ghost id}.
+   -> Expected: HTTP 404 naming the key that was not found.
+3. GET .../plans/{'not-a-plan', '%20', 'null'}.
+   -> Expected: HTTP 400 on each, never 200 and never 5xx.
+**Teardown:** delete the parent partner.
+**Expected (overall):** the documented key resolves and every invalid key is refused.
+**Note (FAILED - by design, BUG-API-029):** Steps 2-3 pass: a ghost key -> 404 naming it, and all three malformed keys -> 400. Step 1 fails - `full-modules-ss` is the `planId` of a plan the catalogue returned one call earlier, and it answers **400 "Invalid id"**, while that row's `_id` answers 200. `getPlanByPlanId` queries `{ _id: planId }` although the route, its @ApiParam ("Kebab-case plan key, e.g. pro-annual") and the service docstring all say slug. The parameter named `planId` is the only value it will not accept, so a client written from the OpenAPI spec fails every time. Contract-level, not a crash - the deal wizard works because it passes `_id`. Confirm with BE which side is authoritative.
 
 ### API · SECURITY_COMPLIANCE
 

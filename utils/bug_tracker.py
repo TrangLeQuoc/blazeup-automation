@@ -169,12 +169,44 @@ def _section_for(tc_id: int, tc_string: str = "") -> str:
     return "UI" if _is_ui(tc_id, tc_string) else "API"
 
 
-def _next_seq(existing: dict[int, BugRow], section: str) -> int:
-    """Highest existing sequence for BUG-<section>-NNN (0 if none)."""
+def all_bug_ids(path: Path) -> list[str]:
+    """Every Bug ID in the sheet, including rows that carry no Test Case ID.
+
+    :func:`load_tracker` is keyed by TC id and therefore ``continue``s past any bug filed
+    without one — which is a normal thing to file: BUG-API-021 records that DELETE partner
+    is a soft delete, a defect no TC asserts. Allocating the next number from that dict
+    handed out 021 a second time (measured 2026-09-16: two BUG-API-021 rows, one of them
+    written by this module's own reconciliation). Numbering has to see the whole column.
+    """
+    if not path.exists():
+        return []
+    import openpyxl
+
+    wb = openpyxl.load_workbook(path, data_only=True)
+    if _SHEET not in wb.sheetnames:
+        return []
+    ws = wb[_SHEET]
+    hdr = {str(c.value).strip().lower(): i for i, c in enumerate(ws[1], 1) if c.value}
+    ci_bug = hdr.get("bug id")
+    if not ci_bug:
+        return []
+    return [
+        str(row[ci_bug - 1].value or "").strip()
+        for row in ws.iter_rows(min_row=2)
+        if str(row[ci_bug - 1].value or "").strip()
+    ]
+
+
+def _next_seq(bug_ids: list[str], section: str) -> int:
+    """Highest existing sequence for BUG-<section>-NNN (0 if none).
+
+    Takes the raw id list rather than the TC-keyed dict so a bug with no TC still reserves
+    its number — see :func:`all_bug_ids`.
+    """
     pat = re.compile(rf"BUG-{section}-0*(\d+)", re.IGNORECASE)
     mx = 0
-    for r in existing.values():
-        m = pat.match(r.bug_id or "")
+    for bug_id in bug_ids:
+        m = pat.match(bug_id or "")
         if m:
             mx = max(mx, int(m.group(1)))
     return mx
@@ -264,19 +296,29 @@ def reconcile(
         allow_write = (not is_ci) and tracker_path.exists()
 
     seen: set[int] = set()
-    candidates: list[tuple[int, object]] = []
+    # (tc_id, group, covering_row): covering_row is an OPEN tracker bug that already
+    # covers this TC's signature group (via a co-grouped, already-tracked TC). Groups
+    # are signature-based — every TC in a group failed for the SAME reason — so an
+    # untracked TC that shares a group with a tracked-open bug is the SAME defect: it
+    # is reported as KNOWN OPEN under that bug, never appended as a duplicate.
+    candidates: list[tuple[int, object, BugRow | None]] = []
     for g in groups:
         if getattr(g, "category", "") != "app_bug":
             continue  # only real defects (API + UI) — skip env/flaky/deploy noise
-        for tc in getattr(g, "tcs", []):
-            n = _tc_int(tc)
-            if n is not None and n not in seen:
+        tcs_int = [n for tc in getattr(g, "tcs", []) if (n := _tc_int(tc)) is not None]
+        covering = next(
+            (existing[n] for n in tcs_int if n in existing and not _is_closed(existing[n].status)),
+            None,
+        )
+        for n in tcs_int:
+            if n not in seen:
                 seen.add(n)
-                candidates.append((n, g))
+                candidates.append((n, g, covering))
 
     reg = _registry_lookup()
     # Per-section running sequence (API / UI numbered independently).
-    next_seq = {s: _next_seq(existing, s) for s in _SECTIONS}
+    seen_ids = all_bug_ids(tracker_path)
+    next_seq = {s: _next_seq(seen_ids, s) for s in _SECTIONS}
     to_append: list[dict] = []
 
     def _build_entry(tc_id: int, g: object) -> dict:
@@ -312,13 +354,26 @@ def reconcile(
             "Notes": "",  # left blank by request — no auto-generated note text
         }
 
-    for tc_id, g in sorted(candidates):
+    for tc_id, g, covering in sorted(candidates, key=lambda c: c[0]):
         row = existing.get(tc_id)
         cur_ev = (getattr(g, "evidence", "") or "")[:300]
-        if row is None:
+        if row is None and covering is not None:
+            # Untracked TC, but a co-grouped TC is an open tracked bug (same signature)
+            # → covered by that bug. Report KNOWN OPEN under it, don't append a duplicate.
+            res.known_open.append(
+                BugRow(tc_id=tc_id, bug_id=covering.bug_id, status=covering.status)
+            )
+        elif row is None:
             entry = _build_entry(tc_id, g)
             res.new.append(entry)
             to_append.append(entry)
+        elif _is_closed(row.status) and covering is not None:
+            # This TC's own bug is closed, but a co-grouped TC is an open bug of the
+            # SAME signature → this run's failure is that open bug, not a reopen of the
+            # closed one. Report KNOWN OPEN under the covering bug, don't append.
+            res.known_open.append(
+                BugRow(tc_id=tc_id, bug_id=covering.bug_id, status=covering.status)
+            )
         elif _is_closed(row.status):
             # A closed bug is failing again. If the failure matches the recorded
             # evidence (same root cause) → REOPEN the same bug. If it's a DIFFERENT

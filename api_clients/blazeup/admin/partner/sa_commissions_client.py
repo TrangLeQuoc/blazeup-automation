@@ -88,6 +88,29 @@ class SaCommissionsClient(BaseClient):
         """Raw GET commissions for negative tests — returns the response unvalidated."""
         return await self.get(_COMMISSIONS_PATH, params=params, expected_status=expected_status)
 
+    async def get_summary(
+        self, *, expected_status: int | tuple[int, ...] | None = 200
+    ) -> httpx.Response:
+        """GET the SA-wide commission payout summary.
+
+        Four cents totals over every partner: ``totalEarnedCents``, ``totalPendingCents``,
+        ``totalPaidCents``, ``clawbackExposureCents``. Takes no parameters and no filters —
+        the route is declared before ``:id`` so ``summary`` is never read as an id.
+        """
+        return await self.get(f"{_COMMISSIONS_PATH}/summary", expected_status=expected_status)
+
+    async def get_commission(
+        self, commission_id: str, *, expected_status: int | tuple[int, ...] | None = 200
+    ) -> httpx.Response:
+        """GET one commission by id.
+
+        Automation cannot create a commission — a row only accrues after the provisioned
+        tenant's first payment (see G1) — so in practice this reaches its refusal paths only.
+        """
+        return await self.get(
+            f"{_COMMISSIONS_PATH}/{commission_id}", expected_status=expected_status
+        )
+
     async def list_rate_table(
         self, *, expected_status: int | tuple[int, ...] = 200
     ) -> list[dict[str, Any]]:

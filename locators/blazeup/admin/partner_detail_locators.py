@@ -17,6 +17,13 @@ class PartnerDetailLocators:
     ONBOARD_EMAIL = "input[placeholder*='contact@partner' i]"
     ONBOARD_SUCCESS = "Partner onboarded successfully"
 
+    # ── Directory filters ─────────────────────────────────────────────────────
+    # The Directory defaults to Status = "Active" (single-select listbox: Active /
+    # Pending / Suspended / Inactive), so a just-onboarded (Pending) partner is hidden
+    # until the filter is switched. Verified live 2026-09-30.
+    STATUS_FILTER_BUTTON = "Status"  # get_by_role button (the filter chip)
+    STATUS_FILTER_OPTION = "[role=listbox] [role=option]"
+
     # ── Detail page ───────────────────────────────────────────────────────────
     ACTIONS_BUTTON = "Partner actions"  # get_by_role button (kebab menu, aria-label)
     TABS = ("Overview", "Deals", "Commission", "Members")
@@ -35,6 +42,9 @@ class PartnerDetailLocators:
     # Deactivated → "Reactivate"/"Activate". Live label is "Deactivate", NOT "Suspend".
     ACTION_APPROVE = "Approve"
     ACTION_DEACTIVATE = "Deactivate"
+    # Required 'reason' textarea in the Deactivate Partner dialog (Deactivate stays
+    # disabled until it is filled). Added by FE for BUG-UI-008; verified 2026-09-30.
+    DEACTIVATE_REASON = "textarea[placeholder*='Reason' i], textarea"
     ACTION_REACTIVATE = "Reactivate"
     # Shown when the BE rejects the deactivate call (the FE sends no `reason`, which the
     # API requires — BUG-UI-008). The page object polls for this so the rejection path

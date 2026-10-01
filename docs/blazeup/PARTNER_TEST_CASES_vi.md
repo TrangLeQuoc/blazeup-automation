@@ -33,13 +33,13 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Ghi chú:** PASSED — verified 2026-07-28 (TC 12060302). Content-test COMMISSIONS đầu tiên — dựng nền page-object `CommissionsPage` (summary cards, ledger tabs). Ledger rỗng hiện "No commissions yet" (partner chưa có deal won). Negative: N/A — view read-only. Idempotency: N/A — read-only.
 #### PARTNER_UI_COMMISSIONS_003 — BLOCKED (thiếu data ledger)
 **Intent:** Trace 1 dòng commission — mở row và verify đủ trường lifecycle (deal → close → rate/version → approval → payout → clawback/waiver → payment status); tổng khớp các dòng hiển thị.
-**Lý do block:** Ledger commission **rỗng** — partner test chưa có deal **Won** nào nên không có commission row ("No commissions yet"). Không có gì để mở/verify. Chuỗi phụ thuộc: rate cấu hình (SA_PARTNER_MODULE_009, chưa deploy) → deal approve (SA deal queue bị BUG-UI-005) → deal Won → commission row. Unblock khi ledger có ít nhất 1 commission.
+**Lý do block:** Ledger commission **rỗng** — không có commission row ("No commissions yet"). **v1 tạo commission bằng ACCRUAL, không phải win deal** (LLD `commission-recurring-accrual`): event `payment.gateway.payment.succeeded` trên deal referral/co-sell đã WON (có `goLiveAt`, trong window) tạo row `ACCRUED`. Lưu ý trường lifecycle "clawback/waiver" trong trace: v1 clawback theo refund (adjustment), và **waiver KHÔNG build ở v1** — chỉ assert các trường v1 render. **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + deal referral/co-sell đã WON + event payment-succeeded → có ≥1 row accrued trong ledger.
 #### PARTNER_UI_COMMISSIONS_004 — BLOCKED (thiếu data ledger)
 **Intent:** Submit commission dispute từ 1 ô text trên 1 dòng commission.
-**Lý do block:** Giống _003 — không có commission row nào để dispute (partner chưa có Won deal → ledger rỗng). Cần 1 commission thật trước (rate → approved deal → Won).
+**Lý do block:** Giống _003 — không có commission row để dispute (ledger rỗng). **v1: row dispute được là row `ACCRUED` tạo bởi accrual `payment.succeeded`** (không phải Won deal). **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + deal referral/co-sell đã WON + event payment-succeeded → có row accrued để dispute.
 #### PARTNER_UI_COMMISSIONS_005 — BLOCKED (thiếu data ledger)
 **Intent:** Submit product-failure waiver request kèm evidence, gắn vào 1 dòng commission/clawback.
-**Lý do block:** Giống _003/_004 — không có commission row đủ điều kiện clawback (ledger rỗng). Cần 1 commission ở trạng thái clawback-eligible trước.
+**Lý do block (v1 — feature chưa build):** **Product-failure waiver KHÔNG có ở v1** (LLD `commission-recurring-accrual` §12: waiver/`clawback_waiver_credit` thuộc payout phase chưa build; enum `reason` của adjustment chỉ có `clawback|refund|manual`). Kèm theo ledger rỗng. → Vẫn BLOCKED vì thiếu feature waiver, không chỉ thiếu data. **Unblock:** BE ship waiver path VÀ có row accrued/clawback (accrual flow, xem _003).
 #### PARTNER_UI_COMMISSIONS_006 — BLOCKED (UI + data chưa có) — Security
 **Intent:** Duyệt payout commission **> $10K** — bắt buộc **two-eye approval** (1 người không tự duyệt khoản lớn).
 **Lý do block:** Cần (a) 1 payout >$10K đang chờ duyệt — mà cần Won deal → commission → payout (ledger rỗng, block như _003), và (b) UI two-eye approval (SA-side, design PN012) **chưa deploy** staging. Unblock khi có cả data payout + UI two-eye.
@@ -55,13 +55,13 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Lý do block:** Không tìm thấy UI edit payout/banking details trên build partner — `/commissions` chỉ là ledger read-only; màn payout-details/settings (theo region) chưa định vị được. Cần UI payout-details + region fixtures. Unblock khi có màn payout-details.
 #### PARTNER_UI_COMMISSIONS_010 — BLOCKED (không có commission data + không có UI process-clawback)
 **Intent:** Process clawback commission khi client churn trong clawback window → commission bị điều chỉnh thành Clawback, partner được notify, và có product-failure waiver path.
-**Lý do block:** Verify live 2026-07-31 (SA commission ledger, stgsa `/partners/commissions`): ledger **rỗng** ("No Data Found", 0 commission) nên không có commission để clawback, và **không có action process-clawback** trên UI (chỉ có summary card "Clawback Exposure" + tab filter status Clawback — không có control "process clawback" theo row; design PN013 chưa deploy). Cần chuỗi đầy đủ — rate config → deal approve (bị BUG-UI-005) → deal Won → commission — + UI process-clawback. Unblock khi có commission client-churn + UI process-clawback deploy.
+**Lý do block (v1 — model clawback đổi + không có UI):** Intent (thủ công "process clawback khi churn trong window" + waiver) **không** khớp v1. **v1 clawback là tự động + theo refund** (LLD `commission-recurring-accrual` §6.1): event `payment.refunded` ghi 1 debit `partner_commission_adjustments` (100%); **không có** action "process clawback" thủ công theo row và **không có waiver** ở v1. Về UI, `/partners/commissions` chỉ có card "Clawback Exposure" + tab filter Clawback (design PN013 chưa deploy). → Re-scope thành "refund tạo 1 adjustment clawback hiện trong ledger/exposure", HOẶC giữ block. **Unblock:** accrual flow (xem _003) + trigger `payment.refunded` + (nếu cần action thủ công) UI PN013.
 #### PARTNER_UI_COMMISSIONS_011 — BLOCKED (cần reseller partner + Won reseller deal)
 **Intent:** Với reseller deal đã Won, commission hiện **rate reseller** (không phải referral/co-sell), nhãn ghi rõ reseller.
-**Lý do block:** Cần **partner type Reseller** có **Won reseller deal** + reseller rate cấu hình. Partner test là Channel, wizard fix deal type Referral, chưa có rate/Won deal → không có commission reseller để kiểm. Unblock với reseller partner + Won reseller deal + rate.
+**Lý do block (SUPERSEDED bởi v1 — reseller không có commission row):** **v1 loại reseller khỏi accrual** — `ACCRUABLE_DEAL_TYPES = {REFERRAL, CO_SELL}`, reseller theo model margin (LLD `commission-recurring-accrual` §7). Nên reseller deal **không sinh commission row nào**, và không có "rate reseller" trong ledger để kiểm. → Premise TC không còn đúng; DROP, hoặc re-scope về assertion API ở `COMMISSIONS_PAYOUTS_011` ("reseller WON + payment → không có row ACCRUED"). Kinh tế reseller = margin lúc invoice, ngoài ledger accrual.
 #### PARTNER_UI_COMMISSIONS_012 — BLOCKED (cần reseller partner + Won reseller deal)
 **Intent:** Khi reseller deal close, invoice xuất **cho partner entity** (không phải end-client); số tiền = reseller rate × deal value; không lộ billing của end-client.
-**Lý do block:** Cùng phụ thuộc reseller — cần reseller partner + Won reseller deal đã qua commission processing, + UI invoice/billing (chưa thấy trên build partner). Unblock với reseller data + UI invoice.
+**Lý do block (ngoài scope accrual v1):** Đây là **invoicing/billing** reseller, không phải engine commission-accrual (vốn loại reseller — xem _011). v1 `commission-recurring-accrual` không cover invoice reseller, và không có UI invoice/billing trên build partner. → Không giải quyết được qua accrual flow; giữ BLOCKED theo feature invoice/billing reseller (tách khỏi commission accrual). Pipeline payout/billing chưa build (LLD §12).
 ### UI · DASHBOARD
 
 #### PARTNER_UI_DASHBOARD_001
@@ -174,15 +174,15 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Expected (tổng):** Thiếu required (company name) chặn advance; điền vào cho phép advance.
 **Ghi chú:** PASSED — verified 2026-07-24 (TC 12060202). **Plan-vs-live:** plan ghi "required field error is shown", nhưng build này KHÔNG có inline error text — nó enforce required bằng cách **disable "Next"**, nên test assert chuyển đổi disabled→enabled thay vì error message. Idempotency: N/A (validation negative, không submit).
 #### PARTNER_UI_MY_PIPELINE_003
-**Mô tả test:** Negative (fail-by-design): domain không hợp lệ/malformed trong register wizard phải bị từ chối với domain-format error (chặn advance hoặc flag field). Tất cả case đều chạy (thu thập).
+**Mô tả test:** Negative: domain vi phạm rule của field Domain (chỉ chữ, số, dấu gạch ngang — không dấu chấm/ký tự đặc biệt, vd `my-company`) phải bị từ chối với format error (chặn advance hoặc flag field). Tất cả case đều chạy (thu thập).
 **Chuẩn bị (điều kiện tiên quyết):** Mở wizard Register-a-Deal (bước 1) với company name, country, primary contact hợp lệ; chỉ thay đổi field Domain.
 **Các bước:** (mỗi case = nhập domain malformed, blur, kiểm tra bị từ chối)
-1. `@@@` → Expected: bị từ chối (Next disabled hoặc field flagged). **Hiện FAIL** — được chấp nhận (Next vẫn enabled, field không flag).
-2. `ab cd` (có space) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
-3. `notadomain` (không TLD) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
-4. `http://x.com` (có scheme, không phải bare domain) → Expected: bị từ chối. **Hiện FAIL** — được chấp nhận.
+1. `@@@` (ký tự đặc biệt) → Expected: bị từ chối (Next disabled hoặc field flagged, inline "Use letters, numbers, and hyphens only — no dots or symbols").
+2. `ab cd` (có space) → Expected: bị từ chối.
+3. `acme.com` (có dấu chấm) → Expected: bị từ chối.
+4. `http://x.com` (scheme + dấu chấm + ký tự đặc biệt) → Expected: bị từ chối.
 **Expected (tổng):** Domain malformed bị từ chối với format error rõ ràng; không tạo deal.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; **BUG-UI-003**) — verified 2026-07-24 (TC 12060203). Register wizard **không validate domain format**: mọi domain malformed (kể cả `@@@` / `ab cd`) đều được chấp nhận — field Domain **giữ nguyên giá trị rác**, "Next" vẫn enabled, và field không bao giờ bị flag (`aria-invalid` không set), nên deal có thể tiếp tục với domain rác (mà domain "derive tenant subdomain"). **Confirm với FE** — thêm validate domain-format ở field Domain. Positive sibling: _001. Idempotency: N/A (không submit).
+**Ghi chú:** PASSED — verified 2026-09-30 (TC 12060203). FE đã validate field Domain (BUG-UI-003 đã fix). Bộ input sửa ngày 2026-09-30: bỏ `notadomain` — đây là subdomain label HỢP LỆ theo rule (không chấm/ký tự đặc biệt), để nó trong list invalid làm TC fail sai; thay bằng `acme.com` (có dấu chấm). Positive sibling: _001. Idempotency: N/A (không submit).
 #### PARTNER_UI_MY_PIPELINE_004
 **Mô tả test:** Trong register wizard, nhập domain (subdomain label) đã bị reserve bởi 1 deal active khác → hiện inline warning active-account/conflict; domain free → không warning. Chỉ UI (không submit).
 **Chuẩn bị (điều kiện tiên quyết):** Chứng minh qua API partner `check-domain` label ứng viên nào reserved (`available=false`) vs free (`available=true`) — để assertion UI không vòng vo. Mở wizard với company/country/contact hợp lệ. LƯU Ý: field "Domain" là **subdomain label** (lowercase/số/gạch nối, KHÔNG dấu chấm) — placeholder "acme.com" gây nhầm; giá trị có dấu chấm → check-domain trả 400.
@@ -293,7 +293,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 - PARTNER_UI_MY_PIPELINE_019 — BLOCKED (enrich khi blur domain hợp lệ: không có feature enrichment — verify live 2026-07-30, Headcount là dropdown "Select range" nhập tay + Logo là ô URL nhập tay; blur chỉ derive subdomain)
 - PARTNER_UI_MY_PIPELINE_020 — BLOCKED (chọn modules of interest: wizard không có bước chọn modules — verify live 2026-07-30, step 2 chỉ có deal type/plan/seats/region/close date)
 - PARTNER_UI_MY_PIPELINE_021 — BLOCKED (đăng ký lại conflict-lost prospect sau 90 ngày: cần deal conflict-lost aged 90 ngày — data theo thời gian, không có)
-- PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: không partner nào đăng ký → commission không award: outcome behavior/backend, không có action UI partner để test)
+- PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: không partner nào đăng ký → commission không award — outcome behavior/backend, không có action UI partner). Cơ chế v1 (LLD `commission-recurring-accrual` §6.1): không đăng ký → không có deal WON gắn `wonTenantId` → event `payment.succeeded` cho tenant đó rơi vào `accrual_no_won_deal` và bị skip → không có row `ACCRUED`. Đây là assertion API/log (không có row ACCRUED sau payment cho tenant chưa attribute), không phải UI → nên đặt làm TC API accrual-negative thay vì UI.
 - PARTNER_UI_MY_PIPELINE_023 — BLOCKED (reseller deal → ô end-client price vắng mặt: wizard không cho chọn reseller; feature absent)
 #### PARTNER_UI_MY_PIPELINE_024
 **Ghi chú (BLOCKED):** Click deal card trong pipeline để mở deal detail. Bị chặn bởi BE defect (verify live 2026-07-24): endpoint danh sách deals partner-portal `GET /v1/partner/portal/deals` trả **400 "Invalid id: 'pro-v1'"**, nên pipeline **không bao giờ render deal row/card** (UI fallback về empty-state "No deals found" kể cả khi partner CÓ deal). Root cause = contract drift tham chiếu plan: deal cũ lưu **slug** (`planId:"pro-v1"`) trong khi BE giờ resolve plan bằng Mongo **_id** (ObjectId), nên list partner có deal tham chiếu slug → "Invalid id" → cả list vỡ. Đã xác nhận deal SA vừa register cho partner vẫn không hiện (list giữ 400 ~40s). Không có card để click → không thể thực hiện luồng "mở deal detail". **Bug này chặn luôn các TC deal-list/detail khác** (_015 detail, _025/_026/_027 filter, _033 card tag). Unblock khi BE fix endpoint deals-list (tha/migrate plan-ref slug cũ, hoặc resolve bằng _id) để pipeline render card. **Liên quan:** register giờ cần plan **_id** (slug → 400) — đã cập nhật `pick_billing_plan_id`.
@@ -312,31 +312,31 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
 **Mô tả test:** Mở tất cả route nav chính của shell partner portal và xác nhận mỗi trang render đúng nội dung (đúng page content, không có lỗi micro-frontend). Một test lặp đi qua tất cả trang bằng URL trực tiếp và thu thập failure → một verdict duy nhất nêu trang nào lỗi.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập một lần bằng user channel-partner đã cấu hình (login UI partner cache theo session). Warm up SPA (mở Dashboard một lần) để trang đầu trong vòng lặp không bị tính chi phí bootstrap một lần.
-**Các bước:** (mỗi trang = một `page.goto(route)`; chờ READY_MARKER trong `<main>` — fast-fail nếu hiện panel "Something went wrong" — **rồi** kiểm tra content đã load: không có banner "Failed to load"/"Please refresh and try again" trong `<main>`) — nav chính đã verify live 2026-07-23:
+**Các bước:** (mỗi trang = 1 `page.goto(route)`; chờ READY_MARKER trong `<main>` — fast-fail nếu hiện panel MFE "Something went wrong" — **rồi** assert content đã load: không có banner "Failed to load"/"Please refresh and try again" trong `<main>`) — nav chính verify lại live 2026-09-30:
 1. Dashboard → `/dashboard` → Expected: title **"Tier & Performance"** hiện + không banner lỗi. → **PASS**
 2. Deals → `/deals` → Expected: **"Deal Pipeline"** hiện + không banner lỗi. → **PASS**
 3. Commissions → `/commissions` → Expected: **"Commissions"** hiện + không banner lỗi. → **PASS**
-4. Resources → `/resources` → Expected: **"Resources"** hiện + không banner lỗi. → **PASS**
-5. My Apps → `/apps` → Expected: **"My Apps"** hiện + không banner lỗi. → **FAIL** — shell render được (title "My Apps" + tabs + nút Submit) nhưng data-fetch danh sách apps lỗi, hiện banner đỏ **"Failed to load your apps. Please refresh and try again."**
-**Expected (tổng):** Cả 5 trang chính render được module VÀ content (không MFE panel, không banner lỗi content); trang lỗi sẽ fast-fail nêu rõ trang nào.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; **BUG-UI-001**) — verified 2026-07-23 (TC 12060101). 4/5 trang pass; **`/apps` (My Apps) FAIL**: shell render được nhưng data-fetch danh sách apps lỗi → banner "Failed to load your apps. Please refresh and try again." (lỗi backend/data-load của trang này — **confirm với BE**). Đã reproduce live, không phải flap một lần. **TC này cũng siết lại readiness check:** chỉ dựa marker (title) cho FALSE PASS vì tiêu đề vẫn render dù data lỗi — đã thêm assertion bắt banner lỗi content sau marker, nhờ đó `/apps` đúng là đỏ. **Mapping plan-vs-live:** plan ghi "My Pipeline / My Clients / Training", nhưng nav chính thực tế là Deals / Resources / My Apps ("My Pipeline" = trang Deals, title "Deal Pipeline"). Test UI partner-portal đầu tiên — tạo bản đồ route live để các content-test sau dùng lại. Negative: N/A (smoke page-load không có bề mặt input sai; case trang lỗi/content-error đã built-in). Idempotency: N/A (điều hướng read-only).
+4. Directory → `/directory` → Expected: **"Directory"** hiện + không banner lỗi. → **PASS**
+5. Resources → `/resources` → Expected: **"Resources"** hiện + không banner lỗi. → **PASS**
+**Expected (tổng):** Cả 5 trang chính render module VÀ content (không panel MFE, không banner lỗi load data); trang hỏng fast-fail và nêu tên trang.
+**Ghi chú:** PASSED — verify 2026-09-30 (TC 12060101), 5/5 trang. **My Apps đã bị bỏ (2026-09-30):** portal không còn mục nav "My Apps" và `/apps` hiện trang 404, nên đã bỏ section này khỏi test (BUG-UI-001 — My Apps "Failed to load your apps" — không còn áp dụng/có thể đóng). Check readiness vẫn giữ assert banner lỗi content sau marker (chỉ check marker từng cho FALSE PASS khi heading render nhưng data lỗi). **Map plan-vs-live:** plan ghi "My Pipeline / My Clients / Training", nhưng nav live là Dashboard / Deals / Commissions / Directory / Resources ("My Pipeline" = trang Deals, title "Deal Pipeline"). Negative: N/A (smoke load trang không có input sai; case trang hỏng/lỗi content đã tích hợp sẵn). Idempotency: N/A (chỉ điều hướng read-only).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_002
 **Mô tả test:** Mở partner portal ở mobile viewport phổ biến (375×812) và xác nhận shell vẫn dùng được trên mọi trang nav chính — trang render, sidebar nav vẫn truy cập được, và layout KHÔNG tràn ngang (không bị cắt nội dung / cuộn ngang) — rồi tap một link sidebar để chứng minh điều hướng mobile hoạt động. Một test lặp thu thập failure theo trang → một verdict.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập một lần bằng user channel-partner đã cấu hình; resize page về 375×812; warm up SPA (mở Dashboard một lần).
-**Các bước:** (mỗi trang ở mobile: READY_MARKER hiện + ≥1 nav link hiện + tràn ngang ≤ 5px cho scrollbar) — verify live 2026-07-24:
-1. Dashboard `/dashboard` → Expected: render, nav truy cập được, không tràn ngang. → **PASS** (tràn 0px).
-2. Deals `/deals` → Expected: không tràn ngang. → **FAIL** — nội dung tràn viewport 375px **+162px** (tabs/filter/nút không fit → cuộn ngang).
-3. Commissions `/commissions` → Expected: không tràn ngang. → **PASS** (0px).
-4. Resources `/resources` → Expected: không tràn ngang. → **PASS** (0px).
-5. My Apps `/apps` → Expected: không tràn ngang. → **FAIL** — tràn **+263px**.
-6. Tap link sidebar ở mobile → Commissions điều hướng + render. → **PASS** (nav mobile dùng được).
-**Expected (tổng):** Mọi trang chính fit mobile viewport (không tràn ngang) và nav truy cập được; tap nav điều hướng đúng.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; **BUG-UI-002**) — verified 2026-07-24 (TC 12060102). 3/5 trang fit + nav mobile hoạt động, nhưng **Deals (+162px) và My Apps (+263px) tràn ngang ở 375px** = lỗi responsive-layout (nội dung không fit màn nhỏ → cuộn ngang; **confirm với FE**). Sidebar mobile vẫn là icon-bar (không ẩn) và tap nav điều hướng đúng, nên bản thân navigation dùng được — lỗi nằm ở độ rộng nội dung trang Deals/My Apps. Đã reproduce live. Negative: N/A (responsive smoke không có bề mặt input sai; case "layout không fit" chính là điều đang kiểm). Idempotency: N/A (điều hướng/resize read-only).
+**Các bước:** (mỗi trang ở mobile width: READY_MARKER của shell hiện + ≥1 nav link hiện + tràn ngang ≤ 5px cho scrollbar) — verify lại live 2026-09-30:
+1. Dashboard `/dashboard` → Expected: render, nav truy cập được, không tràn ngang. → **PASS**
+2. Deals `/deals` → Expected: không tràn ngang. → **PASS** (ngày 2026-07-24 tràn +162px — đã fix).
+3. Commissions `/commissions` → Expected: không tràn ngang. → **PASS**
+4. Directory `/directory` → Expected: không tràn ngang. → **FAIL** — tràn viewport 375px **+93px**: nút "Invite User" lòi ra 93px và bảng member (MEMBER / ROLE / STATUS / LAST LOGIN) rộng hơn viewport ~607px mà không có container cuộn ngang, nên cả trang bị cuộn ngang (`scrollWidth` 468 so với 375).
+5. Resources `/resources` → Expected: không tràn ngang. → **PASS**
+6. Tap link sidebar ở mobile → Commissions route + render. → **PASS** (nav mobile dùng được).
+**Expected (tổng):** Mọi trang chính vừa viewport mobile (không tràn ngang), nav truy cập được; tap nav route đúng.
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — verify 2026-09-30 (TC 12060102). 4/5 trang vừa + nav mobile OK; **chỉ `/directory` tràn (+93px)** = lỗi responsive layout (**confirm với FE**; bug mới **BUG-UI-010** — khác BUG-UI-002 (Deals, nay đã fix)). **My Apps đã bị bỏ (2026-09-30):** không còn nav, `/apps` → 404, nên đã bỏ khỏi test. Negative: N/A (smoke responsive không có input sai; case "layout không vừa" chính là thứ nó check). Idempotency: N/A (chỉ điều hướng/resize read-only).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Ghi chú (BLOCKED):** Partner dual-account chuyển đổi giữa dashboard **Pack** và **Channel**. Không thể tự động hóa — tính năng lẫn test data đều chưa có trên staging (verify live 2026-07-24): (a) **không có account-switcher** trong portal shell — chữ "Select" ở header là badge **tier** (tier=`select`), không phải công tắc đổi account; profile menu chỉ có Profile/Logout; (b) partner đang đăng nhập là **single account** — `GET /v1/partner/auth/me` trả về 1 `partnerId`, `type:"channel"`, `tier:"select"`, không có mảng accounts; (c) **không có khái niệm "Pack"** — enum partner `type` là channel/referral/msp/system_integrator (không có "pack"), nên không thể biểu diễn dual-account Pack↔Channel. Unblock khi BE ship multi-account membership (1 user → 1 account Pack + 1 Channel) + account switcher ở shell, VÀ có test partner dual-account.
 ### UI · PARTNER_TEAM
 
-**Sửa lại (2026-07-30):** nav partner portal có **6 mục** — Dashboard, Deals, Commissions, **Directory**, Resources, My Apps. Ghi chú cũ ở đây nói sai "5 nav / không có UI team" — đó là false-negative do probe chờ quá ngắn (bài học `probe-mfe-with-long-wait`). `/directory` chính là trang team-members của partner.
+**Sửa lại (2026-07-30):** nav partner portal có **6 mục** — Dashboard, Deals, Commissions, **Directory**, Resources, My Apps (**cập nhật 2026-09-30:** đã bỏ My Apps → còn 5 mục). Ghi chú cũ ở đây nói sai "5 nav / không có UI team" — đó là false-negative do probe chờ quá ngắn (bài học `probe-mfe-with-long-wait`). `/directory` chính là trang team-members của partner.
 #### PARTNER_UI_PARTNER_TEAM_001 — PASSED
 **Mô tả test:** Invite partner team member. Trên partner Directory (`/directory`), mở "Invite User", điền email + name + role của member mới, gửi invite, xác nhận invite được tạo (hiện credential 1 lần) và member xuất hiện trong bảng team với role.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập user channel-partner (stgpartners, 2FA); mở `/directory` và chờ READY_MARKER "Directory".
@@ -412,7 +412,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Ở đâu:** stgsa → Partners → Commission → (Commission configuration → SPIFF Program). **Design:** PN020 (section SPIFF), ready-for-dev.
 **Intent:** Tạo SPIFF bonus programme (name, bonus %, regions, tiers, valid dates) → hiện trong Active SPIFF Programmes; phản ánh vào commission projection của partner.
 **Lý do block:** Giống _009 — cấu hình SPIFF nằm trong cùng view Commission configuration, chưa deploy trên staging. Unblock khi FE deploy.
-#### PARTNER_UI_SA_PARTNER_MODULE_011 — FAILED (app bug · BE defect)
+#### PARTNER_UI_SA_PARTNER_MODULE_011 — PASSED
 **Mô tả test:** SA Partner Programme Analytics dashboard (stgsa `/partners/analytics`, PRD §7) — funnel + KPI + tier-distribution + top-partners render và load không lỗi backend.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập super-admin (stgsa); mở `/partners/analytics` và chờ section "Deal Funnel".
 **Các bước:**
@@ -421,9 +421,9 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 2. Section Tier Distribution + Top Partners render.
    → Expected: Deal Funnel, Tier Distribution, Top Partners by ARR hiển thị. **(PASS.)**
 3. Data analytics load không server error.
-   → Expected: không lỗi backend. **(FAIL.)**
+   → Expected: không lỗi backend. **(PASS.)**
 **Expected (tổng):** Dashboard analytics hiện funnel + KPIs + sections với data đã load.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — BE defect thật, verified 2026-07-29 (TC 12060511, **BUG-UI-006**). Dashboard shell render (KPIs + funnel + tier distribution + top-partners đều pass), nhưng 1 query analytics phân trang fail với **"Server Error — Invalid pagination: limit must not exceed 100"** (defect backend: frontend request page size > 100 bị API từ chối). Deterministic. Assertion fail với "confirm with BE". Lưu ý: KPI set live khác plan một chút (Approval Rate / Avg Deal Velocity / line-item commission chi tiết không render) — test assert đúng cái UI render. Negative: N/A — dashboard read-only. Idempotency: N/A.
+**Ghi chú:** PASSED — verify lại 2026-10-01 (TC 12060511): data load không còn server error; **BUG-UI-006 đã fix**, đã bỏ `be_gap` (TC quay lại merge gate). Lịch sử: tới 2026-07-29 dashboard shell render (KPIs + funnel + tier distribution + top-partners đều pass), nhưng 1 query analytics phân trang fail với **"Server Error — Invalid pagination: limit must not exceed 100"** (defect backend: frontend request page size > 100 bị API từ chối). Deterministic. Assertion fail với "confirm with BE". Lưu ý: KPI set live khác plan một chút (Approval Rate / Avg Deal Velocity / line-item commission chi tiết không render) — test assert đúng cái UI render. Negative: N/A — dashboard read-only. Idempotency: N/A.
 #### PARTNER_UI_SA_PARTNER_MODULE_012 — BLOCKED (Territory chưa deploy)
 **Ở đâu:** stgsa → Partners → Territory (và từ Partner detail). **Design:** Territory PN021, ready-for-dev.
 **Intent:** Assign Territory (regions, verticals, exclusivity type, effective dates) cho partner; hiện warning conflict exclusivity; territory exclusive auto-route deal conflict.
@@ -439,7 +439,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. Control Partner-actions render.
    → Expected: control **Partner actions** (kebab) hiển thị trên header. **(PASS.)**
 **Expected (tổng):** Partner Detail load với tabs, sections, thông tin partner và control actions.
-**Note:** PASSED, verify 2026-07-31 (TC 12060513). Check load read-only (an toàn khi rỗng). Negative: N/A — chỉ load read-only. Idempotency: N/A. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-021**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+**Note:** PASSED, verify 2026-07-31 (TC 12060513). Check load read-only (an toàn khi rỗng). Negative: N/A — chỉ load read-only. Idempotency: N/A. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-022**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate chưa có UI)
 **Mô tả:** Từ trang Partner Detail phía SA → tab **Members**, SA thêm 1 portal user (member) cho partner đang active; user mới xuất hiện trong danh sách Portal Users với status **Active**.
 **Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm, **Approve** (Pending → Active), mở tab Members.
@@ -451,17 +451,17 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. User mới xuất hiện ở row Active.
    → Expected: row của user mới hiện email + role **Viewer** + status **Active**; header hiện **Portal Users (1)**. **(PASS.)**
 **Expected (tổng):** SA thêm được portal user cho partner; user hiện Active trong danh sách Portal Users.
-**Note:** PASSED, verify 2026-08-03 (TC 12060514). Password của user tạm (staging) được sinh ngẫu nhiên và **không log**. **Phạm vi:** tab Members chỉ có **Add User** (tạo) + action **Reset Password** trên từng row — **KHÔNG có** control member deactivate / reactivate / suspend / remove nào trên build này (verify live 2026-08-03: full HTML row + hover + quét keyword), nên phần deactivate/reactivate của intent gốc _014 **không tự động hóa được** (UI chưa có). Khi control đó lên, mở rộng thêm cho TC này. Negative: N/A — happy-path add (validate form là TC riêng). Idempotency: N/A — mỗi lần add tạo user khác nhau (email unique). **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-021**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
-#### PARTNER_UI_SA_PARTNER_MODULE_015 — FAILED (app bug · BUG-UI-008, lệch contract FE↔BE)
+**Note:** PASSED, verify 2026-08-03 (TC 12060514). Password của user tạm (staging) được sinh ngẫu nhiên và **không log**. **Phạm vi:** tab Members chỉ có **Add User** (tạo) + action **Reset Password** trên từng row — **KHÔNG có** control member deactivate / reactivate / suspend / remove nào trên build này (verify live 2026-08-03: full HTML row + hover + quét keyword), nên phần deactivate/reactivate của intent gốc _014 **không tự động hóa được** (UI chưa có). Khi control đó lên, mở rộng thêm cho TC này. Negative: N/A — happy-path add (validate form là TC riêng). Idempotency: N/A — mỗi lần add tạo user khác nhau (email unique). **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-022**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+#### PARTNER_UI_SA_PARTNER_MODULE_015 — PASSED
 **Mô tả:** Từ trang Partner Detail phía SA, suspend một partner đang Active qua **Partner actions → Deactivate**. Kỳ vọng: partner chuyển khỏi Active (Suspended/Inactive) và mất quyền truy cập portal.
-**Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm, **Approve** (Pending → Active).
+**Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm (Onboard), tìm nó trong Directory với **filter Status = Pending** (Directory mặc định lọc Status = Active), mở ra và **Approve** (Pending → Active).
 **Test Steps:**
-1. Deactivate (suspend) partner đang active — Partner actions → Deactivate → confirm dialog "Deactivate Partner".
-   → Expected: request thành công. **(FAIL.)**
+1. Deactivate (suspend) partner đang active — Partner actions → Deactivate → nhập **Reason** (bắt buộc) trong dialog "Deactivate Partner" → confirm.
+   → Expected: request thành công (dialog đóng, không có banner "Failed to deactivate partner").
 2. Partner bị suspend, không có lỗi.
-   → Expected: không có banner lỗi; partner không còn Active (Suspended/Inactive). **(FAIL.)**
+   → Expected: không có banner lỗi; badge status chuyển sang Suspended/Inactive (poll — badge refetch sau vài giây).
 **Expected (tổng):** SA suspend được partner Active từ UI; partner mất quyền truy cập portal.
-**Note:** FAILED — app bug thật, verify 2026-07-31 (TC 12060515, **BUG-UI-008**, gắn `be_gap`). Dialog confirm **"Deactivate Partner" KHÔNG có ô nhập reason** (chỉ có nút Cancel / Deactivate), nhưng API deactivate **bắt buộc** field `reason` (chuỗi không rỗng). FE gửi request thiếu reason → BE reject — **"Server Error — reason should not be empty / reason must be a string / reason must be shorter than or equal to 2000 characters"** — UI hiện **"Failed to deactivate partner"** và partner **vẫn Active**. Lệch contract FE↔BE, deterministic: **không SA nào suspend được partner qua UI**. Fix: thêm ô Reason bắt buộc vào dialog (và gửi nó), hoặc để `reason` optional ở API. Cũng chặn luôn _016 (reactivate — không tới được state Suspended). Negative: N/A (1 action chuyển state). Idempotency: N/A — action không bao giờ thành công. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-021**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+**Note:** PASSED — verify 2026-09-30 (TC 12060515). **BUG-UI-008 đã được FE fix:** dialog Deactivate giờ có ô Reason bắt buộc (nút Deactivate disabled tới khi nhập) và request thành công. Cũng cập nhật 2026-09-30: Directory giờ mặc định **Status = Active**, nên partner vừa onboard (Pending) được tìm bằng cách chuyển filter Status sang Pending trước. Lịch sử: tới 2026-07-31 dialog không có ô reason và BE reject ("reason should not be empty"). Gỡ chặn _016 (reactivate). Negative: N/A (1 action chuyển state). Idempotency: N/A. **Cleanup:** đã đăng ký (xoá qua SA API ở teardown) nhưng vẫn chỉ soft-delete (**BUG-API-022**, log `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (phụ thuộc BUG-UI-008)
 **Mô tả:** Từ trang Partner Detail phía SA, reactivate một partner đang **Suspended** qua **Partner actions → Reactivate**; partner trở lại Active và có lại quyền truy cập portal.
 **Intent:** Verify chuyển state Suspended → Active (đối xứng với _015).
@@ -580,6 +580,34 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: 401.
 **Expected (tổng):** Đổi password từ chối một current sai; credential mới hoạt động, cũ bị từ chối.
 **Ghi chú:** PASSED — verified 2026-06-25. Không phụ thuộc sa-plans.
+#### PARTNER_API_AUTH_ACCESS_CONTROL_010
+**Mô tả:** Partner user tự yêu cầu reset mật khẩu (POST /sa-partners-api/v1/partner/auth/forgot-password). Chứng minh bằng hiệu ứng, không cần mailbox: mật khẩu vừa dùng được phải ngừng hoạt động.
+**Setup (tiền điều kiện):** Partner ACTIVE và một user THROWAWAY trên đó. Tốn MỘT lần gọi trong quota per-IP dùng chung.
+**Các bước:**
+1. Login bằng tempPassword từ invite.
+   → Mong đợi: HTTP 200 — nếu không thì hỏng fixture chứ không phải hỏng endpoint.
+2. POST forgot-password cho email đó.
+   → Mong đợi: đúng message cố định "If an account exists for that email, we've sent password-reset instructions."; body không chứa tempPassword/accessToken/refreshToken/newPassword.
+3. Login lại bằng mật khẩu CŨ.
+   → Mong đợi: bị từ chối — credential đã bị xoay trước khi mail được gửi.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** reset thật sự xoay credential và không lộ gì.
+**Ghi chú:** PASSED, mật khẩu cũ → 401. Endpoint này bị ghi "không build được — không đọc được inbox" hôm 2026-09-16; điều đó sai. `forgotPassword` xoay mật khẩu rồi MỚI gửi mail (`partner-auth.service.ts:798` → `generateTempPassword` → `updateUserPassword`), nên hiệu ứng quan sát được đúng như cách PARTNER_TEAM_005 chứng minh reset phía admin. Một endpoint reset mà trả ngược credential mới về còn tệ hơn là vô dụng, nên bước 2 kiểm cả body chứ không chỉ status.
+
+#### PARTNER_API_AUTH_ACCESS_CONTROL_011
+**Mô tả:** Cặp negative/security của _010: dò user, input sai định dạng, và rate limit.
+**Setup (tiền điều kiện):** Partner ACTIVE và một user THROWAWAY. Tốn tối đa 8 lần gọi trong quota per-IP.
+**Các bước:**
+1. POST forgot-password với email='not-an-email'.
+   → Mong đợi: HTTP 400 từ DTO validation.
+2. POST cho một email ĐÃ ĐĂNG KÝ, rồi một email lạ, và so sánh.
+   → Mong đợi: cùng status code VÀ cùng body — bất kỳ khác biệt quan sát được nào cũng là một oracle để dò user. Service return sớm với user lạ ("silent no-op: no email, no write, no audit") và controller không bao giờ rẽ nhánh theo kết quả.
+3. Lặp lại request cho một địa chỉ tới khi bị từ chối.
+   → Mong đợi: HTTP 429 trong cửa sổ 5 lần/email đã đặc tả.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** endpoint không tiết lộ tài khoản nào và không dùng để flood một địa chỉ được.
+**Ghi chú:** PASSED — 429 sau 5 request; email đã đăng ký và email lạ không phân biệt được. CẢNH BÁO cho người chạy: quota CÒN tính theo IP (20 lần / 15 phút) và dùng chung cho mọi thứ sau địa chỉ đó. Module này tốn ~9 lần mỗi run, nên hai run liên tiếp thì vừa, run thứ ba trong cùng cửa sổ sẽ bắt đầu gặp 429. TC viết để coi 429 sớm là bằng chứng limit tồn tại chứ không phải fail, và báo UNPROVEN cho bước 2 nếu quota hết trước khi kịp so sánh.
+
 ### API · DEAL_REGISTRATION_PIPELINE
 
 #### PARTNER_API_DEAL_REGISTRATION_PIPELINE_001
@@ -900,6 +928,62 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Expected (tổng):** Missing required intake → 400; non-approved/already-won → 400; ghost id → 404; malformed id → 400.
 **Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-020**). Gap (case 1–4): WinDealDto khai companyWebsite/industry/adminFirstName/adminLastName là required, nhưng BE nhận win khi thiếu bất kỳ/tất cả (kể cả empty body → 201, deal won) — required-intake validation không được enforce. Case 5–8 đúng (lưu ý: win trả 404 cho ghost id, khác các SA endpoint khác). Confirm với BE.
 
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_035
+**Mô tả:** SA liệt kê deal: GET /sa-partners-api/v1/sa/deals trả danh sách deal toàn hệ, và **mọi filter đều thực sự thu hẹp** — partnerId, status, dealType, limit.
+**Điều kiện tiên quyết:** Một partner ACTIVE có session portal đăng ký **một** deal, để TC có dòng của riêng mình mà tìm lại. Danh sách không lọc có 1406 dòng trên staging nên không được giả định gì về nó.
+**Các bước:**
+1. GET danh sách với limit=5.
+   → Kỳ vọng: HTTP 200; envelope {statusCode, data[], total, message}; total là int > 0; tối đa 5 dòng.
+2. Lọc theo partnerId.
+   → Kỳ vọng: mọi dòng thuộc đúng partner đó, và deal tạo ở setup có mặt.
+3. Kiểm dòng deal.
+   → Kỳ vọng: có _id/partnerId/dealType/status/prospectName/createdAt; status thuộc enum (registered|approved|in_progress|won|lost|expired|rejected); dealType thuộc (referral|reseller|co_sell); không có key password/token/secret/credential.
+4. Lọc theo status.
+   → Kỳ vọng: mọi dòng mang đúng status đó.
+5. Lọc theo dealType.
+   → Kỳ vọng: mọi dòng mang đúng type đó.
+6. So limit=1 với limit=50.
+   → Kỳ vọng: đúng 1 dòng, và `total` **không đổi** — nó đếm cả tập kết quả, không phải trang.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** danh sách deal SA đúng cấu trúc và mọi filter đều thu hẹp kết quả.
+**Ghi chú:** PASSED. Viết nhắm vào một kiểu lỗi cụ thể: **filter được nhận rồi bị bỏ qua**. BUG-API-023 chính là như vậy trên `/directory/users/{userId}/deals`, nên ở đây mỗi filter đều được assert là **thu hẹp**, chứ không chỉ assert trả 200.
+
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_036
+**Mô tả:** Bản negative của _035: giá trị ngoài enum, id sai định dạng, phân trang sai, và một id đúng định dạng nhưng không khớp gì.
+**Điều kiện tiên quyết:** Không có — chỉ đọc.
+**Các bước:**
+1. status='bogus', rồi dealType='bogus'.
+   → Kỳ vọng: HTTP 400 cả hai, body liệt kê đủ giá trị hợp lệ.
+2. partnerId='not-an-id'.
+   → Kỳ vọng: HTTP 400.
+3. limit=-1, limit=0, page='abc'.
+   → Kỳ vọng: HTTP 400 cả ba — kích thước trang vô nghĩa phải bị từ chối, không bao giờ thành **không giới hạn**.
+4. partnerId=<id ma, đúng định dạng>.
+   → Kỳ vọng: HTTP 200 với total=0 — kết quả rỗng không phải là lỗi.
+**Dọn dẹp:** không.
+**Kỳ vọng tổng thể:** mọi filter không hợp lệ bị từ chối bằng 4xx nêu rõ vấn đề, và kết quả rỗng được phân biệt với lỗi.
+**Ghi chú:** FAILED có chủ đích ở bước 3 — **BUG-API-025**. `limit=-1` **có** bị từ chối bằng 400, tức guard tồn tại; nhưng `limit=0` và `page='abc'` lọt qua và endpoint trả 200 kèm **toàn bộ 1406 dòng trong một trang**. Ảnh hưởng là **dump nguyên bảng mỗi request**, không chỉ là thiếu validate. Bước 1, 2, 4 đều pass. Nên kiểm xem các endpoint list khác có dùng chung guard này không.
+
+#### PARTNER_API_DEAL_REGISTRATION_PIPELINE_037
+**Mô tả:** SA remediation POST /sa-partners-api/v1/sa/deals/{id}/link-tenant, đi qua từng guard một. Mỗi case gửi payload hợp lệ ở mọi mặt khác, nên lỗi chỉ có thể đến từ guard đang test.
+**Setup (tiền điều kiện):** Một partner sở hữu một deal `registered` (cho case sai trạng thái) và một deal WON (cho các guard phía sau). CHỈ NEGATIVE — xem ghi chú.
+**Các bước:**
+1. Link một deal vẫn đang `registered`.
+   → Mong đợi: 4xx — chỉ deal đã won mới có tenant để link.
+2. Link deal WON với tenantId không tồn tại.
+   → Mong đợi: 4xx nêu rõ tenant không biết.
+3. Link với tenantId = tenant nền tảng `blazeup-platform`, rồi với reason 9 ký tự.
+   → Mong đợi: HTTP 400 cả hai — DTO có @NotEquals(PLATFORM_TENANT_ID) và bắt reason 10-500 ký tự.
+4. Link với goLiveAt ở tương lai, trước `closedAt`, và không phải date.
+   → Mong đợi: HTTP 400 mỗi lần — goLiveAt là mốc neo tính commission.
+5. Link bằng deal id ma, rồi id sai định dạng.
+   → Mong đợi: 4xx cả hai, không bao giờ 5xx.
+6. Đọc lại deal WON.
+   → Mong đợi: vẫn chưa có `wonTenantId`, và `provisioningState` vẫn `awaited`.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** mọi link không hợp lệ đều bị từ chối và không lần nào ghi gì cả.
+**Ghi chú:** PASSED. CHỈ NEGATIVE vì bắt buộc, không phải vì bỏ sót: Guard 3 gọi `tenantExists()` trên collection tenants thật nên tenantId bịa luôn là 400, và Guard 7 chỉ cho một tenant back MỘT deal WON — nên mượn một tenant thật của staging sẽ tiêu mất nó và làm hỏng attribution đang có. Không có positive để ghép cặp theo rule 1. Đo 2026-09-24: non-WON 400, tenant ma 400, platform tenant 400, reason ngắn 400, cả ba case goLiveAt 400, deal id ma 404, deal id sai định dạng 400. Bước 6 là bước các bước khác không phủ được — một guard trả lỗi nhưng vẫn ghi thì còn tệ hơn không có guard, và không gì khác trong suite nhận ra điều đó.
+
 ### API · DEAL_APPROVAL_QUEUE
 
 #### PARTNER_API_DEAL_APPROVAL_QUEUE_001
@@ -966,6 +1050,38 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Teardown:** đóng session portal; xóa partner.
 **Expected (tổng):** Filter/pagination không hợp lệ bị từ chối (4xx), không bao giờ 5xx.
 **Ghi chú:** PASSED. BE validate cả hai (trả 400) — không lỏng.
+#### PARTNER_API_PIPELINE_MANAGEMENT_012
+**Mô tả:** SA đọc KPI pipeline trên toàn bộ partner (GET /sa-partners-api/v1/sa/deals/stats) — bản SA-wide của DASHBOARD_DATA_002, kèm khối provisioning watchdog chỉ thuộc về đây.
+**Setup (tiền điều kiện):** Bước 1–3 không cần gì (chỉ đọc). Bước 4 tạo một partner có đúng một deal.
+**Các bước:**
+1. GET aggregate SA.
+   → Mong đợi: HTTP 200; cùng scalar và bucket như bản portal, đều `int` và >= 0; total > 0 (staging có hơn một nghìn deal).
+2. Kiểm `byProvisioningState`.
+   → Mong đợi: CÓ ở đây, đủ bốn state (awaited|overdue|resolved|legacy_unknown), mỗi cái là int >= 0. Đây là surface duy nhất được phép lộ nó.
+3. Đối chiếu với GET /v1/sa/deals.
+   → Mong đợi: total của stats = total của list = sum(byStatus).
+4. Tạo một partner và đăng ký đúng một deal.
+   → Mong đợi: deal được tạo.
+5. GET aggregate lọc theo partnerId đó, rồi theo một ghost partnerId.
+   → Mong đợi: total = 1 và byStatus[<status>] = 1 với partner thật; total = 0 với ghost.
+**Teardown:** xoá partner tạo ở bước 4.
+**Mong đợi (tổng thể):** aggregate SA là toàn hệ thống, có khối watchdog, khớp với list, và thu hẹp được theo partnerId.
+**Ghi chú:** PASSED. Đo 2026-09-24: total 1412, byProvisioningState {awaited 0, overdue 81, resolved 0, legacy_unknown 0}. Bước 3 là assertion đáng giá nhất — hai view của cùng một collection mà lệch nhau nghĩa là match stage của stats đã trôi khỏi query của list, không có test nào khác bắt được. Bước 5 canh đúng failure mode của BUG-API-023: một con số SA nhận `partnerId` rồi bỏ qua sẽ báo số toàn hệ thống trên trang của một partner. LƯU Ý: feature row của endpoint này là §5.5 SA Analytics, nhưng TC của nó nằm ở section registry PIPELINE_MANAGEMENT — hai hệ phân loại khác nhau, cố ý.
+
+#### PARTNER_API_PIPELINE_MANAGEMENT_013
+**Mô tả:** Cặp negative của _012: mọi filter enum, id sai định dạng, và id đúng định dạng nhưng không khớp gì.
+**Setup (tiền điều kiện):** Không có — chỉ đọc.
+**Các bước:**
+1. Filter status, dealType, conflictStatus và provisioningState, mỗi cái đặt 'bogus'.
+   → Mong đợi: HTTP 400 mỗi lần, và mỗi body liệt kê đủ giá trị hợp lệ của filter đó.
+2. Filter với partnerId='not-an-id'.
+   → Mong đợi: HTTP 400.
+3. Filter với ghost partnerId.
+   → Mong đợi: HTTP 200, total = 0, và byStatus/byType/byProvisioningState vẫn còn đủ.
+**Teardown:** không có.
+**Mong đợi (tổng thể):** mọi filter không hợp lệ bị từ chối, và kết quả rỗng vẫn zero-filled đầy đủ.
+**Ghi chú:** PASSED. Phần kiểm bucket ở bước 3 là cố ý: zero-filling phải sống sót qua một match rỗng, nếu không dashboard SA lọc theo một partner ít hoạt động sẽ hiện ô trống ở chỗ đáng lẽ là số 0.
+
 ### API · TENANT_PROVISIONING_ATTRIBUTION
 
 > Ghi chú: các id TC của section này gom nhiều feature (close→provision→commission→attribution). Theo quyết định của user, giữ nguyên cách gom hiện tại; một số row thực sự thuộc về co-sell / commissions / CRM.
@@ -974,7 +1090,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú (BLOCKED):** Endpoint accept/lock split co-sell POST /v1/partner/deals/:id/cosell-split-accept không có trong dev build. (Gom nhầm — thực ra là một case co-sell.) Unblock khi BE ship nó.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002
-**Ghi chú (BLOCKED):** Phụ thuộc flow win/close deal (DEAL_018, deferred) + các surface tenant-provisioning & commission/event downstream không tiếp cận được từ domain này. Unblock khi win chạy an toàn được + các surface đó được expose.
+**Ghi chú (BLOCKED — v1 tách trigger):** Chuỗi close→provision→commission. **Provisioning** vẫn do win (cần DEAL_018, deferred) và stamp `goLiveAt` lên deal WON (LLD `commission-recurring-accrual` §6.3). **Commission KHÔNG còn earn lúc provisioning** — `earnOnProvisioning` một-lần đã bị cutover; commission giờ **accrue sau** từ `payment.gateway.payment.succeeded`. Nên verify phần commission cần thêm `COMMISSION_ACCRUAL_ENABLED=true` + 1 event payment-succeeded. Unblock khi win chạy an toàn VÀ có accrual flow (flag + trigger payment).
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_003
 **Ghi chú (BLOCKED):** Phụ thuộc win/close + billing/invoice downstream ("reseller close → invoice nhắm reseller"). Unblock khi win + verify billing khả dụng.
@@ -983,10 +1099,10 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú (BLOCKED):** Phụ thuộc win/close + một tenant đã pre-provision + line-item billing downstream. Unblock khi expansion-close + verify billing được expose.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_005
-**Ghi chú (BLOCKED):** Engine tính commission ở downstream không có API để đọc commission đã tính ("expansion NN → full rate"). Cùng họ với COMMISSIONS_PAYOUTS_001. Unblock khi BE expose commission đã tính.
+**Ghi chú (SUPERSEDED bởi v1 — VIẾT LẠI):** Intent gốc "expansion NN → full rate" test **band** NN/EN/EE. **v1 SHIPPED đã BỎ band** (LLD `commission-recurring-accrual` §13): chỉ còn **1 flat rate deal-stamped** áp lên toàn bộ payment, gate bởi window nhị phân (`goLiveAt + COMMISSION_ELIGIBILITY_WINDOW_MONTHS`, mặc định 12mo, exclusive). Không có band NN để assert. → Re-scope thành: "commission accrued trên payment trong-window dùng `commissionRate` deal-stamped (flat, không phải band)". **Unblock:** commission giờ accrue từ `payment.gateway.payment.succeeded` (KHÔNG phải win) — cần `COMMISSION_ACCRUAL_ENABLED=true` + deal REFERRAL/CO-SELL đã WON có `goLiveAt` + cách bắn event payment-succeeded.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_006
-**Ghi chú (BLOCKED):** Như _005 — tính commission ở downstream, không có API đọc ("expansion EN → rate thấp hơn"). Unblock khi BE expose commission đã tính.
+**Ghi chú (SUPERSEDED bởi v1 — VIẾT LẠI):** "expansion EN → rate thấp hơn" cũng test band (EN). **v1 không có band EN** — cùng flat rate deal-stamped như _005 (LLD §13). → Re-scope thành: "payment thứ 2 trong-window trên cùng deal tạo 1 row `ACCRUED` riêng ở CÙNG flat rate (billing-cadence sinh N row, không phải rate theo band — LLD §7.1)". Unblock giống _005 (accrual flow + flag + trigger payment).
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_007
 **Ghi chú (BLOCKED):** Phụ thuộc flow deal-win (DEAL_018, deferred) + một CRM connector downstream để verify "deal won → CRM close won với tenant id". Unblock khi win chạy an toàn được.
@@ -1002,6 +1118,43 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_011
 **Ghi chú (NOT_STARTED — redundant / cross-ref):** "Validate expectedCloseDate không hợp lệ → 400" đã được kiểm bởi **DEAL_REGISTRATION_PIPELINE_021** (case bad-date: `expectedCloseDate` không đúng ISO-8601 → 400, và thiếu expectedCloseDate → 400). _021 hiện PASS nên validation này đã được cover. KHÔNG blocked — chỉ là không có assertion riêng nào để thêm nếu build standalone. KHÔNG build trùng; coi như đã cover bởi _021. (Nếu sau này cần dòng standalone thì trỏ vào cùng validation ngày của POST /v1/sa/deals.)
+
+#### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_012
+**Mô tả:** SA đọc sổ attribution tenant↔partner (GET /sa-partners-api/v1/sa/partner-attributions) và một dòng theo id. Assert envelope, schema dòng, rằng filter `partnerId` và `status` thực sự thu hẹp kết quả, rằng route chi tiết trả đúng dòng được hỏi, và — bước chịu lực — rằng view SA trải trên NHIỀU HƠN MỘT partner, tức ngược hẳn với route portal.
+**Setup (tiền điều kiện):** Sổ có ít nhất một dòng. Automation không tạo được attribution (chỉ được ghi khi tenant của deal đã win được provision), nên các dòng là đọc chứ không seed; mọi id đều tìm lúc runtime và không ghi gì cả.
+**Các bước:**
+1. GET sổ với limit=50.
+   → Mong đợi: HTTP 200; envelope {statusCode, data[], total, message}; có ít nhất một dòng — sổ rỗng thì fail tiền điều kiện rõ ràng chứ không pass trên tập rỗng.
+2. Kiểm mọi dòng.
+   → Mong đợi: mỗi dòng có _id/partnerId/partnerName/clientTenantId/status/clientLifecycleState/source/arrCents/currency/attachedAt; `status` thuộc (active|terminated); `clientLifecycleState` thuộc (active|suspended|churned); `arrCents` là int; không có key password/token/secret/credential.
+3. Đếm số `partnerId` khác nhau trên trang.
+   → Mong đợi: nhiều hơn một — sổ SA không được bị chặn phạm vi theo partner; việc chặn đó thuộc về route portal.
+4. Filter theo `partnerId` của dòng đầu.
+   → Mong đợi: kết quả không rỗng, mọi dòng đều mang partnerId đó, và `total` nhỏ hơn lúc không filter.
+5. Filter theo `status` của dòng đó.
+   → Mong đợi: chỉ có dòng mang status đó.
+6. GET /partner-attributions/{id} của dòng đầu.
+   → Mong đợi: CÙNG _id và partnerId với dòng trong list — không phải một dòng bất kỳ.
+**Teardown:** không có — chỉ đọc.
+**Mong đợi (tổng thể):** sổ SA là SA-wide, filter thu hẹp thật chứ không phải nhận rồi bỏ qua, và route chi tiết trả chính xác.
+**Ghi chú:** PASSED. Đo 2026-09-23: total=10 trên **6 partner khác nhau**; filter partnerId thu hẹp 10 → 1; route chi tiết trả đúng dòng được hỏi. Bước 3 là bước chịu lực và ghép cặp với CLIENT_HEALTH_MSP_010 bước 4 — hai bên chốt đủ hai nửa của ranh giới phạm vi: bên này SA đọc được dòng của mọi partner, bên kia partner đọc dòng của người khác thì nhận đúng "not found" như id không tồn tại. Bước 4 viết để bắt đúng failure mode của BUG-API-023 (filter nhận rồi bỏ qua); ở đây không xảy ra.
+
+#### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_013
+**Mô tả:** Cặp negative của _012: giá trị ngoài enum, id sai định dạng ở cả filter lẫn path, id đúng định dạng nhưng không khớp gì, và phân trang vô nghĩa.
+**Setup (tiền điều kiện):** Không có — chỉ đọc.
+**Các bước:**
+1. Filter status='bogus', rồi clientLifecycleState='bogus'.
+   → Mong đợi: HTTP 400 cả hai, mỗi body liệt kê đủ giá trị hợp lệ.
+2. Filter partnerId='not-an-id'; GET /partner-attributions/not-an-id.
+   → Mong đợi: HTTP 400 cả hai.
+3. Filter bằng ghost partnerId; GET /partner-attributions/{ghost id}.
+   → Mong đợi: filter trả 200 với total = 0 (không khớp không phải lỗi); route chi tiết từ chối bằng 4xx, không bao giờ 200 và không bao giờ 5xx.
+4. GET sổ với limit=-1, limit=0, page='abc'.
+   → Mong đợi: HTTP 400 cả ba.
+**Teardown:** không có — chỉ đọc.
+**Mong đợi (tổng thể):** mọi filter và id không hợp lệ đều bị từ chối, và kết quả rỗng được phân biệt với lỗi.
+**Ghi chú (FAILED — chủ đích, BUG-API-028):** Bước 1–3 pass hết. Bước 4 fail — `limit=-1` bị từ chối đúng với 400 ("Invalid pagination: limit must be a positive integer"), nhưng `limit=0` và `page='abc'` đều trả 200 kèm **toàn bộ 10 dòng**. Khác với route portal, list này KHÔNG rỗng, nên caller thật sự nhận được cả sổ SA-wide trong một trang. Đây là endpoint **thứ tư** cùng root cause sau BUG-API-025 (/v1/sa/deals), BUG-API-026 (/portal/modules) và BUG-API-027 (/portal/clients) — cả bốn đều từ chối `limit=-1` và chấp nhận `limit=0`/`page=abc`, cho thấy đây là **một** validator phân trang dùng chung chứ không phải bốn chỗ sót riêng lẻ. Đề nghị sửa một lần ở tầng đó, đóng cả bốn. Cần BE xác nhận.
+
 ### API · REFERRAL_ATTRIBUTION
 
 #### PARTNER_API_REFERRAL_ATTRIBUTION_001
@@ -1018,10 +1171,43 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 
 ### API · CLIENT_HEALTH_MSP
 
-> Tất cả BLOCKED — module My Clients / Client Health / MSP (`/v1/partner/clients/*`) vắng khỏi spec đã deploy (xác nhận 2026-06-30: sa-partners-api = 68 path, 0 path /client*). Unblock khi BE ship module.
+> Đã ship một phần. Ghi chú 2026-06-30 đánh dấu cả module BLOCKED theo path `/v1/partner/clients/*`; thực tế nó ship dưới **`/v1/partner/portal/clients`**. Probe lại 2026-09-21: path cũ trả 404, path portal trả 200, và controller BE khai đúng hai route — `GET /` và `GET /:id`. `/clients/:id/health`, `/clients/:id/tickets`, consent, provisioning và handoff **không tồn tại** trong source BE, nên _002.._009 vẫn BLOCKED đúng lý do cũ.
+>
+> Một dòng ở đây là một **partner-tenant attribution**, chỉ được ghi khi tenant của deal đã win được provision xong. Automation không chạm tới bước đó (xem G1/G2), nên list rỗng là hợp lệ và không TC nào được assert có dòng.
 
 #### PARTNER_API_CLIENT_HEALTH_MSP_001
-**Ghi chú (BLOCKED):** GET /v1/partner/clients (My Clients — tenant post-close) chưa implement.
+**Mô tả:** Partner đọc danh sách tenant post-close của chính mình (GET /sa-partners-api/v1/partner/portal/clients). Chứng minh envelope, rằng list rỗng là câu trả lời đúng chứ không phải lỗi, và rằng phạm vi đọc lấy từ JWT chứ không từ query parameter. Route chi tiết thuộc về _010 — partner không tự tạo được attribution nên không có id nào của chính mình để fetch, route đó không có positive case nào automation chạm tới được.
+**Setup (tiền điều kiện):** Một partner ACTIVE có portal session và chưa có attribution nào.
+**Các bước:**
+1. GET My Clients.
+   → Mong đợi: HTTP 200; envelope {statusCode, data[], total, message}; total = 0 và data = [] với partner chưa từng win deal; `message` không rỗng.
+2. Kiểm mọi dòng trả về theo đúng portal mapper.
+   → Mong đợi: mỗi dòng có id/clientTenantId/clientTenantName/arrCents/currency/clientLifecycleState/billingModel/source/attachedAt, và KHÔNG có attributionHistory/commissionStructure/suspensionTrigger/partnerId, cũng không có key password/token/secret/credential.
+3. Tạo partner thứ hai, rồi GET lại kèm `partnerId` = id của partner thứ hai trong query.
+   → Mong đợi: `total` không đổi — phạm vi lấy từ JWT, không bao giờ từ query string.
+4. GET với limit=5, page=1.
+   → Mong đợi: tối đa 5 dòng và `total` không đổi — `total` đếm cả tập kết quả, không phải một trang.
+**Teardown:** xoá cả hai partner.
+**Mong đợi (tổng thể):** read My Clients bị chặn phạm vi theo JWT, an toàn cho portal, và coi kết quả rỗng là 200 hợp lệ.
+**Ghi chú:** PASSED. Bước 2 cố ý viết để chạy trên bất kỳ dòng nào có, thay vì skip: khi provisioning chạy được, đây chính là chỗ chứng minh response là dòng portal đã map chứ không phải document attribution thô. Bước 3 là bước chịu lực — comment BE ghi rõ `partnerId` "never comes from the query string", và bước này assert đúng điều đó.
+
+#### PARTNER_API_CLIENT_HEALTH_MSP_010
+**Mô tả:** Cặp negative của _001, và là nơi phủ route chi tiết (GET /portal/clients/{id}): attribution id không tồn tại, id sai định dạng, một id THẬT thuộc partner khác, và phân trang vô nghĩa. Route này không có positive case chạm tới được — partner không tự tạo được attribution — nên mọi case của nó đều là từ chối.
+**Setup (tiền điều kiện):** Một partner ACTIVE có portal session.
+**Các bước:**
+1. GET /portal/clients/{ghost id} với id đúng định dạng nhưng không thể tồn tại.
+   → Mong đợi: 4xx nêu rõ không tìm thấy cái gì — không bao giờ 200 kèm record, không bao giờ 5xx.
+2. GET /portal/clients/not-an-id.
+   → Mong đợi: HTTP 400.
+3. Kiểm body của cả hai lần từ chối.
+   → Mong đợi: không lần nào chứa field của client row.
+4. Tìm một attribution thuộc partner KHÁC từ list SA-wide, rồi GET nó bằng portal session của partner này.
+   → Mong đợi: không bao giờ 200; status code PHẢI giống hệt ghost id ở bước 1, và body không có field row — nếu khác nhau thì caller biết được id nào tồn tại và có thể dò id của partner khác.
+5. GET /portal/clients với limit=-1, limit=0, page='abc'.
+   → Mong đợi: HTTP 400 cả ba.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** mọi input không hợp lệ, thuộc partner khác, hoặc vô nghĩa đều bị từ chối, và không lần từ chối nào tiết lộ record có tồn tại hay không.
+**Ghi chú (FAILED — chủ đích, BUG-API-027):** Bước 1–4 pass. Bước 4 là bước chịu lực và giờ đã **chứng minh được** chứ không còn là giả định: attribution `6a72acaea5cf85c2f783548a` (partner `6a71c288a5cf85c2f7834bf8`) trả đúng cùng một 400 "not found" như ghost id — không có existence oracle. Foreign id được tìm lúc runtime từ `GET /v1/sa/partner-attributions`, không hard-code, và không ghi gì vào nó; nếu staging không còn attribution nào thì bước này tự báo UNPROVEN thay vì pass im lặng. Bước 5 fail — `limit=-1` bị từ chối đúng với 400, nhưng `limit=0` và `page='abc'` đều trả 200. Đây là endpoint thứ ba cùng root cause sau BUG-API-025 (/v1/sa/deals) và BUG-API-026 (/portal/modules) — nên sửa một lần dùng chung, không phải ba lần. Cần BE xác nhận.
 
 #### PARTNER_API_CLIENT_HEALTH_MSP_002
 **Ghi chú (BLOCKED):** GET /v1/partner/clients/:tenantId/health (metric usage/renewal/ticket) chưa implement.
@@ -1048,10 +1234,11 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú (BLOCKED):** Audit grant/revoke MSP consent dưới /v1/partner/clients/* (event với actor + timestamp, đổi truy cập ngay lập tức) chưa implement.
 ### API · COMMISSIONS_PAYOUTS
 
-> Spec (xác nhận 2026-06-30): endpoint commission ĐÃ CÓ (/v1/sa/commissions + /approve /mark-paid /dispute /clawback, /v1/partner/portal/commissions + /summary /dispute, /v1/sa/rate-table). VẮNG: waiver, spiff, approve-payout, payout/banking. Hầu hết TC lifecycle vẫn cần một commission record, vốn chỉ được tạo bởi win pipeline đã deferred (DEAL_018). Chỉ _002 và _006 build được ngay bây giờ.
+> Spec (xác nhận 2026-06-30): endpoint commission ĐÃ CÓ (/v1/sa/commissions + /approve /mark-paid /dispute /clawback, /v1/partner/portal/commissions + /summary /dispute, /v1/sa/rate-table). VẮNG: waiver, spiff, approve-payout, payout-batch.
+> **Model tạo commission v1 (LLD `commission-recurring-accrual`, SHIPPED — cập nhật 2026-09-30):** commission row tạo bởi **ACCRUAL từ `payment.gateway.payment.succeeded`** (→ status `ACCRUED`), **KHÔNG** phải win pipeline. Điều kiện để có row: `COMMISSION_ACCRUAL_ENABLED=true` + deal **referral/co-sell** đã WON (reseller bị loại) có `goLiveAt` + event payment-succeeded trong `goLiveAt + 12mo`. Clawback là **refund-driven 100%** (`payment.refunded` → adjustment), không phải "50% khi churn". **Band NN/EN/EE và waiver/payout-batch KHÔNG build ở v1.** Các TC lifecycle bên dưới bị chặn bởi accrual flow này (flag + trigger payment), không phải DEAL_018.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_001
-**Ghi chú (BLOCKED):** Tính commission downstream ("renewal EE → rate thấp nhất"); cần pipeline win→commission (deferred) và không có API để đọc rate đã tính. Unblock khi một commission có thể được tạo + rate của nó đọc được.
+**Ghi chú (SUPERSEDED bởi v1 — VIẾT LẠI):** "renewal EE → rate thấp nhất" test **band** EE — bậc thấp nhất của taper NN→EN→EE. **v1 SHIPPED không có band** (LLD `commission-recurring-accrual` §13): 1 flat rate deal-stamped, không có bậc EE, không taper theo vòng đời deal. Không có "rate thấp nhất" để assert. → DROP, hoặc re-scope về flat-rate accrual (đã cover ở TENANT_PROVISIONING_ATTRIBUTION_005/006). **Lưu ý:** commission tạo bởi accrual `payment.gateway.payment.succeeded`, không phải win pipeline.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_002
 **Mô tả test:** SA liệt kê commission ledger: GET /sa-partners-api/v1/sa/commissions trả về ledger phân trang, lọc được, đúng cấu trúc.
@@ -1065,10 +1252,10 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 4. Verify lọc theo status chỉ trả entry khớp (phụ thuộc dữ liệu).
    → Expected: status=<status của entry đầu> chỉ trả status đó. WARN-skip nếu rỗng.
 **Expected (tổng):** Commission-ledger list trả envelope đúng, phân trang, lọc được, không lộ dữ liệu nhạy cảm.
-**Ghi chú:** PASSED. Read-only (không setup/cleanup). Commission row được tạo downstream khi deal win (DEAL_018, hoãn), nên trên staging ledger rỗng hợp lệ → bước 3–4 WARN-skip; contract list vẫn đúng. Đối trọng negative (invalid filter/pagination) là _017.
+**Ghi chú:** PASSED. Read-only (không setup/cleanup). **v1:** commission row tạo bởi **accrual** (`payment.gateway.payment.succeeded` → `ACCRUED`), không phải khi deal win — với flag accrual off / không có event payment trên staging thì ledger rỗng hợp lệ → bước 3–4 WARN-skip; contract list vẫn đúng. Lưu ý status enum giờ có `accrued` (thêm vào tập status hợp lệ ở bước 3). Đối trọng negative (invalid filter/pagination) là _017.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_003
-**Ghi chú (BLOCKED, positive):** POST /v1/partner/portal/commissions/{id}/dispute đã có, nhưng dispute cần một commission {id} thật (win pipeline deferred). Negative (dispute một ghost id → 4xx) build được ngay bây giờ. Unblock khi một commission record có thể được tạo.
+**Ghi chú (BLOCKED, positive — precondition cập nhật theo v1 accrual):** POST /v1/partner/portal/commissions/{id}/dispute đã có, nhưng dispute cần một commission {id} thật. **v1: commission {id} tạo bởi ACCRUAL** (`payment.gateway.payment.succeeded` → row `ACCRUED`), KHÔNG phải win pipeline (LLD `commission-recurring-accrual`). Negative (dispute một ghost id → 4xx) build được ngay bây giờ. **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + deal referral/co-sell đã WON có `goLiveAt` + event payment-succeeded để sinh row accrued.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_004
 **Ghi chú (BLOCKED):** Waiver product-failure POST /v1/partner/commissions/:id/waiver vắng khỏi spec (2026-06-30). Unblock khi BE ship endpoint waiver.
@@ -1102,10 +1289,10 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú (BLOCKED):** Endpoint referral-link vắng (0 referral path, 2026-06-30). "Signup qua referral-link → notification + trigger commission" cần referral path.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_010
-**Ghi chú (BLOCKED):** POST /v1/sa/commissions/{id}/clawback đã có, nhưng một clawback cần một commission tồn tại (win pipeline deferred) + điều khiển timing 12 tháng.
+**Ghi chú (VIẾT LẠI cho v1 — model clawback đổi):** Gốc giả định PRD "clawback 50% khi churn trong 12 tháng". **v1 SHIPPED đã thay** (LLD `commission-recurring-accrual` §6.1/§7): clawback tự động **theo refund** — event `payment.gateway.payment.refunded` debit **100%** số refund (`CLAWBACK_REFUND_PCT = 1.0`) thành 1 row `partner_commission_adjustments` (âm, `reason=clawback`), **không** emit Kafka. Không có trigger churn-12-tháng, không có con số 50% ở v1. Endpoint thủ công `POST /v1/sa/commissions/{id}/clawback` vẫn còn (pre-v1) nhưng là action riêng. → Re-scope thành: "refund trên invoice đã accrued → 1 adjustment clawback = 100% refund (rate-weighted theo các row của invoice); refund txn trùng → không tạo adjustment thứ 2". **Unblock:** commission accrued (xem _003) + cách bắn `payment.refunded`.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_011
-**Ghi chú (BLOCKED):** Cần một reseller commission record + một churn event (cả hai downstream/không khả dụng) để assert "reseller churn → KHÔNG clawback".
+**Ghi chú (VIẾT LẠI cho v1 — reseller bị loại khỏi accrual):** Gốc: "reseller churn → KHÔNG clawback". **v1 loại reseller khỏi accrual hoàn toàn** — `ACCRUABLE_DEAL_TYPES = {REFERRAL, CO_SELL}`, reseller theo model margin (LLD `commission-recurring-accrual` §7). Nên deal reseller không bao giờ sinh commission row → không có gì để clawback. → Re-scope thành assertion mạnh/sạch hơn: "deal **reseller** đã WON + event `payment.succeeded` → **KHÔNG tạo row `ACCRUED`** (log `accrual_skip {reason: not_accruable_deal_type}`)". **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + deal reseller đã WON + trigger payment.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_012
 **Ghi chú (BLOCKED):** Endpoint SLA/quyết định waiver + ledger-credit vắng (không có waiver path, 2026-06-30). Cặp với _004/_005.
@@ -1117,10 +1304,27 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú (BLOCKED):** POST /v1/sa/rate-table đã có (bản update), nhưng "rate cache Redis bị invalidate" là một side-effect internal không có API để quan sát. Re-scope thành "update bền vững + phản ánh ở lần đọc kế tiếp" (chồng với _006), hoặc giữ blocked cho assertion cache-invalidation theo nghĩa đen.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_015
-**Ghi chú (BLOCKED):** "Ledger của pack vs channel partner giữ tách biệt" cần commission tồn tại cho cả hai loại partner (win pipeline deferred). Endpoint list đã có; dữ liệu thì chưa.
+**Ghi chú (BLOCKED — precondition cập nhật theo v1 accrual):** "Ledger của pack vs channel partner giữ tách biệt" cần commission tồn tại cho cả hai loại partner. **v1: commission tạo bởi accrual** (`payment.succeeded` → `ACCRUED`), không phải win pipeline. Endpoint list đã có; dữ liệu cần accrual flow. **Unblock:** `COMMISSION_ACCRUAL_ENABLED=true` + deal referral/co-sell đã WON trên cả hai loại partner + trigger payment.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_016
-**Ghi chú (BLOCKED):** "Chi tiết banking payout mã hóa at-rest" (CSFLE) là một thuộc tính lưu trữ internal không có API để xác nhận; không có endpoint payout/banking trong khu vực commissions (banking nằm trên partner.payoutAccounts). Verify qua review DB/infra, không qua API.
+**Mô tả:** Toàn bộ chuỗi CRUD payout account mà partner admin sở hữu — list, add, promote primary, remove — và sau MỖI call đều rà response tìm số tài khoản, routing number, IBAN thô đã gửi lên. GET/POST /sa-partners-api/v1/partner/portal/bank-accounts, PATCH …/{accountId}/primary, DELETE …/{accountId}.
+**Setup (tiền điều kiện):** Partner ACTIVE có ADMIN portal session, chưa có payout account nào. Tự chứa hoàn toàn: TC tự tạo mọi thứ nó dùng rồi tự xoá.
+**Các bước:**
+1. GET danh sách payout account.
+   → Mong đợi: HTTP 200, list rỗng — nếu không thì các bước add phía dưới không chứng minh được gì.
+2. POST một account US `bank_transfer` đầy đủ (mọi field bắt buộc + tuỳ chọn).
+   → Mong đợi: HTTP 201; mọi field không nhạy cảm echo nguyên vẹn; `payoutMethod` thuộc (bank_transfer|swift|wise|paypal); `status` = `unverified`; có `accountNumberMasked`, kết thúc bằng đúng 4 số cuối thật và KHÔNG bằng số đầy đủ.
+3. GET lại danh sách.
+   → Mong đợi: đúng 1 account và nó là `isPrimary` — account duy nhất phải là đích nhận tiền. Không có field `accountNumber`/`routingNumber`/`iban` thô, và không có GIÁ TRỊ nào của chúng ở bất kỳ đâu trong body.
+4. POST account thứ hai khác hẳn (SWIFT/IBAN), rồi PATCH nó thành primary.
+   → Mong đợi: có `ibanMasked` và không phải IBAN đầy đủ; PATCH trả về CẢ HAI account và đúng một cái mang `isPrimary` — cái vừa promote. Việc hạ cái cũ xảy ra trong cùng một write atomic.
+5. DELETE account không phải primary.
+   → Mong đợi: HTTP 200 chỉ còn account kia, vẫn primary.
+6. DELETE account cuối cùng (chính là primary).
+   → Mong đợi: HTTP 200, list rỗng — primary được xoá khi nó là cái cuối cùng.
+**Teardown:** xoá partner cha (account đã xoá sạch).
+**Mong đợi (tổng thể):** chuỗi chạy trọn vẹn và không định danh ngân hàng thô nào bị trả về.
+**Ghi chú:** PASSED. **Note BLOCKED cũ sai một nửa, đúng một nửa.** Sai: nó ghi "không có endpoint payout/banking" — `/v1/partner/portal/bank-accounts` có thật và đủ cả 4 route. Đúng: CSFLE *mã hoá at-rest* là thuộc tính lưu trữ, vẫn không xác nhận được qua API. Cái TC này chứng minh là **nửa quan sát được qua API** của §9.3 — định danh thô không bao giờ bị trả về, assert bằng cách rà từng response tìm đúng dãy số đã gửi, chứ không chỉ kiểm tên field vắng mặt (`toBankAccountView` strip `accountNumber`/`routingNumber`/`iban`). Mã hoá at-rest vẫn cần review DB/infra. Guard 409 khi xoá primary nằm ở _021, guard trùng ở _022.
 
 #### PARTNER_API_COMMISSIONS_PAYOUTS_017
 **Mô tả test:** Đối trọng negative của _002 (commission ledger): filter/pagination không hợp lệ bị từ chối với code đúng (không bao giờ 5xx). Tất cả case đều chạy (thu thập failure).
@@ -1149,6 +1353,99 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 10. Non-numeric rate ('abc') → **400** 'rate must be a number'.
 **Expected (tổng):** Mọi upsert rate không hợp lệ bị từ chối 400 và không có gì được lưu (rate phải 0..1). Không cần teardown (không ghi).
 **Ghi chú:** PASSED. Dòng negative mới ghép với _006.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_021
+**Mô tả:** Cặp negative của _016, phủ ba lớp từ chối trên các route payout: validate DTO, guard trạng thái, và phân quyền admin-only chứng minh bằng một session `viewer` thật.
+**Setup (tiền điều kiện):** Partner ACTIVE có ADMIN portal session, cộng thêm một user thứ hai trên CÙNG partner được invite với role `viewer` và đã login.
+**Các bước:**
+1. POST account thiếu lần lượt từng field bắt buộc (`label`, `accountHolderName`, `bankName`, `countryCode`, `currency`, `payoutMethod`).
+   → Mong đợi: HTTP 400 mỗi lần, và message nêu đúng tên field thiếu.
+2. POST với `payoutMethod='carrier_pigeon'`.
+   → Mong đợi: HTTP 400 liệt kê bank_transfer|swift|wise|paypal.
+3. Thêm 2 account, rồi DELETE cái PRIMARY trong khi cái kia vẫn còn.
+   → Mong đợi: HTTP 409 — không được để partner mất đích nhận tiền đã chọn.
+4. DELETE và PATCH …/primary với account id ma.
+   → Mong đợi: 4xx cả hai, không bao giờ 2xx và không bao giờ 5xx.
+5. Dùng session VIEWER gọi cả bốn route.
+   → Mong đợi: HTTP 403 tất cả, và các write bị từ chối không tạo ra account nào.
+**Teardown:** TC tự xoá account nó thêm; xoá partner cha.
+**Mong đợi (tổng thể):** mọi payload sai, mọi chuyển trạng thái phi pháp và mọi caller không phải admin đều bị từ chối.
+**Ghi chú:** PASSED. Đo 2026-09-23: cả sáu field bắt buộc thiếu → 400 nêu đúng tên; enum sai → 400 liệt kê đủ 4 method; xoá primary khi còn cái khác → **409**; id ma → **404** cả DELETE lẫn PATCH; viewer → **403** cả bốn route. Bước 5 chính là case "role khác" của rule 5, và được chứng minh bằng login thật chứ không phải đọc guard.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_022
+**Mô tả:** Rule 8 (duplicate/idempotency) tách thành TC riêng: thêm cùng một payout account hai lần.
+**Setup (tiền điều kiện):** Partner ACTIVE có ADMIN portal session và đã có sẵn một account.
+**Các bước:**
+1. POST lại đúng payload đó lần hai.
+   → Mong đợi: HTTP 400 báo account đã có trên hồ sơ, VÀ partner vẫn chỉ giữ đúng MỘT account.
+2. POST cùng số tài khoản nhưng khác khoảng trắng (` 0001 2345 6789 `).
+   → Mong đợi: cũng bị bắt là trùng — guard so sánh giá trị đã chuẩn hoá, không phải chuỗi thô. Nếu được nhận thì partner vẫn không được có hai cái.
+3. POST một account khác hẳn (SWIFT/IBAN).
+   → Mong đợi: được nhận, id mới, hai account trên hồ sơ, và primary vẫn là account đầu tiên.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** gửi lại bị từ chối thẳng và không bao giờ sinh bản ghi thứ hai, trong khi account khác biệt vẫn được nhận.
+**Ghi chú:** PASSED. Câu trả lời của BE là TỪ CHỐI (không phải idempotent no-op): 400 "This payout account is already on file for the partner". Bước 2 xác nhận `normaliseAccountField` bỏ định dạng trước khi so. Bước 3 tồn tại để chứng minh guard **đúng** chứ không phải **quá rộng** — một guard từ chối tất cả thì vẫn pass bước 1–2.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_019
+**Mô tả:** GET /sa-partners-api/v1/sa/commissions/summary — bốn tổng cents trên toàn bộ partner. Assert envelope, kiểu dữ liệu, dấu, và rằng các tổng không mâu thuẫn với sổ mà nó tổng hợp.
+**Setup (tiền điều kiện):** Không có — chỉ đọc.
+**Các bước:**
+1. GET summary.
+   → Mong đợi: HTTP 200; `data` có totalEarnedCents, totalPendingCents, totalPaidCents, clawbackExposureCents; `message` không rỗng.
+2. Kiểm từng tổng.
+   → Mong đợi: là `int` (không bao giờ float — cents tích luỹ sai số làm tròn trên cả sổ là lỗi thật, và không bao giờ bool) và `>= 0`, kể cả clawback exposure vốn là độ lớn dương.
+3. Kiểm vật liệu credential.
+   → Mong đợi: không có key password/token/secret/credential.
+4. Đối chiếu với GET /v1/sa/commissions.
+   → Mong đợi: nếu sổ rỗng thì mọi tổng phải bằng 0 — một con số không có dòng nào đứng sau là con số bịa. Nếu sổ có dòng thì ít nhất một tổng > 0 và totalPaidCents <= totalEarnedCents.
+**Teardown:** không có.
+**Mong đợi (tổng thể):** summary đúng định dạng, không âm, và suy ra từ sổ.
+**Ghi chú:** PASSED. Đo 2026-09-23: cả bốn tổng bằng 0, và sổ rỗng — nhất quán. Không thể assert một con số cụ thể (commission chỉ accrue sau lần thanh toán đầu của tenant, xem G1), và đó chính là lý do bước 4 tồn tại: nó là thứ sẽ bắt được một summary ngừng đọc sổ, và vẫn còn ý nghĩa khi commission thật xuất hiện.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_023
+**Mô tả:** Cặp negative của _019, và là nơi phủ GET /v1/sa/commissions/{id}. Automation không tạo được commission (G1), nên mọi case của route đó đều là từ chối.
+**Setup (tiền điều kiện):** Không có — chỉ đọc.
+**Các bước:**
+1. GET /v1/sa/commissions/{ghost id}.
+   → Mong đợi: 4xx — không bao giờ 200 kèm record, không bao giờ 5xx.
+2. GET /v1/sa/commissions/not-an-id.
+   → Mong đợi: HTTP 400.
+3. GET /v1/sa/commissions/summary lần nữa, coi `summary` như một id theo nghĩa đen.
+   → Mong đợi: HTTP 200 kèm các tổng — `summary` khai trước `:id` và không bao giờ được để `:id` nuốt mất.
+4. List với status='bogus', partnerId='not-an-id', rồi ghost partnerId.
+   → Mong đợi: 400, 400, rồi 200 với total = 0.
+**Teardown:** không có.
+**Mong đợi (tổng thể):** mọi id và filter không hợp lệ đều bị từ chối, và kết quả rỗng được phân biệt với lỗi.
+**Ghi chú:** PASSED. Đo 2026-09-23: ghost id → 400, id sai định dạng → 400, `summary` vẫn resolve về route riêng của nó, status sai → 400, partnerId sai định dạng → 400, ghost partnerId → 200 rỗng. Bước 3 canh một lỗi hồi quy thứ tự route mà nếu không có thì sẽ vô hình: nếu `:id` bị khai trước, `summary` sẽ bắt đầu trả "commission not found" và dashboard SA đơn giản là trống trơn.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_020
+**Mô tả:** Partner đọc sổ commission của chính mình (GET /sa-partners-api/v1/partner/portal/commissions). Sổ rỗng là câu trả lời đúng với mọi partner trên staging, nên TC assert những tính chất sống sót qua điều đó chứ không assert nội dung.
+**Setup (tiền điều kiện):** Partner ACTIVE có portal session.
+**Các bước:**
+1. GET sổ.
+   → Mong đợi: HTTP 200; envelope {statusCode, data[], total, message}; `total` không nhỏ hơn số dòng trả về; không dòng nào có key password/token/secret/credential.
+2. Filter theo cả tám status (earned, accrued, pending_approval, approved, paid, disputed, clawback, cancelled).
+   → Mong đợi: HTTP 200 mỗi lần, và dòng nào trả về cũng mang đúng status được hỏi.
+3. GET /portal/commissions/summary rồi đối chiếu với bước 1.
+   → Mong đợi: có đủ bốn tổng cents, và nếu sổ rỗng thì MỌI tổng phải bằng 0 — một con số không có dòng nào đứng sau là con số bịa. Nếu sổ có dòng thì ít nhất một tổng > 0.
+4. Lặp lại bước 1 nhưng truyền `partnerId` của người khác vào query.
+   → Mong đợi: `total` không đổi — controller lấy partnerId từ JWT hai lần và không bao giờ từ query.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** sổ bị chặn phạm vi theo JWT, enum được nối đủ, và khớp với summary của chính nó.
+**Ghi chú:** PASSED. Không có commission nào trên toàn staging — một dòng chỉ accrue sau lần thanh toán đầu của tenant đã provision (G1) — nên NỘI DUNG sổ là bất khả và TC nói thẳng điều đó thay vì giả vờ. Bước 3 là bước còn giữ giá trị khi commission xuất hiện: nó so hai view của cùng một dữ liệu chứ không kiểm một hằng số, nên sổ rỗng mà tổng khác 0 thì fail hôm nay, và summary trôi lệch thì fail về sau. Bước 2 không chứng minh được filter THU HẸP trên sổ rỗng, nhưng chứng minh được một status hợp lệ không bị từ chối — đúng thứ sẽ hỏng nếu enum trôi khỏi schema.
+
+#### PARTNER_API_COMMISSIONS_PAYOUTS_024
+**Mô tả:** Cặp negative của _020: status ngoài enum, và phân trang vô nghĩa.
+**Setup (tiền điều kiện):** Partner ACTIVE có portal session.
+**Các bước:**
+1. GET sổ với status='bogus'.
+   → Mong đợi: HTTP 400 liệt kê đủ tám status hợp lệ.
+2. GET sổ với limit=-1, limit=0, page='abc'.
+   → Mong đợi: HTTP 400 cả ba.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** mọi status và giá trị trang không hợp lệ đều bị từ chối.
+**Ghi chú (FAILED — chủ đích, BUG-API-030):** Bước 1 pass. Bước 2 fail — `limit=-1` bị từ chối đúng với 400 ("Invalid pagination: limit must be a positive integer") nhưng `limit=0` và `page='abc'` đều trả 200. Cả hai trả 0 dòng, nhưng chỉ vì sổ rỗng: giá trị đó được CHẤP NHẬN chứ không bị từ chối, nên số dòng không chứng minh gì về guard. Đây là endpoint **thứ năm** cùng root cause sau BUG-API-025 (/v1/sa/deals), 026 (/portal/modules), 027 (/portal/clients) và 028 (/v1/sa/partner-attributions). Năm lần bỏ sót độc lập đúng cùng hai giá trị là điều không hợp lý — đây là một validator phân trang dùng chung, sửa một lần nên đóng được cả năm. Cần BE xác nhận.
+
 ### API · PARTNER_ACCOUNT_MANAGEMENT
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_001
@@ -1387,6 +1684,38 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Expected (tổng):** Re-grant không được duplicate một active cert cùng loại.
 **Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker BUG-API-001). Gap: re-grant trả 201 và tạo một active cert THỨ HAI (list hiện 2). BE nên renew hoặc reject (409). Xác nhận với BE.
 
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_023
+**Mô tả:** SA cập nhật partner: PATCH /sa-partners-api/v1/sa/partners/{id} lưu mọi field mà UpdatePartnerDto nhận, **chứng minh bằng cách đọc lại partner** chứ không tin response của lệnh ghi.
+**Điều kiện tiên quyết:** Có sẵn một partner — tạo qua fixture `seeded_partner` để lệnh DELETE được đăng ký trước mọi assert.
+**Các bước:**
+1. PATCH partner với 6 field (name, legalName, website, taxId, internalNotes, type).
+   → Kỳ vọng: HTTP 200; `_id` trong response đúng partner đã hỏi.
+2. GET lại partner.
+   → Kỳ vọng: cả 6 field giữ đúng giá trị đã gửi; `type` nằm trong enum (channel|referral|msp|system_integrator).
+3. Kiểm bản ghi đúng cấu trúc.
+   → Kỳ vọng: có _id/code/email/status/tier; không có key password/token/secret/credential.
+4. PATCH lại **y hệt** lần nữa.
+   → Kỳ vọng: idempotent — đây là update chứ không phải create, bản ghi không đổi.
+**Dọn dẹp:** fixture xoá partner.
+**Kỳ vọng tổng thể:** mọi field khai báo đều persist, và lặp lại cùng một update thì không đổi gì.
+**Ghi chú:** PASSED. Đọc lại là điểm mấu chốt: nếu chỉ assert response của PATCH thì test vẫn xanh kể cả khi không có gì được lưu.
+
+#### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_024
+**Mô tả:** Bản negative của _023: id ma, id sai định dạng, enum ngoài spec, body rỗng, và các field **không có** trong UpdatePartnerDto.
+**Điều kiện tiên quyết:** Có sẵn một partner (`seeded_partner`), để nguyên trạng thái **PENDING** — chính status là thứ bước 4 kiểm.
+**Các bước:**
+1. PATCH với id ma, rồi id sai định dạng.
+   → Kỳ vọng: cả hai bị từ chối. Tự chứng minh — chính endpoint này phải báo.
+2. PATCH type='wizard'.
+   → Kỳ vọng: HTTP 400, body liệt kê đủ mọi giá trị hợp lệ.
+3. PATCH body rỗng.
+   → Kỳ vọng: no-op, không phải lỗi — UpdatePartnerDto không có field bắt buộc nào.
+4. PATCH `_id`, `code`, `status` — **từng cái một** (đều không có trong DTO).
+   → Kỳ vọng: mỗi cái bị bỏ qua hoặc từ chối bằng 4xx; **không bao giờ 5xx**, và không bao giờ được ghi.
+**Dọn dẹp:** fixture xoá partner.
+**Kỳ vọng tổng thể:** mọi update không hợp lệ bị từ chối, và không field định danh hay vòng đời nào ghi được qua PATCH.
+**Ghi chú:** FAILED có chủ đích ở bước 4 — **BUG-API-024**, ba lỗi riêng biệt. (a) `_id` trả **HTTP 500** và body lộ nguyên văn lỗi của storage engine: *"Plan executor error during findAndModify :: caused by :: Performing an update on the path '_id' would modify the immutable field '_id'"*. (b) `code` **bị ghi** — mã partner sửa được. (c) `status` **bị ghi**, đưa partner đang PENDING thẳng sang `active` mà không qua `POST /partners/{id}/approve`, tức bỏ qua FSM 3 bước ở PRD §12.1 B3 (SA Review → Legal Countersign → SA Final Approval). Bước 1–3 đều pass. **(c) cần BE xác nhận** — có thể là quyền override cố ý cho SA chứ không phải bypass; (a) và (b) là lỗi trong mọi trường hợp.
+
 ### API · PARTNER_USERS
 
 #### PARTNER_API_PARTNER_USERS_001
@@ -1480,6 +1809,38 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 2. Malformed userId ('not-an-id') → **400** Bad Request, message "invalid id".
 **Expected (tổng):** userId không tồn tại → 404; malformed userId → 400; không bao giờ 5xx.
 **Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker **BUG-API-016**). Gap (case 1): một userId đúng định dạng nhưng không tồn tại trả **400** ("not found") thay vì **404** — cùng root cause với gap get-by-id của deals. Case 2 đúng. Xác nhận với BE.
+#### PARTNER_API_PARTNER_USERS_015
+**Mô tả:** SA gỡ khoá tài khoản partner user (POST /sa-partners-api/v1/sa/partner-users/{userId}/unlock), chứng minh bằng hiệu ứng từ đầu đến cuối chứ không bằng status code.
+**Setup (tiền điều kiện):** Partner ACTIVE và một user THROWAWAY trên đó — tuyệt đối không dùng tài khoản portal dùng chung, vì khoá nó sẽ chặn mọi test partner khác trong 30 phút.
+**Các bước:**
+1. Login bằng user throwaway với tempPassword từ invite.
+   → Mong đợi: HTTP 200 — nếu không thì hỏng fixture chứ không phải hỏng endpoint.
+2. Gửi mật khẩu sai liên tiếp cho tới khi tài khoản bị khoá (tối đa 8 lần).
+   → Mong đợi: tài khoản bị khoá; TC ghi lại số lần cần thiết chứ không giả định trước một con số.
+3. Thử mật khẩu ĐÚNG trong lúc đang khoá.
+   → Mong đợi: bị từ chối — một lockout mà vẫn cho mật khẩu đúng đi qua thì chỉ là hình thức.
+4. SA gọi unlock.
+   → Mong đợi: HTTP 200, `data.userId` đúng user được hỏi, và có `message`.
+5. Login lại bằng mật khẩu đúng.
+   → Mong đợi: HTTP 200.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** unlock thật sự xoá lockout, chứ không chỉ báo thành công.
+**Ghi chú:** PASSED, khoá ở lần sai thứ 4 (cửa sổ 30 phút). Status code không chứng minh được gì trên endpoint này — đo 2026-09-24, unlock trả 200 kể cả với user không hề bị khoá — và đó chính là lý do bước 5 tồn tại. Ngưỡng được ĐO lúc chạy chứ không ghim cứng: nó chưa có trong §9.1 lẫn §5.1 (đã nêu ở OQ-28), nên hard-code số 4 sẽ biến một thay đổi chính sách hợp lệ thành test đỏ, còn viết như hiện tại thì TC chỉ đỏ khi tài khoản không còn bị khoá nữa.
+
+#### PARTNER_API_PARTNER_USERS_016
+**Mô tả:** Cặp negative của _015: user id không tồn tại, id không phải id, và trường hợp gọi lặp.
+**Setup (tiền điều kiện):** Partner ACTIVE và một user THROWAWAY trên đó.
+**Các bước:**
+1. Unlock một user id đúng định dạng nhưng không tồn tại.
+   → Mong đợi: 4xx nêu rõ user nào — thành công im lặng trên một id không thể tồn tại sẽ giấu lỗi gõ nhầm của SA.
+2. Unlock 'not-an-id'.
+   → Mong đợi: HTTP 400.
+3. Unlock một user KHÔNG bị khoá, hai lần liên tiếp, rồi login bằng user đó.
+   → Mong đợi: cả hai lần trả cùng một code (đo được: 200), và sau đó user vẫn login được.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** target không hợp lệ bị từ chối, và unlock thừa thì vô hại.
+**Ghi chú:** PASSED. Unlock là HÀNH ĐỘNG thay đổi trạng thái chứ không phải create, nên công thức 409-hoặc-idempotent của rule 8 không áp dụng máy móc — câu hỏi thật là BE muốn gì khi không có gì để xoá, và câu trả lời đo được là 200 no-op. Bước 3 assert điều đó, cộng thêm tính chất quan trọng hơn cả status code: sau hai lần unlock thừa, tài khoản vẫn dùng được — unlock no-op không làm hỏng một tài khoản vốn không cần sửa gì.
+
 ### API · TERRITORIES
 
 #### PARTNER_API_TERRITORIES_001
@@ -1670,13 +2031,156 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 7. page=0 → **400** 'non-negative'.
 **Expected (tổng):** Mọi filter/pagination không hợp lệ bị từ chối với 400; không bao giờ 5xx. expiringWithinDays giới hạn 1..365.
 **Ghi chú:** PASSED.
-### API · TEAM_REFERRAL_LINKS
+### API · PARTNER_TEAM
 
-#### PARTNER_API_TEAM_REFERRAL_LINKS_001
-**Ghi chú (BLOCKED):** Endpoint referral vắng khỏi spec đã deploy (xác nhận 2026-06-30: 0 referral path). GET /v1/partner/referral-links chưa implement. Unblock khi BE ship API referral-links.
+PRD §4.10 "Partner Team Management + Referral Links" — partner org quản lý **thành viên của
+chính mình**. KHÔNG phải "Partner Directory" phía SA (§5.1, nơi SA operator duyệt danh sách
+**tổ chức partner**); cái đó là `PARTNER_UI_SA_PARTNER_MODULE_*`. Path của BE ghi `directory`
+nhưng feature là danh sách team của chính org này.
 
-#### PARTNER_API_TEAM_REFERRAL_LINKS_002
-**Ghi chú (BLOCKED):** Endpoint referral vắng (0 referral path, 2026-06-30). POST /v1/partner/referral-links (tạo link tracking campaign) chưa implement.
+Đổi tên từ `TEAM_REFERRAL_LINKS` ngày 2026-09-16: §4.10 là một feature gồm hai nửa, nửa team
+đã deploy còn nửa referral thì chưa, và tên cũ chỉ phủ đúng cái nửa **không tồn tại**. Cùng tên
+với `UI · PARTNER_TEAM` là có chủ đích — một feature, hai tầng.
+
+#### PARTNER_API_PARTNER_TEAM_001
+**Mô tả:** Partner admin mời thành viên rồi đọc danh sách team: POST /sa-partners-api/v1/partner/directory/users, sau đó GET list và GET theo id trả về cùng một record, giới hạn trong partnerId của người gọi.
+**Điều kiện tiên quyết:** SA tạo + duyệt partner (pending → active), một partner user đăng nhập lấy session portal.
+**Các bước:**
+1. Mời thành viên với đủ field của DTO (email, firstName, lastName, role='sales').
+   → Kỳ vọng: HTTP 201; body có userId + email + role.
+2. Kiểm mọi field gửi lên được echo nguyên vẹn.
+   → Kỳ vọng: email/firstName/lastName/role giống hệt lúc gửi; partnerId == partner của session; role nằm trong enum (admin|sales|finance|viewer); status là chuỗi không rỗng.
+3. Lấy danh sách team (limit=50).
+   → Kỳ vọng: HTTP 200; envelope {statusCode, data[], total, message}; total là int ≥ 2 (session user + thành viên vừa mời); thành viên có mặt kèm _id/email/role/status/firstName/lastName.
+4. Kiểm scoping partner trên danh sách.
+   → Kỳ vọng: partnerId của mọi dòng == partner của session.
+5. Kiểm không lộ thông tin đăng nhập trong danh sách.
+   → Kỳ vọng: không có key password/token/secret/credential/tempPassword ở dòng nào (response **invite** có tempPassword là đúng thiết kế; danh sách thì không được).
+6. Đọc lại session user theo id.
+   → Kỳ vọng: HTTP 200 và data.userId == đúng id đã hỏi.
+**Dọn dẹp:** xoá partner cha (kéo theo thành viên).
+**Kỳ vọng tổng thể:** partner admin mời được thành viên và đọc lại được, giới hạn trong partner của mình, không lộ credential.
+**Ghi chú:** FAILED có chủ đích ở bước 6 — **BUG-API-022**. `GET /v1/partner/directory/users/{userId}` **bỏ qua path param**: hỏi session user lại trả về thành viên vừa mời, còn id ma (`000000000000000000000000`) hay id sai định dạng (`not-an-id`) đều trả HTTP 200 với đúng record đó. Scoping partner vẫn đúng — partner thứ hai hỏi thành viên của partner này sẽ nhận **user của chính nó**, không bao giờ nhận record này — nên đây là **sai dữ liệu**, không phải rò chéo partner (§9.1 còn nguyên). Bước 1–5 đều pass. Cần xác nhận với BE.
+
+#### PARTNER_API_PARTNER_TEAM_002
+**Mô tả:** Bản negative của _001: payload mời không hợp lệ và id thành viên không hợp lệ trên /sa-partners-api/v1/partner/directory/users.
+**Điều kiện tiên quyết:** SA tạo + duyệt partner; một partner user đăng nhập lấy session portal.
+**Các bước:**
+1. Mời thiếu `email`.
+   → Kỳ vọng: HTTP 400 (DirectoryInvitePartnerUserDto bắt buộc).
+2. Mời thiếu `firstName`.
+   → Kỳ vọng: HTTP 400.
+3. Mời thiếu `lastName`.
+   → Kỳ vọng: HTTP 400.
+4. Mời với role='wizard' (ngoài enum).
+   → Kỳ vọng: HTTP 400 kèm danh sách giá trị hợp lệ.
+5. Mời với email='not-an-email'.
+   → Kỳ vọng: HTTP 400 "email must be an email".
+6. GET userId ma (ObjectId đúng định dạng nhưng không tồn tại).
+   → Kỳ vọng: HTTP 404 not-found. Tự chứng minh — chính endpoint đang test phải báo, nên không cần GET ở service nguồn.
+7. GET userId sai định dạng ('not-an-id').
+   → Kỳ vọng: HTTP 400 invalid-id.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** mọi input sai đều bị từ chối bằng 4xx nêu rõ vấn đề; không bao giờ 5xx.
+**Ghi chú:** FAILED có chủ đích ở bước 6–7 — **BUG-API-022**, cùng nguyên nhân gốc với bước 6 của _001: cả hai id đều trả HTTP 200 kèm record thật. Bước 1–5 đều pass, tức BE validate DTO đúng; chỉ phần tra cứu theo id là hỏng. Tất cả case chạy trong một lượt (gom lỗi). Email trùng **cố ý không** nằm ở đây — nó là _008 (rule 8). Cần xác nhận với BE.
+
+#### PARTNER_API_PARTNER_TEAM_003
+**Mô tả:** Hai rollup theo từng thành viên: GET /sa-partners-api/v1/partner/directory/users/{userId}/deals và /commissions, cả hai đều bắt buộc query `partnerId`. Kiểm envelope, deal vừa đăng ký có xuất hiện không, rollup có **phân biệt** giữa các thành viên không, và partner khác có đọc được các dòng này bằng cách truyền partnerId của partner này không.
+**Điều kiện tiên quyết:** SA tạo + duyệt partner; một partner user đăng nhập lấy session portal; mời một thành viên **không đăng ký gì**; session user đăng ký một deal.
+**Các bước:**
+1. GET deals của session user (bắt buộc partnerId).
+   → Kỳ vọng: HTTP 200; envelope {statusCode, data[], total, message}; total là int; deal vừa đăng ký có mặt.
+2. Kiểm dòng deal đúng cấu trúc và đúng partner.
+   → Kỳ vọng: có _id/partnerId/dealType/status/prospectName; partnerId == partner của session; status thuộc enum (registered|approved|in_progress|won|lost|expired|rejected); không có key password/token/secret/credential/tempPassword.
+3. GET commissions của thành viên.
+   → Kỳ vọng: HTTP 200; data[] là list; total là int. Ledger **rỗng vẫn hợp lệ** — commission chỉ sinh ra sau khi deal WON.
+4. Partner **thứ hai** truyền partnerId của partner này vào query.
+   → Kỳ vọng: list rỗng. JWT phải quyết định phạm vi, không phải query param.
+5. So rollup của session user với rollup của thành viên.
+   → Kỳ vọng: khác nhau — thành viên chưa đăng ký gì.
+6. Truyền partnerId của partner khác từ session này.
+   → Kỳ vọng: list rỗng.
+**Dọn dẹp:** xoá cả hai partner.
+**Kỳ vọng tổng thể:** rollup trả đúng bản ghi của thành viên đó, phạm vi do JWT quyết định.
+**Ghi chú:** FAILED có chủ đích ở bước 5 — **BUG-API-023**. `GET /directory/users/{userId}/deals` **bỏ qua cả hai tham số**: thành viên không đăng ký gì vẫn nhận deal của partner, userId ma cũng vậy, và truyền partnerId của partner khác vẫn trả về dòng của partner này. Bản ghi deal **không có field registeredBy/createdBy nào**, nên khả năng là **data model chưa có** phần gán deal cho thành viên, chứ không phải filter hỏng — cần hỏi BE là cái nào. **Bước 4 PASS**: scoping theo JWT vẫn đúng, **không rò chéo partner**. Bước 1–4 đều pass. Cần xác nhận với BE.
+
+#### PARTNER_API_PARTNER_TEAM_004
+**Mô tả:** Bản negative của _003: thiếu query bắt buộc `partnerId`, status enum sai, và id ma / sai định dạng ở cả path lẫn query.
+**Điều kiện tiên quyết:** SA tạo + duyệt partner; một partner user đăng nhập lấy session portal. **Không** đăng ký deal nào — TC này nói về việc từ chối, không phải dữ liệu.
+**Các bước:**
+1. GET deals rồi commissions, bỏ `partnerId`.
+   → Kỳ vọng: HTTP 400 cả hai ("partnerId must be a mongodb id").
+2. GET deals với status='bogus'.
+   → Kỳ vọng: HTTP 400, body liệt kê đủ mọi giá trị hợp lệ.
+3. GET deals với partnerId='not-an-id'.
+   → Kỳ vọng: HTTP 400.
+4. GET deals với userId ma, rồi userId sai định dạng.
+   → Kỳ vọng: HTTP 404 và HTTP 400. Tự chứng minh — chính endpoint đang test phải báo.
+5. GET deals với `partnerId` ma.
+   → Kỳ vọng: HTTP 404, và không bao giờ trả dòng của partner này.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** mọi input sai bị từ chối bằng 4xx nêu rõ vấn đề; không bao giờ 5xx.
+**Ghi chú:** FAILED có chủ đích ở bước 4–5 — **BUG-API-023**, cùng nguyên nhân với _003. Cả hai id đều trả HTTP 200 thay vì 404/400, nên một thành viên **không tồn tại** đọc lên thành một thành viên **chưa có bản ghi nào**. Partner trong TC này không có deal nên **không lộ gì ở đây**; _003 cho thấy cùng lời gọi đó trả về deal của thành viên khác khi có dữ liệu. Bước 1–3 pass, tức BE validate `partnerId` và status enum đúng. Cần xác nhận với BE.
+
+#### PARTNER_API_PARTNER_TEAM_005
+**Mô tả:** Partner admin reset mật khẩu một thành viên và mở khoá thành viên bị khoá: POST /sa-partners-api/v1/partner/directory/users/{userId}/reset-password và /unlock. Cả hai được kiểm bằng **hiệu lực thật trên login**, không phải chỉ nhìn mã 2xx — `tempPassword` từ invite chính là mật khẩu đăng nhập của thành viên, nên chứng minh được mật khẩu cũ đã chết và mật khẩu mới dùng được. **Không cần đọc email.**
+**Điều kiện tiên quyết:** SA tạo + duyệt partner; một partner user đăng nhập lấy session portal; mời một thành viên **THROWAWAY** chỉ dùng cho TC này (lấy userId, email, tempPassword). Tuyệt đối không dùng account portal dùng chung — khoá hoặc reset nó sẽ làm hỏng mọi test partner khác trong 30 phút.
+**Các bước:**
+1. Đăng nhập bằng thành viên vừa mời với `tempPassword` của invite.
+   → Kỳ vọng: HTTP 200. Hỏng ở đây là hỏng tiền đề, không phải lỗi của feature.
+2. Reset mật khẩu thành viên.
+   → Kỳ vọng: HTTP 200; body có `tempPassword` **khác** cái của invite, và `userId` == đúng thành viên đã hỏi.
+3. Đăng nhập bằng mật khẩu **CŨ**.
+   → Kỳ vọng: HTTP 401 — reset đã thực sự có hiệu lực.
+4. Đăng nhập bằng mật khẩu **MỚI**.
+   → Kỳ vọng: HTTP 200 — credential trả về dùng được thật.
+5. Nhập sai mật khẩu tới khi tài khoản bị khoá.
+   → Kỳ vọng: tài khoản bị khoá; đo 2026-09-17 thì lần sai **thứ 4** trả "Too many failed login attempts. Try again in 30 minutes."
+6. Đăng nhập bằng mật khẩu **ĐÚNG** khi đang bị khoá.
+   → Kỳ vọng: vẫn bị từ chối — khoá không phải cho có.
+7. Mở khoá thành viên.
+   → Kỳ vọng: HTTP 200, `userId` == đúng thành viên đã hỏi.
+8. Đăng nhập lại bằng mật khẩu đúng.
+   → Kỳ vọng: HTTP 200 — khoá đã được gỡ.
+**Dọn dẹp:** xoá partner cha (kéo theo thành viên throwaway).
+**Kỳ vọng tổng thể:** cả hai hành động làm đúng điều chúng báo: credential cũ chết, credential mới sống, và thành viên bị khoá chỉ đăng nhập lại được sau khi unlock.
+**Ghi chú:** PASSED. Khác với các endpoint đọc ở _001/_003, cặp này **tôn trọng** path param `{userId}`. Ngưỡng khoá **không được quy định trong PRD** (§9.1 không nhắc lockout) — 4 lần / 30 phút là thực tế staging hôm nay, nên nếu BE đổi thì bước 5 sẽ đỏ chứ không trôi qua im lặng.
+
+#### PARTNER_API_PARTNER_TEAM_009
+**Mô tả:** Bản negative của _005: userId ma, userId sai định dạng, và hành vi khi **lặp lại** mỗi hành động.
+**Điều kiện tiên quyết:** SA tạo + duyệt partner; một partner user đăng nhập lấy session portal; mời một thành viên throwaway.
+**Các bước:**
+1. reset-password và unlock với userId ma.
+   → Kỳ vọng: cả hai bị từ chối kèm thông báo not-found. Tự chứng minh — chính endpoint đang test phải báo.
+2. reset-password và unlock với userId sai định dạng.
+   → Kỳ vọng: HTTP 400 "Invalid id" cả hai.
+3. Reset hai lần liên tiếp, rồi thử mật khẩu của lần **thứ nhất**.
+   → Kỳ vọng: hai lần reset trả mật khẩu khác nhau, và mật khẩu đầu **không còn đăng nhập được** — credential cấp lại phải thay thế credential trước.
+4. Unlock hai lần trên thành viên **không** bị khoá.
+   → Kỳ vọng: no-op, không 5xx và không bị từ chối — gỡ cái không có không phải là lỗi.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** mục tiêu không hợp lệ bị từ chối, và lặp lại hành động cho hành vi đúng thiết kế.
+**Ghi chú:** PASSED. Công thức 409-hoặc-idempotent của rule 8 **không** áp dụng ở đây — không endpoint nào tạo resource, nên lặp lại là *mutating action* và hành vi đúng phải **probe** chứ không suy đoán (2026-09-17: reset cấp lại, unlock no-op). userId ma bị từ chối bằng **400** thay vì 404; đó là quy ước ghost-id toàn service (helper `Method.findById` dùng chung ném `BadRequestException`), được theo dõi như một **họ lỗi** chứ không mở bug riêng cho từng endpoint — TC này assert **việc từ chối** và thông báo not-found, tức phần thực sự bảo vệ người gọi.
+
+#### PARTNER_API_PARTNER_TEAM_008
+**Mô tả:** Mời trùng email hai lần thì bị từ chối và không tạo thành viên thứ hai (rule 8 — duplicate/idempotency cho POST tạo resource).
+**Điều kiện tiên quyết:** SA tạo + duyệt partner; một partner user đăng nhập lấy session portal.
+**Các bước:**
+1. Mời một thành viên.
+   → Kỳ vọng: HTTP 201 kèm userId.
+2. Mời lại **đúng email đó**.
+   → Kỳ vọng: HTTP 409 Conflict, "A partner user with email ... already exists" (đã probe 2026-09-16).
+3. Lấy danh sách và đếm số thành viên mang email đó.
+   → Kỳ vọng: đúng 1 — 409 mà vẫn ghi thêm dòng là lỗi nặng hơn.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** bản trùng bị từ chối bằng 409 và danh sách không đổi.
+**Ghi chú:** PASSED. Tách thành TC riêng thay vì bước cuối của _001: một lần trùng mà fail ở đó sẽ nhuộm đỏ cả luồng create và đọc lên thành "invite hỏng".
+
+#### PARTNER_API_PARTNER_TEAM_006
+**Ghi chú (BLOCKED):** Đổi tên từ `PARTNER_API_TEAM_REFERRAL_LINKS_001`. Endpoint referral vắng khỏi spec đã deploy (xác nhận 2026-06-30: 0 referral path; vẫn vắng trong 101 route của `v26 @ 0b35609`, 2026-09-16). GET /v1/partner/referral-links chưa implement. Unblock khi BE ship API referral-links.
+
+#### PARTNER_API_PARTNER_TEAM_007
+**Ghi chú (BLOCKED):** Đổi tên từ `PARTNER_API_TEAM_REFERRAL_LINKS_002`. POST /v1/partner/referral-links (tạo link tracking campaign) chưa implement. Lưu ý thêm: §3-E và §8.4 (Referral Attribution) đang là **Rejected / On Hold** trong `partner_requirement.xlsx`, nên có thể sẽ không được build.
 
 ### API · RESOURCES_SANDBOX
 
@@ -1701,6 +2205,34 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Teardown:** đóng session portal; xóa partner.
 **Expected (tổng):** Dashboard partner trả về schema KPI well-formed, không lộ credential.
 **Ghi chú:** PASSED. Endpoint PARTNER-PORTAL (cần một partner JWT, không phải SA token; SA token → 401). Không có negative invalid-input (không param); 401 auth thuộc về Auth & Access Control. Idempotency: GET read-only → N/A.
+#### PARTNER_API_DASHBOARD_DATA_002
+**Mô tả:** Partner đọc KPI pipeline của chính mình (GET /sa-partners-api/v1/partner/portal/deals/stats). Chứng minh aggregate bị chặn phạm vi theo caller, được tính thật chứ không phải stub, và không mang khối provisioning vốn chỉ dành cho SA.
+**Setup (tiền điều kiện):** Partner ACTIVE có portal session, chưa có deal nào.
+**Các bước:**
+1. GET stats của partner chưa đăng ký gì.
+   → Mong đợi: HTTP 200; total/openCount/conflictedCount/wonEstimatedAcvCents đều có, kiểu `int`, >= 0; byStatus đủ 7 status và byType đủ 4 type, mọi giá trị = 0 — aggregate được đặc tả là zero-filled nên thiếu key là lỗi.
+2. Kiểm payload có `byProvisioningState` không.
+   → Mong đợi: KHÔNG có. Đây là field SA-only (AC-19/AC-20, §2.1), nó lộ watchdog provisioning nội bộ, gồm cả số tenant đang OVERDUE.
+3. Đăng ký một deal rồi GET stats lại.
+   → Mong đợi: total = 1; byStatus[<status của deal>] = 1; byType[<type của deal>] = 1; sum(byStatus) = total.
+4. Filter theo status của deal đó, rồi theo một status khác.
+   → Mong đợi: lần lượt total = 1 và total = 0.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** aggregate KPI bị chặn theo caller, đếm đúng, và không có field SA-only.
+**Ghi chú:** PASSED. Bước 2 là bước chịu lực. Swagger example CÓ show `byProvisioningState` ở route này vì hai surface dùng chung một response DTO, tức đọc spec sẽ ra kết luận ngược với quy tắc; đo 2026-09-24 thì implementation đúng còn example mới là cái sai. Bước 3 là thứ chứng minh aggregate được tính thật chứ không stub — chỉ chạm được ở đây vì partner sở hữu chính dữ liệu nó đếm.
+
+#### PARTNER_API_DASHBOARD_DATA_003
+**Mô tả:** Cặp negative của _002: status ngoài enum, và search không khớp gì.
+**Setup (tiền điều kiện):** Partner ACTIVE có portal session.
+**Các bước:**
+1. GET stats với status='bogus'.
+   → Mong đợi: HTTP 400 liệt kê đủ bảy status hợp lệ.
+2. GET stats với từ khoá search không khớp prospect nào.
+   → Mong đợi: HTTP 200 với total = 0 và các bucket vẫn zero-filled đầy đủ — không bao giờ là lỗi.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** filter không hợp lệ bị từ chối, kết quả rỗng được phân biệt với thất bại.
+**Ghi chú:** PASSED. Bước 2 quan trọng hơn vẻ ngoài của nó: dashboard phải phân biệt được "không có kết quả" với "request lỗi", và nếu bỏ bucket khi không khớp thì nó sẽ render ô trống thay vì số 0.
+
 ### API · CRM_INTEGRATION
 
 > Tất cả BLOCKED — CRM connector downstream (event được consume bởi service connectors/CRM, không tiếp cận được từ domain này). Các event quan sát được qua API đã được cover bởi DEAL_010 / AUDIT_LOG_*; side-effect phía CRM ngoài phạm vi ở đây. Unblock khi việc verify CRM được expose cho QA.
@@ -1792,6 +2324,40 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Teardown:** đóng session portal; xóa partner.
 **Expected (tổng):** Rate theo tier được trả về dưới dạng một list.
 **Ghi chú:** PASSED. List rate rỗng cho một partner tier-registered trên staging (vẫn là một list well-formed). Không param (không có input-negative); GET → idempotency N/A.
+#### PARTNER_API_PARTNER_PORTAL_007
+**Mô tả:** Partner đọc danh mục module (GET /sa-partners-api/v1/partner/portal/modules) và chứng chỉ của team mình (GET .../portal/team/certifications). Phần chứng chỉ được chứng minh **bằng hiệu lực**: danh sách rỗng, SA cấp một cái, rồi cùng lời gọi đó trả về nó.
+**Điều kiện tiên quyết:** Một partner ACTIVE có session portal và **chưa có** chứng chỉ nào.
+**Các bước:**
+1. GET danh mục module.
+   → Kỳ vọng: HTTP 200; envelope {statusCode, data[], total, message}; total > 0; mọi dòng có `_id` và `name` không rỗng.
+2. Lọc module theo `name`, lấy tên từ bước 1.
+   → Kỳ vọng: chỉ các dòng đúng tên đó, và có ít nhất một dòng.
+3. GET chứng chỉ của team **trước khi** cấp.
+   → Kỳ vọng: total = 0 — nếu không thì bước 4 chẳng chứng minh được gì.
+4. SA cấp `sales_certified` cho session user, rồi GET lại chứng chỉ team.
+   → Kỳ vọng: total = 1; dòng có _id/partnerId/userId/certificationType/status/earnedAt; đúng loại chứng chỉ; status thuộc (active|expired|revoked); partnerId đúng partner gọi; không có key password/token/secret/credential.
+5. Lọc theo `status`, rồi theo `certificationType`.
+   → Kỳ vọng: mỗi filter chỉ trả dòng khớp, và **không** trả trang rỗng.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** cả hai endpoint đọc đều giới hạn đúng partner, đúng cấu trúc, và **phản ánh trạng thái** chứ không chỉ trả 200.
+**Ghi chú:** PASSED. Bước 3 tồn tại để bước 4 có ý nghĩa — nếu partner đã sẵn có chứng chỉ thì assert "có chứng chỉ trong danh sách" vẫn pass kể cả khi lệnh cấp không hoạt động.
+
+#### PARTNER_API_PARTNER_PORTAL_008
+**Mô tả:** Bản negative của _007: giá trị ngoài enum, filter không khớp gì, phân trang sai, và view `groupByCategory`.
+**Điều kiện tiên quyết:** Một partner ACTIVE có session portal.
+**Các bước:**
+1. Chứng chỉ team với status='bogus', rồi certificationType='bogus'.
+   → Kỳ vọng: HTTP 400 cả hai; body của status liệt kê active|expired|revoked.
+2. Module lọc theo tên không khớp gì.
+   → Kỳ vọng: HTTP 200 với trang rỗng — không khớp **không phải** lỗi.
+3. Module với limit=-1, limit=0, page='abc'.
+   → Kỳ vọng: HTTP 400 cả ba.
+4. Module với groupByCategory=true.
+   → Kỳ vọng: các dòng **dùng được** — tên nhóm và các module trong nhóm.
+**Dọn dẹp:** xoá partner cha.
+**Kỳ vọng tổng thể:** input sai bị từ chối, kết quả rỗng phân biệt với lỗi, và view gom nhóm dùng được.
+**Ghi chú:** FAILED có chủ đích ở bước 3–4 — **BUG-API-026**. (a) `groupByCategory=true` trả 200 với 10 dòng, mỗi dòng **đúng bằng** `{"_id": "undefined"}` — chuỗi JavaScript `undefined` nằm ở chỗ đáng lẽ là id, không tên nhóm, không thành viên; view này **không dùng được**. (b) **Không** giá trị phân trang nào được validate: `limit=-1`, `limit=0`, `page='abc'` đều trả 200 kèm toàn bộ danh mục. Phần phân trang cùng họ với BUG-API-025 trên `/v1/sa/deals`, nhưng ở đây tệ hơn — `/sa/deals` ít nhất còn từ chối `limit=-1`, endpoint này không từ chối gì. Bước 1–2 pass.
+
 #### PARTNER_API_PARTNER_PORTAL_012
 **Mô tả test:** Đối trọng negative của _002 (own deal by id): một ghost / malformed deal id bị từ chối với code đúng. Tất cả case đều chạy (thu thập failure).
 **Chuẩn bị (điều kiện tiên quyết):** Mint một session partner-portal.
@@ -1812,6 +2378,40 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Teardown:** đóng session portal; xóa partner.
 **Expected (tổng):** Filter cert không hợp lệ bị từ chối với 400; không bao giờ 5xx.
 **Ghi chú:** PASSED.
+
+#### PARTNER_API_PARTNER_PORTAL_009
+**Mô tả:** Partner đọc ba catalogue mà deal-registration wizard dùng: GET /sa-partners-api/v1/partner/portal/plans, GET .../plans/{id} và GET .../countries. Chứng minh envelope, rằng mọi dòng đều là bản PUBLISHED thuộc edition chuẩn, rằng khoá plan là duy nhất, và route chi tiết trả đúng plan mà list đã quảng cáo.
+**Setup (tiền điều kiện):** Partner ACTIVE có portal session. Catalogue phải có ít nhất một plan — automation không publish plan được.
+**Các bước:**
+1. GET catalogue.
+   → Mong đợi: HTTP 200, `data` là list không rỗng.
+2. Kiểm mọi dòng.
+   → Mong đợi: có _id/planId/displayName/edition/billingCycle/currency/basePrice/status; `status` = `published`; `edition` thuộc (starter|pro|enterprise) — custom/bespoke bị service loại, nên một dòng ngoài tập này nghĩa là filter đã hỏng; không có key password/token/secret/credential.
+3. Kiểm khoá trên toàn catalogue.
+   → Mong đợi: `_id` duy nhất và `planId` duy nhất — picker không được phép hiện trùng.
+4. GET .../plans/{_id} của dòng đầu.
+   → Mong đợi: cùng `_id`, và `planId`/`displayName`/`edition`/`billingCycle`/`currency` giống hệt dòng trong list; `status` vẫn `published`.
+5. GET lookup quốc gia.
+   → Mong đợi: ít nhất 200 dòng (~250 nước theo ISO 3166-1; ngắn hơn nghĩa là lookup bị cắt và partner không đăng ký deal được cho các thị trường thiếu); mỗi dòng có _id/name/alpha2Code/alpha3Code không rỗng; alpha2Code 2 ký tự, alpha3Code 3 ký tự; `_id` BẰNG alpha2Code vì picker submit `_id`; không trùng alpha2Code.
+6. Search quốc gia với 'viet', 'VIET' và 'Viet'.
+   → Mong đợi: mỗi lần trả ít nhất một dòng, mọi tên trả về đều chứa từ khoá không phân biệt hoa thường, và kết quả ngắn hơn danh sách đầy đủ.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** catalogue chỉ lộ plan published thuộc edition chuẩn, route chi tiết trả chính xác.
+**Ghi chú:** PASSED. Đo 2026-09-23: 3 plan, edition {starter, pro, enterprise}, tất cả `published`. Bước 2 là bước chịu lực — list này nuôi deal wizard, nên một plan chưa publish hoặc bespoke lọt vào là nó sẽ được chào cho partner.
+
+#### PARTNER_API_PARTNER_PORTAL_010
+**Mô tả:** Cặp negative của _009: khoá plan đúng như tài liệu, khoá không khớp gì, và khoá không phải id.
+**Setup (tiền điều kiện):** Partner ACTIVE có portal session và một plan mượn từ catalogue để lấy khoá.
+**Các bước:**
+1. GET .../plans/{planId slug} bằng `planId` của một plan catalogue vừa trả về.
+   → Mong đợi: HTTP 200 — route khai là `plans/:planId` và @ApiParam của nó ghi rõ là slug kebab-case.
+2. GET .../plans/{ghost id}.
+   → Mong đợi: HTTP 404 nêu rõ khoá không tìm thấy.
+3. GET .../plans/{'not-a-plan', '%20', 'null'}.
+   → Mong đợi: HTTP 400 mỗi cái, không bao giờ 200 và không bao giờ 5xx.
+**Teardown:** xoá partner cha.
+**Mong đợi (tổng thể):** khoá theo tài liệu thì resolve được, mọi khoá không hợp lệ đều bị từ chối.
+**Ghi chú (FAILED — chủ đích, BUG-API-029):** Bước 2–3 pass: ghost key → 404 nêu tên, cả ba khoá sai định dạng → 400. Bước 1 fail — `full-modules-ss` chính là `planId` của plan mà catalogue trả về ở call ngay trước đó, vậy mà nó trả **400 "Invalid id"**, trong khi `_id` của đúng dòng đó thì 200. `getPlanByPlanId` query `{ _id: planId }` dù route, @ApiParam ("Kebab-case plan key, e.g. pro-annual") và docstring service đều nói là slug. Tham số tên `planId` là thứ duy nhất nó KHÔNG nhận, nên client viết theo OpenAPI spec sẽ fail 100%. Đây là lỗi contract chứ không phải crash — deal wizard chạy được vì nó truyền `_id`. Cần BE xác nhận bên nào là chuẩn.
 
 ### API · SECURITY_COMPLIANCE
 

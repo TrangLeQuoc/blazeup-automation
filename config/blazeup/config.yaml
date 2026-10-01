@@ -80,6 +80,26 @@ modules:
       DEAL_APPROVAL_QUEUE: 11
       PIPELINE_MANAGEMENT: 12
       SECURITY_COMPLIANCE: 13   # _001 (audit-trail: actor/action/reasoning/correlationId) buildable; _002/_003 BLOCKED
+      # /v1/partner/directory/users* — the partner org managing its OWN team (PRD §4.10).
+      # Same NAME as ui.PARTNER_TEAM (=6) on purpose: one feature, two layers. The numbers
+      # differ because the ui: and api: maps were filled independently and renumbering one
+      # would rewrite every TC id in it.
+      # NOT "partner directory": that label belongs to ui.SA_PARTNER_MODULE, where an SA
+      # operator browses partner ORGANISATIONS (PRD §5.1). The backend path says
+      # `directory` but means this org's own member list.
+      PARTNER_TEAM: 14
+      # /v1/partner/portal/clients* — the partner's own post-close tenants ("My Clients",
+      # PRD §4.6), served from `partner_tenant_attribution`. Name kept as the test plan
+      # spells it: 8 of the 9 rows in this section ARE the client-health / MSP features
+      # (health, tickets, consent, provisioning, handoff), which BE has not shipped — only
+      # _001 (the list + detail read) exists. Renaming to PARTNER_CLIENTS would fit that one
+      # row and mislead on the other eight. Decided 2026-09-21.
+      CLIENT_HEALTH_MSP: 15
+      # /v1/sa/partner-attributions* — the SA-wide tenant<->partner attribution ledger
+      # (PRD §7.5). Name kept exactly as the test plan spells it; unlike section 15 there was
+      # never an alternative on the table. A row is written only once a won deal's tenant is
+      # provisioned, so automation can read and filter this ledger but cannot create a row.
+      TENANT_PROVISIONING_ATTRIBUTION: 16
   MARKETPLACE:
     number: 7
   # SA-Dashboard "Audit Log" nav PAGE — distinct from PARTNER.api.AUDIT_LOG (=6),

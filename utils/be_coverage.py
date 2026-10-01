@@ -406,13 +406,26 @@ def extract_be_endpoints_from(
     for rel in sorted(controllers):
         text = controllers[rel]
         lines = text.splitlines()
-        cm = _CTRL_RE.search(text)
-        prefix = (cm.group(1) if cm else "").strip("/")
-        km = _CLASS_RE.search(text)
-        cls = km.group(1) if km else Path(rel).stem
-        own = tuple(
-            sorted(s for s, body in specs.items() if re.search(rf"\b{re.escape(cls)}\b", body))
-        )
+
+        # ONE FILE CAN DECLARE SEVERAL CONTROLLERS. Reading only the first @Controller gave
+        # every route in the file that prefix — measured 2026-09-17 on
+        # partner-users.sa.controller.ts, which holds `v1/sa/partner-users` AND
+        # `v1/partner/auth`: three deprecated auth routes were reported as
+        # `/v1/sa/partner-users/{users,invite,users/:userId/reset-password}`, paths that do
+        # not exist. Three rows of the build plan were written against them.
+        #
+        # So: collect every @Controller and every exported class with its line, then bind
+        # each route to the NEAREST PRECEDING one.
+        ctrls = [
+            (text[: m.start()].count("\n"), m.group(1).strip("/")) for m in _CTRL_RE.finditer(text)
+        ]
+        klasses = [(text[: m.start()].count("\n"), m.group(1)) for m in _CLASS_RE.finditer(text)]
+
+        def _nearest(pairs, line_no, fallback):
+            found = [v for ln, v in pairs if ln <= line_no]
+            return found[-1] if found else fallback
+
+        own_cache: dict[str, tuple[str, ...]] = {}
 
         for i, line in enumerate(lines):
             rm = _ROUTE_RE.match(line)
@@ -422,6 +435,15 @@ def extract_be_endpoints_from(
             if not handler:
                 unpaired.append(f"{rel}:{i + 1}: {line.strip()}")
                 continue
+            prefix = _nearest(ctrls, i, "")
+            cls = _nearest(klasses, i, Path(rel).stem)
+            if cls not in own_cache:
+                own_cache[cls] = tuple(
+                    sorted(
+                        s for s, body in specs.items() if re.search(rf"\b{re.escape(cls)}\b", body)
+                    )
+                )
+            own = own_cache[cls]
             hits = tuple(s for s in own if re.search(rf"\b{re.escape(handler)}\b", specs[s]))
             sub = (rm.group(2) or "").strip("/")
             endpoints.append(

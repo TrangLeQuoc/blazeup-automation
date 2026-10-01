@@ -9,11 +9,11 @@ One looping test = one test case = one START/FINISH banner + one verdict. The lo
 soft-collects failures (does NOT stop at the first bad page), then reports a single
 verdict naming exactly which page(s) failed.
 
-Primary nav (verified live 2026-07-23): Dashboard, Deals, Commissions, Resources,
-My Apps. The plan's step text named "My Pipeline / My Clients / Training", but the
-live portal exposes Deals / Resources / My Apps instead ("My Pipeline" is the Deals
-page, titled "Deal Pipeline"); the test drives the REAL nav — see
-``PartnerShellLocators`` for the mapping note.
+Primary nav (re-verified live 2026-09-30): Dashboard, Deals, Commissions, Directory,
+Resources — "My Apps" was removed from the portal. The plan's step text named
+"My Pipeline / My Clients / Training", but the live portal exposes Deals / Resources
+instead ("My Pipeline" is the Deals page, titled "Deal Pipeline"); the test drives the
+REAL nav — see ``PartnerShellLocators`` for the mapping note.
 """
 
 import pytest
@@ -29,7 +29,6 @@ PAGES = list(PartnerShellLocators.SECTIONS.keys())
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-UI-001: the 'apps' (My Apps) section content fails to load. Confirm with FE.
 async def test_partner_ui_partner_portal_shell_001(make_partner_page, request):
     """PARTNER_UI_PARTNER_PORTAL_SHELL_001: every primary nav page loads via URL (no MFE error).
 

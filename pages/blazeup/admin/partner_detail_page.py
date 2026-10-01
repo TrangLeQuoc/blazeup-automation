@@ -89,12 +89,31 @@ class PartnerDetailPage(BasePage):
             "(no success toast and the form is still open)."
         )
 
-    async def open_partner(self, company: str, timeout: int = 60_000) -> None:
+    async def filter_status(self, status: str) -> None:
+        """Switch the Directory 'Status' filter to *status* (Active/Pending/Suspended/Inactive)."""
+        logger.log("STEP", "Directory: filter Status = {}", status)
+        await self._main().get_by_role("button", name=L.STATUS_FILTER_BUTTON).first.click()
+        option = (
+            self.page.locator(L.STATUS_FILTER_OPTION)
+            .filter(has_text=re.compile(rf"^\s*{re.escape(status)}\s*$"))
+            .first
+        )
+        await option.wait_for(state="visible", timeout=10_000)
+        if await option.get_attribute("aria-selected") != "true":
+            await option.click()
+        await self.page.keyboard.press("Escape")  # close the listbox if it stays open
+
+    async def open_partner(
+        self, company: str, status: str = "Pending", timeout: int = 60_000
+    ) -> None:
         """Open the just-onboarded partner's detail: back to the Directory, find its row, click it."""
         # After onboarding, the page is on the onboard form — go back to the Directory
-        # and wait for the newly-created partner row to appear, then click it.
+        # and wait for the newly-created partner row to appear, then click it. The
+        # Directory defaults to Status = Active, so switch to the partner's status
+        # (a fresh onboard is Pending) or its row never renders.
         await self.goto("/partners")
         await self._poll_main(40, 60)
+        await self.filter_status(status)
         row = self._main().locator("tbody tr").filter(has_text=company).first
         await row.wait_for(state="visible", timeout=timeout)
         await row.click()
@@ -156,6 +175,19 @@ class PartnerDetailPage(BasePage):
                 return value
         return ""
 
+    async def wait_status(self, expected: tuple[str, ...], timeout: int = 15_000) -> str:
+        """Poll the status badge until it reads one of *expected*; return the last value read.
+
+        The badge re-renders asynchronously after an action (refetch), so a single read
+        right after the confirm races it. Never raises — the caller owns the assertion.
+        """
+        deadline = time.perf_counter() + timeout / 1000
+        while True:
+            value = await self.status()
+            if value in expected or time.perf_counter() >= deadline:
+                return value
+            await self.page.wait_for_timeout(500)
+
     # ── Partner-actions workflow (Approve → Deactivate) ───────────────────────
     async def open_actions_menu(self, timeout: int = 15_000) -> None:
         """Open the 'Partner actions' kebab menu (Radix dropdown)."""
@@ -180,19 +212,21 @@ class PartnerDetailPage(BasePage):
             await self.page.wait_for_timeout(500)
         raise AssertionError("partner did not reach 'Active' after Approve within the timeout")
 
-    async def deactivate_partner(self) -> str:
+    async def deactivate_partner(self, reason: str = "QA-AUTO: suspend via UI test") -> str:
         """Confirm the Deactivate (suspend) action; return the resulting banner text.
 
-        Opens Actions → Deactivate, then confirms the 'Deactivate Partner' dialog.
-        Returns the <main> text after the request settles so the caller can assert
-        on the success/error banner (the confirm dialog collects no 'reason').
+        Opens Actions → Deactivate, fills the required 'reason' in the 'Deactivate
+        Partner' dialog (the confirm button stays disabled until it is filled), then
+        confirms. Returns the <main> text after the request settles so the caller can
+        assert on the success/error banner.
         """
-        logger.log("STEP", "Actions → Deactivate (confirm)")
+        logger.log("STEP", "Actions → Deactivate (reason + confirm)")
         await self.open_actions_menu()
         await self.menu_item(L.ACTION_DEACTIVATE).click()
         # (No sleep here: the dialog wait below IS the wait for the menu item to act.)
         dlg = self.page.get_by_role("dialog").filter(has_text="Deactivate Partner").first
         await dlg.wait_for(state="visible", timeout=10_000)
+        await dlg.locator(L.DEACTIVATE_REASON).first.fill(reason)
         await dlg.get_by_role("button", name=L.ACTION_DEACTIVATE, exact=True).first.click()
         await self._wait_deactivate_outcome(dlg)
         return await self.detail_text()

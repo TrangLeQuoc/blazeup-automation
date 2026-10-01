@@ -16,8 +16,10 @@ response means the service is up; 502/timeout means it is down or not deployed.
 """
 
 import asyncio
+import contextlib
 import io
 import re
+import sys
 import time
 import tokenize
 from pathlib import Path
@@ -188,6 +190,14 @@ def check_services(
     Returns ``0`` when every service is up, ``1`` when at least one is down,
     ``2`` when the API host is missing/invalid (config error).
     """
+    # The table below prints ✅/❌/⚠ and an em dash. On Windows the console defaults to
+    # cp1252, which cannot encode any of them: `python -m runner.<domain>.health` died with
+    # UnicodeEncodeError partway through the table — after the header, so it looked like the
+    # health probe itself had crashed. Measured 2026-09-16.
+    for stream in (sys.stdout, sys.stderr):
+        with contextlib.suppress(Exception):
+            stream.reconfigure(encoding="utf-8")
+
     labels = {**_SERVICE_LABELS, **(labels or {})}
     services = sorted(services)
     host = str(api_base_url or "").rstrip("/")

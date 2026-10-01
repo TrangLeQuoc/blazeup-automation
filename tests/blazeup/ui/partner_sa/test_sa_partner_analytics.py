@@ -17,7 +17,6 @@ from utils.log_helper import async_step
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-UI-006: analytics query 400s ("limit must not exceed 100"). Confirm with BE.
 async def test_partner_ui_sa_partner_module_011(make_page):
     """PARTNER_UI_SA_PARTNER_MODULE_011: the SA partner-programme analytics dashboard.
 
@@ -25,11 +24,9 @@ async def test_partner_ui_sa_partner_module_011(make_page):
     shell — the summary KPI cards, the Deal Funnel stages, and the Tier Distribution /
     Top Partners sections — then that its data loaded with no backend error.
 
-    Live status: the dashboard shell renders (KPIs + funnel + sections), but a
-    paginated analytics query fails with "Server Error — Invalid pagination: limit
-    must not exceed 100" (a backend defect). Steps [1-2] PASS (shell renders); step
-    [3] FAILS with "confirm with BE" on the server error. This surfaces the real
-    defect rather than faking a green.
+    Live status (re-verified 2026-10-01): PASSES — the shell renders and the data loads
+    with no backend error (BUG-UI-006, the 'limit must not exceed 100' pagination 400,
+    is fixed).
     """
     analytics = make_page(PartnerAnalyticsPage)
 

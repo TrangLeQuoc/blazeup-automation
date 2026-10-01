@@ -109,11 +109,12 @@ class PartnerShellLocators:
     # REAL nav, not the plan's assumed labels.
     # Live nav = 6 items (re-verified 2026-07-29): a "Directory" (team members) item
     # was added since the original 5-item snapshot.
+    # Live nav = 5 items (re-verified 2026-09-30): "My Apps" was REMOVED from the portal
+    # (no nav item; /apps now renders a 404 page) — dropped from SECTIONS.
     SECTIONS: dict[str, dict[str, str]] = {
         "dashboard": {"label": "Dashboard", "route": "/dashboard", "marker": "Tier & Performance"},
         "deals": {"label": "Deals", "route": "/deals", "marker": "Deal Pipeline"},
         "commissions": {"label": "Commissions", "route": "/commissions", "marker": "Commissions"},
         "directory": {"label": "Directory", "route": "/directory", "marker": "Directory"},
         "resources": {"label": "Resources", "route": "/resources", "marker": "Resources"},
-        "apps": {"label": "My Apps", "route": "/apps", "marker": "My Apps"},
     }

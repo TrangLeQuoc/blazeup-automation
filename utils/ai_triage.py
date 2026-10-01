@@ -263,6 +263,27 @@ def _rule_category(text: str) -> str:
 # confirmed defect this run).
 _INFRA_CATEGORIES = frozenset({"env_auth", "flaky_slow", "deploy_mfe"})
 
+# Categories a Bug-Tracker hit is allowed to upgrade to app_bug. A TC already in the
+# tracker is a human-confirmed defect, a stronger signal than the log heuristics — so
+# it overrides even flaky_slow (the register-wizard "Locator.click timeout" is a real
+# bug, not a slow load). env_auth/deploy_mfe stay: those mean the test could not run
+# at all this run, so the tracked bug is not what reproduced.
+_UPGRADE_WHEN_TRACKED = frozenset({"unknown", "test_or_ui_bug", "flaky_slow"})
+
+
+def _tracked_tc_ids() -> set[int]:
+    """Numeric TC ids that already have a Bug Tracker row (any status).
+
+    A failing TC already in the tracker is a KNOWN defect. Best-effort: if the tracker
+    is absent (e.g. CI) or unreadable, return empty so triage falls back to heuristics.
+    """
+    try:
+        from utils.bug_tracker import DEFAULT_TRACKER, load_tracker
+
+        return set(load_tracker(DEFAULT_TRACKER).keys())
+    except Exception:  # noqa: BLE001 — tracker enrichment is best-effort
+        return set()
+
 
 def _tc_markers(tc: str) -> list[str]:
     """Registry markers for a 'TC-<id>' token (empty on any lookup failure)."""
@@ -337,6 +358,17 @@ def collect_fail_groups(log_text: str) -> list[FailGroup]:
     for g in groups.values():
         if g.category not in _INFRA_CATEGORIES and _is_known_be_gap_group(g):
             g.category = "app_bug"
+
+    # Tracker-aware upgrade: a group is a KNOWN defect if ANY of its TCs already has a
+    # Bug Tracker row. Groups are signature-based (every TC in a group failed for the
+    # SAME reason), so one tracked TC means the whole group is that known bug →
+    # reclassify to app_bug so it displays correctly AND reconciles against the tracker
+    # (turns the recurring "N flaky / M unknown" noise into KNOWN OPEN rows).
+    tracked = _tracked_tc_ids()
+    if tracked:
+        for g in groups.values():
+            if g.category in _UPGRADE_WHEN_TRACKED and any(_tc_num(tc) in tracked for tc in g.tcs):
+                g.category = "app_bug"
     return list(groups.values())
 
 

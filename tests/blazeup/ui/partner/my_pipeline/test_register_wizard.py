@@ -213,21 +213,21 @@ async def test_partner_ui_my_pipeline_002(make_partner_page):
     )
 
 
-# Clearly-malformed domains that a "domain format" validation must reject.
-_INVALID_DOMAINS = ("@@@", "ab cd", "notadomain", "http://x.com")
+# Domains violating the field rule "letters, numbers, and hyphens only — no dots or symbols"
+# (the Domain field is a bare subdomain label, e.g. "my-company"). NOTE: a dot-less label like
+# "notadomain" is VALID under this rule, so it must not be listed here.
+_INVALID_DOMAINS = ("@@@", "ab cd", "acme.com", "http://x.com")
 
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-UI-003: no domain-format validation — garbage domains accepted. Confirm with FE.
 async def test_partner_ui_my_pipeline_003(make_partner_page):
     """PARTNER_UI_MY_PIPELINE_003: an invalid domain must be rejected with a format error.
 
-    Negative (fail-by-design). With valid company/contact and a malformed domain, the
-    wizard SHOULD reject it (block Next or flag the field). On this build it does NOT:
-    every malformed domain (even '@@@' / 'ab cd') is accepted — Next stays enabled and
-    the Domain field is not flagged. There is no domain-format validation, so this
-    asserts the correct behaviour and fails until FE adds it. All cases run (collected).
+    Negative. With valid company/contact and a domain that breaks the field rule
+    (letters, numbers, hyphens only — no dots or symbols), the wizard must reject it:
+    block Next or flag the field (inline "Use letters, numbers, and hyphens only…").
+    All cases run (collected).
     """
     shell = make_partner_page(PartnerShellPage)
     wiz = make_partner_page(RegisterDealWizard)

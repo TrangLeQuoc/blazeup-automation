@@ -4,12 +4,8 @@ PARTNER_UI_SA_PARTNER_MODULE_015 — from the SA Partner Detail page, an active
 partner is suspended via Partner actions → Deactivate. Expected: the partner
 transitions out of Active (Suspended/Inactive) and portal access is revoked.
 
-Fail-by-design (be_gap): the "Deactivate Partner" confirm dialog collects NO
-'reason', but the deactivate API *requires* a non-empty reason string. The FE
-sends the request without one, so the BE rejects it ("reason should not be
-empty / must be a string / must be shorter than or equal to 2000 characters")
-and the UI shows "Failed to deactivate partner / Server Error" while the partner
-stays Active. No SA can suspend a partner through the UI. Confirm with BE.
+The "Deactivate Partner" dialog now has a required 'reason' textarea (FE fix for
+BUG-UI-008, verified 2026-09-30); the page object fills it before confirming.
 """
 
 import pytest
@@ -25,13 +21,11 @@ _BE_ERROR_MARKERS = ("Failed to deactivate", "Server Error", "reason should not 
 
 @pytest.mark.ui
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-UI-008: Deactivate dialog sends no 'reason'; BE requires it -> suspend fails.
 async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_015: suspend (deactivate) an active partner.
 
-    Self-seeds a throwaway partner, approves it to Active, then deactivates it and
-    asserts the partner is suspended (no longer Active) with no error banner. Fails
-    by design on the FE↔BE 'reason' contract gap (see module docstring).
+    Self-seeds a throwaway partner, approves it to Active, then deactivates it (with a
+    reason) and asserts the partner is suspended (no longer Active) with no error banner.
     """
     detail = make_page(PartnerDetailPage)
     company = "QA-AUTO Suspend " + unique_email().split("@")[0].split("+")[1]
@@ -41,7 +35,7 @@ async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_r
         await detail.open_directory()
         await detail.onboard_partner(company, email)
         # Register cleanup as soon as the record exists (before the assertions). This TC
-        # is be_gap — it fails on purpose — so without this the leak was guaranteed.
+        # can fail mid-way, so registering it late would leak the partner.
         created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
         await detail.open_partner(company)
         await detail.approve_partner()
@@ -68,9 +62,20 @@ async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_r
         # — three OR'd substring scans of all of <main>, so almost any page satisfied
         # one of them. ("Inactive" never renders on this build at all: verified live
         # 2026-08-10, so that third branch could not ever have been the reason it passed.)
-        status = await detail.status()
-        assert status in ("Suspended", "Inactive"), (
+        suspended = ("Suspended", "Inactive")
+        status = await detail.wait_status(suspended)
+        if status not in suspended:
+            # Tell a stale badge (FE doesn't refetch) apart from a real no-op (BE didn't suspend).
+            await detail.page.reload()
+            await detail.wait_detail_ready()
+            after_reload = await detail.status()
+            assert after_reload not in suspended, (
+                f"the partner IS suspended (badge reads {after_reload!r} after reload), but the "
+                f"detail page kept showing {status!r} after Deactivate — the status badge is not "
+                f"refreshed after the action. confirm with FE"
+            )
+        assert status in suspended, (
             f"the partner should no longer be Active after Deactivate — status badge "
-            f"still reads {status!r}. confirm with BE"
+            f"still reads {status!r} (also after reload). confirm with BE"
         )
         logger.info("RESULT: partner suspended via UI (status={})", status)

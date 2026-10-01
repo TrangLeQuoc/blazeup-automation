@@ -178,11 +178,16 @@ def test_marker_bug_exists_in_the_tracker(tc):
 
 @pytest.mark.parametrize("tc", BE_GAP_TCS)
 def test_marker_bug_matches_the_tracker_row_for_this_tc(tc):
-    """The tracker row that names this TC must name the same bug the code does."""
-    expected = TRACKER_BY_TC.get(tc)
-    assert expected, f"{tc}: is be_gap but no Bug_Tracker row names it"
+    """The tracker row that names this TC must name the same bug the code does.
+
+    Only OPEN rows count: a TC keeps the rows of bugs it already closed (one bug per
+    distinct failure, each with its own lifecycle), and those must not be in the marker.
+    """
+    rows = TRACKER_BY_TC.get(tc)
+    assert rows, f"{tc}: is be_gap but no Bug_Tracker row names it"
+    expected = [b for b in rows if BUG_STATUS.get(b, "OPEN") == "OPEN"]
     assert set(CODE[tc]) == set(expected), (
-        f"{tc}: marker says {sorted(CODE[tc])} but the tracker row says {sorted(expected)}"
+        f"{tc}: marker says {sorted(CODE[tc])} but the tracker's OPEN rows say {sorted(expected)}"
     )
 
 

@@ -1,6 +1,7 @@
 """Shared pytest fixtures for UI and API automation."""
 
 import contextlib
+import json
 import logging
 import os
 import re
@@ -246,6 +247,7 @@ async def _create_browser_context(
     storage_state: dict | None = None,
     base_url: str | None = None,
     viewport: dict | None = None,
+    session_storage: dict | None = None,
 ) -> tuple[Browser, BrowserContext]:
     """Launch a browser and create a context.
 
@@ -255,6 +257,12 @@ async def _create_browser_context(
         result_dir:     Artifact directory for video recording.
         storage_state:  Playwright storage state dict (cookies + localStorage) to
                         pre-authenticate the context, or ``None`` to log in fresh.
+        session_storage: sessionStorage key/values to re-seed on every navigation via
+                        an init script. Playwright's ``storage_state`` captures cookies +
+                        localStorage only — the partner portal keeps its auth
+                        (``pp_refresh_token``) in sessionStorage, so a reused snapshot
+                        WITHOUT this seeds a logged-out context (every page bounces to
+                        /login). Pass it to carry the partner session across contexts.
 
     Returns:
         ``(Browser, BrowserContext)`` — both must be closed by the caller.
@@ -281,6 +289,19 @@ async def _create_browser_context(
         context_options["storage_state"] = storage_state
 
     context = await browser.new_context(**context_options)
+    if session_storage:
+        # Runs before page scripts on every document load, so the SPA's auth guard sees
+        # the token on first paint (no /login bounce). storage_state can't carry this.
+        # Seed ONLY keys the tab does not already have: sessionStorage survives navigations
+        # within a context, and the app may ROTATE pp_refresh_token — re-writing the stale
+        # captured value on every navigation would clobber the rotated one and log the tab
+        # out mid-test. `=== null` seeds on first load, then leaves the live value alone.
+        await context.add_init_script(
+            "(() => { const d = "
+            + json.dumps(session_storage)
+            + "; try { for (const k in d) if (sessionStorage.getItem(k) === null)"
+            " sessionStorage.setItem(k, d[k]); } catch (e) {} })()"
+        )
     await context.tracing.start(screenshots=True, snapshots=True, sources=True)
     return browser, context
 
@@ -456,13 +477,21 @@ def make_page(authenticated_page: Page, settings: Settings):
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
-    """Log in to the PARTNER portal once and cache its storage state.
+    """Log in to the PARTNER portal once and cache its session.
 
     Session-scoped snapshot for the partner portal (stgpartners.blazeup.ai): partner
     credentials + the single-step ``PartnerLoginPage`` + the partner base URL, run
     once per session. (The SA side re-logs in per test instead — see
     ``authenticated_page`` — because stgsa's rotating refresh cookie breaks a shared
-    snapshot; the partner portal does not, so a single shared snapshot is fine here.)
+    snapshot.)
+
+    Returns ``{"storage_state": <playwright cookies+localStorage>, "session_storage":
+    <dict>}``. The partner portal keeps its auth token (``pp_refresh_token``) in
+    **sessionStorage**, and it sets NO auth cookie — Playwright's ``storage_state``
+    captures neither sessionStorage, so it alone yields a logged-out context (every
+    protected page redirects to /login within seconds — verified 2026-09-28). Consumers
+    must seed BOTH: ``storage_state`` on the context + ``session_storage`` re-injected
+    via ``_create_browser_context(session_storage=...)``.
     """
     partner_url = settings.partner_base_url
     if partner_url is None:
@@ -488,6 +517,13 @@ async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
                 totp_secret=settings.partner_totp_secret,
             )
             state = await context.storage_state()
+            # The auth token lives in sessionStorage (pp_refresh_token), which
+            # storage_state does not capture — grab it while the page is still alive.
+            session_storage = await page_obj.evaluate(
+                "() => { const o = {}; for (let i = 0; i < sessionStorage.length; i++)"
+                " { const k = sessionStorage.key(i); o[k] = sessionStorage.getItem(k); }"
+                " return o; }"
+            )
         except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
             logger.error("Login UI (partner) FAILED — blocking the run: {}", exc)
             pytest.skip(f"BLOCKED: shared partner UI login failed — {blocked_reason(exc)}")
@@ -495,8 +531,8 @@ async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
             await context.close()
             await browser.close()
 
-    logger.info("Login UI (partner) complete - storage state cached")
-    yield state
+    logger.info("Login UI (partner) complete - session cached (storage_state + sessionStorage)")
+    yield {"storage_state": state, "session_storage": session_storage}
     logger.log("FINISH", "Logout UI (partner) - shared partner session closed")
 
 
@@ -504,10 +540,9 @@ async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
 async def partner_session_started_at(partner_auth_state: dict) -> float:
     """When the shared partner snapshot was captured (``time.monotonic``).
 
-    A separate fixture rather than a field on the state dict: that dict is handed
-    straight to Playwright as ``storage_state``, so it must stay exactly what Playwright
-    produced. Depending on ``partner_auth_state`` means this is stamped right after the
-    login, once per session.
+    A separate fixture rather than a field on the state dict, so that dict stays a clean
+    ``{"storage_state", "session_storage"}`` payload for the context seeding. Depending on
+    ``partner_auth_state`` means this is stamped right after the login, once per session.
 
     Its only job is the diagnostic in ``partner_authenticated_page``: when the session
     turns out to be dead, the log says how long it had been alive, which is the number
@@ -545,9 +580,10 @@ async def partner_authenticated_page(
             playwright,
             settings,
             result_dir,
-            storage_state=partner_auth_state,
+            storage_state=partner_auth_state["storage_state"],
             base_url=str(settings.partner_base_url),
             viewport=viewport,
+            session_storage=partner_auth_state["session_storage"],
         )
         page_obj = await context.new_page()
         request.node._playwright_page = page_obj

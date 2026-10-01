@@ -104,6 +104,64 @@ class SaDealsClient(BaseClient):
         """Raw POST register for negative tests — no schema validation."""
         return await self.post(_DEALS_PATH, json=payload, expected_status=expected_status)
 
+    async def list_deals(
+        self,
+        *,
+        params: dict | None = None,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """GET the SA-wide deal list.
+
+        Filters accepted by the spec (2026-09-17): ``partnerId``, ``status``, ``dealType``,
+        ``conflictStatus``, ``search``, ``provisioningState``, plus ``page``/``limit``/``sort``.
+        Returns the raw response so one method serves the positive case and the negative one
+        (``expected_status=None`` → the test asserts the code).
+
+        This is the SA view over EVERY partner's deals — 1405 rows on staging 2026-09-17 — so
+        a test must filter rather than assume anything about the unfiltered page.
+        """
+        return await self.get(_DEALS_PATH, params=params, expected_status=expected_status)
+
+    async def get_deal_stats(
+        self,
+        *,
+        params: dict | None = None,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """GET SA-wide deal-pipeline KPIs, filterable by the same fields as the list.
+
+        Same aggregate as the partner-portal twin PLUS ``byProvisioningState``
+        (awaited/overdue/resolved/legacy_unknown), which is SA-only (AC-19/AC-20) and must
+        never appear on the portal surface (§2.1). Every bucket is zero-filled, so a missing
+        status key is a defect rather than "no rows in that state".
+        """
+        return await self.get(
+            f"{_DEALS_PATH}/stats", params=params, expected_status=expected_status
+        )
+
+    async def link_tenant(
+        self,
+        deal_id: str,
+        body: dict[str, Any],
+        *,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """POST SA remediation — link an already-provisioned tenant to a stuck WON deal.
+
+        ``LinkProvisionedTenantDto``: ``tenantId`` (non-empty, <= 64 chars, and NOT the platform
+        tenant), ``goLiveAt`` (ISO date, bounded ``closedAt <= goLiveAt <= now``) and ``reason``
+        (10-500 chars).
+
+        Only the REFUSAL paths are reachable from automation. Guard 3 calls ``tenantExists()``
+        against the real tenants collection, so a fabricated ``tenantId`` is always a 400, and
+        Guard 7 lets one tenant back only one WON deal — meaning the success path would need a
+        real, unclaimed tenant that automation cannot provision. See P2-19 in
+        ENDPOINT_BUILD_LIST.md.
+        """
+        return await self.post(
+            f"{_DEALS_PATH}/{deal_id}/link-tenant", json=body, expected_status=expected_status
+        )
+
     async def get_deal(
         self,
         deal_id: str,
