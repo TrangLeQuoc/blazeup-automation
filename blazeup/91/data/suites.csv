@@ -1,0 +1,13 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_PARTNER_PORTAL_010: plan catalogue invalid key - correct rejection.
+
+Negative counterpart of _009. A key that does not exist must be refused with a 4xx that
+names what was not found, and a key that is not an id at all must be refused too — never a
+200 carrying some other plan, never a 5xx.
+
+The step that matters most is the CONTRACT one: the route is declared `plans/:planId` and
+its OpenAPI `@ApiParam` documents a kebab-case slug, so the row's own `planId` must work.
+It does not — see BUG-API-029.
+
+All cases run and failures are collected.
+","0","test_partner_api_partner_portal_010","API","2026-10-01","skipped","2026-10-01","","partner","",""
