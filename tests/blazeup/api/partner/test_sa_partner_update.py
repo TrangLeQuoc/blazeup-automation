@@ -105,7 +105,7 @@ async def test_partner_api_partner_account_management_024(sa_partners_client, se
 
     gaps: list[str] = []
 
-    async with async_step("[2/5] Ghost and malformed id → must be refused"):
+    async with async_step("[2/5] Ghost and malformed id → must be refused", soft=gaps):
         for label, bad in (("ghost", _GHOST), ("malformed", "not-an-id")):
             resp = await sa_partners_client.update_partner(
                 bad, {"name": "QA-AUTO nope"}, expected_status=None
@@ -115,7 +115,7 @@ async def test_partner_api_partner_account_management_024(sa_partners_client, se
             else:
                 logger.info("CHECK {} id → {} → OK", label, resp.status_code)
 
-    async with async_step("[3/5] Enum outside the spec → 400 naming the allowed values"):
+    async with async_step("[3/5] Enum outside the spec → 400 naming the allowed values", soft=gaps):
         resp = await sa_partners_client.update_partner(
             partner_id, {"type": "wizard"}, expected_status=None
         )
@@ -126,7 +126,7 @@ async def test_partner_api_partner_account_management_024(sa_partners_client, se
         else:
             logger.info("CHECK invalid type → 400 listing every allowed value → OK")
 
-    async with async_step("[4/5] An empty body is a no-op, not an error"):
+    async with async_step("[4/5] An empty body is a no-op, not an error", soft=gaps):
         before = _data(await sa_partners_client.raw_get_partner(partner_id, expected_status=200))
         resp = await sa_partners_client.update_partner(partner_id, {}, expected_status=None)
         if resp.status_code >= 400:
@@ -141,7 +141,7 @@ async def test_partner_api_partner_account_management_024(sa_partners_client, se
             else:
                 logger.info("CHECK empty body → no-op → OK")
 
-    async with async_step("[5/5] A field the DTO does not expose must not be writable"):
+    async with async_step("[5/5] A field the DTO does not expose must not be writable", soft=gaps):
         # One field at a time, so the report names the one that breaks rather than "the
         # payload". Sent together they returned 500 — see the 5xx branch below.
         for field, attempted in (("_id", _GHOST), ("code", "QA-HACKED"), ("status", "active")):

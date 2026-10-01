@@ -631,7 +631,7 @@ async def test_partner_api_deal_registration_pipeline_021(sa_deals_client, seede
     ]
     gaps: list[str] = []
     for idx, (label, body, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid register: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid register: {label}", soft=gaps):
             r = await sa_deals_client.raw_register_deal(body)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -677,7 +677,9 @@ async def test_partner_api_deal_registration_pipeline_028(sa_deals_client, seede
     ]
     gaps: list[str] = []
     for idx, (label, deal_id, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject approve: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject approve: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_deals_client.raw_approve_deal(deal_id)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -747,7 +749,7 @@ async def test_partner_api_deal_registration_pipeline_029(sa_deals_client, seede
     gaps: list[str] = []
     for idx, (label, target, decision, reasoning, want_status, hint) in enumerate(cases, start=1):
         async with async_step(
-            f"[{idx}/{len(cases)}] Reject resolve-conflict: {label} → {want_status}"
+            f"[{idx}/{len(cases)}] Reject resolve-conflict: {label} → {want_status}", soft=gaps
         ):
             r = await sa_deals_client.raw_resolve_conflict(
                 target, decision=decision, reasoning=reasoning
@@ -900,7 +902,7 @@ async def test_partner_api_deal_registration_pipeline_030(sa_deals_client):
     gaps: list[str] = []
     for idx, (label, did, kwargs, want_status, hint) in enumerate(cases, start=1):
         async with async_step(
-            f"[{idx}/{len(cases)}] Reject extend-protection: {label} → {want_status}"
+            f"[{idx}/{len(cases)}] Reject extend-protection: {label} → {want_status}", soft=gaps
         ):
             r = await sa_deals_client.raw_extend_protection(did, expected_status=None, **kwargs)
             msg = str(r.json().get("message") or "")
@@ -1055,7 +1057,9 @@ async def test_partner_api_deal_registration_pipeline_031(sa_deals_client):
     ]
     gaps: list[str] = []
     for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get deal: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject get deal: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_deals_client.get_deal(did, expected_status=None)
             msg = str(r.message or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -1143,7 +1147,9 @@ async def test_partner_api_deal_registration_pipeline_032(sa_deals_client, seede
     ]
     gaps: list[str] = []
     for idx, (label, target, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject lose: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject lose: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_deals_client.raw_lose_deal(target, notes="QA", expected_status=None)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -1230,7 +1236,9 @@ async def test_partner_api_deal_approval_queue_011(sa_deals_client, seeded_partn
     ]
     gaps: list[str] = []
     for idx, (label, target, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject reject: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject reject: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_deals_client.raw_reject_deal(
                 target, review_notes="QA", expected_status=None
             )
@@ -1415,7 +1423,9 @@ async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seede
     for idx, field in enumerate(
         ("companyWebsite", "industry", "adminFirstName", "adminLastName"), start=1
     ):
-        async with async_step(f"[{idx}/8] Win with missing {field} → expect 400 (required)"):
+        async with async_step(
+            f"[{idx}/8] Win with missing {field} → expect 400 (required)", soft=gaps
+        ):
             did = await _approved_deal()
             r = await sa_deals_client.raw_win_deal(
                 did, win_intake=without(field), expected_status=None
@@ -1431,7 +1441,9 @@ async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seede
                     "CHECK missing {} → FAIL (got {}, required not enforced)", field, r.status_code
                 )
 
-    async with async_step("[5/8] Win a non-approved (registered) deal → 400 illegal transition"):
+    async with async_step(
+        "[5/8] Win a non-approved (registered) deal → 400 illegal transition", soft=gaps
+    ):
         did_reg = (
             await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
         ).deal_id
@@ -1443,7 +1455,7 @@ async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seede
             gaps.append(f"non-approved: status={r.status_code}, msg={msg!r}")
             logger.error("CHECK non-approved → FAIL (status={}, msg={!r})", r.status_code, msg)
 
-    async with async_step("[6/8] Win a ghost deal id → 404 not found"):
+    async with async_step("[6/8] Win a ghost deal id → 404 not found", soft=gaps):
         r = await sa_deals_client.raw_win_deal(_GHOST_ID, win_intake=full, expected_status=None)
         msg = str(r.json().get("message") or "")
         if r.status_code == 404 and "not found" in msg.lower():
@@ -1452,7 +1464,7 @@ async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seede
             gaps.append(f"ghost id: expected 404, got {r.status_code}, msg={msg!r}")
             logger.error("CHECK ghost id → FAIL (status={}, msg={!r})", r.status_code, msg)
 
-    async with async_step("[7/8] Win a malformed deal id → 400 invalid id"):
+    async with async_step("[7/8] Win a malformed deal id → 400 invalid id", soft=gaps):
         r = await sa_deals_client.raw_win_deal("not-an-id", win_intake=full, expected_status=None)
         msg = str(r.json().get("message") or "")
         if r.status_code == 400 and "invalid id" in msg.lower():
@@ -1462,7 +1474,7 @@ async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seede
             logger.error("CHECK malformed id → FAIL (status={}, msg={!r})", r.status_code, msg)
 
     async with async_step(
-        "[8/8] Re-win an already-won deal → 400 illegal transition (repeat rejected)"
+        "[8/8] Re-win an already-won deal → 400 illegal transition (repeat rejected)", soft=gaps
     ):
         did_won = await _approved_deal()
         await sa_deals_client.win_deal(did_won, win_intake=full)

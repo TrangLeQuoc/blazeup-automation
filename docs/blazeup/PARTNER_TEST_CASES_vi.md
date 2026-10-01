@@ -1671,18 +1671,18 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú:** PASSED.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022
-**Mô tả test:** Đối trọng idempotency/duplicate của _010 (certification earned): re-grant cùng loại certification cho cùng user không được tạo một duplicate (renew hoặc 409).
-**Chuẩn bị (điều kiện tiên quyết):** SA tạo một partner + mời một portal user (lấy userId).
+**Mô tả test:** Case idempotency/duplicate của _010 (cấp certification): cấp lại cùng loại certification cho cùng user không được để lại 2 cert ACTIVE cùng loại. Hành vi thiết kế (BE xác nhận 2026-10-01) = **gia hạn (renewal)**: cert active hiện tại bị thu hồi (`revokeReason=superseded_by_renewal`) và tạo 1 cert active mới.
+**Chuẩn bị (điều kiện tiên quyết):** SA tạo partner + mời 1 portal user (lấy userId).
 **Các bước:**
-1. Grant 'sales_certified' (lần đầu).
+1. Cấp 'sales_certified' (lần đầu, score 90).
    → Expected: cert 'active'.
-2. Re-grant CÙNG loại certification.
-   → Expected: một outcome xác định — renew (2xx) hoặc reject (409).
-3. Verify user KHÔNG kết thúc với một active cert duplicate cùng loại (list các certification của partner).
-   → Expected: đúng 1 cert 'sales_certified'. **Hiện FAIL** — list hiện 2.
-**Teardown:** xóa partner cha.
-**Expected (tổng):** Re-grant không được duplicate một active cert cùng loại.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate; tracked trong Bug_Tracker BUG-API-001). Gap: re-grant trả 201 và tạo một active cert THỨ HAI (list hiện 2). BE nên renew hoặc reject (409). Xác nhận với BE.
+2. Cấp lại CÙNG loại certification (score 95).
+   → Expected: kết quả xác định — renew (2xx) hoặc từ chối (409). Live: **201** (renewal).
+3. Lấy danh sách certification của partner.
+   → Expected: đúng **1 cert ACTIVE** 'sales_certified'. Với nhánh renewal: cert active là cert mới (score 95) và cert đầu bị `revoked` với `revokeReason = superseded_by_renewal` (tổng cộng 2 bản ghi cùng loại: 1 revoked + 1 active).
+**Teardown:** xoá partner cha.
+**Expected (tổng):** Cấp lại không bao giờ để lại cert active trùng; renewal thay thế cert cũ.
+**Ghi chú:** PASSED — verify 2026-10-01 (TC 2060122). **BUG-API-001 đóng — không phải bug (đúng thiết kế).** Trước 2026-10-01 bước 3 đếm MỌI bản ghi cùng loại bất kể status, nên cặp revoked + active mới bị hiểu là "trùng" — false positive của test. Bước 3 giờ chỉ đếm cert `active` và assert vết renewal; đã bỏ `be_gap`.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_023
 **Mô tả:** SA cập nhật partner: PATCH /sa-partners-api/v1/sa/partners/{id} lưu mọi field mà UpdatePartnerDto nhận, **chứng minh bằng cách đọc lại partner** chứ không tin response của lệnh ghi.

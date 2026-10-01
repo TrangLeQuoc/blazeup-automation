@@ -465,7 +465,9 @@ async def test_partner_api_partner_account_management_011(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, params) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid pagination: {label}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject invalid pagination: {label}", soft=gaps
+        ):
             r = await sa_partners_client.raw_list_partners(**params)
             if 400 <= r.status_code < 500:
                 logger.info("CHECK {} → OK (rejected {}, no 5xx)", label, r.status_code)
@@ -516,7 +518,9 @@ async def test_partner_api_partner_account_management_013(sa_partners_client, se
     ]
     gaps: list[str] = []
     for idx, (label, pid, want_status, hint) in enumerate(illegal, start=1):
-        async with async_step(f"[{idx}/{len(illegal)}] Reject approve: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(illegal)}] Reject approve: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.raw_approve_partner(pid)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -561,7 +565,7 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, se
     ]
     gaps: list[str] = []
     for idx, (label, pid, want_status, hint) in enumerate(illegal, start=1):
-        async with async_step(f"[{idx}/3] Reject deactivate: {label} → {want_status}"):
+        async with async_step(f"[{idx}/3] Reject deactivate: {label} → {want_status}", soft=gaps):
             r = await sa_partners_client.deactivate_partner(pid, reason="x", expected_status=None)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -577,7 +581,7 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, se
                 )
 
     async with async_step(
-        "[3/3] Deactivating an already-suspended partner (idempotency observation)"
+        "[3/3] Deactivating an already-suspended partner (idempotency observation)", soft=gaps
     ):
         p = await seeded_partner()
         await sa_partners_client.deactivate_partner(p.partner_id, reason="first")
@@ -634,7 +638,9 @@ async def test_partner_api_partner_account_management_015(sa_partners_client, se
     ]
     gaps: list[str] = []
     for idx, (label, target, tier, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject change-tier: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject change-tier: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.raw_change_tier(target, tier=tier)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -759,7 +765,9 @@ async def test_partner_api_partner_account_management_020(sa_partners_client, se
     ]
     gaps: list[str] = []
     for idx, (label, target, ctype, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject grant-cert: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject grant-cert: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.raw_grant_certification(target, certification_type=ctype)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -821,19 +829,19 @@ async def test_partner_api_partner_account_management_021(sa_partners_client, se
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-001: re-grant creates a duplicate active cert (count=2) — confirm with BE
 async def test_partner_api_partner_account_management_022(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022: re-grant same certification - must not duplicate (idempotent or 409).
 
     Idempotency / duplicate counterpart of _010 (certification earned). Granting the
-    SAME certificationType to the SAME user a second time must NOT create a second
-    active cert of that type — it should be idempotent (renew the existing record)
-    or rejected (409).
+    SAME certificationType to the SAME user a second time must NOT leave two ACTIVE
+    certs of that type.
 
-    GAP this test surfaces (verified 2026-06-22): the API returns 201 and creates a
-    SECOND cert record (the user ends up with two active 'sales_certified' certs).
-    Step [3/3] asserts a single cert of that type and therefore FAILS until the BE
-    de-dupes — confirm with BE whether re-grant should renew or reject.
+    Designed behaviour (confirmed by BE, 2026-10-01): re-grant is a RENEWAL — the
+    current active cert is revoked (revokeReason=superseded_by_renewal) and one new
+    active cert is created (new expiry, new score); a unique index allows only one
+    active cert per user + type. So the list holds TWO records of the type: one
+    revoked, one active. Counting records regardless of status (as this TC did until
+    2026-10-01) read that as a duplicate — a false positive (BUG-API-001, closed).
     """
     async with async_step("Setup: partner + invited user"):
         partner = await seeded_partner()
@@ -863,11 +871,26 @@ async def test_partner_api_partner_account_management_022(sa_partners_client, se
     async with async_step("[3/3] The user must NOT end up with a duplicate active cert"):
         lst = await sa_partners_client.list_partner_certifications(pid)
         same = [c for c in lst.data if c.get("certificationType") == cert_type]
-        assert len(same) == 1, (
-            f"re-granting must not duplicate: expected 1 '{cert_type}' cert, got {len(same)} "
-            "— BE creates a second cert on re-grant; confirm with BE (renew vs reject)"
+        active = [c for c in same if c.get("status") == "active"]
+        assert len(active) == 1, (
+            f"re-granting must not duplicate: expected exactly 1 ACTIVE '{cert_type}' cert, "
+            f"got {len(active)} (statuses: {[c.get('status') for c in same]})"
         )
-        logger.info("CHECK no-duplicate → OK (exactly 1 '{}' cert)", cert_type)
+        if g2.status_code in (200, 201):  # renewal path: the old cert is superseded, not kept
+            assert active[0].get("score") == 95, (
+                f"the active cert must be the renewed one (score 95), got {active[0].get('score')}"
+            )
+            old = [c for c in same if c.get("_id") == g1.data.get("_id")]
+            assert old and old[0].get("status") == "revoked", (
+                f"renewal must revoke the first cert, got {[c.get('status') for c in old]}"
+            )
+            assert old[0].get("revokeReason") == "superseded_by_renewal", (
+                f"the first cert's revokeReason must be 'superseded_by_renewal', "
+                f"got {old[0].get('revokeReason')!r}"
+            )
+        logger.info(
+            "CHECK no-duplicate → OK (1 active '{}' cert; old one revoked by renewal)", cert_type
+        )
 
     logger.info("RESULT: re-grant certification idempotency checked")
 

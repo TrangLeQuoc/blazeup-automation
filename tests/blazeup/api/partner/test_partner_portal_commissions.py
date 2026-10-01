@@ -139,7 +139,9 @@ async def test_partner_api_commissions_payouts_024(sa_partners_client, settings,
 
     gaps: list[str] = []
 
-    async with async_step("[2/3] A status outside the enum → 400 listing all eight values"):
+    async with async_step(
+        "[2/3] A status outside the enum → 400 listing all eight values", soft=gaps
+    ):
         resp = await portal.list_commissions(params={"status": "bogus"}, expected_status=None)
         if resp.status_code != 400:
             gaps.append(f"status='bogus' answered {resp.status_code}, expected 400")
@@ -148,7 +150,7 @@ async def test_partner_api_commissions_payouts_024(sa_partners_client, settings,
         else:
             logger.info("CHECK status='bogus' → 400 listing every status → OK")
 
-    async with async_step("[3/3] Nonsensical pagination must be refused"):
+    async with async_step("[3/3] Nonsensical pagination must be refused", soft=gaps):
         for params in ({"limit": -1}, {"limit": 0}, {"page": "abc"}):
             r = await portal.list_commissions(params=params, expected_status=None)
             if r.status_code == 200:

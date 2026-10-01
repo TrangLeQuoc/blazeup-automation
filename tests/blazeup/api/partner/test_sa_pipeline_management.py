@@ -112,7 +112,7 @@ async def test_partner_api_pipeline_management_011(sa_partners_client, settings,
     ]
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}", soft=gaps):
             r = await portal.list_deals(params=params, expected_status=None)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():

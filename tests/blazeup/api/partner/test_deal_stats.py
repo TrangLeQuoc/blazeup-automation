@@ -171,7 +171,9 @@ async def test_partner_api_dashboard_data_003(sa_partners_client, settings, crea
 
     gaps: list[str] = []
 
-    async with async_step("[2/3] A status outside the enum → 400 listing the allowed values"):
+    async with async_step(
+        "[2/3] A status outside the enum → 400 listing the allowed values", soft=gaps
+    ):
         resp = await portal.get_deal_stats(params={"status": "bogus"}, expected_status=None)
         if resp.status_code != 400:
             gaps.append(f"status='bogus' answered {resp.status_code}, expected 400")
@@ -180,7 +182,9 @@ async def test_partner_api_dashboard_data_003(sa_partners_client, settings, crea
         else:
             logger.info("CHECK status='bogus' → 400 listing every status → OK")
 
-    async with async_step("[3/3] A search matching nothing → 200 zeroed, never an error"):
+    async with async_step(
+        "[3/3] A search matching nothing → 200 zeroed, never an error", soft=gaps
+    ):
         resp = await portal.get_deal_stats(
             params={"search": "QA-AUTO no such prospect"}, expected_status=None
         )
@@ -297,7 +301,7 @@ async def test_partner_api_pipeline_management_013(sa_deals_client):
     """
     gaps: list[str] = []
 
-    async with async_step("[1/3] Every enum filter refuses a value outside the spec"):
+    async with async_step("[1/3] Every enum filter refuses a value outside the spec", soft=gaps):
         for param, allowed in (
             ("status", _STATUSES),
             ("dealType", _TYPES),
@@ -314,7 +318,7 @@ async def test_partner_api_pipeline_management_013(sa_deals_client):
             else:
                 logger.info("CHECK {}='bogus' → 400 listing every value → OK", param)
 
-    async with async_step("[2/3] A malformed partnerId → 400"):
+    async with async_step("[2/3] A malformed partnerId → 400", soft=gaps):
         resp = await sa_deals_client.get_deal_stats(
             params={"partnerId": "not-an-id"}, expected_status=None
         )
@@ -323,7 +327,7 @@ async def test_partner_api_pipeline_management_013(sa_deals_client):
         else:
             logger.info("CHECK malformed partnerId → 400 → OK")
 
-    async with async_step("[3/3] A ghost partnerId → 200 zeroed, still fully filled"):
+    async with async_step("[3/3] A ghost partnerId → 200 zeroed, still fully filled", soft=gaps):
         resp = await sa_deals_client.get_deal_stats(
             params={"partnerId": _GHOST}, expected_status=None
         )

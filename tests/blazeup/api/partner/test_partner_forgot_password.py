@@ -135,14 +135,16 @@ async def test_partner_api_auth_access_control_011(sa_partners_client, settings,
 
     gaps: list[str] = []
 
-    async with async_step("[2/4] A malformed email → 400 from DTO validation"):
+    async with async_step("[2/4] A malformed email → 400 from DTO validation", soft=gaps):
         resp = await anon.forgot_password("not-an-email", expected_status=None)
         if resp.status_code != 400:
             gaps.append(f"email='not-an-email' answered {resp.status_code}, expected 400")
         else:
             logger.info("CHECK malformed email → 400 → OK")
 
-    async with async_step("[3/4] An unknown email is indistinguishable from a registered one"):
+    async with async_step(
+        "[3/4] An unknown email is indistinguishable from a registered one", soft=gaps
+    ):
         unknown = unique_email()
         known = await anon.forgot_password(known_email, expected_status=None)
         stranger = await anon.forgot_password(unknown, expected_status=None)
@@ -168,7 +170,7 @@ async def test_partner_api_auth_access_control_011(sa_partners_client, settings,
             else:
                 logger.info("CHECK known and unknown email indistinguishable → OK")
 
-    async with async_step("[4/4] The per-email rate limit fires"):
+    async with async_step("[4/4] The per-email rate limit fires", soft=gaps):
         # Same throwaway address as step 3, which already spent 1 of its 5.
         limited_at = None
         for attempt in range(1, _PROBE_CAP + 1):

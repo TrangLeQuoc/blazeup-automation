@@ -179,7 +179,7 @@ async def test_partner_api_partner_portal_010(sa_partners_client, settings, crea
 
     gaps: list[str] = []
 
-    async with async_step("[2/5] The documented `planId` slug must resolve the plan"):
+    async with async_step("[2/5] The documented `planId` slug must resolve the plan", soft=gaps):
         slug = sample.get("planId")
         resp = await portal.get_plan(str(slug), expected_status=None)
         if resp.status_code == 200:
@@ -194,7 +194,9 @@ async def test_partner_api_partner_portal_010(sa_partners_client, settings, crea
                 "OpenAPI spec always fails here. BUG-API-029, confirm with BE which side is wrong"
             )
 
-    async with async_step("[3/5] A well-formed key that matches nothing → 404 naming it"):
+    async with async_step(
+        "[3/5] A well-formed key that matches nothing → 404 naming it", soft=gaps
+    ):
         resp = await portal.get_plan(_GHOST, expected_status=None)
         if resp.status_code == 200:
             gaps.append(f"a ghost plan key answered 200 with a plan: {resp.text[:160]}")
@@ -205,7 +207,7 @@ async def test_partner_api_partner_portal_010(sa_partners_client, settings, crea
         else:
             logger.info("CHECK ghost plan key → {} naming it → OK", resp.status_code)
 
-    async with async_step("[4/5] A key that is not an id at all → 400, and never a 5xx"):
+    async with async_step("[4/5] A key that is not an id at all → 400, and never a 5xx", soft=gaps):
         # No path-traversal case here: `plans/../plans` is normalised to `plans` before the
         # request is even sent, so it would assert URL resolution rather than this endpoint.
         for bad in ("not-a-plan", "%20", "null"):
@@ -217,7 +219,9 @@ async def test_partner_api_partner_portal_010(sa_partners_client, settings, crea
             else:
                 logger.info("CHECK plan key {!r} → {} → OK", bad, resp.status_code)
 
-    async with async_step("[5/5] A country search that matches nothing → 200 empty, not an error"):
+    async with async_step(
+        "[5/5] A country search that matches nothing → 200 empty, not an error", soft=gaps
+    ):
         resp = await portal.list_countries(
             params={"search": "QA-AUTO no such country"}, expected_status=None
         )

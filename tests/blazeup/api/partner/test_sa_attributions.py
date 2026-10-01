@@ -166,7 +166,9 @@ async def test_partner_api_tenant_provisioning_attribution_013(sa_partners_clien
     """
     gaps: list[str] = []
 
-    async with async_step("[1/4] Values outside an enum → 400 naming the allowed values"):
+    async with async_step(
+        "[1/4] Values outside an enum → 400 naming the allowed values", soft=gaps
+    ):
         for param, allowed in (("status", _STATUSES), ("clientLifecycleState", _LIFECYCLE)):
             resp = await sa_partners_client.list_attributions(
                 params={param: "bogus"}, expected_status=None
@@ -178,7 +180,7 @@ async def test_partner_api_tenant_provisioning_attribution_013(sa_partners_clien
             else:
                 logger.info("CHECK {}='bogus' → 400 listing every allowed value → OK", param)
 
-    async with async_step("[2/4] A malformed id → 400, on the filter and on the path"):
+    async with async_step("[2/4] A malformed id → 400, on the filter and on the path", soft=gaps):
         resp = await sa_partners_client.list_attributions(
             params={"partnerId": "not-an-id"}, expected_status=None
         )
@@ -193,7 +195,7 @@ async def test_partner_api_tenant_provisioning_attribution_013(sa_partners_clien
         else:
             logger.info("CHECK malformed attribution id → 400 → OK")
 
-    async with async_step("[3/4] A well-formed id that matches nothing"):
+    async with async_step("[3/4] A well-formed id that matches nothing", soft=gaps):
         resp = await sa_partners_client.list_attributions(
             params={"partnerId": _GHOST}, expected_status=None
         )
@@ -215,7 +217,7 @@ async def test_partner_api_tenant_provisioning_attribution_013(sa_partners_clien
         else:
             logger.info("CHECK ghost attribution id → {} → OK", detail.status_code)
 
-    async with async_step("[4/4] Nonsensical pagination must not dump the whole ledger"):
+    async with async_step("[4/4] Nonsensical pagination must not dump the whole ledger", soft=gaps):
         for params in ({"limit": -1}, {"limit": 0}, {"page": "abc"}):
             r = await sa_partners_client.list_attributions(params=params, expected_status=None)
             if r.status_code == 200:

@@ -173,7 +173,7 @@ async def test_partner_api_partner_team_002(sa_partners_client, settings, create
     gaps: list[str] = []
 
     for idx, field in enumerate(("email", "firstName", "lastName"), start=2):
-        async with async_step(f"[{idx}/7] Invite without `{field}` → expect 400"):
+        async with async_step(f"[{idx}/7] Invite without `{field}` → expect 400", soft=gaps):
             bad = {k: v for k, v in _member_payload().items() if k != field}
             resp = await portal.invite_team_member(bad, expected_status=None)
             if resp.status_code != 400:
@@ -184,7 +184,7 @@ async def test_partner_api_partner_team_002(sa_partners_client, settings, create
             else:
                 logger.info("CHECK missing `{}` → 400 → OK", field)
 
-    async with async_step("[5/7] Invite with a role outside the enum → expect 400"):
+    async with async_step("[5/7] Invite with a role outside the enum → expect 400", soft=gaps):
         resp = await portal.invite_team_member(
             {**_member_payload(), "role": "wizard"}, expected_status=None
         )
@@ -193,7 +193,7 @@ async def test_partner_api_partner_team_002(sa_partners_client, settings, create
         else:
             logger.info("CHECK invalid role → 400 → OK")
 
-    async with async_step("[6/7] Invite with a malformed email → expect 400"):
+    async with async_step("[6/7] Invite with a malformed email → expect 400", soft=gaps):
         resp = await portal.invite_team_member(
             {**_member_payload(), "email": "not-an-email"}, expected_status=None
         )
@@ -206,7 +206,7 @@ async def test_partner_api_partner_team_002(sa_partners_client, settings, create
 
     # A ghost id is self-proving here: the endpoint under test is the one that must report
     # "not found", so no separate GET at a source service is needed (rule 3 exception).
-    async with async_step("[7/7] Read by ghost and malformed userId → expect 404 / 400"):
+    async with async_step("[7/7] Read by ghost and malformed userId → expect 404 / 400", soft=gaps):
         ghost = "000000000000000000000000"
         resp = await portal.get_team_member(ghost, expected_status=None)
         if resp.status_code < 400:
@@ -372,7 +372,7 @@ async def test_partner_api_partner_team_004(sa_partners_client, settings, create
 
     gaps: list[str] = []
 
-    async with async_step("[2/6] Omit the REQUIRED partnerId query → expect 400"):
+    async with async_step("[2/6] Omit the REQUIRED partnerId query → expect 400", soft=gaps):
         legs = {
             "deals": portal.get_team_member_deals,
             "commissions": portal.get_team_member_commissions,
@@ -386,7 +386,9 @@ async def test_partner_api_partner_team_004(sa_partners_client, settings, create
             else:
                 logger.info("CHECK {} without partnerId → 400 → OK", leg)
 
-    async with async_step("[3/6] Invalid status enum → expect 400 naming the allowed values"):
+    async with async_step(
+        "[3/6] Invalid status enum → expect 400 naming the allowed values", soft=gaps
+    ):
         resp = await portal.get_team_member_deals(
             session_user_id, partner_id, params={"status": "bogus"}, expected_status=None
         )
@@ -400,7 +402,7 @@ async def test_partner_api_partner_team_004(sa_partners_client, settings, create
             else:
                 logger.info("CHECK invalid status → 400 listing every allowed value → OK")
 
-    async with async_step("[4/6] Malformed partnerId → expect 400"):
+    async with async_step("[4/6] Malformed partnerId → expect 400", soft=gaps):
         resp = await portal.get_team_member_deals(
             session_user_id, "not-an-id", expected_status=None
         )
@@ -409,7 +411,7 @@ async def test_partner_api_partner_team_004(sa_partners_client, settings, create
         else:
             logger.info("CHECK malformed partnerId → 400 → OK")
 
-    async with async_step("[5/6] Ghost and malformed userId → expect 404 / 400"):
+    async with async_step("[5/6] Ghost and malformed userId → expect 404 / 400", soft=gaps):
         for label, uid, want in (("ghost", _GHOST, 404), ("malformed", "not-an-id", 400)):
             resp = await portal.get_team_member_deals(uid, partner_id, expected_status=None)
             if resp.status_code != want:
@@ -424,7 +426,9 @@ async def test_partner_api_partner_team_004(sa_partners_client, settings, create
             else:
                 logger.info("CHECK {} userId → {} → OK", label, want)
 
-    async with async_step("[6/6] Ghost partnerId → expect 404, never this partner's rows"):
+    async with async_step(
+        "[6/6] Ghost partnerId → expect 404, never this partner's rows", soft=gaps
+    ):
         resp = await portal.get_team_member_deals(session_user_id, _GHOST, expected_status=None)
         if resp.status_code < 400:
             n = len(resp.json().get("data") or [])
@@ -568,7 +572,7 @@ async def test_partner_api_partner_team_009(sa_partners_client, settings, create
 
     gaps: list[str] = []
 
-    async with async_step("[2/5] Ghost userId on both endpoints → must be refused"):
+    async with async_step("[2/5] Ghost userId on both endpoints → must be refused", soft=gaps):
         for label, call in (
             ("reset-password", portal.reset_team_member_password),
             ("unlock", portal.unlock_team_member),
@@ -584,7 +588,7 @@ async def test_partner_api_partner_team_009(sa_partners_client, settings, create
                 # the status-code family is tracked separately, not re-filed per endpoint.
                 logger.info("CHECK {} ghost userId → {} not-found → OK", label, resp.status_code)
 
-    async with async_step("[3/5] Malformed userId on both endpoints → 400 invalid-id"):
+    async with async_step("[3/5] Malformed userId on both endpoints → 400 invalid-id", soft=gaps):
         for label, call in (
             ("reset-password", portal.reset_team_member_password),
             ("unlock", portal.unlock_team_member),
@@ -595,7 +599,9 @@ async def test_partner_api_partner_team_009(sa_partners_client, settings, create
             else:
                 logger.info("CHECK {} malformed userId → 400 → OK", label)
 
-    async with async_step("[4/5] Repeat reset → a DIFFERENT password each time, both usable"):
+    async with async_step(
+        "[4/5] Repeat reset → a DIFFERENT password each time, both usable", soft=gaps
+    ):
         first = _envelope(await portal.reset_team_member_password(user_id))["data"]["tempPassword"]
         second = _envelope(await portal.reset_team_member_password(user_id))["data"]["tempPassword"]
         if first == second:
@@ -610,7 +616,9 @@ async def test_partner_api_partner_team_009(sa_partners_client, settings, create
             else:
                 logger.info("CHECK repeat reset supersedes the previous credential → OK")
 
-    async with async_step("[5/5] Repeat unlock on a member that is not locked → no-op, no 5xx"):
+    async with async_step(
+        "[5/5] Repeat unlock on a member that is not locked → no-op, no 5xx", soft=gaps
+    ):
         for n in (1, 2):
             resp = await portal.unlock_team_member(user_id, expected_status=None)
             if resp.status_code >= 500:

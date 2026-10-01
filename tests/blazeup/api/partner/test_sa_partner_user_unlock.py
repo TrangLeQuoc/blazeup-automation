@@ -152,7 +152,9 @@ async def test_partner_api_partner_users_016(sa_partners_client, settings, creat
 
     gaps: list[str] = []
 
-    async with async_step("[2/4] A well-formed user id that does not exist → 4xx naming it"):
+    async with async_step(
+        "[2/4] A well-formed user id that does not exist → 4xx naming it", soft=gaps
+    ):
         resp = await sa_partners_client.unlock_partner_user(_GHOST, expected_status=None)
         if resp.status_code < 400:
             gaps.append(
@@ -166,14 +168,16 @@ async def test_partner_api_partner_users_016(sa_partners_client, settings, creat
         else:
             logger.info("CHECK ghost userId → {} naming it → OK", resp.status_code)
 
-    async with async_step("[3/4] A user id that is not an id at all → 400"):
+    async with async_step("[3/4] A user id that is not an id at all → 400", soft=gaps):
         resp = await sa_partners_client.unlock_partner_user("not-an-id", expected_status=None)
         if resp.status_code != 400:
             gaps.append(f"a malformed userId answered {resp.status_code}, expected 400")
         else:
             logger.info("CHECK malformed userId → 400 → OK")
 
-    async with async_step("[4/4] Unlocking a user who is NOT locked is a harmless no-op"):
+    async with async_step(
+        "[4/4] Unlocking a user who is NOT locked is a harmless no-op", soft=gaps
+    ):
         first = await sa_partners_client.unlock_partner_user(user_id, expected_status=None)
         if first.status_code != 200:
             gaps.append(

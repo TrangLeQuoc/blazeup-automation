@@ -119,7 +119,7 @@ async def test_partner_api_commissions_payouts_023(sa_commissions_client):
     """
     gaps: list[str] = []
 
-    async with async_step("[1/4] A well-formed commission id that does not exist → 4xx"):
+    async with async_step("[1/4] A well-formed commission id that does not exist → 4xx", soft=gaps):
         resp = await sa_commissions_client.get_commission(_GHOST, expected_status=None)
         if resp.status_code == 200:
             gaps.append(f"a ghost commission id answered 200: {resp.text[:160]}")
@@ -131,14 +131,14 @@ async def test_partner_api_commissions_payouts_023(sa_commissions_client):
         else:
             logger.info("CHECK ghost commission id → {} → OK", resp.status_code)
 
-    async with async_step("[2/4] An id that is not an id at all → 400"):
+    async with async_step("[2/4] An id that is not an id at all → 400", soft=gaps):
         resp = await sa_commissions_client.get_commission("not-an-id", expected_status=None)
         if resp.status_code != 400:
             gaps.append(f"a malformed commission id answered {resp.status_code}, expected 400")
         else:
             logger.info("CHECK malformed commission id → 400 → OK")
 
-    async with async_step("[3/4] `summary` must stay a route, not be read as an id"):
+    async with async_step("[3/4] `summary` must stay a route, not be read as an id", soft=gaps):
         # /summary is declared before /:id; if that order ever flips, this returns a
         # "not found" for an id literally called "summary" instead of the totals.
         resp = await sa_commissions_client.get_summary(expected_status=None)
@@ -152,7 +152,9 @@ async def test_partner_api_commissions_payouts_023(sa_commissions_client):
         else:
             logger.info("CHECK `summary` resolves to the summary route → OK")
 
-    async with async_step("[4/4] Ledger filters: bad status → 400, ghost partnerId → 200 empty"):
+    async with async_step(
+        "[4/4] Ledger filters: bad status → 400, ghost partnerId → 200 empty", soft=gaps
+    ):
         resp = await sa_commissions_client.raw_list_commissions(status="bogus")
         if resp.status_code != 400:
             gaps.append(f"status='bogus' answered {resp.status_code}, expected 400")

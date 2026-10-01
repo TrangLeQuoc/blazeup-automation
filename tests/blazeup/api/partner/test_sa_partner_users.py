@@ -109,7 +109,7 @@ async def test_partner_api_partner_users_011(sa_partners_client):
     gaps: list[str] = []
 
     for idx, (label, params, hint) in enumerate(robustness, start=1):
-        async with async_step(f"[{idx}/{n_steps}] Reject invalid: {label}"):
+        async with async_step(f"[{idx}/{n_steps}] Reject invalid: {label}", soft=gaps):
             r = await sa_partners_client.raw_list_partner_users(expected_status=None, **params)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -119,7 +119,7 @@ async def test_partner_api_partner_users_011(sa_partners_client):
                 logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
 
     async with async_step(
-        f"[{len(robustness) + 1}/{n_steps}] Ghost partnerId → 200 empty (graceful)"
+        f"[{len(robustness) + 1}/{n_steps}] Ghost partnerId → 200 empty (graceful)", soft=gaps
     ):
         r = await sa_partners_client.raw_list_partner_users(
             partnerId="000000000000000000000000", limit=5
@@ -130,7 +130,9 @@ async def test_partner_api_partner_users_011(sa_partners_client):
             gaps.append(f"ghost partnerId: status={r.status_code}")
             logger.error("CHECK ghost partnerId → FAIL ({})", r.status_code)
 
-    async with async_step(f"[{n_steps}/{n_steps}] Lenient-default params must still not 5xx"):
+    async with async_step(
+        f"[{n_steps}/{n_steps}] Lenient-default params must still not 5xx", soft=gaps
+    ):
         for label, params in observations:
             r = await sa_partners_client.raw_list_partner_users(expected_status=None, **params)
             assert r.status_code < 500, f"{label} must not 5xx, got {r.status_code}"
@@ -235,7 +237,7 @@ async def test_partner_api_partner_users_012(sa_partners_client, seeded_partner)
     ]
     gaps: list[str] = []
     for idx, (label, body, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid invite: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid invite: {label}", soft=gaps):
             r = await sa_partners_client.raw_invite_partner_user(body, expected_status=None)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -367,7 +369,9 @@ async def test_partner_api_partner_users_014(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, uid, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject reset: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject reset: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.raw_reset_partner_user_password(uid)
             try:
                 msg = str(r.json().get("message") or "")

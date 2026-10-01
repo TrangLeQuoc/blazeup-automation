@@ -1671,18 +1671,18 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note:** PASSED.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_022
-**Test Description:** Idempotency/duplicate counterpart of _010 (certification earned): re-granting the same certification type to the same user must not create a duplicate (renew or 409).
+**Test Description:** Idempotency/duplicate counterpart of _010 (certification earned): re-granting the same certification type to the same user must not leave two ACTIVE certs of that type. Designed behaviour (confirmed by BE 2026-10-01) = **renewal**: the current active cert is revoked (`revokeReason=superseded_by_renewal`) and one new active cert is created.
 **Setup (precondition):** SA creates a partner + invites a portal user (capture userId).
 **Test Steps:**
-1. Grant 'sales_certified' (first time).
+1. Grant 'sales_certified' (first time, score 90).
    → Expected: cert 'active'.
-2. Re-grant the SAME certification type.
-   → Expected: a defined outcome — renew (2xx) or reject (409).
-3. Verify the user does NOT end up with a duplicate active cert (list the partner's certifications).
-   → Expected: exactly 1 'sales_certified' cert. **Currently FAILS** — the list shows 2.
+2. Re-grant the SAME certification type (score 95).
+   → Expected: a defined outcome — renew (2xx) or reject (409). Live: **201** (renewal).
+3. List the partner's certifications.
+   → Expected: exactly **1 ACTIVE** 'sales_certified' cert. On the renewal path: the active one is the new cert (score 95) and the first cert is `revoked` with `revokeReason = superseded_by_renewal` (2 records of the type in total: 1 revoked + 1 active).
 **Teardown:** delete the parent partner.
-**Expected (overall):** Re-grant must not duplicate an active cert of the same type.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate; tracked in Bug_Tracker BUG-API-001). Gap: re-grant returns 201 and creates a SECOND active cert (list shows 2). BE should renew or reject (409). Confirm with BE.
+**Expected (overall):** Re-grant never leaves a duplicate active cert; a renewal supersedes the old cert.
+**Note:** PASSED — verified 2026-10-01 (TC 2060122). **BUG-API-001 closed as not-a-bug (works as designed).** Until 2026-10-01 step 3 counted ALL records of the type regardless of status, so the revoked + new active pair read as a "duplicate" — a false positive in the test. Step 3 now counts only `active` certs and asserts the renewal trail; `be_gap` removed.
 
 #### PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_023
 **Test Description:** SA updates a partner: PATCH /sa-partners-api/v1/sa/partners/{id} stores every field UpdatePartnerDto accepts, proven by reading the partner back rather than trusting the write response.

@@ -107,7 +107,7 @@ async def test_partner_api_audit_log_005(sa_partners_client):
     total_steps = len(cases) + 1
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{total_steps}] Reject invalid list: {label}"):
+        async with async_step(f"[{idx}/{total_steps}] Reject invalid list: {label}", soft=gaps):
             r = await sa_partners_client.raw_list_audit_logs(expected_status=None, **params)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -116,7 +116,9 @@ async def test_partner_api_audit_log_005(sa_partners_client):
                 gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
                 logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
 
-    async with async_step(f"[{total_steps}/{total_steps}] Empty-but-valid range is graceful"):
+    async with async_step(
+        f"[{total_steps}/{total_steps}] Empty-but-valid range is graceful", soft=gaps
+    ):
         r = await sa_partners_client.raw_list_audit_logs(
             limit=5, dateFrom="2026-12-31", dateTo="2026-01-01"
         )
@@ -253,7 +255,7 @@ async def test_partner_api_audit_log_006(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject export: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject export: {label}", soft=gaps):
             r = await sa_partners_client.export_audit_logs(expected_status=None, **params)
             try:
                 msg = str(r.json().get("message") or "")
@@ -320,7 +322,7 @@ async def test_partner_api_audit_log_007(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, log_id, expected, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get-by-id: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject get-by-id: {label}", soft=gaps):
             r = await sa_partners_client.raw_get_audit_log(log_id)
             try:
                 msg = str(r.json().get("message") or "")

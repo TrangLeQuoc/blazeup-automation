@@ -108,7 +108,7 @@ async def test_partner_api_commissions_payouts_017(sa_commissions_client):
     ]
     gaps: list[str] = []
     for idx, (label, params, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}", soft=gaps):
             r = await sa_commissions_client.raw_list_commissions(expected_status=None, **params)
             body = r.json()
             msg = str(body.get("message") or "")
@@ -291,7 +291,7 @@ async def test_partner_api_commissions_payouts_018(sa_commissions_client):
     ]
     gaps: list[str] = []
     for idx, (label, body, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid upsert: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid upsert: {label}", soft=gaps):
             r = await sa_commissions_client.raw_upsert_rate(body, expected_status=None)
             msg = str(r.json().get("message") or "")
             if r.status_code == 400 and hint.lower() in msg.lower():

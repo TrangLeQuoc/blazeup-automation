@@ -231,7 +231,7 @@ async def test_partner_api_commissions_payouts_021(sa_partners_client, settings,
 
     gaps: list[str] = []
 
-    async with async_step("[2/5] Every required field missing in turn → 400 naming it"):
+    async with async_step("[2/5] Every required field missing in turn → 400 naming it", soft=gaps):
         required = (
             "label",
             "accountHolderName",
@@ -253,7 +253,9 @@ async def test_partner_api_commissions_payouts_021(sa_partners_client, settings,
             else:
                 logger.info("CHECK missing {} → 400 naming it → OK", field)
 
-    async with async_step("[3/5] A payoutMethod outside the enum → 400 listing the allowed ones"):
+    async with async_step(
+        "[3/5] A payoutMethod outside the enum → 400 listing the allowed ones", soft=gaps
+    ):
         r = await portal.add_bank_account(
             _account_payload(payoutMethod="carrier_pigeon"), expected_status=None
         )
@@ -265,7 +267,7 @@ async def test_partner_api_commissions_payouts_021(sa_partners_client, settings,
             logger.info("CHECK bad payoutMethod → 400 listing every method → OK")
 
     async with async_step(
-        "[4/5] State guards: ghost id, and removing the primary while others exist"
+        "[4/5] State guards: ghost id, and removing the primary while others exist", soft=gaps
     ):
         first = _rows(await portal.add_bank_account(_account_payload()))[0]
         second = _rows(await portal.add_bank_account(_swift_payload()))[0]
@@ -295,7 +297,7 @@ async def test_partner_api_commissions_payouts_021(sa_partners_client, settings,
         await portal.delete_bank_account(second["id"])
         await portal.delete_bank_account(first["id"])
 
-    async with async_step("[5/5] A VIEWER is refused 403 on all four routes"):
+    async with async_step("[5/5] A VIEWER is refused 403 on all four routes", soft=gaps):
         checks = (
             ("GET list", viewer.list_bank_accounts(expected_status=None)),
             ("POST add", viewer.add_bank_account(_account_payload(), expected_status=None)),

@@ -37,6 +37,7 @@ FINISH   | 26 | blue bold
 These complement loguru built-ins (INFO=20, SUCCESS=25, WARNING=30, ERROR=40).
 """
 
+import re
 import time
 from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager, suppress
@@ -107,13 +108,45 @@ def ordinal(n: int) -> str:
     return f"{n}{suffix}"
 
 
+_STEP_NO_RE = re.compile(r"^\s*(\[\d+/\d+\])")
+
+
+class SoftStepFailure(AssertionError):
+    """Raised INSIDE the Allure step only, so Allure paints that step red; never escapes."""
+
+
+def _step_label(name: str) -> str:
+    """'[2/5] Do X' -> '[2/5]'; a step without a number keeps its whole name."""
+    m = _STEP_NO_RE.match(name)
+    return m.group(1) if m else f"[{name.strip()}]"
+
+
+def _new_soft_failures(name: str, soft: list[str] | None, before: int, start: float) -> str:
+    """Tag the gaps this step added with its step number; return them joined ('' = none).
+
+    Soft-collect tests append to a ``gaps`` list and assert once at the very end, so
+    without this every step reads green in Allure and the final error does not say
+    which step produced which gap.
+    """
+    if soft is None or len(soft) <= before:
+        return ""
+    label = _step_label(name)
+    for i in range(before, len(soft)):
+        if not soft[i].startswith(label):
+            soft[i] = f"{label} {soft[i]}"
+    added = soft[before:]
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    logger.error("  SOFT FAIL | {} ({}ms) -- {}", name, elapsed_ms, " | ".join(added))
+    return "\n".join(added)
+
+
 # ---------------------------------------------------------------------------
 # Public context managers
 # ---------------------------------------------------------------------------
 
 
 @contextmanager
-def step(name: str, **params: Any) -> Generator[None]:
+def step(name: str, *, soft: list[str] | None = None, **params: Any) -> Generator[None]:
     """Sync context manager that logs a named test step.
 
     Emits a STEP-level entry on start.  On failure, emits an ERROR with the
@@ -121,6 +154,10 @@ def step(name: str, **params: Any) -> Generator[None]:
 
     Args:
         name:     Human-readable step description (shown in logs and Allure).
+        soft:     The test's soft-collect list (``gaps``). If the step appends to it,
+                  the step is marked FAILED in Allure (red) and the new entries are
+                  prefixed with the step number — but the test keeps running; the
+                  final ``assert not gaps`` still decides the verdict.
         **params: Optional key=value data appended to the log line.
                   Keys matching ``password``, ``token``, ``secret``, ``key``,
                   or ``pwd`` are automatically masked as ``***``.
@@ -132,8 +169,9 @@ def step(name: str, **params: Any) -> Generator[None]:
     """
     param_str = _fmt_params(params)
     start = time.perf_counter()
+    before = len(soft) if soft is not None else 0
     logger.log("STEP", "{}{}", name, param_str)
-    with _allure_step(name):
+    with suppress(SoftStepFailure), _allure_step(name):
         try:
             yield
         except Exception as exc:
@@ -146,10 +184,14 @@ def step(name: str, **params: Any) -> Generator[None]:
                 exc,
             )
             raise
+        if added := _new_soft_failures(name, soft, before, start):
+            raise SoftStepFailure(added)
 
 
 @asynccontextmanager
-async def async_step(name: str, **params: Any) -> AsyncGenerator[None]:
+async def async_step(
+    name: str, *, soft: list[str] | None = None, **params: Any
+) -> AsyncGenerator[None]:
     """Async context manager that logs a named test step.
 
     Emits a STEP-level entry on start.  On failure, emits an ERROR with the
@@ -157,19 +199,25 @@ async def async_step(name: str, **params: Any) -> AsyncGenerator[None]:
 
     Args:
         name:     Human-readable step description (shown in logs and Allure).
+        soft:     The test's soft-collect list (``gaps``). If the step appends to it,
+                  the step is marked FAILED in Allure (red) and the new entries are
+                  prefixed with the step number — but the test keeps running; the
+                  final ``assert not gaps`` still decides the verdict.
         **params: Optional key=value data appended to the log line.
                   Keys matching ``password``, ``token``, ``secret``, ``key``,
                   or ``pwd`` are automatically masked as ``***``.
 
     Example::
 
-        async with async_step("Step 1: Login", email=email):
-            response = await client.login(email, password)
+        async with async_step("[2/5] Slug resolves the plan", soft=gaps):
+            if resp.status_code != 200:
+                gaps.append("slug answered 400")   # step turns red, test continues
     """
     param_str = _fmt_params(params)
     start = time.perf_counter()
+    before = len(soft) if soft is not None else 0
     logger.log("STEP", "{}{}", name, param_str)
-    with _allure_step(name):
+    with suppress(SoftStepFailure), _allure_step(name):
         try:
             yield
         except Exception as exc:
@@ -182,6 +230,8 @@ async def async_step(name: str, **params: Any) -> AsyncGenerator[None]:
                 exc,
             )
             raise
+        if added := _new_soft_failures(name, soft, before, start):
+            raise SoftStepFailure(added)
 
 
 # ---------------------------------------------------------------------------

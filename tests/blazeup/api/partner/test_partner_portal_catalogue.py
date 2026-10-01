@@ -121,7 +121,7 @@ async def test_partner_api_partner_portal_008(sa_partners_client, settings, crea
 
     gaps: list[str] = []
 
-    async with async_step("[2/5] Certification values outside an enum → 400"):
+    async with async_step("[2/5] Certification values outside an enum → 400", soft=gaps):
         for param, allowed in (("status", _CERT_STATUSES), ("certificationType", None)):
             resp = await portal.get_team_certifications(
                 params={param: "bogus"}, expected_status=None
@@ -133,7 +133,7 @@ async def test_partner_api_partner_portal_008(sa_partners_client, settings, crea
             else:
                 logger.info("CHECK {}='bogus' → 400 → OK", param)
 
-    async with async_step("[3/5] A module name that matches nothing → 200, empty page"):
+    async with async_step("[3/5] A module name that matches nothing → 200, empty page", soft=gaps):
         resp = await portal.get_modules(
             params={"name": "QA-AUTO no such module"}, expected_status=None
         )
@@ -149,7 +149,9 @@ async def test_partner_api_partner_portal_008(sa_partners_client, settings, crea
             else:
                 logger.info("CHECK unmatched name → 200 empty → OK")
 
-    async with async_step("[4/5] Bad pagination on modules → 400, never the whole table"):
+    async with async_step(
+        "[4/5] Bad pagination on modules → 400, never the whole table", soft=gaps
+    ):
         for params in ({"limit": -1}, {"limit": 0}, {"page": "abc"}):
             resp = await portal.get_modules(params=params, expected_status=None)
             if resp.status_code != 400:
@@ -162,7 +164,7 @@ async def test_partner_api_partner_portal_008(sa_partners_client, settings, crea
             else:
                 logger.info("CHECK modules {} → 400 → OK", params)
 
-    async with async_step("[5/5] groupByCategory must return usable rows"):
+    async with async_step("[5/5] groupByCategory must return usable rows", soft=gaps):
         body = _envelope(await portal.get_modules(params={"groupByCategory": "true"}))
         broken = [m for m in body["data"] if str(m.get("_id")) == "undefined" or len(m) <= 1]
         if broken:

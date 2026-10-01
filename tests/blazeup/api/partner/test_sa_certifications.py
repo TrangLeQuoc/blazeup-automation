@@ -115,7 +115,9 @@ async def test_partner_api_certifications_sa_012(sa_partners_client, seeded_part
     n_steps = len(cases) + 1
     gaps: list[str] = []
     for idx, (label, u, ct, reason, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{n_steps}] Reject revoke: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{n_steps}] Reject revoke: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.raw_revoke_certification(
                 u, ct, reason=reason, expected_status=None
             )
@@ -133,7 +135,7 @@ async def test_partner_api_certifications_sa_012(sa_partners_client, seeded_part
                 )
 
     async with async_step(
-        f"[{n_steps}/{n_steps}] Re-revoke an already-revoked cert → 404 not found"
+        f"[{n_steps}/{n_steps}] Re-revoke an already-revoked cert → 404 not found", soft=gaps
     ):
         await sa_partners_client.revoke_certification(
             uid, "sales_certified", reason="QA-AUTO first"
@@ -250,7 +252,7 @@ async def test_partner_api_certifications_sa_013(sa_partners_client, seeded_part
     gaps: list[str] = []
 
     for idx, (label, params, hint) in enumerate(robustness, start=1):
-        async with async_step(f"[{idx}/{n_steps}] Reject invalid: {label}"):
+        async with async_step(f"[{idx}/{n_steps}] Reject invalid: {label}", soft=gaps):
             r = await sa_partners_client.raw_list_partner_certifications(
                 pid, expected_status=None, **params
             )
@@ -261,7 +263,9 @@ async def test_partner_api_certifications_sa_013(sa_partners_client, seeded_part
                 gaps.append(f"{label}: status={r.status_code}, msg={msg!r}")
                 logger.error("CHECK {} → FAIL (status={}, msg={!r})", label, r.status_code, msg)
 
-    async with async_step(f"[{len(robustness) + 1}/{n_steps}] Malformed partnerId → 4xx"):
+    async with async_step(
+        f"[{len(robustness) + 1}/{n_steps}] Malformed partnerId → 4xx", soft=gaps
+    ):
         r = await sa_partners_client.raw_list_partner_certifications("not-an-id", limit=5)
         msg = str(r.json().get("message") or "")
         if 400 <= r.status_code < 500 and "invalid id" in msg.lower():
@@ -271,7 +275,7 @@ async def test_partner_api_certifications_sa_013(sa_partners_client, seeded_part
             logger.error("CHECK malformed partnerId → FAIL ({}, {!r})", r.status_code, msg)
 
     async with async_step(
-        f"[{len(robustness) + 2}/{n_steps}] Ghost partnerId → 200 empty (graceful)"
+        f"[{len(robustness) + 2}/{n_steps}] Ghost partnerId → 200 empty (graceful)", soft=gaps
     ):
         r = await sa_partners_client.raw_list_partner_certifications(_GHOST_ID, limit=5)
         if r.status_code == 200 and len(r.json().get("data") or []) == 0:
@@ -281,7 +285,7 @@ async def test_partner_api_certifications_sa_013(sa_partners_client, seeded_part
             logger.error("CHECK ghost partnerId → FAIL ({})", r.status_code)
 
     async with async_step(
-        f"[{n_steps}/{n_steps}] page=0 handled gracefully (4xx or default, never 5xx)"
+        f"[{n_steps}/{n_steps}] page=0 handled gracefully (4xx or default, never 5xx)", soft=gaps
     ):
         r = await sa_partners_client.raw_list_partner_certifications(pid, page=0, limit=5)
         assert r.status_code < 500, f"page=0 must not 5xx, got {r.status_code}"
@@ -367,7 +371,7 @@ async def test_partner_api_certifications_sa_014(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid: {label}", soft=gaps):
             r = await sa_partners_client.raw_list_certifications(expected_status=None, **params)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():

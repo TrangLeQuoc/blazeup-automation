@@ -205,7 +205,9 @@ async def test_partner_api_partner_portal_013(sa_partners_client, settings, crea
     ]
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid cert filter: {label}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject invalid cert filter: {label}", soft=gaps
+        ):
             r = await portal.get_certifications(params=params, expected_status=None)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -274,7 +276,9 @@ async def test_partner_api_partner_portal_012(sa_partners_client, settings, crea
     ]
     gaps: list[str] = []
     for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get own deal: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject get own deal: {label} → {want_status}", soft=gaps
+        ):
             r = await portal.get_deal(did, expected_status=None)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():

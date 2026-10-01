@@ -138,7 +138,9 @@ async def test_partner_api_deal_registration_pipeline_036(sa_deals_client):
     """
     gaps: list[str] = []
 
-    async with async_step("[1/4] Values outside an enum → 400 naming the allowed values"):
+    async with async_step(
+        "[1/4] Values outside an enum → 400 naming the allowed values", soft=gaps
+    ):
         for param, allowed in (("status", _STATUSES), ("dealType", _DEAL_TYPES)):
             resp = await sa_deals_client.list_deals(params={param: "bogus"}, expected_status=None)
             if resp.status_code != 400:
@@ -148,7 +150,7 @@ async def test_partner_api_deal_registration_pipeline_036(sa_deals_client):
             else:
                 logger.info("CHECK {}='bogus' → 400 listing every allowed value → OK", param)
 
-    async with async_step("[2/4] Malformed partnerId → 400"):
+    async with async_step("[2/4] Malformed partnerId → 400", soft=gaps):
         resp = await sa_deals_client.list_deals(
             params={"partnerId": "not-an-id"}, expected_status=None
         )
@@ -157,7 +159,7 @@ async def test_partner_api_deal_registration_pipeline_036(sa_deals_client):
         else:
             logger.info("CHECK malformed partnerId → 400 → OK")
 
-    async with async_step("[3/4] Bad pagination → 400, never a silent default"):
+    async with async_step("[3/4] Bad pagination → 400, never a silent default", soft=gaps):
         for params in ({"limit": -1}, {"limit": 0}, {"page": "abc"}):
             resp = await sa_deals_client.list_deals(params=params, expected_status=None)
             if resp.status_code != 400:
@@ -173,7 +175,9 @@ async def test_partner_api_deal_registration_pipeline_036(sa_deals_client):
             else:
                 logger.info("CHECK {} → 400 → OK", params)
 
-    async with async_step("[4/4] A well-formed id that matches nothing → 200, empty page"):
+    async with async_step(
+        "[4/4] A well-formed id that matches nothing → 200, empty page", soft=gaps
+    ):
         resp = await sa_deals_client.list_deals(params={"partnerId": _GHOST}, expected_status=None)
         if resp.status_code != 200:
             gaps.append(

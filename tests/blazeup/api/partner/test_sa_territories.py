@@ -105,7 +105,7 @@ async def test_partner_api_territories_011(sa_partners_client, seeded_partner):
     ]
     gaps: list[str] = []
     for idx, (label, body, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid assign: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid assign: {label}", soft=gaps):
             r = await sa_partners_client.raw_assign_territory(body, expected_status=None)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -240,7 +240,7 @@ async def test_partner_api_territories_013(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}"):
+        async with async_step(f"[{idx}/{len(cases)}] Reject invalid list: {label}", soft=gaps):
             r = await sa_partners_client.raw_list_territories(expected_status=None, **params)
             msg = str(r.json().get("message") or "")
             if 400 <= r.status_code < 500 and hint.lower() in msg.lower():
@@ -305,7 +305,9 @@ async def test_partner_api_territories_014(sa_partners_client):
     ]
     gaps: list[str] = []
     for idx, (label, tid, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{len(cases)}] Reject get-by-id: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{len(cases)}] Reject get-by-id: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.raw_get_territory(tid)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -391,7 +393,9 @@ async def test_partner_api_territories_015(sa_partners_client, seeded_partner):
     n_steps = len(cases) + 1
     gaps: list[str] = []
     for idx, (label, did, want_status, hint) in enumerate(cases, start=1):
-        async with async_step(f"[{idx}/{n_steps}] Reject delete: {label} → {want_status}"):
+        async with async_step(
+            f"[{idx}/{n_steps}] Reject delete: {label} → {want_status}", soft=gaps
+        ):
             r = await sa_partners_client.delete_territory(did, expected_status=None)
             msg = str(r.json().get("message") or "")
             if r.status_code == want_status and hint.lower() in msg.lower():
@@ -407,7 +411,7 @@ async def test_partner_api_territories_015(sa_partners_client, seeded_partner):
                 )
 
     async with async_step(
-        f"[{n_steps}/{n_steps}] Re-delete an already-removed territory → 404 not found"
+        f"[{n_steps}/{n_steps}] Re-delete an already-removed territory → 404 not found", soft=gaps
     ):
         await sa_partners_client.delete_territory(tid)
         r = await sa_partners_client.delete_territory(tid, expected_status=None)

@@ -153,7 +153,7 @@ async def test_partner_api_client_health_msp_010(sa_partners_client, settings, c
 
     gaps: list[str] = []
 
-    async with async_step("[2/5] A well-formed id that does not exist → 4xx, never 200"):
+    async with async_step("[2/5] A well-formed id that does not exist → 4xx, never 200", soft=gaps):
         resp = await portal.get_client(_GHOST, expected_status=None)
         if resp.status_code == 200:
             gaps.append(
@@ -170,7 +170,9 @@ async def test_partner_api_client_health_msp_010(sa_partners_client, settings, c
         else:
             logger.info("CHECK ghost attribution id → {} → OK", resp.status_code)
 
-    async with async_step("[3/5] An id that is not an id at all → 400, and no existence oracle"):
+    async with async_step(
+        "[3/5] An id that is not an id at all → 400, and no existence oracle", soft=gaps
+    ):
         bad = await portal.get_client("not-an-id", expected_status=None)
         if bad.status_code != 400:
             gaps.append(f"a malformed attribution id answered {bad.status_code}, expected 400")
@@ -189,7 +191,9 @@ async def test_partner_api_client_health_msp_010(sa_partners_client, settings, c
                     )
             logger.info("CHECK neither refusal leaks row data → OK")
 
-    async with async_step("[4/5] A REAL attribution owned by another partner → same refusal"):
+    async with async_step(
+        "[4/5] A REAL attribution owned by another partner → same refusal", soft=gaps
+    ):
         # Discovered, never hard-coded: the row must belong to somebody else and must still
         # exist when this runs. Nothing is written to it.
         sa_rows = (await sa_partners_client.list_attributions(params={"limit": 20})).json()
@@ -232,7 +236,7 @@ async def test_partner_api_client_health_msp_010(sa_partners_client, settings, c
                     other.status_code,
                 )
 
-    async with async_step("[5/5] Nonsensical pagination must not dump the whole table"):
+    async with async_step("[5/5] Nonsensical pagination must not dump the whole table", soft=gaps):
         for params in ({"limit": -1}, {"limit": 0}, {"page": "abc"}):
             r = await portal.list_clients(params=params, expected_status=None)
             if r.status_code == 200:

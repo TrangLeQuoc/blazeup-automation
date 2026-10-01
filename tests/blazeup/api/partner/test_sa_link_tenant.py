@@ -107,7 +107,7 @@ async def test_partner_api_deal_registration_pipeline_037(
 
     gaps: list[str] = []
 
-    async with async_step("[2/7] Guard 2: a deal that is not WON cannot be linked"):
+    async with async_step("[2/7] Guard 2: a deal that is not WON cannot be linked", soft=gaps):
         resp = await sa_deals_client.link_tenant(registered_id, _body(), expected_status=None)
         if resp.status_code < 400:
             gaps.append(
@@ -119,7 +119,7 @@ async def test_partner_api_deal_registration_pipeline_037(
         else:
             logger.info("CHECK non-WON deal → {} → OK", resp.status_code)
 
-    async with async_step("[3/7] Guard 3: a tenant that does not exist is refused"):
+    async with async_step("[3/7] Guard 3: a tenant that does not exist is refused", soft=gaps):
         resp = await sa_deals_client.link_tenant(won_id, _body(), expected_status=None)
         if resp.status_code < 400:
             gaps.append(
@@ -136,7 +136,9 @@ async def test_partner_api_deal_registration_pipeline_037(
         else:
             logger.info("CHECK ghost tenantId → {} → OK", resp.status_code)
 
-    async with async_step("[4/7] DTO: the platform tenant and a too-short reason are refused"):
+    async with async_step(
+        "[4/7] DTO: the platform tenant and a too-short reason are refused", soft=gaps
+    ):
         resp = await sa_deals_client.link_tenant(
             won_id, _body(tenantId=_PLATFORM_TENANT), expected_status=None
         )
@@ -160,7 +162,7 @@ async def test_partner_api_deal_registration_pipeline_037(
         else:
             logger.info("CHECK reason below the minimum length → 400 → OK")
 
-    async with async_step("[5/7] Guard 6: goLiveAt must sit between closedAt and now"):
+    async with async_step("[5/7] Guard 6: goLiveAt must sit between closedAt and now", soft=gaps):
         for label, value in (
             ("in the future", "2099-01-01T00:00:00.000Z"),
             ("before closedAt", "2020-01-01T00:00:00.000Z"),
@@ -178,7 +180,7 @@ async def test_partner_api_deal_registration_pipeline_037(
             else:
                 logger.info("CHECK goLiveAt {} → 400 → OK", label)
 
-    async with async_step("[6/7] A deal id that is not a deal"):
+    async with async_step("[6/7] A deal id that is not a deal", soft=gaps):
         for label, deal_id in (("ghost", _GHOST_DEAL), ("malformed", "not-an-id")):
             resp = await sa_deals_client.link_tenant(deal_id, _body(), expected_status=None)
             if resp.status_code < 400:
@@ -188,7 +190,7 @@ async def test_partner_api_deal_registration_pipeline_037(
             else:
                 logger.info("CHECK {} deal id → {} → OK", label, resp.status_code)
 
-    async with async_step("[7/7] Nothing was linked by any of the refused calls"):
+    async with async_step("[7/7] Nothing was linked by any of the refused calls", soft=gaps):
         deal = (await sa_deals_client.get_deal(won_id)).data
         assert not deal.get("wonTenantId"), (
             f"the deal carries wonTenantId={deal.get('wonTenantId')!r} after only refused link "
