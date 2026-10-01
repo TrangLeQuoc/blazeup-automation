@@ -100,6 +100,8 @@ jobs:
             echo "PARTNER_BASE_URL=${{ secrets.PARTNER_BASE_URL }}"
             echo "PARTNER_EMAIL=${{ secrets.PARTNER_EMAIL }}"
             echo "PARTNER_PASSWORD=${{ secrets.PARTNER_PASSWORD }}"
+            # Partner portal 2FA: base32 TOTP key — login (UI + API) fails without it.
+            echo "PARTNER_TOTP_SECRET=${{ secrets.PARTNER_TOTP_SECRET }}"
           } >> "$GITHUB_ENV"
 
       # ── Run via the merged runner — same entry point you use locally ───────
