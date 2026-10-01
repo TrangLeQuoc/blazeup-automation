@@ -1,0 +1,7 @@
+{
+  "statusCode": 500,
+  "message": "Plan executor error during findAndModify :: caused by :: Performing an update on the path '_id' would modify the immutable field '_id'",
+  "error": "MongoServerError",
+  "timestamp": "2026-10-01T08:12:54.665Z",
+  "path": "/sa-partners-api/v1/sa/partners/6abe16059093518fdee901b2"
+}

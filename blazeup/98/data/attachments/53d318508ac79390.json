@@ -1,0 +1,7 @@
+{
+  "method": "PATCH",
+  "endpoint": "sa-partners-api/v1/sa/partners/6abe16059093518fdee901b2",
+  "payload": {
+    "code": "QA-HACKED"
+  }
+}

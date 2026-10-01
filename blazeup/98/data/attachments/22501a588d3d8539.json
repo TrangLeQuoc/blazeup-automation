@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6abe16059093518fdee901b2",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Anderson, Barron and Coleman",
+    "code": "PAR-111094",
+    "email": "qa.auto+christopherwoods-397a64976acf@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://www.king.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-10-01T08:12:53.602Z",
+    "updatedAt": "2026-10-01T08:12:54.128Z",
+    "__v": 0,
+    "openDealsCount": 0
+  },
+  "message": "Partner retrieved successfully"
+}
