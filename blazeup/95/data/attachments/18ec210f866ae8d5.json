@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners/6abe0f2c9093518fdee90080/deactivate",
+  "payload": {
+    "reason": "first"
+  }
+}

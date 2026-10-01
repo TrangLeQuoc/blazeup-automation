@@ -1,0 +1,12 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
+
+Negative counterpart of _004 (deactivate). A GHOST id (well-formed but
+non-existent) → 404 'not found'; a MALFORMED id → 400 'invalid id'. Deactivating
+an already-suspended partner is observed (currently a no-op 201 — idempotent) and
+logged, not failed.
+
+GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+its own ""not found"" message. That case asserts 404 and FAILS until the BE returns
+the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
+","479","test_partner_api_partner_account_management_014","API","2026-10-01","passed","2026-10-01","","partner","",""
