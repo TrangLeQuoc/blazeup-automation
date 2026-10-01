@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid credentials",
+  "error": "Bad Request",
+  "timestamp": "2026-10-01T03:48:27.930Z",
+  "path": "/sa-auth-api/sign-in/credentials"
+}
