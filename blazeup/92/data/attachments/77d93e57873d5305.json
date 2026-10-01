@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Invalid id: 'not-a-plan'",
+  "error": "Bad Request",
+  "timestamp": "2026-10-01T03:58:13.510Z",
+  "path": "/sa-partners-api/v1/partner/portal/plans/not-a-plan"
+}

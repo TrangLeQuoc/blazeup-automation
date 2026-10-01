@@ -1,0 +1,28 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Kennedy PLC",
+    "code": "PAR-528194",
+    "email": "qa.auto+foxmatthew-a86dab1df9a2@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "http://kelly.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "_id": "6abdda511b740e61df68f8ac",
+    "payoutAccounts": [],
+    "createdAt": "2026-10-01T03:58:09.844Z",
+    "updatedAt": "2026-10-01T03:58:09.844Z"
+  },
+  "message": "Partner created successfully"
+}
