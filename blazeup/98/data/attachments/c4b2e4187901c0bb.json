@@ -1,0 +1,5 @@
+{
+  "method": "PATCH",
+  "endpoint": "sa-partners-api/v1/sa/partners/6abe3a069093518fdee9045e",
+  "payload": {}
+}
