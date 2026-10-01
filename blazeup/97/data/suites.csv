@@ -1,0 +1,12 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_TERRITORIES_014: get territory with invalid id - rejected with the correct code.
+
+Negative counterpart of _003. Self-proving:
+
+* a GHOST id (well-formed but non-existent) → 404 'not found';
+* a MALFORMED id → 400 'invalid id'.
+
+GAP this test surfaces: the ghost id returns 400 (not 404) — the status contradicts
+its own ""not found"" message. That case asserts 404 and FAILS until the BE returns
+the correct code (confirm with BE). Same root cause as the deals get-by-id gap.
+","406","test_partner_api_territories_014","API","2026-10-01","passed","2026-10-01","","partner","",""
