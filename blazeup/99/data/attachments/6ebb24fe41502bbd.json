@@ -1,0 +1,38 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6abe3b757d1bcf30d310a7e0",
+    "tenantId": "blazeup-platform",
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "partnerName": "QA-AUTO Gonzales-Combs",
+    "dealType": "referral",
+    "status": "approved",
+    "prospectName": "QA-AUTO Gomez LLC Opportunity cfd93ddf",
+    "prospectEmail": "qa.auto+perezchristina-e1fc73eeef84@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 89103172,
+    "planId": "6abc78bfd6baf1566fead02c",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Look fight customer impact space reflect.",
+    "tenantDomain": "qa-auto-f8b25c5493.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1701,
+    "protectionExpiresAt": "2026-11-30T10:52:37.434Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "protectionExtensions": [],
+    "createdAt": "2026-10-01T10:52:37.457Z",
+    "updatedAt": "2026-10-01T10:52:37.643Z",
+    "commissionRate": 0.04,
+    "commissionRateLockedAt": "2026-10-01T10:52:37.639Z",
+    "rateTableVersion": "deal-stamped",
+    "reviewedAt": "2026-10-01T10:52:37.639Z",
+    "reviewedBy": "6aa38ceace02b83220d35283"
+  },
+  "message": "Deal approved successfully"
+}

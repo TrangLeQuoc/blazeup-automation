@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "partnerName": "QA-AUTO Gonzales-Combs",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Evans and Sons Opportunity fbf7045c",
+    "prospectEmail": "qa.auto+thomaswoods-8dec8587f2c3@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 158528394,
+    "planId": "6abc78bfd6baf1566fead02c",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Strategy try week body.",
+    "tenantDomain": "qa-auto-343e82059d.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 1924,
+    "protectionExpiresAt": "2026-11-30T10:52:36.129Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6abe3b747d1bcf30d310a768",
+    "protectionExtensions": [],
+    "createdAt": "2026-10-01T10:52:36.146Z",
+    "updatedAt": "2026-10-01T10:52:36.146Z"
+  },
+  "message": "Deal registered successfully"
+}

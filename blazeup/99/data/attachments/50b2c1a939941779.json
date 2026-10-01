@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6abe3b747d1bcf30d310a768/win",
+  "payload": {
+    "companyWebsite": "https://qa-auto.example.com",
+    "industry": "Technology",
+    "adminLastName": "Auto",
+    "actualAcvCents": 100000,
+    "region": "asia-southeast1",
+    "billingCycle": "annual"
+  }
+}

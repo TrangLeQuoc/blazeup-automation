@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "planId": "6abc78bfd6baf1566fead02c",
+    "dealType": "referral",
+    "tenantDomain": "qa-auto-343e82059d.com",
+    "prospectName": "QA-AUTO Evans and Sons Opportunity fbf7045c",
+    "prospectEmail": "qa.auto+thomaswoods-8dec8587f2c3@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 158528394,
+    "currency": "USD",
+    "numberOfEmployee": 1924,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Strategy try week body."
+  }
+}

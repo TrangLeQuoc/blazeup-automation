@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "partnerName": "QA-AUTO Gonzales-Combs",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Cochran PLC Opportunity 01383814",
+    "prospectEmail": "qa.auto+vfarmer-40058bf3aaaf@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 497901987,
+    "planId": "6abc78bfd6baf1566fead02c",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Between kid fall skin subject decade purpose.",
+    "tenantDomain": "qa-auto-9e5fa32191.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 2554,
+    "protectionExpiresAt": "2026-11-30T10:52:36.539Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6abe3b747d1bcf30d310a78f",
+    "protectionExtensions": [],
+    "createdAt": "2026-10-01T10:52:36.557Z",
+    "updatedAt": "2026-10-01T10:52:36.557Z"
+  },
+  "message": "Deal registered successfully"
+}

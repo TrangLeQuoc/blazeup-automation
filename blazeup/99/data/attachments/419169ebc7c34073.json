@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Cannot mark the deal as won: required win-intake fields — companyWebsite is missing. Provide it in the win request, or set the matching prospect email/phone on the deal before winning.",
+  "error": "Cannot mark the deal as won: required win-intake fields — companyWebsite is missing. Provide it in the win request, or set the matching prospect email/phone on the deal before winning.",
+  "timestamp": "2026-10-01T10:52:35.531Z",
+  "path": "/sa-partners-api/v1/sa/deals/6abe3b737d1bcf30d310a718/win"
+}

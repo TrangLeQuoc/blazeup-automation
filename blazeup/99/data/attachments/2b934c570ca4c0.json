@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "planId": "6abc78bfd6baf1566fead02c",
+    "dealType": "referral",
+    "tenantDomain": "qa-auto-f8b25c5493.com",
+    "prospectName": "QA-AUTO Gomez LLC Opportunity cfd93ddf",
+    "prospectEmail": "qa.auto+perezchristina-e1fc73eeef84@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 89103172,
+    "currency": "USD",
+    "numberOfEmployee": 1701,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Look fight customer impact space reflect."
+  }
+}

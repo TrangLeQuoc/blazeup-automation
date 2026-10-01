@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Gonzales-Combs",
+    "email": "qa.auto+cookmegan-6b63ccd5e786@mailinator.com",
+    "type": "channel",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://www.black.biz/"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "partnerName": "QA-AUTO Gonzales-Combs",
+    "dealType": "referral",
+    "status": "registered",
+    "prospectName": "QA-AUTO Hester LLC Opportunity f4bc71f1",
+    "prospectEmail": "qa.auto+lisa90-a3bd731bf937@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 296551551,
+    "planId": "6abc78bfd6baf1566fead02c",
+    "expectedCloseDate": "2026-12-31T00:00:00.000Z",
+    "notes": "QA-AUTO Memory five nice green carry both floor near.",
+    "tenantDomain": "qa-auto-f44a9cde0d.com",
+    "billingCycle": "annual",
+    "numberOfEmployee": 3617,
+    "protectionExpiresAt": "2026-11-30T10:52:35.150Z",
+    "conflictStatus": "none",
+    "conflictingDealIds": [],
+    "schemaVersion": 1,
+    "_id": "6abe3b737d1bcf30d310a718",
+    "protectionExtensions": [],
+    "createdAt": "2026-10-01T10:52:35.204Z",
+    "updatedAt": "2026-10-01T10:52:35.204Z"
+  },
+  "message": "Deal registered successfully"
+}

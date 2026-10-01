@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals",
+  "payload": {
+    "partnerId": "6abe3b727d1bcf30d310a705",
+    "planId": "6abc78bfd6baf1566fead02c",
+    "dealType": "referral",
+    "tenantDomain": "qa-auto-9e5fa32191.com",
+    "prospectName": "QA-AUTO Cochran PLC Opportunity 01383814",
+    "prospectEmail": "qa.auto+vfarmer-40058bf3aaaf@mailinator.com",
+    "prospectPhone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "prospectCountry": "US",
+    "estimatedAcvCents": 497901987,
+    "currency": "USD",
+    "numberOfEmployee": 2554,
+    "billingCycle": "annual",
+    "expectedCloseDate": "2026-12-31",
+    "notes": "QA-AUTO Between kid fall skin subject decade purpose."
+  }
+}

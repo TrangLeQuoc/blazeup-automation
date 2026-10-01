@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/deals/6abe3b737d1bcf30d310a73d/approve",
+  "payload": {
+    "planId": "6abc78bfd6baf1566fead02c"
+  }
+}

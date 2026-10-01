@@ -1,0 +1,15 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_DEAL_REGISTRATION_PIPELINE_034: win invalid/illegal-state - rejected with the correct code.
+
+Negative counterpart of _018 (win). Illegal transitions and bad ids are rejected
+correctly; the DTO's required fields SHOULD be enforced too. All cases run
+(failures collected).
+
+GAP this test surfaces (verified 2026-07-22): WinDealDto declares companyWebsite,
+industry, adminFirstName, adminLastName as required, but the BE accepts a win with
+any/all of them missing (even an empty body -> 201, deal won). Cases 1-4 assert a
+400 and therefore FAIL until the BE enforces the required intake - confirm with BE.
+The id/state cases (5-8) are correct: winning a non-approved deal -> 400 'cannot
+transition'; a ghost id -> 404; a malformed id -> 400; re-winning a won deal -> 400
+(mutating action, repeat rejected - not a create).
+","3696","test_partner_api_deal_registration_pipeline_034","API","2026-10-01","passed","2026-10-01","","partner","",""
