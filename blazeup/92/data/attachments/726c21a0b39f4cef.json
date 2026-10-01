@@ -1,0 +1,7 @@
+{
+  "statusCode": 404,
+  "message": "We couldn't find an available billing plan called 'null'. Please choose another.",
+  "error": "Not Found",
+  "timestamp": "2026-10-01T06:08:56.966Z",
+  "path": "/sa-partners-api/v1/partner/portal/plans/null"
+}

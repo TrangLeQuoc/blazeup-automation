@@ -1,0 +1,14 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6abdf8f69093518fdee8ff81",
+    "partnerId": "6abdf8f59093518fdee8ff69",
+    "email": "qa.auto+nicolekennedy-152b780c7c8a@mailinator.com",
+    "firstName": "Tyrone",
+    "lastName": "Chang",
+    "role": "admin",
+    "status": "active",
+    "tempPassword": "***"
+  },
+  "message": "Partner user created successfully"
+}

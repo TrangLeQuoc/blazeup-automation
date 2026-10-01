@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "Please select a billing plan.",
+  "error": "Bad Request",
+  "timestamp": "2026-10-01T06:08:56.916Z",
+  "path": "/sa-partners-api/v1/partner/portal/plans/%20"
+}

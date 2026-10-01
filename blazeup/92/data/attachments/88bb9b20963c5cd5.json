@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6abdf8f59093518fdee8ff69",
+    "email": "qa.auto+nicolekennedy-152b780c7c8a@mailinator.com",
+    "firstName": "Tyrone",
+    "lastName": "Chang",
+    "role": "admin"
+  }
+}

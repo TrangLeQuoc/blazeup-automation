@@ -10,4 +10,4 @@ its OpenAPI `@ApiParam` documents a kebab-case slug, so the row's own `planId` m
 It does not — see BUG-API-029.
 
 All cases run and failures are collected.
-","4351","test_partner_api_partner_portal_010","API","2026-10-01","failed","2026-10-01","","partner","",""
+","3663","test_partner_api_partner_portal_010","API","2026-10-01","passed","2026-10-01","","partner","",""

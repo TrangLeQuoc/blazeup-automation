@@ -1,0 +1,91 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6abc78bfd6baf1566fead02c",
+    "planId": "full-modules-ss",
+    "displayName": "Full Modules - DONT TOUCH (v8)",
+    "edition": "enterprise",
+    "billingCycle": "monthly",
+    "currency": "USD",
+    "basePrice": {
+      "value": 10,
+      "_id": "6abc78f8d6baf1566fead0bc",
+      "id": "6abc78f8d6baf1566fead0bc"
+    },
+    "localePricing": [],
+    "annualDiscountPercent": 8,
+    "seatTiers": [
+      {
+        "tierLabel": "1 - 150 seats",
+        "minSeats": 1,
+        "maxSeats": 150,
+        "pricePerSeatPerCycle": {
+          "value": 10,
+          "_id": "6abc78f8d6baf1566fead0be",
+          "id": "6abc78f8d6baf1566fead0be"
+        },
+        "discountPercent": 0,
+        "_id": "6abc78f8d6baf1566fead0bd",
+        "id": "6abc78f8d6baf1566fead0bd"
+      },
+      {
+        "tierLabel": "151 - 300 seats",
+        "minSeats": 151,
+        "maxSeats": 300,
+        "pricePerSeatPerCycle": {
+          "value": 9.6,
+          "_id": "6abc78f8d6baf1566fead0c0",
+          "id": "6abc78f8d6baf1566fead0c0"
+        },
+        "discountPercent": 4,
+        "_id": "6abc78f8d6baf1566fead0bf",
+        "id": "6abc78f8d6baf1566fead0bf"
+      },
+      {
+        "tierLabel": "301 - 500 seats",
+        "minSeats": 301,
+        "maxSeats": 500,
+        "pricePerSeatPerCycle": {
+          "value": 9.200000000000001,
+          "_id": "6abc78f8d6baf1566fead0c2",
+          "id": "6abc78f8d6baf1566fead0c2"
+        },
+        "discountPercent": 8,
+        "_id": "6abc78f8d6baf1566fead0c1",
+        "id": "6abc78f8d6baf1566fead0c1"
+      }
+    ],
+    "trialDays": 7,
+    "includedModules": [
+      {
+        "_id": "6a7604176b47d2fc3996c7ce",
+        "name": "Full Modules",
+        "category": "Special Testing",
+        "status": "ACTIVE",
+        "id": "6a7604176b47d2fc3996c7ce"
+      }
+    ],
+    "connectors": [],
+    "addOns": [],
+    "meters": [
+      {
+        "meterId": "blazey-credits",
+        "displayName": "Blazey Credits",
+        "unitName": "credits",
+        "includedQuantity": 10000,
+        "pricePerUnit": {
+          "value": 0.1,
+          "_id": "6abc78f8d6baf1566fead0c4",
+          "id": "6abc78f8d6baf1566fead0c4"
+        },
+        "hardCap": null,
+        "hardCapExempt": false,
+        "_id": "6abc78f8d6baf1566fead0c3",
+        "id": "6abc78f8d6baf1566fead0c3"
+      }
+    ],
+    "status": "published",
+    "publishedAt": "2026-09-30T02:50:45.438Z"
+  },
+  "message": "Plan retrieved"
+}

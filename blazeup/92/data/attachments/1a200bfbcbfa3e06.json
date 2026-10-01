@@ -1,0 +1,399 @@
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "_id": "6abc78bfd6baf1566fead02c",
+      "planId": "full-modules-ss",
+      "displayName": "Full Modules - DONT TOUCH (v8)",
+      "edition": "enterprise",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 10,
+        "_id": "6abc78f8d6baf1566fead0bc",
+        "id": "6abc78f8d6baf1566fead0bc"
+      },
+      "localePricing": [],
+      "annualDiscountPercent": 8,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 150 seats",
+          "minSeats": 1,
+          "maxSeats": 150,
+          "pricePerSeatPerCycle": {
+            "value": 10,
+            "_id": "6abc78f8d6baf1566fead0be",
+            "id": "6abc78f8d6baf1566fead0be"
+          },
+          "discountPercent": 0,
+          "_id": "6abc78f8d6baf1566fead0bd",
+          "id": "6abc78f8d6baf1566fead0bd"
+        },
+        {
+          "tierLabel": "151 - 300 seats",
+          "minSeats": 151,
+          "maxSeats": 300,
+          "pricePerSeatPerCycle": {
+            "value": 9.6,
+            "_id": "6abc78f8d6baf1566fead0c0",
+            "id": "6abc78f8d6baf1566fead0c0"
+          },
+          "discountPercent": 4,
+          "_id": "6abc78f8d6baf1566fead0bf",
+          "id": "6abc78f8d6baf1566fead0bf"
+        },
+        {
+          "tierLabel": "301 - 500 seats",
+          "minSeats": 301,
+          "maxSeats": 500,
+          "pricePerSeatPerCycle": {
+            "value": 9.200000000000001,
+            "_id": "6abc78f8d6baf1566fead0c2",
+            "id": "6abc78f8d6baf1566fead0c2"
+          },
+          "discountPercent": 8,
+          "_id": "6abc78f8d6baf1566fead0c1",
+          "id": "6abc78f8d6baf1566fead0c1"
+        }
+      ],
+      "trialDays": 7,
+      "includedModules": [
+        {
+          "_id": "6a7604176b47d2fc3996c7ce",
+          "name": "Full Modules",
+          "category": "Special Testing",
+          "status": "ACTIVE",
+          "id": "6a7604176b47d2fc3996c7ce"
+        }
+      ],
+      "connectors": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "blazey-credits",
+          "displayName": "Blazey Credits",
+          "unitName": "credits",
+          "includedQuantity": 10000,
+          "pricePerUnit": {
+            "value": 0.1,
+            "_id": "6abc78f8d6baf1566fead0c4",
+            "id": "6abc78f8d6baf1566fead0c4"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6abc78f8d6baf1566fead0c3",
+          "id": "6abc78f8d6baf1566fead0c3"
+        }
+      ],
+      "status": "published",
+      "publishedAt": "2026-09-30T02:50:45.438Z"
+    },
+    {
+      "_id": "6ab0e0a9e87ceb4b2c1a1b77",
+      "planId": "pro-allowed-over-seats",
+      "displayName": "PRO allowed over seats (v10)",
+      "edition": "pro",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 20,
+        "_id": "6ab22a957bcb862b96df6a53",
+        "id": "6ab22a957bcb862b96df6a53"
+      },
+      "localePricing": [],
+      "annualDiscountPercent": 10,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 250 seats",
+          "minSeats": 1,
+          "maxSeats": 250,
+          "pricePerSeatPerCycle": {
+            "value": 20,
+            "_id": "6ab22a957bcb862b96df6a55",
+            "id": "6ab22a957bcb862b96df6a55"
+          },
+          "discountPercent": 0,
+          "_id": "6ab22a957bcb862b96df6a54",
+          "id": "6ab22a957bcb862b96df6a54"
+        },
+        {
+          "tierLabel": "251 - 500 seats",
+          "minSeats": 251,
+          "maxSeats": 500,
+          "pricePerSeatPerCycle": {
+            "value": 19,
+            "_id": "6ab22a957bcb862b96df6a57",
+            "id": "6ab22a957bcb862b96df6a57"
+          },
+          "discountPercent": 5,
+          "_id": "6ab22a957bcb862b96df6a56",
+          "id": "6ab22a957bcb862b96df6a56"
+        }
+      ],
+      "trialDays": 7,
+      "includedModules": [
+        {
+          "_id": "6a7d7bf279bc6bb828011945",
+          "name": "Employee Management",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d7bf279bc6bb828011945"
+        },
+        {
+          "_id": "6a7d7c4f79bc6bb828011a57",
+          "name": "Time Management",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d7c4f79bc6bb828011a57"
+        },
+        {
+          "_id": "6a7d7d9279bc6bb828011ce8",
+          "name": "Social Pulse",
+          "category": "Admin Operation",
+          "status": "ACTIVE",
+          "id": "6a7d7d9279bc6bb828011ce8"
+        },
+        {
+          "_id": "6a7604176b47d2fc3996c7ce",
+          "name": "Full Modules",
+          "category": "Special Testing",
+          "status": "ACTIVE",
+          "id": "6a7604176b47d2fc3996c7ce"
+        },
+        {
+          "_id": "6a7d7c0f79bc6bb828011996",
+          "name": "Employee Recognition",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d7c0f79bc6bb828011996"
+        },
+        {
+          "_id": "6a7d7ca379bc6bb828011ad7",
+          "name": "Onboarding Management",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d7ca379bc6bb828011ad7"
+        },
+        {
+          "_id": "6a7d7cb879bc6bb828011b1c",
+          "name": "Offboarding Management",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d7cb879bc6bb828011b1c"
+        },
+        {
+          "_id": "6a7d7d5879bc6bb828011c4e",
+          "name": "HR Communication",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d7d5879bc6bb828011c4e"
+        },
+        {
+          "_id": "6a7d82e679bc6bb82801231c",
+          "name": "Payroll",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d82e679bc6bb82801231c"
+        },
+        {
+          "_id": "6a7d830079bc6bb82801236a",
+          "name": "Performance Management",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d830079bc6bb82801236a"
+        },
+        {
+          "_id": "6a7d833179bc6bb8280123ae",
+          "name": "LMS",
+          "category": "Human Resource",
+          "status": "ACTIVE",
+          "id": "6a7d833179bc6bb8280123ae"
+        }
+      ],
+      "connectors": [
+        {
+          "_id": "6aa283412ac1cb7eab5421d9",
+          "name": "Slack",
+          "key": "***",
+          "category": "comms",
+          "status": "published",
+          "iconURL": "",
+          "id": "6aa283412ac1cb7eab5421d9"
+        }
+      ],
+      "addOns": [
+        {
+          "_id": "6a7d7b9a79bc6bb8280118f3",
+          "name": "Admin Apps",
+          "category": "Common",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 5,
+            "_id": "6ab22a957bcb862b96df6a58",
+            "id": "6ab22a957bcb862b96df6a58"
+          },
+          "id": "6a7d7b9a79bc6bb8280118f3"
+        },
+        {
+          "_id": "6a7d835079bc6bb8280123f2",
+          "name": "Messaging",
+          "category": "Communication",
+          "pricingModel": "per_seat",
+          "pricePerSeatPerMonth": {
+            "value": 5,
+            "_id": "6ab22a957bcb862b96df6a59",
+            "id": "6ab22a957bcb862b96df6a59"
+          },
+          "id": "6a7d835079bc6bb8280123f2"
+        },
+        {
+          "_id": "6a7d7e5b79bc6bb828011e0c",
+          "name": "CRM",
+          "category": "Sales & Marketing",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 100,
+            "_id": "6ab22a957bcb862b96df6a5a",
+            "id": "6ab22a957bcb862b96df6a5a"
+          },
+          "id": "6a7d7e5b79bc6bb828011e0c"
+        },
+        {
+          "_id": "6a7d7d1879bc6bb828011bcf",
+          "name": "Expense Management",
+          "category": "Finance",
+          "pricingModel": "flat_monthly",
+          "flatMonthlyPrice": {
+            "value": 500,
+            "_id": "6ab22a957bcb862b96df6a5b",
+            "id": "6ab22a957bcb862b96df6a5b"
+          },
+          "id": "6a7d7d1879bc6bb828011bcf"
+        }
+      ],
+      "meters": [
+        {
+          "meterId": "blazey-credits",
+          "displayName": "Blazey Credits",
+          "unitName": "credits",
+          "includedQuantity": 1000000,
+          "pricePerUnit": {
+            "value": 0.1,
+            "_id": "6ab22a957bcb862b96df6a5d",
+            "id": "6ab22a957bcb862b96df6a5d"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6ab22a957bcb862b96df6a5c",
+          "id": "6ab22a957bcb862b96df6a5c"
+        }
+      ],
+      "status": "published",
+      "publishedAt": "2026-09-22T09:12:31.688Z"
+    },
+    {
+      "_id": "6ab5ee2b7bcb862b96df9b24",
+      "planId": "starter-plan",
+      "displayName": "Starter Plan (v6)",
+      "edition": "starter",
+      "billingCycle": "monthly",
+      "currency": "USD",
+      "basePrice": {
+        "value": 8,
+        "_id": "6ab5ee527bcb862b96df9b9e",
+        "id": "6ab5ee527bcb862b96df9b9e"
+      },
+      "localePricing": [
+        {
+          "country": "IN",
+          "price": 5,
+          "discountPercent": 5,
+          "_id": "6ab5ee527bcb862b96df9ba5",
+          "id": "6ab5ee527bcb862b96df9ba5"
+        },
+        {
+          "country": "VN",
+          "price": 4,
+          "discountPercent": 5,
+          "_id": "6ab5ee527bcb862b96df9ba6",
+          "id": "6ab5ee527bcb862b96df9ba6"
+        },
+        {
+          "country": "AS",
+          "price": 4,
+          "discountPercent": 2,
+          "_id": "6ab5ee527bcb862b96df9ba7",
+          "id": "6ab5ee527bcb862b96df9ba7"
+        },
+        {
+          "country": "US",
+          "price": 10,
+          "discountPercent": 3,
+          "_id": "6ab5ee527bcb862b96df9ba8",
+          "id": "6ab5ee527bcb862b96df9ba8"
+        }
+      ],
+      "annualDiscountPercent": 5,
+      "seatTiers": [
+        {
+          "tierLabel": "1 - 50 seats",
+          "minSeats": 1,
+          "maxSeats": 50,
+          "pricePerSeatPerCycle": {
+            "value": 8,
+            "_id": "6ab5ee527bcb862b96df9ba0",
+            "id": "6ab5ee527bcb862b96df9ba0"
+          },
+          "discountPercent": 0,
+          "_id": "6ab5ee527bcb862b96df9b9f",
+          "id": "6ab5ee527bcb862b96df9b9f"
+        },
+        {
+          "tierLabel": "51 - 100 seats",
+          "minSeats": 51,
+          "maxSeats": 100,
+          "pricePerSeatPerCycle": {
+            "value": 8,
+            "_id": "6ab5ee527bcb862b96df9ba2",
+            "id": "6ab5ee527bcb862b96df9ba2"
+          },
+          "discountPercent": 0,
+          "_id": "6ab5ee527bcb862b96df9ba1",
+          "id": "6ab5ee527bcb862b96df9ba1"
+        }
+      ],
+      "trialDays": 14,
+      "includedModules": [
+        {
+          "_id": "6a7d7b9a79bc6bb8280118f3",
+          "name": "Admin Apps",
+          "category": "Common",
+          "status": "ACTIVE",
+          "id": "6a7d7b9a79bc6bb8280118f3"
+        }
+      ],
+      "connectors": [],
+      "addOns": [],
+      "meters": [
+        {
+          "meterId": "blazey-credits",
+          "displayName": "Blazey Credits",
+          "unitName": "credits",
+          "includedQuantity": 500,
+          "pricePerUnit": {
+            "value": 0.1,
+            "_id": "6ab5ee527bcb862b96df9ba4",
+            "id": "6ab5ee527bcb862b96df9ba4"
+          },
+          "hardCap": null,
+          "hardCapExempt": false,
+          "_id": "6ab5ee527bcb862b96df9ba3",
+          "id": "6ab5ee527bcb862b96df9ba3"
+        }
+      ],
+      "status": "published",
+      "publishedAt": "2026-09-25T07:47:17.126Z"
+    }
+  ],
+  "message": "Plans retrieved"
+}
