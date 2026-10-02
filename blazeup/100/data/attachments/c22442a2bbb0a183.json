@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6abf58b87e1ce1684866feed",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Cherry-Davis",
+    "code": "PAR-563989",
+    "email": "qa.auto+briantaylor-c86b57c5dffb@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "http://ross-hayes.biz/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-10-02T07:09:44.216Z",
+    "updatedAt": "2026-10-02T07:09:44.216Z",
+    "__v": 0,
+    "openDealsCount": 0
+  },
+  "message": "Partner retrieved successfully"
+}

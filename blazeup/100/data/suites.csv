@@ -1,0 +1,10 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_024: SA partner update invalid - correct rejection.
+
+Negative counterpart of _023: a ghost id, a malformed id, an enum outside the spec, and an
+attempt to overwrite an identifier the DTO does not expose. An empty body is asserted as a
+legitimate no-op, not an error — UpdatePartnerDto declares no required field.
+
+All cases run and failures are collected. A ghost id is self-proving: this endpoint is the
+one that must report it.
+","2863","test_partner_api_partner_account_management_024","API","2026-10-02","failed","2026-10-02","","partner","",""

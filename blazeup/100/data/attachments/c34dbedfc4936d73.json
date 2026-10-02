@@ -1,0 +1,7 @@
+{
+  "method": "PATCH",
+  "endpoint": "sa-partners-api/v1/sa/partners/not-an-id",
+  "payload": {
+    "name": "QA-AUTO nope"
+  }
+}

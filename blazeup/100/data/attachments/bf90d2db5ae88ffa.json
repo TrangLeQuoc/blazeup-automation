@@ -1,0 +1,11 @@
+{
+  "statusCode": 200,
+  "data": {
+    "accessToken": "***",
+    "refreshToken": "***",
+    "customToken": "***",
+    "sessionId": "6abf58b7d430a61c2e7d86f7",
+    "isFirstLogin": false
+  },
+  "message": "Sign in successfully"
+}
