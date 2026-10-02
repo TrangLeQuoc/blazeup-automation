@@ -1,6 +1,7 @@
 """SA tenant<->partner attribution ledger — GET /v1/sa/partner-attributions (sa-partners-api).
 
-Maps to the test plan: PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_012 / _013. PRD §7.5.
+Maps to the test plan: PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002 (PRD §7.1 provision
+leg) / _012 / _013 (PRD §7.5 ledger).
 
 The SA-wide counterpart of the partner portal's "My Clients". Same underlying collection, two
 deliberately different scopes: the portal's `findByIdScoped(id, partnerId)` refuses a row that
@@ -8,17 +9,27 @@ is not the caller's, while this controller calls `findByIdScoped(id)` with no sc
 an SA operator reads every partner's row. Proving that contrast is the point of _012 — it is
 the same property CLIENT_HEALTH_MSP_010 proves from the other side.
 
-A row is written only once a won deal's tenant is provisioned, which automation cannot make
-happen (see G1/G2 in ENDPOINT_BUILD_LIST.md). These TCs therefore READ rows that already exist
-and never create one. Every id used is discovered at run time from the list — nothing is
-hard-coded and nothing is written — and if the ledger is ever empty the affected steps report
-themselves unproven instead of passing silently.
+A row is written only once a won deal's tenant is provisioned. The ledger TCs (_012/_013)
+therefore READ rows that already exist and never create one; every id is discovered at run time
+and nothing is written. The ONE exception is _002, which drives register→approve→win itself and
+asserts the provisioning that *would* write such a row actually completes (it currently fails —
+BUG-API-033 — and is the regression guard for when BE's provisioning worker runs on staging).
 """
+
+import asyncio
+import uuid
 
 import pytest
 from loguru import logger
 
+from utils.data_factory import make_deal
 from utils.log_helper import async_step
+
+# Provisioning is async with no published SLA (BE: "indeterminate"); 117 deals sit 'overdue' on
+# staging, so a generous bound still fails fast enough for CI while giving a healthy BE time to
+# resolve. Revisit once BE confirms the expected provisioning completion time.
+_PROVISION_POLL_TIMEOUT_S = 90
+_PROVISION_POLL_INTERVAL_S = 10
 
 # From partner-tenant-attribution.schema.ts — the spec's own enums, not guesses.
 _STATUSES = ("active", "terminated")
@@ -236,3 +247,117 @@ async def test_partner_api_tenant_provisioning_attribution_013(sa_partners_clien
 
     assert not gaps, "Gaps on GET /v1/sa/partner-attributions:\n  - " + "\n  - ".join(gaps)
     logger.info("RESULT: every invalid filter and id refused, empty distinguished from an error")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+async def test_partner_api_tenant_provisioning_attribution_002(sa_deals_client, seeded_partner):
+    """PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002: win an approved deal -> tenant provisioning completes.
+
+    Provision leg of the close->provision->commission chain (PRD v1.8 §7.1). Scope
+    is ONLY the provisioning outcome: a WON deal's tenant actually provisions —
+    ``wonTenantId`` + ``goLiveAt`` get stamped and ``provisioningState`` reaches
+    ``resolved`` within a bounded time. ``goLiveAt`` anchors the commission
+    eligibility window, so this is the gate everything downstream depends on.
+
+    NOT covered here: the commission leg (accrues later from
+    ``payment.gateway.payment.succeeded``; stays blocked on _005/_006 behind
+    ``COMMISSION_ACCRUAL_ENABLED`` + a payment event) and the win-endpoint
+    negatives/idempotency (those belong to the deal-pipeline win TC, not to this
+    outcome check).
+
+    Currently FAILS by design — it reproduces BUG-API-033 (staging: 0 of the WON
+    deals ever reach ``resolved``; ``wonTenantId``/``goLiveAt`` never stamped). It
+    turns green the moment BE's provisioning worker runs on staging, so it is the
+    regression guard for §7.1.
+    """
+    async with async_step(
+        "Setup: partner + plan + register + approve a referral deal (status 'approved')"
+    ):
+        partner = await seeded_partner()
+        pid = partner.partner_id
+        plan_id = await sa_deals_client.pick_billing_plan_id()
+        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
+        deal_id = deal.deal_id
+        approved = await sa_deals_client.approve_deal(deal_id, plan_id=plan_id)
+        assert approved.data.get("status") == "approved", "precondition: deal must be approved"
+        logger.info("SETUP: deal {} approved (plan locked)", deal_id)
+
+    async with async_step(
+        "[1/4] Mark the approved deal as won (win intake incl. required adminPhoneNumber) -> status 'won'"
+    ):
+        suffix = uuid.uuid4().hex[:8]
+        win_intake = {
+            "companyWebsite": "https://qa-auto-provision.example.com",
+            "industry": "Technology",
+            "adminFirstName": "QA",
+            "adminLastName": "Provision",
+            "adminEmail": f"qa.auto+provision-{suffix}@mailinator.com",
+            "companyName": f"QA-AUTO Provision Co {suffix}",
+            "tenantDomain": f"qa-auto-provision-{suffix}.example.com",
+            "planId": plan_id,
+            "billingCycle": "annual",
+            "numberOfEmployee": 42,
+            "region": "asia-southeast1",
+            "country": "US",
+            "actualAcvCents": 7_500_000,
+            # Required: the UI's "reuse prospect phone" fallback does not fire, so send it.
+            "adminPhoneNumber": {"number": "4155550123", "countryCode": "+1"},
+            "notes": "QA-AUTO provision-leg",
+        }
+        won = await sa_deals_client.win_deal(deal_id, win_intake=win_intake)
+        assert won.data.get("status") == "won", (
+            f"deal must become 'won', got {won.data.get('status')!r}"
+        )
+        logger.info(
+            "CHECK won -> OK (provisioning kicked off; state={})",
+            won.data.get("provisioningState"),
+        )
+
+    async with async_step(
+        f"[2/4] Poll <={_PROVISION_POLL_TIMEOUT_S}s until provisioning completes "
+        "(wonTenantId + goLiveAt stamped)"
+    ):
+        deadline = asyncio.get_event_loop().time() + _PROVISION_POLL_TIMEOUT_S
+        d = won.data
+        while True:
+            d = (await sa_deals_client.get_deal(deal_id)).data
+            if d.get("wonTenantId") and d.get("goLiveAt"):
+                break
+            if asyncio.get_event_loop().time() >= deadline:
+                break
+            await asyncio.sleep(_PROVISION_POLL_INTERVAL_S)
+        logger.info(
+            "POLL end: provisioningState={} wonTenantId={} goLiveAt={}",
+            d.get("provisioningState"),
+            d.get("wonTenantId"),
+            d.get("goLiveAt"),
+        )
+
+    async with async_step(
+        "[3/4] The WON deal has wonTenantId + goLiveAt stamped (attribution + commission-window anchor)"
+    ):
+        assert d.get("wonTenantId"), (
+            f"wonTenantId not stamped after {_PROVISION_POLL_TIMEOUT_S}s — tenant never "
+            "provisioned (BUG-API-033)"
+        )
+        assert d.get("goLiveAt"), (
+            f"goLiveAt not stamped after {_PROVISION_POLL_TIMEOUT_S}s — commission eligibility "
+            "window cannot start (BUG-API-033)"
+        )
+        logger.info(
+            "CHECK stamped -> wonTenantId={} goLiveAt={}",
+            d.get("wonTenantId"),
+            d.get("goLiveAt"),
+        )
+
+    async with async_step(
+        "[4/4] provisioningState reached 'resolved' (deal no longer awaiting/overdue)"
+    ):
+        assert d.get("provisioningState") == "resolved", (
+            f"provisioningState={d.get('provisioningState')!r}, expected 'resolved' — "
+            "provisioning did not complete (BUG-API-033)"
+        )
+        logger.info(
+            "RESULT: provision leg complete — tenant provisioned, commission window can begin"
+        )

@@ -1090,7 +1090,20 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 **Note (BLOCKED):** Co-sell split accept/lock endpoint POST /v1/partner/deals/:id/cosell-split-accept not in dev build. (Mis-grouped — really a co-sell case.) Unblock when BE ships it.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002
-**Note (BLOCKED — split trigger in v1):** Chains close→provision→commission. **Provisioning** is still win-driven (needs DEAL_018, deferred) and stamps `goLiveAt` on the WON deal (LLD `commission-recurring-accrual` §6.3). **Commission is NO LONGER earned at provisioning** — the one-shot `earnOnProvisioning` was cut over; a commission now **accrues later** from `payment.gateway.payment.succeeded`. So verifying the commission leg additionally needs `COMMISSION_ACCRUAL_ENABLED=true` + a payment-succeeded event. Unblock when win is safely runnable AND the accrual flow (flag + payment trigger) is available.
+**Test Description:** Provision leg of the close→provision→commission chain (PRD v1.8 §7.1). Registers, approves and WINS a referral deal, then asserts the win actually provisions a tenant: `wonTenantId` + `goLiveAt` stamped and `provisioningState='resolved'` within a bounded poll. `goLiveAt` anchors the commission eligibility window, so this is the gate every downstream commission step depends on.
+**Setup (precondition):** A fresh seeded partner + a published billing plan; a referral deal registered and approved (status 'approved'). The approve/win path is runnable via API (approve supplies a catalog plan `_id`; win supplies the required `adminPhoneNumber`).
+**Test Steps:**
+1. Mark the approved deal as won (win intake incl. the required `adminPhoneNumber{number,countryCode}`).
+   → Expected: HTTP 201; status='won'; body message confirms provisioning kicked off.
+2. Poll the deal (≤90s, every 10s) until provisioning completes.
+   → Expected: within the window, `wonTenantId` and `goLiveAt` are both set on the deal.
+3. The WON deal has `wonTenantId` + `goLiveAt` stamped.
+   → Expected: `wonTenantId` non-empty (tenant provisioned) and `goLiveAt` set (commission-window anchor).
+4. `provisioningState` reached 'resolved'.
+   → Expected: `provisioningState='resolved'` (not 'awaited'/'overdue') — the deal is no longer awaiting provisioning.
+**Teardown:** none (the won deal + any provisioned tenant persist on staging; QA-AUTO data).
+**Expected (overall):** winning an approved deal drives the async provision chain to completion — the tenant is provisioned and the commission eligibility window can begin.
+**Note (FAILS — reproduces BUG-API-033):** Scope is the provision leg ONLY; the commission/accrual leg stays blocked on _005/_006 (needs `COMMISSION_ACCRUAL_ENABLED=true` + a `payment.gateway.payment.succeeded` event). Currently FAILS by design: on staging no won deal reaches 'resolved' (byProvisioningState.resolved=0, overdue=117, won=262 as of 2026-10-01); `wonTenantId`/`goLiveAt` never stamped. §7.1 is marked BE=Done but the provisioning worker appears not to run on staging — raised at Khoa's request as BUG-API-033. Turns PASS once provisioning completes, making it the §7.1 regression guard.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_003
 **Note (BLOCKED):** Depends on win/close + downstream billing/invoice ("reseller close → invoice targets the reseller"). Unblock when win + billing verification are available.

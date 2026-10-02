@@ -1090,7 +1090,20 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 **Ghi chú (BLOCKED):** Endpoint accept/lock split co-sell POST /v1/partner/deals/:id/cosell-split-accept không có trong dev build. (Gom nhầm — thực ra là một case co-sell.) Unblock khi BE ship nó.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002
-**Ghi chú (BLOCKED — v1 tách trigger):** Chuỗi close→provision→commission. **Provisioning** vẫn do win (cần DEAL_018, deferred) và stamp `goLiveAt` lên deal WON (LLD `commission-recurring-accrual` §6.3). **Commission KHÔNG còn earn lúc provisioning** — `earnOnProvisioning` một-lần đã bị cutover; commission giờ **accrue sau** từ `payment.gateway.payment.succeeded`. Nên verify phần commission cần thêm `COMMISSION_ACCRUAL_ENABLED=true` + 1 event payment-succeeded. Unblock khi win chạy an toàn VÀ có accrual flow (flag + trigger payment).
+**Mô tả:** Chặng provision của chuỗi close→provision→commission (PRD v1.8 §7.1). Register, approve và WIN một deal referral, rồi assert win thật sự provision được tenant: `wonTenantId` + `goLiveAt` được stamp và `provisioningState='resolved'` trong một khoảng poll có giới hạn. `goLiveAt` là mốc bắt đầu cửa sổ eligibility của commission, nên đây là cổng mà mọi bước commission phía sau phụ thuộc.
+**Setup (điều kiện trước):** 1 partner seed mới + 1 billing plan published; 1 deal referral đã register và approve (status 'approved'). Đường approve/win chạy được qua API (approve truyền plan `_id` catalog; win truyền `adminPhoneNumber` bắt buộc).
+**Test Steps:**
+1. Mark deal (đã approved) thành won (win intake kèm `adminPhoneNumber{number,countryCode}` bắt buộc).
+   → Expected: HTTP 201; status='won'; message xác nhận provisioning đã kick off.
+2. Poll deal (≤90s, mỗi 10s) tới khi provisioning hoàn tất.
+   → Expected: trong cửa sổ đó, `wonTenantId` và `goLiveAt` đều được set trên deal.
+3. Deal WON có `wonTenantId` + `goLiveAt` được stamp.
+   → Expected: `wonTenantId` khác rỗng (tenant đã provision) và `goLiveAt` có giá trị (mốc cửa sổ commission).
+4. `provisioningState` đạt 'resolved'.
+   → Expected: `provisioningState='resolved'` (không phải 'awaited'/'overdue') — deal không còn chờ provision.
+**Teardown:** không (deal won + tenant provision nếu có vẫn tồn trên staging; data QA-AUTO).
+**Expected (tổng):** win một deal approved đẩy chuỗi provision async tới hoàn tất — tenant được provision và cửa sổ eligibility commission có thể bắt đầu.
+**Ghi chú (FAIL — tái hiện BUG-API-033):** Phạm vi CHỈ chặng provision; chặng commission/accrual vẫn blocked ở _005/_006 (cần `COMMISSION_ACCRUAL_ENABLED=true` + event `payment.gateway.payment.succeeded`). Hiện FAIL chủ đích: trên staging không deal won nào đạt 'resolved' (byProvisioningState.resolved=0, overdue=117, won=262 tính tới 2026-10-01); `wonTenantId`/`goLiveAt` không bao giờ được stamp. §7.1 ghi BE=Done nhưng provisioning worker có vẻ không chạy trên staging — đã raise theo yêu cầu Khoa thành BUG-API-033. Sẽ chuyển PASS khi provisioning hoàn tất, trở thành regression guard cho §7.1.
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_003
 **Ghi chú (BLOCKED):** Phụ thuộc win/close + billing/invoice downstream ("reseller close → invoice nhắm reseller"). Unblock khi win + verify billing khả dụng.
