@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "property code should not exist"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-10-02T09:11:08.547Z",
+  "path": "/sa-partners-api/v1/sa/partners/6abf752b7e1ce168486703f8"
+}

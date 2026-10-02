@@ -7,4 +7,4 @@ legitimate no-op, not an error — UpdatePartnerDto declares no required field.
 
 All cases run and failures are collected. A ghost id is self-proving: this endpoint is the
 one that must report it.
-","2863","test_partner_api_partner_account_management_024","API","2026-10-02","failed","2026-10-02","","partner","",""
+","1163","test_partner_api_partner_account_management_024","API","2026-10-02","failed","2026-10-02","","partner","",""

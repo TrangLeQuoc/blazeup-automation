@@ -1,0 +1,30 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6abf752b7e1ce168486703f8",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Johnson Ltd",
+    "code": "PAR-009857",
+    "email": "qa.auto+taylorchavez-f205e2192254@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "http://www.bell.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-10-02T09:11:07.679Z",
+    "updatedAt": "2026-10-02T09:11:07.679Z",
+    "__v": 0,
+    "openDealsCount": 0
+  },
+  "message": "Partner retrieved successfully"
+}

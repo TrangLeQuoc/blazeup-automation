@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "type must be one of the following values: channel, referral, msp, system_integrator"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-10-02T09:11:08.176Z",
+  "path": "/sa-partners-api/v1/sa/partners/6abf752b7e1ce168486703f8"
+}

@@ -1,0 +1,7 @@
+{
+  "method": "PATCH",
+  "endpoint": "sa-partners-api/v1/sa/partners/6abf752b7e1ce168486703f8",
+  "payload": {
+    "_id": "000000000000000000000000"
+  }
+}
