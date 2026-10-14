@@ -101,8 +101,8 @@ async def test_partner_api_commissions_payouts_017(sa_commissions_client):
     cases = [
         ("bad status enum", {"status": "bogus", "limit": 5}, 400, "status must be one of"),
         ("malformed partnerId", {"partnerId": "not-an-id", "limit": 5}, 400, "mongodb id"),
-        ("page=0", {"page": 0, "limit": 5}, 400, "non-negative"),
-        ("page=-1", {"page": -1, "limit": 5}, 400, "non-negative"),
+        ("page=0", {"page": 0, "limit": 5}, 400, "must not be less than 1"),
+        ("page=-1", {"page": -1, "limit": 5}, 400, "must not be less than 1"),
         ("limit over max", {"limit": 999999}, 400, "must not exceed 100"),
         ("limit=0 (lenient)", {"limit": 0}, None, None),
     ]

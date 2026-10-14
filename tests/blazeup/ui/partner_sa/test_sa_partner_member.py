@@ -15,6 +15,7 @@ import uuid
 import pytest
 from loguru import logger
 
+from locators.blazeup.admin.partner_detail_locators import PartnerDetailLocators
 from pages.blazeup.admin.partner_detail_page import PartnerDetailPage
 from utils.data_factory import unique_email
 from utils.log_helper import async_step
@@ -64,11 +65,11 @@ async def test_partner_ui_sa_partner_module_014(sa_cleanup, make_page, created_r
         result = await detail.add_portal_user(
             first="Qa", last="Auto", email=member_email, password=_throwaway_password()
         )
-        assert "created successfully" in result, (
-            "adding a portal user must confirm 'Portal user created successfully'; "
-            f"got: {result[:200]!r}"
+        assert PartnerDetailLocators.MEMBER_CREATED_TOAST in result, (
+            "adding a portal user must confirm "
+            f"'{PartnerDetailLocators.MEMBER_CREATED_TOAST}'; got: {result[:200]!r}"
         )
-        logger.info("CHECK create → OK (Portal user created successfully)")
+        logger.info("CHECK create → OK ({})", PartnerDetailLocators.MEMBER_CREATED_TOAST)
 
     async with async_step("[3/3] The new user appears as an Active row"):
         row = detail.member_row(member_email)

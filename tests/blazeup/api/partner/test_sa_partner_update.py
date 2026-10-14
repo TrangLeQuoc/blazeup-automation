@@ -93,8 +93,9 @@ async def test_partner_api_partner_account_management_024(sa_partners_client, se
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_024: SA partner update invalid - correct rejection.
 
     Negative counterpart of _023: a ghost id, a malformed id, an enum outside the spec, and an
-    attempt to overwrite an identifier the DTO does not expose. An empty body is asserted as a
-    legitimate no-op, not an error — UpdatePartnerDto declares no required field.
+    attempt to overwrite an identifier the DTO does not expose. An empty body is refused with
+    400 "Please provide at least one field to update." — the BE's PATCH guard (confirmed
+    2026-10-02; previously it was a silent no-op).
 
     All cases run and failures are collected. A ghost id is self-proving: this endpoint is the
     one that must report it.
@@ -126,20 +127,23 @@ async def test_partner_api_partner_account_management_024(sa_partners_client, se
         else:
             logger.info("CHECK invalid type → 400 listing every allowed value → OK")
 
-    async with async_step("[4/5] An empty body is a no-op, not an error", soft=gaps):
+    async with async_step("[4/5] An empty body is refused with 400 and changes nothing", soft=gaps):
         before = _data(await sa_partners_client.raw_get_partner(partner_id, expected_status=200))
         resp = await sa_partners_client.update_partner(partner_id, {}, expected_status=None)
-        if resp.status_code >= 400:
+        msg = str(resp.json().get("message") or "")
+        if resp.status_code != 400:
             gaps.append(
-                f"an empty PATCH was refused with {resp.status_code}; UpdatePartnerDto "
-                "declares no required field, so it should be a no-op — confirm with BE"
+                f"an empty PATCH answered {resp.status_code}, expected 400 "
+                "'Please provide at least one field to update.'"
             )
+        elif "at least one field" not in msg.lower():
+            gaps.append(f"the 400 for an empty PATCH does not explain the rule — got {msg!r}")
         else:
             after = _data(await sa_partners_client.raw_get_partner(partner_id, expected_status=200))
             if after.get("name") != before.get("name"):
-                gaps.append("an empty PATCH changed the record")
+                gaps.append("an empty PATCH changed the record despite the 400")
             else:
-                logger.info("CHECK empty body → no-op → OK")
+                logger.info("CHECK empty body → 400 'at least one field', no change → OK")
 
     async with async_step("[5/5] A field the DTO does not expose must not be writable", soft=gaps):
         # One field at a time, so the report names the one that breaks rather than "the

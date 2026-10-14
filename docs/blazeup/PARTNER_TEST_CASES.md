@@ -296,17 +296,111 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 - PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: no registration → commission not awarded — behavioural/backend outcome, no partner-UI action). v1 mechanism (LLD `commission-recurring-accrual` §6.1): no registration → no WON deal with `wonTenantId` → a `payment.succeeded` for that tenant hits `accrual_no_won_deal` and skips → no `ACCRUED` row. This is an API/log-observable assertion (no ACCRUED row after a payment for an unattributed tenant), not a partner-UI one → better placed as an API accrual-negative TC than a UI TC.
 - PARTNER_UI_MY_PIPELINE_023 — BLOCKED (reseller deal → end-client price field absent: reseller deal type not offered in the wizard; feature absent)
 #### PARTNER_UI_MY_PIPELINE_024
-**Note (BLOCKED):** Click a pipeline deal card so the deal detail opens. Blocked by a BE defect (verified live 2026-07-24): the partner-portal deals-list endpoint `GET /v1/partner/portal/deals` returns **400 "Invalid id: 'pro-v1'"**, so the pipeline **never renders any deal row/card** (the UI falls back to the "No deals found" empty state even when the partner HAS deals). Root cause = the plan-reference contract drift: older deals store a plan **slug** (`planId:"pro-v1"`) while the BE now resolves plans by Mongo **_id** (ObjectId), so listing a partner whose deals include any slug-referenced plan throws "Invalid id" and the whole list fails. Confirmed a freshly SA-registered deal for the partner still does not appear (list stays 400 for ~40 s). With no deal card to click, the "open deal detail" flow cannot be exercised. **Same blocker applies to the other deal-list/detail pipeline TCs** (_015 detail, _025/_026/_027 filter, _033 card tag). Unblock when BE fixes the deals-list endpoint (tolerate/migrate legacy slug plan refs, or resolve by _id) so the pipeline renders deal cards. **Related:** register now requires the plan **_id** (slug → 400) — `pick_billing_plan_id` updated accordingly.
+**Test Description:** Click a deal row in My Pipeline and confirm the Deal Detail drawer opens in place (no route change).
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:**
+1. Click the first deal row → the Deal Detail drawer opens.
+   → Expected: a dialog with the heading "Deal Detail" becomes visible.
+2. The drawer opens in place (URL stays on /deals).
+   → Expected: the page URL is unchanged — detail is a drawer, not a new route.
+**Teardown:** none — read-only.
+**Expected (overall):** a deal row opens its detail drawer on the pipeline page.
+**Note:** PASSED — verified 2026-10-14 (TC 12060224). Unblocked after the BE fixed `GET /v1/partner/portal/deals` (was 400 "Invalid id: 'pro-v1'" on legacy-slug plan refs) — re-probed live 2026-10-02: 200, 20 rows/page, total 102. Negative/Idempotency: N/A — read-only view.
 #### PARTNER_UI_MY_PIPELINE_025
-**Note (BLOCKED):** Filter deals by company text so matching deals are displayed. Blocked by the same BE defect as _024 (verified live 2026-07-24): the deals-list endpoint `GET /v1/partner/portal/deals` returns **400 "Invalid id: 'pro-v1'"** — and the search variant `?search=QA` returns the **same 400** (filtering runs through the same endpoint). With the list broken, no deal ever renders, so a "matching deals displayed" assertion cannot be exercised. Unblock together with _024 (BE must fix the deals-list endpoint to tolerate/resolve legacy slug plan refs).
+**Test Description:** Open the Filter control on My Pipeline and confirm the filter builder popover opens.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:**
+1. Click Filter → the filter popover opens.
+   → Expected: the radix filter popover is visible.
+2. The popover exposes the filter builder ('Add Filter' control).
+   → Expected: an "Add Filter" control is present inside the popover.
+**Teardown:** none — read-only.
+**Expected (overall):** the advanced-filter entry point opens and is interactive.
+**Note:** PASSED — verified 2026-10-14 (TC 12060225). Unblocked after the BE fixed `GET /v1/partner/portal/deals` (was 400 "Invalid id: 'pro-v1'" on legacy-slug plan refs) — re-probed live 2026-10-02: 200, 20 rows/page, total 102. **Re-scoped:** the original intent was "filter by company text", but the portal has **no free-text search box** — filtering is a radix "builder" (field combobox, default Deal Type, + Add Filter). This TC covers the entry point; applying a filter and asserting narrowed results needs a dedicated builder-interaction spec (follow-up). Real list narrowing is covered by _035 (stage control). Negative/Idempotency: N/A — read-only.
 - PARTNER_UI_MY_PIPELINE_026 — BLOCKED (filter by deal type: deals-list 400 → pipeline empty; a Filter button exists but filtering can't be verified with 0 deals; same BE defect as _024/_025)
 - PARTNER_UI_MY_PIPELINE_027 — BLOCKED (filter by module: same deals-list 400 + no "module" concept in the deal model/wizard)
 - PARTNER_UI_MY_PIPELINE_028 — BLOCKED (add shared note to a deal: no deal detail — deals-list 400, pipeline empty, no deal to open)
 - PARTNER_UI_MY_PIPELINE_029 — BLOCKED (upload document to a deal: no deal detail — same as _028)
 - PARTNER_UI_MY_PIPELINE_030 — BLOCKED (view assigned BlazeUp rep: a rep is assigned on SA approval (blocked by BUG-UI-005) + deals-list 400, no deal to open) **UPDATE 2026-08-10: BUG-UI-005 is fixed** (`_007` now passes) — the blocker named above is gone. Re-check whether this TC is buildable now; it is a candidate, not confirmed unblocked, since it may still need its own conflict fixture.
 - PARTNER_UI_MY_PIPELINE_031 — BLOCKED (request manual protection extension: needs an approved deal with a running protection clock + deal detail — deals-list 400 / no SA approval)
-- PARTNER_UI_MY_PIPELINE_032 — BLOCKED (reseller marks deal Won / self-confirm: reseller deal type not offered in the UI)
-- PARTNER_UI_MY_PIPELINE_033 — BLOCKED (pipeline card shows reseller billing tag: deals-list 400 → no card renders + reseller not offered)
+- _(unnumbered)_ Reseller marks deal Won — BLOCKED (reseller marks deal Won / self-confirm: reseller deal type not offered in the UI)
+- _(unnumbered)_ Reseller billing tag on pipeline card — BLOCKED (pipeline card shows reseller billing tag: deals-list 400 → no card renders + reseller not offered)
+#### PARTNER_UI_MY_PIPELINE_032
+**Test Description:** On a partner with deals, the My Pipeline deals table renders rows and the expected columns.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:**
+1. The deals table shows the expected column headers.
+   → Expected: headers include DEAL ID, DOMAIN, DEAL TYPE, ESTIMATED ACV, STATUS.
+2. At least one deal row is rendered.
+   → Expected: ≥ 1 data row (not the "No deals found" empty state).
+3. The first row carries a Deal ID and a STATUS value.
+   → Expected: both cells are non-empty.
+**Teardown:** none — read-only.
+**Expected (overall):** the deals list renders (the regression that blocked _024/_025).
+**Note:** PASSED — verified 2026-10-14 (TC 12060234). Negative/Idempotency: N/A — read-only.
+
+#### PARTNER_UI_MY_PIPELINE_033
+**Test Description:** A pipeline stage control filters the list to that status.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:**
+1. Pick a non-empty stage that fits on one page (1..20 deals).
+   → Expected: a non-'All' stage button whose count is 1..20 exists.
+2. Click the stage and the list shows exactly its deals.
+   → Expected: rendered row count equals the stage's count (polled — the table re-renders client-side).
+3. Every rendered row has that stage's STATUS.
+   → Expected: each row's STATUS matches the stage.
+**Teardown:** none — read-only.
+**Expected (overall):** stage controls narrow the list correctly.
+**Note:** PASSED — verified 2026-10-14 (TC 12060235). Stage controls are BUTTONS "<Stage> <count>" (All/Pending/Approved/In Progress/Won/Lost/Expired). Negative/Idempotency: N/A — read-only.
+
+#### PARTNER_UI_MY_PIPELINE_034
+**Test Description:** The Deal Detail drawer shows the clicked deal's info.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:**
+1. The drawer shows the DEAL INFO and COMPANY INFO sections.
+   → Expected: both section headings are visible in the drawer (opened from the first row in Setup).
+2. The drawer reflects the clicked deal (its company/domain text appears).
+   → Expected: a token from the row's DOMAIN cell appears inside the Deal Detail dialog.
+**Teardown:** none — read-only.
+**Expected (overall):** the drawer shows the deal that was clicked, not a blank shell.
+**Note:** PASSED — verified 2026-10-14 (TC 12060236). Negative/Idempotency: N/A — read-only.
+
+#### PARTNER_UI_MY_PIPELINE_035
+**Test Description:** Pagination — page 2 loads a different set of deals.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle. More than one page of deals (All > 20); otherwise the TC reports BLOCKED.
+**Test Steps:**
+1. Jump to page 2 → a new page of deals loads.
+   → Expected: via the "Go to page" input, the first row changes and rows still render.
+2. Page 2's first deal differs from page 1.
+   → Expected: page-2 first Deal ID ≠ page-1 first Deal ID.
+**Teardown:** none — read-only.
+**Expected (overall):** paging through the pipeline loads new rows.
+**Note:** PASSED — verified 2026-10-14 (TC 12060238). Footer: "Showing 1 - 20 of 102 | 20 / page | 1..6 | Go to page". Negative/Idempotency: N/A — read-only.
+
+#### PARTNER_UI_MY_PIPELINE_036
+**Test Description:** Each deal row's DEAL TYPE / ESTIMATED ACV / STATUS are well-formed.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:** (one step per row, first ≤ 5 rows; failures collected)
+1..N. Row i: DEAL TYPE / ESTIMATED ACV / STATUS are valid.
+   → Expected: DEAL TYPE ∈ Referral/Reseller/Co-sell; ESTIMATED ACV contains an amount; STATUS ∈ Pending/Approved/Won/Lost/Expired/In Progress/Registered.
+**Teardown:** none — read-only.
+**Expected (overall):** the typed columns render valid values on every row.
+**Note:** PASSED — verified 2026-10-14 (TC 12060239). Soft-collect (`soft=gaps`) so one bad row never hides others. Negative/Idempotency: N/A — read-only.
+
+#### PARTNER_UI_MY_PIPELINE_037
+**Test Description:** A zero-count stage shows the "No deals found" empty state.
+**Setup (precondition):** Log in once as the shared channel-partner user (a partner WITH deals — 102 live on 2026-10-02); open `/deals` via the shell, wait for the "Deal Pipeline" READY_MARKER and for the deals list to settle.
+**Test Steps:**
+1. Find a stage with a zero deal count.
+   → Expected: a stage button shows 0 (e.g. In Progress / Lost / Expired).
+2. Switching to it shows the 'No deals found' empty state.
+   → Expected: the empty-state message is visible.
+3. No deal data rows are listed under the empty stage.
+   → Expected: 0 rows carrying a "D#…" Deal ID (the single placeholder row is the empty-state message).
+**Teardown:** none — read-only.
+**Expected (overall):** an empty stage renders a clear empty state, no stale rows.
+**Note:** PASSED — verified 2026-10-14 (TC 12060240). Negative/Idempotency: N/A — read-only.
+
 ### UI · PARTNER_PORTAL_SHELL
 
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
@@ -331,7 +425,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 5. Resources `/resources` → Expected: no h-overflow. → **PASS**
 6. Tap sidebar link at mobile → Commissions routes + renders. → **PASS** (mobile nav is usable).
 **Expected (overall):** Every primary page fits the mobile viewport (no horizontal overflow) with the nav reachable; tapping nav routes correctly.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-09-30 (TC 12060102). 4/5 pages fit + mobile nav works; **only `/directory` overflows (+93px)** = responsive-layout defect (**confirm with FE**; new bug **BUG-UI-010** — distinct from BUG-UI-002, which was Deals and is now fixed). **My Apps removed (2026-09-30):** no nav item, `/apps` → 404, so it was dropped from the test. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
+**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-09-30 (TC 12060102). 4/5 pages fit + mobile nav works; **only `/directory` overflows (+93px)** = responsive-layout defect (**confirm with FE**; tracked as **BUG-UI-013** — BUG-UI-010 covered the same defect and was closed 2026-10-08, so the live row is 013; distinct from BUG-UI-002, which was Deals and is fixed). **My Apps removed (2026-09-30):** no nav item, `/apps` → 404, so it was dropped from the test. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Note (BLOCKED):** Dual-account partner switching between **Pack** and **Channel** dashboards. Cannot automate — the feature and the test data do not exist on staging (verified live 2026-07-24): (a) **no account-switcher control** in the portal shell — the header "Select" is the tier badge (tier=`select`), not an account switcher, and the profile menu only offers Profile/Logout; (b) the logged-in partner is a **single account** — `GET /v1/partner/auth/me` returns one `partnerId` with `type:"channel"`, `tier:"select"`, no accounts array; (c) **no "Pack" concept** — the partner `type` enum is channel/referral/msp/system_integrator (no "pack"), so a Pack↔Channel dual-account cannot even be represented. Unblock when BE ships multi-account membership (one user → a Pack + a Channel account) + a shell account switcher, AND a dual-account test partner is provisioned.
 ### UI · PARTNER_TEAM
@@ -1091,7 +1185,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002
 **Test Description:** Provision leg of the close→provision→commission chain (PRD v1.8 §7.1). Registers, approves and WINS a referral deal, then asserts the win actually provisions a tenant: `wonTenantId` + `goLiveAt` stamped and `provisioningState='resolved'` within a bounded poll. `goLiveAt` anchors the commission eligibility window, so this is the gate every downstream commission step depends on.
-**Setup (precondition):** A fresh seeded partner + a published billing plan; a referral deal registered and approved (status 'approved'). The approve/win path is runnable via API (approve supplies a catalog plan `_id`; win supplies the required `adminPhoneNumber`).
+**Setup (precondition):** A fresh seeded partner + a published billing plan; a referral deal registered and approved (status 'approved'). The approve/win path is runnable via API (approve supplies a catalog plan `_id`; win supplies the required `adminPhoneNumber`). **Win intake uses REAL data (2026-10-02):** the tenant admin is a real mailbox from `.env` (`PROVISION_ADMIN_EMAIL`/`_FIRST_NAME`/`_LAST_NAME`/`_PHONE`/`_COUNTRY`; COUNTRY is ISO alpha-2, default `VN`, and drives the tenant `country`, the admin phone `countryCode` and the prospect country together — BE validates `countryCode` as alpha-2, not a dial code), plus-addressed per run (`you+prov-<id>@company.com`) — provisioning mails the new tenant's login/confirmation there; `tenantDomain` is a bare label `qa-auto-prov-<id>` (no dots — the domain rule). SKIPPED (opt-in, not BLOCKED — so CI stays green) while `PROVISION_ADMIN_EMAIL` is unset.
 **Test Steps:**
 1. Mark the approved deal as won (win intake incl. the required `adminPhoneNumber{number,countryCode}`).
    → Expected: HTTP 201; status='won'; body message confirms provisioning kicked off.
@@ -1101,7 +1195,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    → Expected: `wonTenantId` non-empty (tenant provisioned) and `goLiveAt` set (commission-window anchor).
 4. `provisioningState` reached 'resolved'.
    → Expected: `provisioningState='resolved'` (not 'awaited'/'overdue') — the deal is no longer awaiting provisioning.
-**Teardown:** none (the won deal + any provisioned tenant persist on staging; QA-AUTO data).
+**Teardown:** none, deliberately — pass OR fail (agreed with BE 2026-10-02). A won deal is handed to another team's provisioning service asynchronously; deleting the partner mid-flight cuts that flow and leaves nothing for the PO to check. The run log prints `KEPT for provisioning follow-up: partner=… deal=… tenantDomain=… adminEmail=…`. (Until 2026-10-02 the code deleted the partner at teardown, contradicting this line.)
 **Expected (overall):** winning an approved deal drives the async provision chain to completion — the tenant is provisioned and the commission eligibility window can begin.
 **Note (FAILS — reproduces BUG-API-033):** Scope is the provision leg ONLY; the commission/accrual leg stays blocked on _005/_006 (needs `COMMISSION_ACCRUAL_ENABLED=true` + a `payment.gateway.payment.succeeded` event). Currently FAILS by design: on staging no won deal reaches 'resolved' (byProvisioningState.resolved=0, overdue=117, won=262 as of 2026-10-01); `wonTenantId`/`goLiveAt` never stamped. §7.1 is marked BE=Done but the provisioning worker appears not to run on staging — raised at Khoa's request as BUG-API-033. Turns PASS once provisioning completes, making it the §7.1 regression guard.
 

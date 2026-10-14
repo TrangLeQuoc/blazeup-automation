@@ -485,7 +485,6 @@ async def test_partner_api_partner_account_management_011(sa_partners_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-012: ghost (absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_013(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_013: approve invalid/illegal-state - rejected with the correct code.
 
@@ -545,7 +544,6 @@ async def test_partner_api_partner_account_management_013(sa_partners_client, se
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-013: ghost (absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_014(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_014: deactivate invalid id - rejected; repeat is idempotent.
 
@@ -606,7 +604,6 @@ async def test_partner_api_partner_account_management_014(sa_partners_client, se
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-014: ghost (absent) partner id returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_015(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_015: change tier with invalid input - rejected with the correct code.
 
@@ -733,7 +730,6 @@ async def test_partner_api_partner_account_management_010(sa_partners_client, se
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-015: ghost (absent) userId returns 400, should be 404 — confirm with BE
 async def test_partner_api_partner_account_management_020(sa_partners_client, seeded_partner):
     """PARTNER_API_PARTNER_ACCOUNT_MANAGEMENT_020: grant certification invalid input - rejected with the correct code.
 
@@ -914,7 +910,7 @@ async def test_partner_api_partner_account_management_006(sa_deals_client, seede
     async with async_step(
         "Setup: partner + plan + a RESELLER deal payload carrying end-client pricing"
     ):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="reseller", **_END_CLIENT_PRICE_FIELDS)
@@ -964,7 +960,7 @@ async def test_partner_api_partner_account_management_016(sa_deals_client, seede
     recognized editable field. Verified 2026-07-22.
     """
     async with async_step("Setup: partner + plan + a registered (open, editable) reseller deal"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal_id = (

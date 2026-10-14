@@ -20,13 +20,14 @@ class DashboardPage(BasePage):
     SECTIONS = DashboardLocators.SECTIONS
 
     def kpi_card(self, label: str) -> Locator:
-        """Locator for a KPI card by its label (e.g. 'Commission YTD')."""
+        """Locator for a KPI card by its label (e.g. 'Commission paid YTD')."""
         return self.page.locator("main").get_by_text(label, exact=False).first
 
     async def kpi_value(self, label: str) -> str:
-        """Return the metric value shown with a KPI card (e.g. 'USD 0'), or ''.
+        """Return the metric value shown with a KPI card (e.g. '3,505,844'), or ''.
 
-        Cards render as "<value> <label>" in <main> (e.g. "USD 0 Total pipeline ACV"),
+        Cards render as "<value> <label>" in <main> (e.g. "3,505,844 Open pipeline (est.
+        ACV)"; older builds prefixed "USD"),
         so read the normalized main text and pull the value right before the label.
         """
         text = " ".join((await self.page.locator("main").inner_text()).split())

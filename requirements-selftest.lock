@@ -42,14 +42,23 @@ pydantic==2.13.4
     # via
     #   -c requirements.txt
     #   -r requirements-selftest.txt
+    #   pydantic-settings
 pydantic-core==2.46.4
     # via pydantic
+pydantic-settings==2.14.0
+    # via
+    #   -c requirements.txt
+    #   -r requirements-selftest.txt
 pygments==2.20.0
     # via pytest
 pytest==9.0.3
     # via
     #   -c requirements.txt
     #   -r requirements-selftest.txt
+python-dotenv==1.2.2
+    # via
+    #   -c requirements.txt
+    #   pydantic-settings
 pyyaml==6.0.3
     # via
     #   -c requirements.txt
@@ -60,4 +69,6 @@ typing-extensions==4.16.0
     #   pydantic-core
     #   typing-inspection
 typing-inspection==0.4.3
-    # via pydantic
+    # via
+    #   pydantic
+    #   pydantic-settings

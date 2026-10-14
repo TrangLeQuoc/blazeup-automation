@@ -154,10 +154,22 @@ class FailGroup:
     reason: str = ""
     recommendation: str = ""
     tcs: list[str] = field(default_factory=list)
+    # Every member's OWN evidence, keyed by tc string. `evidence` above is only the
+    # group's representative (the first member) — fine for display, WRONG for any
+    # per-TC decision: two TCs share a group because their signatures match after
+    # normalization, not because their raw assertions are identical. The Bug Tracker
+    # compares each TC's failure against the cause recorded on its bug, so it must
+    # read this map, not `evidence` (a group of 5 would otherwise judge 4 TCs by the
+    # first one's assertion).
+    evidence_by_tc: dict[str, str] = field(default_factory=dict)
 
     @property
     def count(self) -> int:
         return len(self.tcs)
+
+    def evidence_for(self, tc: str) -> str:
+        """This TC's own evidence, falling back to the group's representative."""
+        return self.evidence_by_tc.get(tc) or self.evidence
 
 
 def _parse_lines(log_text: str) -> list[LogLine]:
@@ -345,10 +357,15 @@ def collect_fail_groups(log_text: str) -> list[FailGroup]:
         g = groups.get(sig)
         if g is None:
             groups[sig] = FailGroup(
-                signature=sig, evidence=evidence, category=_rule_category(evidence), tcs=[tc]
+                signature=sig,
+                evidence=evidence,
+                category=_rule_category(evidence),
+                tcs=[tc],
+                evidence_by_tc={tc: evidence},
             )
         else:
             g.tcs.append(tc)
+            g.evidence_by_tc[tc] = evidence
 
     # Marker-aware upgrade: a group of KNOWN be_gap tests that failed on an
     # assertion (i.e. landed in the ambiguous test_or_ui_bug / unknown buckets, not

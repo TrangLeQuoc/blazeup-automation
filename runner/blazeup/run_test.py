@@ -42,6 +42,10 @@ REPORT_EXCEL: bool = False
 # Run AI failure triage automatically when a run has failures (writes ai_triage.md).
 REPORT_AI_TRIAGE: bool = True
 
+# Build test data from config/blazeup/test_data.yaml (real person/company) instead of
+# random data. Per-run suffixes keep records unique. CLI: --real-data / --no-real-data.
+REAL_TEST_DATA: bool = False
+
 # Test-plan workbook this suite reports into.
 EXCEL_FILE = _PROJECT_ROOT / "docs" / "blazeup" / "Partner_Platform_Test_Plan.xlsx"
 
@@ -68,5 +72,6 @@ if __name__ == "__main__":
     _run_module.DEFAULT_SKIP_IDS = DEFAULT_SKIP_IDS
     _run_module.REPORT_EXCEL = REPORT_EXCEL
     _run_module.REPORT_AI_TRIAGE = REPORT_AI_TRIAGE
+    _run_module.REAL_TEST_DATA = REAL_TEST_DATA
     _run_module.EXCEL_FILE = EXCEL_FILE
     sys.exit(_run_module.main())

@@ -116,7 +116,7 @@ class PartnerShellPage(BasePage):
         Cheap (reads the current URL, no round trip) and unambiguous. Used to tell an
         expired SESSION apart from a page that failed to render — the two look
         identical to a readiness wait, and the shared partner session (one login for
-        the whole run, see the ``partner_auth_state`` fixture) is what expires.
+        each test logs in afresh, see ``partner_authenticated_page``) is what expires.
         """
         return PartnerShellLocators.is_login_url(self.page.url)
 

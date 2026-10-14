@@ -13,7 +13,7 @@ import asyncio
 import pytest
 from loguru import logger
 
-from utils.data_factory import make_deal, make_partner, make_prospect
+from utils.data_factory import make_deal, make_partner, make_prospect, make_win_intake
 from utils.log_helper import async_step
 
 # A syntactically valid Mongo ObjectId that does not exist — for "not found" tests.
@@ -33,7 +33,7 @@ async def test_partner_api_deal_registration_pipeline_001(sa_deals_client, seede
     a follow-up GET.
     """
     async with async_step("Setup: create a partner + pick a published billing plan"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="referral")
@@ -111,7 +111,7 @@ async def test_partner_api_deal_registration_pipeline_002(sa_deals_client, seede
     ``dealType == "reseller"`` IS the stored billing model.
     """
     async with async_step("Setup: create a partner + pick a published billing plan"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="reseller")
@@ -178,7 +178,7 @@ async def test_partner_api_deal_registration_pipeline_003(sa_deals_client, seede
     job), out of scope here.
     """
     async with async_step("Setup: create a partner + pick a published billing plan"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="co_sell")
@@ -244,8 +244,8 @@ async def test_partner_api_deal_registration_pipeline_004(sa_deals_client, seede
     duplicate instead — a separate behavior, not this TC.)
     """
     async with async_step("Setup: two partners + a shared prospect identity"):
-        p1 = await seeded_partner()
-        p2 = await seeded_partner()
+        p1 = await seeded_partner(approve=True)
+        p2 = await seeded_partner(approve=True)
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, shared by both partners
@@ -296,7 +296,7 @@ async def test_partner_api_deal_registration_pipeline_022(sa_deals_client, seede
     returned, no conflict path.
     """
     async with async_step("Setup: one partner + a published plan + a unique prospect identity"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, reused for both register calls
@@ -351,7 +351,7 @@ async def test_partner_api_deal_registration_pipeline_008(sa_deals_client, seede
     (not serialized), stamped at a different stage (e.g. deal win), or unimplemented.
     """
     async with async_step("Setup: create partner + register a deal (status 'registered')"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         registered = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -403,8 +403,8 @@ async def test_partner_api_deal_registration_pipeline_009(sa_deals_client, seede
     reasoning = "QA-AUTO original reasoning — confirmed partner wins"
 
     async with async_step("Setup: create a flagged conflict (two partners, same prospect)"):
-        p1 = await seeded_partner()
-        p2 = await seeded_partner()
+        p1 = await seeded_partner(approve=True)
+        p2 = await seeded_partner(approve=True)
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, shared by both partners
@@ -476,7 +476,7 @@ async def test_partner_api_deal_registration_pipeline_010(
     Integration TCs).
     """
     async with async_step("Setup: create partner + register a deal (status 'registered')"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal_id = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
@@ -531,8 +531,8 @@ async def test_partner_api_deal_registration_pipeline_013(sa_deals_client, seede
     immutability is covered by _009; negative resolve inputs by _029.
     """
     async with async_step("Setup: two partners register the SAME prospect (deal B flagged)"):
-        p1 = await seeded_partner()
-        p2 = await seeded_partner()
+        p1 = await seeded_partner(approve=True)
+        p2 = await seeded_partner(approve=True)
         assert p1.partner_id and p2.partner_id, "precondition: both partners must be created"
         plan_id = await sa_deals_client.pick_billing_plan_id()
         prospect = make_prospect()  # unique identity, shared by both partners
@@ -594,7 +594,7 @@ async def test_partner_api_deal_registration_pipeline_021(sa_deals_client, seede
     accidentally created is removed via the parent-partner cleanup.
     """
     async with async_step("Setup: create a partner + pick a published plan (valid baseline)"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         base = make_deal(pid, plan_id, dealType="referral")
@@ -662,7 +662,7 @@ async def test_partner_api_deal_registration_pipeline_028(sa_deals_client, seede
     the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: create partner + register + approve a deal (now 'approved')"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         approved = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -722,7 +722,7 @@ async def test_partner_api_deal_registration_pipeline_029(sa_deals_client, seede
     the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: create a registered (non-flagged) deal as the target"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -797,7 +797,7 @@ async def test_partner_api_deal_registration_pipeline_016(sa_deals_client, seede
         return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
 
     async with async_step("Setup: partner + plan + a registered deal (has a protection window)"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -944,7 +944,7 @@ async def test_partner_api_deal_registration_pipeline_033(sa_deals_client, seede
 
     added_days = 30
     async with async_step("Setup: partner + plan + a registered deal (has a protection window)"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -995,7 +995,7 @@ async def test_partner_api_deal_registration_pipeline_020(sa_deals_client, seede
     present, status 'registered', protection window + conflictStatus).
     """
     async with async_step("Setup: partner + plan + a registered deal"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -1090,7 +1090,7 @@ async def test_partner_api_deal_registration_pipeline_019(sa_deals_client, seede
     flips ``approved`` → ``lost`` (partner notification is downstream, out of scope).
     """
     async with async_step("Setup: partner + plan + register + approve a deal"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal = await sa_deals_client.register_deal(make_deal(pid, plan_id))
@@ -1133,7 +1133,7 @@ async def test_partner_api_deal_registration_pipeline_032(sa_deals_client, seede
     returns the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: a registered (not approved) deal"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
@@ -1180,7 +1180,7 @@ async def test_partner_api_deal_approval_queue_001(sa_deals_client, seeded_partn
     ``registered`` deal to ``rejected``; the status persists via a follow-up GET.
     """
     async with async_step("Setup: partner + plan + a registered deal"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         deal_id = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
@@ -1221,7 +1221,7 @@ async def test_partner_api_deal_approval_queue_011(sa_deals_client, seeded_partn
     the correct code (confirm with BE). Same root cause as the get-by-id gap (_031).
     """
     async with async_step("Setup: register + reject a deal (now 'rejected')"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         did = (await sa_deals_client.register_deal(make_deal(pid, plan_id))).deal_id
@@ -1278,30 +1278,20 @@ async def test_partner_api_deal_registration_pipeline_018(
     /v1/sa/commissions), out of scope here (cf. DEAL_010 pattern).
     """
     async with async_step("Setup: partner + plan + register + approve a deal (status 'approved')"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
+        reg_payload = make_deal(pid, plan_id, dealType="referral")
+        deal = await sa_deals_client.register_deal(reg_payload)
         deal_id = deal.deal_id
         approved = await sa_deals_client.approve_deal(deal_id, plan_id=plan_id)
         assert approved.data.get("status") == "approved", "precondition: deal must be approved"
-        win_intake = {
-            "companyWebsite": "https://qa-auto-win.example.com",
-            "industry": "Technology",
-            "adminFirstName": "QA",
-            "adminLastName": "AutoWin",
-            "adminEmail": "qa.auto+win@mailinator.com",
-            "companyName": "QA-AUTO Won Co",
-            "tenantDomain": "qa-auto-won.example.com",
-            "planId": plan_id,
-            "billingCycle": "annual",
-            "numberOfEmployee": 42,
-            "region": "asia-southeast1",
-            "country": "US",
-            "actualAcvCents": 7_500_000,
-            "notes": "QA-AUTO win",
-        }
-        logger.info("SETUP: deal {} approved; winning with actualAcvCents={}", deal_id, 7_500_000)
+        win_intake = make_win_intake(plan_id, tenant_domain=reg_payload["tenantDomain"])
+        logger.info(
+            "SETUP: deal {} approved; winning with actualAcvCents={}",
+            deal_id,
+            win_intake["actualAcvCents"],
+        )
 
     async with async_step(
         "[1/4] Mark the approved deal as won (capture tenant-provisioning intake)"
@@ -1376,7 +1366,11 @@ async def test_partner_api_deal_registration_pipeline_018(
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-020: WinDealDto required fields not enforced (empty body → 201) — confirm with BE
+# NOT be_gap: BUG-API-020 (required win-intake fields unenforced) is CLOSED — steps
+# [1/8]-[4/8] now return 400 as specified. The TC still fails at [8/8], which has to win
+# a deal first, and /win is uncallable while BUG-API-043 (billingCycle case mismatch) is
+# open. That defect is tracked on its own TC (2061602), so this TC gets no row of its own
+# — triage reports it as KNOWN OPEN under BUG-API-043 via the cause group.
 async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seeded_partner):
     """PARTNER_API_DEAL_REGISTRATION_PIPELINE_034: win invalid/illegal-state - rejected with the correct code.
 
@@ -1393,7 +1387,7 @@ async def test_partner_api_deal_registration_pipeline_034(sa_deals_client, seede
     (mutating action, repeat rejected - not a create).
     """
     async with async_step("Setup: partner + plan (fresh approved deals are built per case)"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         full = {

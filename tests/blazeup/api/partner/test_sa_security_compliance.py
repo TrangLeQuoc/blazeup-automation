@@ -127,7 +127,7 @@ async def test_partner_api_security_compliance_002(sa_deals_client, seeded_partn
     Idempotency N/A (duplicate register is _022).
     """
     async with async_step("Setup: partner + plan + a deal payload carrying unnecessary PII"):
-        partner = await seeded_partner()
+        partner = await seeded_partner(approve=True)
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
         payload = make_deal(pid, plan_id, dealType="referral", **_UNNECESSARY_PII)

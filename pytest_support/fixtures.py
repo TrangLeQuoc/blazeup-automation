@@ -1,7 +1,7 @@
 """Shared pytest fixtures for UI and API automation."""
 
+import asyncio
 import contextlib
-import json
 import logging
 import os
 import re
@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 import pytest_asyncio
 from faker import Faker
@@ -25,6 +26,7 @@ from api_clients.blazeup.admin.partner.sa_deals_client import SaDealsClient
 from api_clients.blazeup.admin.partner.sa_partners_client import SaPartnersClient
 from config.settings import Settings, get_settings
 from pages.blazeup.partner.login_page import PartnerLoginPage
+from pytest_support.approval import ApproverLogin, BlockedApprover, assign_single_approver
 from pytest_support.seeding import seed_partner
 from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui
@@ -244,10 +246,8 @@ async def _create_browser_context(
     playwright_obj: Any,
     settings: Settings,
     result_dir: Path,
-    storage_state: dict | None = None,
     base_url: str | None = None,
     viewport: dict | None = None,
-    session_storage: dict | None = None,
 ) -> tuple[Browser, BrowserContext]:
     """Launch a browser and create a context.
 
@@ -255,14 +255,13 @@ async def _create_browser_context(
         playwright_obj: The async_playwright instance.
         settings:       Runtime settings (browser type, viewport, etc.).
         result_dir:     Artifact directory for video recording.
-        storage_state:  Playwright storage state dict (cookies + localStorage) to
-                        pre-authenticate the context, or ``None`` to log in fresh.
-        session_storage: sessionStorage key/values to re-seed on every navigation via
-                        an init script. Playwright's ``storage_state`` captures cookies +
-                        localStorage only — the partner portal keeps its auth
-                        (``pp_refresh_token``) in sessionStorage, so a reused snapshot
-                        WITHOUT this seeds a logged-out context (every page bounces to
-                        /login). Pass it to carry the partner session across contexts.
+        base_url:       Context base URL (defaults to the SA app).
+        viewport:       Override the configured viewport (e.g. the 375×812 mobile size).
+
+    No storage-state / sessionStorage seeding: every UI fixture logs in inside its own
+    context. The partner portal's ``pp_refresh_token`` is single-use, so a captured session
+    replayed into another context was refused (2026-10-09) — the parameters that carried it
+    were removed with the snapshot mechanism.
 
     Returns:
         ``(Browser, BrowserContext)`` — both must be closed by the caller.
@@ -285,23 +284,7 @@ async def _create_browser_context(
         "record_video_dir": str(result_dir / "videos"),
         "record_video_size": vp,  # match the viewport so the video has no dead margin
     }
-    if storage_state is not None:
-        context_options["storage_state"] = storage_state
-
     context = await browser.new_context(**context_options)
-    if session_storage:
-        # Runs before page scripts on every document load, so the SPA's auth guard sees
-        # the token on first paint (no /login bounce). storage_state can't carry this.
-        # Seed ONLY keys the tab does not already have: sessionStorage survives navigations
-        # within a context, and the app may ROTATE pp_refresh_token — re-writing the stale
-        # captured value on every navigation would clobber the rotated one and log the tab
-        # out mid-test. `=== null` seeds on first load, then leaves the live value alone.
-        await context.add_init_script(
-            "(() => { const d = "
-            + json.dumps(session_storage)
-            + "; try { for (const k in d) if (sessionStorage.getItem(k) === null)"
-            " sessionStorage.setItem(k, d[k]); } catch (e) {} })()"
-        )
     await context.tracing.start(screenshots=True, snapshots=True, sources=True)
     return browser, context
 
@@ -475,104 +458,31 @@ def make_page(authenticated_page: Page, settings: Settings):
 # ---------------------------------------------------------------------------
 
 
-@pytest_asyncio.fixture(scope="session", loop_scope="session")
-async def partner_auth_state(settings: Settings) -> AsyncGenerator[dict]:
-    """Log in to the PARTNER portal once and cache its session.
+@pytest_asyncio.fixture
+async def partner_authenticated_page(
+    request: pytest.FixtureRequest,
+    settings: Settings,
+    result_dir: Path,
+) -> AsyncGenerator[Page]:
+    """Pre-authenticated PARTNER-portal page — a FRESH login per test.
 
-    Session-scoped snapshot for the partner portal (stgpartners.blazeup.ai): partner
-    credentials + the single-step ``PartnerLoginPage`` + the partner base URL, run
-    once per session. (The SA side re-logs in per test instead — see
-    ``authenticated_page`` — because stgsa's rotating refresh cookie breaks a shared
-    snapshot.)
+    Why not one cached login reused by every test (which is what this used to do): the
+    portal keeps ``pp_refresh_token`` in sessionStorage and that token is SINGLE-USE. The
+    context that logged in consumes it, so replaying the same snapshot into a second
+    context is refused and every protected page bounces to /login. Measured 2026-10-09:
+    the original context reached /deals while a freshly seeded one redirected to /login,
+    and a full run lost 19 TCs to it at session age 0m00s. The SA side
+    (``authenticated_page``) already re-logs in per test for the same reason.
 
-    Returns ``{"storage_state": <playwright cookies+localStorage>, "session_storage":
-    <dict>}``. The partner portal keeps its auth token (``pp_refresh_token``) in
-    **sessionStorage**, and it sets NO auth cookie — Playwright's ``storage_state``
-    captures neither sessionStorage, so it alone yields a logged-out context (every
-    protected page redirects to /login within seconds — verified 2026-09-28). Consumers
-    must seed BOTH: ``storage_state`` on the context + ``session_storage`` re-injected
-    via ``_create_browser_context(session_storage=...)``.
+    Tests marked ``@pytest.mark.mobile`` get a mobile-sized context (375×812) so the
+    viewport AND the recorded video match — no need to resize at runtime (which would
+    leave the video canvas at the desktop size with a grey dead margin).
     """
     partner_url = settings.partner_base_url
     if partner_url is None:
         pytest.skip("BLOCKED: PARTNER_BASE_URL not configured — cannot run partner UI tests")
     partner_url = str(partner_url)
-    logger.log("START", "Login UI (partner) - establishing the shared partner-portal session")
-    async with async_playwright() as p:
-        browser_launcher = getattr(p, settings.browser)
-        browser = await browser_launcher.launch(headless=settings.headless)
-        context = await browser.new_context(
-            viewport={"width": settings.viewport_width, "height": settings.viewport_height},
-            base_url=partner_url,
-        )
-        page_obj = await context.new_page()
-        email, password = require_credentials(settings.partner_email, settings.partner_password)
-        try:
-            await login_ui(
-                page_obj,
-                partner_url,
-                email,
-                password,
-                login_page_cls=PartnerLoginPage,
-                totp_secret=settings.partner_totp_secret,
-            )
-            state = await context.storage_state()
-            # The auth token lives in sessionStorage (pp_refresh_token), which
-            # storage_state does not capture — grab it while the page is still alive.
-            session_storage = await page_obj.evaluate(
-                "() => { const o = {}; for (let i = 0; i < sessionStorage.length; i++)"
-                " { const k = sessionStorage.key(i); o[k] = sessionStorage.getItem(k); }"
-                " return o; }"
-            )
-        except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a defect
-            logger.error("Login UI (partner) FAILED — blocking the run: {}", exc)
-            pytest.skip(f"BLOCKED: shared partner UI login failed — {blocked_reason(exc)}")
-        finally:
-            await context.close()
-            await browser.close()
-
-    logger.info("Login UI (partner) complete - session cached (storage_state + sessionStorage)")
-    yield {"storage_state": state, "session_storage": session_storage}
-    logger.log("FINISH", "Logout UI (partner) - shared partner session closed")
-
-
-@pytest_asyncio.fixture(scope="session", loop_scope="session")
-async def partner_session_started_at(partner_auth_state: dict) -> float:
-    """When the shared partner snapshot was captured (``time.monotonic``).
-
-    A separate fixture rather than a field on the state dict, so that dict stays a clean
-    ``{"storage_state", "session_storage"}`` payload for the context seeding. Depending on
-    ``partner_auth_state`` means this is stamped right after the login, once per session.
-
-    Its only job is the diagnostic in ``partner_authenticated_page``: when the session
-    turns out to be dead, the log says how long it had been alive, which is the number
-    you need to decide "token TTL" vs "invalidated server-side".
-    """
-    return time.monotonic()
-
-
-@pytest_asyncio.fixture
-async def partner_authenticated_page(
-    request: pytest.FixtureRequest,
-    settings: Settings,
-    partner_auth_state: dict,
-    partner_session_started_at: float,
-    result_dir: Path,
-) -> AsyncGenerator[Page]:
-    """Pre-authenticated PARTNER-portal page — fresh context per test, login once.
-
-    Tests marked ``@pytest.mark.mobile`` get a mobile-sized context (375×812) so the
-    viewport AND the recorded video match — no need to resize at runtime (which would
-    leave the video canvas at the desktop size with a grey dead margin).
-
-    Logs the age of the shared session on every test. Measured on run_20260810_170831
-    the snapshot was reused across 358 s, comfortably inside a normal token lifetime —
-    but that window grows with every partner TC added, and when it finally crosses the
-    TTL the age printed here is what turns "the page did not render" into "the session
-    aged out at N minutes" (``PartnerShellPage.wait_ready`` raises the matching error).
-    """
-    age_s = time.monotonic() - partner_session_started_at
-    logger.info("shared partner session age: {:.0f}m{:02.0f}s", age_s // 60, age_s % 60)
+    email, password = require_credentials(settings.partner_email, settings.partner_password)
     trace_name = request.node.name.replace("/", "_").replace("\\", "_")
     viewport = {"width": 375, "height": 812} if request.node.get_closest_marker("mobile") else None
     async with async_playwright() as playwright:
@@ -580,14 +490,24 @@ async def partner_authenticated_page(
             playwright,
             settings,
             result_dir,
-            storage_state=partner_auth_state["storage_state"],
-            base_url=str(settings.partner_base_url),
+            base_url=partner_url,
             viewport=viewport,
-            session_storage=partner_auth_state["session_storage"],
         )
         page_obj = await context.new_page()
         request.node._playwright_page = page_obj
         try:
+            try:
+                await login_ui(
+                    page_obj,
+                    partner_url,
+                    email,
+                    password,
+                    login_page_cls=PartnerLoginPage,
+                    totp_secret=settings.partner_totp_secret,
+                )
+            except Exception as exc:  # noqa: BLE001 — precondition, not the feature under test
+                logger.error("Login UI (partner) FAILED — blocking this test: {}", exc)
+                pytest.skip(f"BLOCKED: partner UI login failed — {blocked_reason(exc)}")
             yield page_obj
         finally:
             await _save_page_artifacts(page_obj, request, result_dir)
@@ -639,6 +559,207 @@ async def api_token(settings: Settings) -> AsyncGenerator[str]:
     logger.log("FINISH", "Disconnect API - shared API session token released")
 
 
+# Sign-in is a POST, so base_client deliberately does not retry it (a retried create could
+# double-create). Signing in creates nothing, so the approver login retries on its own —
+# on transport errors, gateway 502/503/504 and an over-SLA response, i.e. the outages a
+# second try can fix. Never on a 4xx: retrying a 401 would just hammer a wrong password.
+_APPROVER_LOGIN_ATTEMPTS = 3
+
+
+def _is_transport_error(exc: BaseException) -> bool:
+    seen: BaseException | None = exc
+    while seen is not None:
+        if isinstance(seen, httpx.TransportError):
+            return True
+        seen = seen.__cause__ or seen.__context__
+    return False
+
+
+_GATEWAY_ERROR_RE = re.compile(r"\bgot 50[234]\b")
+
+
+def _is_retryable_login_error(exc: BaseException) -> bool:
+    """A failure a second sign-in attempt can plausibly fix (see the note above)."""
+    text = str(exc)
+    return (
+        _is_transport_error(exc)
+        or bool(_GATEWAY_ERROR_RE.search(text))
+        or "exceeded limit" in text  # base_client's over-SLA assertion
+    )
+
+
+async def login_qa_approver(
+    settings: Settings, *, login=login_api, sleep=asyncio.sleep
+) -> ApproverLogin:
+    """Log the QA approver (ADMIN2) in — retrying transport errors — or say why it can't.
+
+    A plain function (``login`` / ``sleep`` injectable) so the retry and the classification
+    are unit-tested without a network; the ``approver_login`` fixture only calls it.
+    """
+    if not (settings.admin2_email and settings.admin2_password):
+        reason = (
+            "no QA approver configured (ADMIN2_EMAIL / ADMIN2_PASSWORD) — the creator may "
+            "not approve its own record"
+        )
+        logger.error("SA approver unavailable: {}", reason)
+        return ApproverLogin(blocked_reason=reason)
+    last_exc: BaseException | None = None
+    for attempt in range(1, _APPROVER_LOGIN_ATTEMPTS + 1):
+        try:
+            token = await login(
+                str(settings.api_base_url),
+                str(settings.base_url),
+                settings.admin2_email,
+                settings.admin2_password,
+                max_response_time_ms=settings.default_response_time_ms * 5,
+            )
+        except Exception as exc:  # noqa: BLE001 — classified below, never fatal to the run
+            last_exc = exc
+            retryable = _is_retryable_login_error(exc)
+            logger.warning(
+                "SA approver (ADMIN2) login attempt {}/{} failed ({}): {}",
+                attempt,
+                _APPROVER_LOGIN_ATTEMPTS,
+                "retrying" if retryable else "not retryable",
+                f"{type(exc).__name__}: {exc}",
+            )
+            if not retryable or attempt == _APPROVER_LOGIN_ATTEMPTS:
+                break
+            await sleep(2 * attempt)
+            continue
+        logger.info("Login API (approver) complete - ADMIN2 token cached for approvals")
+        return ApproverLogin(token=token)
+    # Type name first: an httpx timeout stringifies to "" and the old log line ended in a
+    # bare colon, which named nothing.
+    reason = "SA approver (ADMIN2) login failed — " + blocked_reason(
+        RuntimeError(f"{type(last_exc).__name__}: {last_exc}")
+    )
+    logger.error("{} — tests that approve or reject will be BLOCKED", reason)
+    return ApproverLogin(blocked_reason=reason)
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def approver_login(settings: Settings) -> AsyncGenerator[ApproverLogin]:
+    """Session login of the SECOND SA actor — the one that APPROVES what the first created.
+
+    The approval chain forbids the REQUESTER from approving its own record (the same rule a
+    code review encodes: the author does not approve their own PR). Seeding therefore
+    creates with ``ADMIN_*`` and approves with ``ADMIN2_*``.
+
+    There is NO fallback to the creating account any more. It used to fall back, and that
+    can never work while the chain is on: on 2026-10-13 one ADMIN2 sign-in timeout made
+    the creator the "approver", and the approve was refused with a 400/403 that read like a
+    BE defect. Instead this reports WHY the approver is unavailable, and every test that
+    actually approves turns BLOCKED with that reason (see ``BlockedApprover``).
+    """
+    result = await login_qa_approver(settings)
+    yield result
+    if result.token:
+        logger.log("FINISH", "Disconnect API - approver session token released")
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def approver_api_token(approver_login: ApproverLogin) -> AsyncGenerator[str]:
+    """The QA approver's token — empty when it is unavailable (see ``approver_login``)."""
+    yield approver_login.token
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def approver_user_id(
+    settings: Settings, approver_login: ApproverLogin
+) -> AsyncGenerator[str]:
+    """The QA approver's own user id, read from its token — never hard-coded.
+
+    Needed because assigning an approval chain names the approver by id. Resolved once per
+    session from ``GET /sa-auth-api/current-user``; an empty string when it cannot be read,
+    which ``assign_single_approver`` reports rather than crashing the run.
+
+    When the approver is unavailable this does NOT call current-user at all: with the old
+    creator fallback that call returned the CREATOR's id, which was then assigned as the
+    approver and refused by the BE.
+    """
+    if approver_login.blocked_reason:
+        logger.warning("QA approver user id not resolved — {}", approver_login.blocked_reason)
+        yield ""
+        return
+    client = AuthClient(
+        str(settings.api_base_url),
+        token=approver_login.token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
+    user_id = ""
+    try:
+        response = await client.get("/sa-auth-api/current-user", expected_status=None)
+        if response.status_code < 400:
+            body = response.json()
+            data = body.get("data", body)
+            user_id = str(data.get("_id") or data.get("id") or "")
+    except Exception as exc:  # noqa: BLE001 — resolved lazily; absence is handled downstream
+        logger.warning("Could not resolve the QA approver's user id: {}", exc)
+    finally:
+        await client.close()
+    if user_id:
+        logger.info("QA approver user id resolved: {}", user_id)
+    else:
+        logger.warning("QA approver user id is unknown — approval chains cannot be assigned")
+    yield user_id
+
+
+@pytest.fixture
+def assign_qa_approver(
+    approver_user_id: str,
+    sa_partners_client: SaPartnersClient,
+    sa_deals_client: SaDealsClient,
+):
+    """Reusable STEP: pin one record's approval chain to the QA approver (count = 1).
+
+    Any test that has to get a partner or a deal approved calls this first, so the record
+    carries exactly one approver who is NOT its creator::
+
+        await assign_qa_approver(partner_id, kind="partner")
+        await sa_approver_client.approve_partner(partner_id)   # approved by the QA account
+
+        await assign_qa_approver(deal_id, kind="deal")
+
+    Why it exists and why the count is 1 (never 0) is documented in
+    ``pytest_support.approval``. Returns True when the chain was assigned.
+    """
+
+    async def _assign(record_id: str, *, kind: str = "partner") -> bool:
+        setter = {
+            "partner": sa_partners_client.set_partner_approval_config,
+            "deal": sa_deals_client.set_deal_approval_config,
+        }.get(kind)
+        if setter is None:
+            raise ValueError(f"kind must be 'partner' or 'deal', got {kind!r}")
+        return await assign_single_approver(setter, record_id, approver_user_id, label=kind)
+
+    return _assign
+
+
+@pytest_asyncio.fixture
+async def sa_approver_client(
+    settings: Settings, approver_login: ApproverLogin
+) -> AsyncGenerator[SaPartnersClient | BlockedApprover]:
+    """SA Partners client bound to the APPROVER actor (see ``approver_login``).
+
+    A ``BlockedApprover`` when that account is unavailable: approving through it marks the
+    test BLOCKED with the reason, instead of failing it on the creator's refusal.
+    """
+    if approver_login.blocked_reason:
+        yield BlockedApprover(approver_login.blocked_reason)
+        return
+    client = SaPartnersClient(
+        str(settings.api_base_url),
+        token=approver_login.token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
+    yield client
+    await client.close()
+
+
 @pytest_asyncio.fixture
 async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[AuthClient]:
     """Authenticated AuthClient — fresh instance per test, token from session."""
@@ -655,13 +776,45 @@ async def auth_client(settings: Settings, api_token: str) -> AsyncGenerator[Auth
 
 @pytest_asyncio.fixture
 async def sa_partners_client(
-    settings: Settings, api_token: str
+    settings: Settings,
+    api_token: str,
+    sa_approver_client: SaPartnersClient,
+    approver_user_id: str,
 ) -> AsyncGenerator[SaPartnersClient]:
-    """Authenticated SA Partners API client (sa-partners-api), token from session."""
+    """Authenticated SA Partners API client (sa-partners-api), token from session.
+
+    Carries the QA approver alongside it, so ``approve_partner`` assigns the partner's
+    chain to that account and lets IT approve — the creator may not approve its own
+    partner. Every call site (seeding, ``provision_partner_user``, the approval TCs) gets
+    this for free.
+    """
 
     client = SaPartnersClient(
         str(settings.api_base_url),
         token=api_token,
+        max_response_time_ms=settings.default_response_time_ms,
+        app_origin=str(settings.base_url),
+    )
+    client.approver_client = sa_approver_client
+    client.approver_user_id = approver_user_id
+    yield client
+    await client.close()
+
+
+@pytest_asyncio.fixture
+async def sa_deals_approver_client(
+    settings: Settings, approver_login: ApproverLogin
+) -> AsyncGenerator[SaDealsClient | BlockedApprover]:
+    """SA Deals client bound to the QA APPROVER actor — it approves what the creator cannot.
+
+    A ``BlockedApprover`` when that account is unavailable (see ``sa_approver_client``).
+    """
+    if approver_login.blocked_reason:
+        yield BlockedApprover(approver_login.blocked_reason)
+        return
+    client = SaDealsClient(
+        str(settings.api_base_url),
+        token=approver_login.token,
         max_response_time_ms=settings.default_response_time_ms,
         app_origin=str(settings.base_url),
     )
@@ -670,8 +823,18 @@ async def sa_partners_client(
 
 
 @pytest_asyncio.fixture
-async def sa_deals_client(settings: Settings, api_token: str) -> AsyncGenerator[SaDealsClient]:
-    """Authenticated SA Deals API client (sa-partners-api /v1/sa/deals), token from session."""
+async def sa_deals_client(
+    settings: Settings,
+    api_token: str,
+    sa_deals_approver_client: SaDealsClient,
+    approver_user_id: str,
+) -> AsyncGenerator[SaDealsClient]:
+    """Authenticated SA Deals API client (sa-partners-api /v1/sa/deals), token from session.
+
+    Carries the QA approver alongside it, so ``approve_deal`` / ``reject_deal`` can assign
+    the deal's chain to that account and let IT make the call — the creator may not approve
+    its own deal. Call sites stay unchanged.
+    """
 
     client = SaDealsClient(
         str(settings.api_base_url),
@@ -679,6 +842,8 @@ async def sa_deals_client(settings: Settings, api_token: str) -> AsyncGenerator[
         max_response_time_ms=settings.default_response_time_ms,
         app_origin=str(settings.base_url),
     )
+    client.approver_client = sa_deals_approver_client
+    client.approver_user_id = approver_user_id
     yield client
     await client.close()
 
@@ -826,7 +991,12 @@ async def created_resources() -> AsyncGenerator[_CleanupRegistry]:
 
 
 @pytest.fixture
-def seeded_partner(sa_partners_client: SaPartnersClient, created_resources: _CleanupRegistry):
+def seeded_partner(
+    sa_partners_client: SaPartnersClient,
+    sa_approver_client: SaPartnersClient,
+    approver_user_id: str,
+    created_resources: _CleanupRegistry,
+):
     """Create a partner with its cleanup ALREADY registered — impossible to forget.
 
     Requests ``sa_partners_client`` before ``created_resources`` on purpose: that sets the
@@ -845,7 +1015,12 @@ def seeded_partner(sa_partners_client: SaPartnersClient, created_resources: _Cle
 
     async def _seed(*, approve: bool = False, payload: dict[str, Any] | None = None):
         return await seed_partner(
-            sa_partners_client, created_resources.add, approve=approve, payload=payload
+            sa_partners_client,
+            created_resources.add,
+            approve=approve,
+            payload=payload,
+            approver_client=sa_approver_client,
+            approver_user_id=approver_user_id,
         )
 
     return _seed

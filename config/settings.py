@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     admin_base_url: AnyHttpUrl = Field(..., description="SA UI root, e.g. https://stgsa.blazeup.ai")
     admin_email: str | None = Field(default=None)
     admin_password: str | None = Field(default=None)
+    # Second SA actor, used ONLY to approve what the first one created. The approval
+    # chain forbids the requester from approving its own record (PRD partner-approval
+    # FSM), so seeding creates with admin_* and approves with admin2_*. Optional: when
+    # unset, approvals fall back to the creating account, which only works while the
+    # chain is off (Required approvers = 0).
+    admin2_email: str | None = Field(default=None)
+    admin2_password: str | None = Field(default=None)
     # Partner actor — optional (only needed for direct partner-login tests; the
     # current partner-portal tests mint a throwaway partner from the SA side).
     partner_base_url: AnyHttpUrl | None = Field(
@@ -51,6 +58,21 @@ class Settings(BaseSettings):
     # login helper can generate the current code with pyotp. Optional: when unset,
     # the login flow behaves as the pre-2FA single-step form.
     partner_totp_secret: str | None = Field(default=None)
+    # Tenant admin for the deal-win provisioning TC (PARTNER_API_TENANT_PROVISIONING_
+    # ATTRIBUTION_002). Provisioning mails the new tenant's credentials / confirmation to
+    # this address, so it must be a REAL mailbox someone reads — never a throwaway. The TC
+    # plus-addresses it per run (local+prov-<id>@domain) so every tenant gets a unique
+    # admin email that still lands in the same inbox. Personal data: keep it in the
+    # gitignored .env, never in code.
+    provision_admin_email: str | None = Field(default=None)
+    provision_admin_first_name: str | None = Field(default=None)
+    provision_admin_last_name: str | None = Field(default=None)
+    # National format as you dial it locally, e.g. 0987654321 (BE's own DTO example).
+    provision_admin_phone: str | None = Field(default=None)
+    # ISO 3166-1 alpha-2 — NOT a dial code: BE validates PhoneDetail.countryCode and the
+    # tenant `country` as alpha-2 ('VN'). One value drives the tenant country, the admin
+    # phone's countryCode and the prospect country, so the three can never disagree.
+    provision_admin_country: str = Field(default="VN", pattern=r"^[A-Z]{2}$")
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)

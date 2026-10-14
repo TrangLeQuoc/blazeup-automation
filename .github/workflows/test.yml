@@ -97,11 +97,20 @@ jobs:
             echo "ADMIN_BASE_URL=${{ secrets.ADMIN_BASE_URL }}"
             echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}"
             echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}"
+            # Second SA = the QA approver. The approval chain forbids the creator from
+            # approving its own partner/deal, so every test that approves is BLOCKED without it.
+            echo "ADMIN2_EMAIL=${{ secrets.ADMIN2_EMAIL }}"
+            echo "ADMIN2_PASSWORD=${{ secrets.ADMIN2_PASSWORD }}"
             echo "PARTNER_BASE_URL=${{ secrets.PARTNER_BASE_URL }}"
             echo "PARTNER_EMAIL=${{ secrets.PARTNER_EMAIL }}"
             echo "PARTNER_PASSWORD=${{ secrets.PARTNER_PASSWORD }}"
             # Partner portal 2FA: base32 TOTP key — login (UI + API) fails without it.
             echo "PARTNER_TOTP_SECRET=${{ secrets.PARTNER_TOTP_SECRET }}"
+            # Deal-win provisioning TC: a REAL tenant-admin mailbox (TC is SKIPPED without it).
+            echo "PROVISION_ADMIN_EMAIL=${{ secrets.PROVISION_ADMIN_EMAIL }}"
+            echo "PROVISION_ADMIN_FIRST_NAME=${{ secrets.PROVISION_ADMIN_FIRST_NAME }}"
+            echo "PROVISION_ADMIN_LAST_NAME=${{ secrets.PROVISION_ADMIN_LAST_NAME }}"
+            echo "PROVISION_ADMIN_PHONE=${{ secrets.PROVISION_ADMIN_PHONE }}"
           } >> "$GITHUB_ENV"
 
       # ── Run via the merged runner — same entry point you use locally ───────

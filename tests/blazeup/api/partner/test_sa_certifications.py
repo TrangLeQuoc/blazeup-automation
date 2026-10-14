@@ -69,7 +69,6 @@ async def test_partner_api_certifications_sa_002(sa_partners_client, seeded_part
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-019: not-found targets (ghost user / not-held / revoked) return 400, want 404
 async def test_partner_api_certifications_sa_012(sa_partners_client, seeded_partner):
     """PARTNER_API_CERTIFICATIONS_SA_012: revoke certification invalid input/state - rejected with the correct code.
 
@@ -367,7 +366,7 @@ async def test_partner_api_certifications_sa_014(sa_partners_client):
         ("expiringWithinDays negative", {"expiringWithinDays": -5}, "must not be less than 1"),
         ("expiringWithinDays > 365", {"expiringWithinDays": 366}, "must not be greater than 365"),
         ("limit over max", {"limit": 999999}, "must not exceed 100"),
-        ("page=0", {"page": 0, "limit": 5}, "non-negative"),
+        ("page=0", {"page": 0, "limit": 5}, "must not be less than 1"),
     ]
     gaps: list[str] = []
     for idx, (label, params, hint) in enumerate(cases, start=1):

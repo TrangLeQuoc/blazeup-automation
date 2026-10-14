@@ -7,6 +7,7 @@ read-only helper to pick a published plan lives here too.
 Maps to the Partner Platform test plan: PARTNER_API_DEAL_REGISTRATION_PIPELINE_*.
 """
 
+import contextlib
 from typing import Any
 
 import httpx
@@ -45,6 +46,31 @@ class DealWriteResponse(BaseModel):
 
 class SaDealsClient(BaseClient):
     """Client for SA-side deal-registration & pipeline endpoints (sa-partners-api)."""
+
+    # The approval chain forbids the REQUESTER from approving its own deal, and this client
+    # is the one that registered it. The fixture layer attaches a second client (the QA
+    # approver) plus its user id; `approve_deal` / `reject_deal` then assign the chain to
+    # that approver and let IT make the call. Left unset, the chain is not touched and the
+    # creator makes the call — which the BE refuses while the chain is on.
+    approver_client: "SaDealsClient | None" = None
+    approver_user_id: str = ""
+
+    async def _pin_single_approver(self, deal_id: str) -> None:
+        """Assign this deal exactly one approver — the QA account — before approve/reject.
+
+        Never 0: a count of 0 turns the chain off and would let the creator approve its own
+        deal, which is the control the chain exists to enforce (and a defect FE is fixing).
+        With no QA approver id the chain is left as it is — the same rule as
+        ``SaPartnersClient._pin_single_approver`` and ``pytest_support.approval``. (This copy
+        used to fall back to 0 in that case, contradicting the line above.)
+        Best-effort — the approve/reject that follows is what the caller asserts on.
+        """
+        if not self.approver_user_id:
+            return
+        with contextlib.suppress(Exception):
+            await self.set_deal_approval_config(
+                deal_id, required_approvers=1, approvers=[self.approver_user_id]
+            )
 
     async def pick_billing_plan_id(self, *, expected_status: int | tuple[int, ...] = 200) -> str:
         """Return a published billing plan's id — needed to register a deal.
@@ -207,10 +233,16 @@ class SaDealsClient(BaseClient):
         """
         if plan_id is None:
             plan_id = (await self.get_deal(deal_id)).data.get("planId")
+        # A registered deal carries an approval chain; approving one whose chain is
+        # unassigned is refused with 400 "Approval chain not assigned yet — an SA must assign
+        # the approvers first". Assign it to the QA approver, then let THAT actor approve —
+        # the creator may not approve its own deal. `raw_approve_deal` deliberately skips
+        # this, so the negative tests still see the untouched behaviour.
+        await self._pin_single_approver(deal_id)
         body: dict[str, Any] = {"planId": plan_id}
         if review_notes is not None:
             body["reviewNotes"] = review_notes
-        response = await self.post(
+        response = await (self.approver_client or self).post(
             f"{_DEALS_PATH}/{deal_id}/approve",
             json=body,
             expected_status=expected_status,
@@ -218,6 +250,27 @@ class SaDealsClient(BaseClient):
             timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return DealWriteResponse.model_validate(response.json())
+
+    async def set_deal_approval_config(
+        self,
+        deal_id: str,
+        *,
+        required_approvers: int,
+        approvers: list[str] | None = None,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """PUT the approval chain of ONE registered deal (count + approvers).
+
+        The deal-side twin of the partner "Configure approval" dialog;
+        ``requiredApprovers: 0`` turns the chain off for that deal only, leaving the global
+        Approval Settings untouched. Returns the raw response so callers can treat a refusal
+        as non-fatal.
+        """
+        return await self.put(
+            f"{_DEALS_PATH}/{deal_id}/approval-config",
+            json={"requiredApprovers": required_approvers, "approvers": approvers or []},
+            expected_status=expected_status,
+        )
 
     async def raw_approve_deal(
         self,
@@ -291,8 +344,11 @@ class SaDealsClient(BaseClient):
 
         On success the deal transitions ``registered`` → ``rejected``. HTTP 201.
         """
+        # Rejecting runs through the same chain as approving, so an unassigned chain is
+        # refused the same way — assign it first (see `approve_deal`).
+        await self._pin_single_approver(deal_id)
         body: dict[str, Any] = {} if review_notes is None else {"reviewNotes": review_notes}
-        response = await self.post(
+        response = await (self.approver_client or self).post(
             f"{_DEALS_PATH}/{deal_id}/reject",
             json=body,
             expected_status=expected_status,

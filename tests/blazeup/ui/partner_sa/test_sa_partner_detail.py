@@ -10,7 +10,7 @@ import pytest
 from loguru import logger
 
 from pages.blazeup.admin.partner_detail_page import PartnerDetailPage
-from utils.data_factory import unique_email
+from utils.data_factory import partner_name, unique_email
 from utils.log_helper import async_step
 
 
@@ -25,7 +25,7 @@ async def test_partner_ui_sa_partner_module_013(sa_cleanup, make_page, created_r
     Partner-actions control. Read-only load check (empty-safe).
     """
     detail = make_page(PartnerDetailPage)
-    company = "QA-AUTO Detail " + unique_email().split("@")[0].split("+")[1]
+    company = partner_name("Detail")
     email = unique_email()
 
     async with async_step("Setup: onboard a throwaway partner and open its detail"):

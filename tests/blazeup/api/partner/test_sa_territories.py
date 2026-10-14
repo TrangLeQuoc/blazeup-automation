@@ -235,7 +235,7 @@ async def test_partner_api_territories_013(sa_partners_client):
         ("bad exclusivityType", {"exclusivityType": "bogus"}, "exclusivitytype must be one of"),
         ("bad country", {"country": "ZZ"}, "iso31661"),
         ("limit over max", {"limit": 999999}, "must not exceed"),
-        ("page=0", {"page": 0, "limit": 5}, "non-negative"),
+        ("page=0", {"page": 0, "limit": 5}, "must not be less than 1"),
         ("malformed partnerId", {"partnerId": "not-an-id"}, "mongodb id"),
     ]
     gaps: list[str] = []
@@ -285,7 +285,6 @@ async def test_partner_api_territories_003(sa_partners_client, seeded_partner, c
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-017: ghost (absent) id returns 400, should be 404 — confirm with BE
 async def test_partner_api_territories_014(sa_partners_client):
     """PARTNER_API_TERRITORIES_014: get territory with invalid id - rejected with the correct code.
 
@@ -364,7 +363,6 @@ async def test_partner_api_territories_004(sa_partners_client, seeded_partner):
 
 @pytest.mark.api
 @pytest.mark.regression
-@pytest.mark.be_gap  # BUG-API-018: ghost / already-removed id returns 400, should be 404 — confirm with BE
 async def test_partner_api_territories_015(sa_partners_client, seeded_partner):
     """PARTNER_API_TERRITORIES_015: delete territory invalid/already-removed - rejected with the correct code.
 

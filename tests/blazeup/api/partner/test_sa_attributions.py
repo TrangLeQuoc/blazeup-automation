@@ -22,6 +22,7 @@ import uuid
 import pytest
 from loguru import logger
 
+from pytest_support.seeding import seed_partner
 from utils.data_factory import make_deal
 from utils.log_helper import async_step
 
@@ -49,6 +50,18 @@ _REQUIRED_FIELDS = (
 )
 _SENSITIVE = ("password", "token", "secret", "credential")
 _GHOST = "000000000000000000000000"
+
+
+def _plus_address(email: str, tag: str) -> str:
+    """you@co.com -> you+<tag>@co.com: a unique admin per tenant, same real inbox."""
+    local, _, domain = email.partition("@")
+    return f"{local.split('+', 1)[0]}+{tag}@{domain}"
+
+
+def _keep(_cleanup) -> None:
+    """Deliberately DROP the cleanup: a won deal is handed to another team's provisioning
+    service, which works asynchronously; deleting the partner mid-flight cuts that flow and
+    leaves nothing for the PO to check. The ids are logged instead (see _002)."""
 
 
 def _envelope(resp) -> dict:
@@ -251,7 +264,9 @@ async def test_partner_api_tenant_provisioning_attribution_013(sa_partners_clien
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_tenant_provisioning_attribution_002(sa_deals_client, seeded_partner):
+async def test_partner_api_tenant_provisioning_attribution_002(
+    sa_deals_client, sa_partners_client, sa_approver_client, settings
+):
     """PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002: win an approved deal -> tenant provisioning completes.
 
     Provision leg of the close->provision->commission chain (PRD v1.8 §7.1). Scope
@@ -270,41 +285,105 @@ async def test_partner_api_tenant_provisioning_attribution_002(sa_deals_client, 
     deals ever reach ``resolved``; ``wonTenantId``/``goLiveAt`` never stamped). It
     turns green the moment BE's provisioning worker runs on staging, so it is the
     regression guard for §7.1.
+
+    Real data, nothing deleted (agreed with BE 2026-10-02): provisioning mails the new
+    tenant's admin login / confirmation, so the admin is a REAL mailbox from .env
+    (PROVISION_ADMIN_*), plus-addressed per run; and the partner/deal/tenant are KEPT
+    whatever the outcome — the hand-off to the provisioning service is asynchronous, and
+    deleting mid-flight both breaks it and removes what the PO needs to check.
     """
+    if not settings.provision_admin_email:
+        # A plain SKIP, NOT "BLOCKED:" — the runner maps "blocked:" to an env outage and
+        # exits 3, which would turn every CI run red just because this opt-in TC is off.
+        pytest.skip(
+            "NOT CONFIGURED (opt-in): set PROVISION_ADMIN_EMAIL in config/blazeup/.env (or the "
+            "GitHub secret) to run it — provisioning mails the tenant's admin credentials, so "
+            "it needs a real mailbox, not a throwaway"
+        )
+
     async with async_step(
         "Setup: partner + plan + register + approve a referral deal (status 'approved')"
     ):
-        partner = await seeded_partner()
+        # approve=True: registering a deal now requires an ACTIVE partner (the BE refuses a
+        # pending one with 403 "Partner account is not active"). Approved by the SECOND SA
+        # actor, since the approval chain forbids the creator from approving its own record.
+        partner = await seed_partner(  # NOT deleted — see docstring
+            sa_partners_client, _keep, approve=True, approver_client=sa_approver_client
+        )
         pid = partner.partner_id
         plan_id = await sa_deals_client.pick_billing_plan_id()
-        deal = await sa_deals_client.register_deal(make_deal(pid, plan_id, dealType="referral"))
+        # ONE per-run identity, used for BOTH the registration and the win so the two never
+        # disagree (BE falls back `dto.tenantDomain ?? deal.tenantDomain` at win). Everything
+        # a uniqueness check could look at carries the run suffix — partner, deal, domain,
+        # company name, admin email — so repeated runs never collide; only the real person's
+        # name/phone/country repeat, which no BE index keys on.
+        suffix = uuid.uuid4().hex[:8]
+        country = settings.provision_admin_country  # ISO alpha-2, e.g. 'VN'
+        admin_email = _plus_address(settings.provision_admin_email, f"prov-{suffix}")
+        admin_phone = {
+            # countryCode is ISO alpha-2 (same `country`), NOT a dial code; the number stays
+            # in national format. The fallback is BE's own DTO example (a VN number).
+            "number": settings.provision_admin_phone or "0987654321",
+            "countryCode": country,
+        }
+        # A bare subdomain LABEL (letters, digits, hyphens — no dots), the same rule the
+        # register wizard's Domain field enforces; a dotted value is not a valid tenant slug.
+        tenant_domain = f"qa-auto-prov-{suffix}"
+        deal = await sa_deals_client.register_deal(
+            make_deal(
+                pid,
+                plan_id,
+                dealType="referral",
+                tenantDomain=tenant_domain,
+                prospectEmail=admin_email,
+                prospectPhone=admin_phone,
+                prospectCountry=country,
+            )
+        )
         deal_id = deal.deal_id
         approved = await sa_deals_client.approve_deal(deal_id, plan_id=plan_id)
         assert approved.data.get("status") == "approved", "precondition: deal must be approved"
-        logger.info("SETUP: deal {} approved (plan locked)", deal_id)
+        logger.info(
+            "SETUP: deal {} approved (plan locked, tenantDomain={})", deal_id, tenant_domain
+        )
 
     async with async_step(
         "[1/4] Mark the approved deal as won (win intake incl. required adminPhoneNumber) -> status 'won'"
     ):
-        suffix = uuid.uuid4().hex[:8]
         win_intake = {
-            "companyWebsite": "https://qa-auto-provision.example.com",
+            # Per-run and never a real company: PRD §4/§5.2 treat a domain that is already a
+            # BlazeUp tenant (or another party's deal) as a conflict, so a fixed website — worse,
+            # blazeup.ai itself — risks every run colliding. `.example.com` is reserved (RFC 2606).
+            "companyWebsite": f"https://{tenant_domain}.example.com",
             "industry": "Technology",
-            "adminFirstName": "QA",
-            "adminLastName": "Provision",
-            "adminEmail": f"qa.auto+provision-{suffix}@mailinator.com",
+            "adminFirstName": settings.provision_admin_first_name or "QA",
+            "adminLastName": settings.provision_admin_last_name or "Automation",
+            "adminEmail": admin_email,
             "companyName": f"QA-AUTO Provision Co {suffix}",
-            "tenantDomain": f"qa-auto-provision-{suffix}.example.com",
+            "tenantDomain": tenant_domain,
             "planId": plan_id,
+            # Lowercase is the value WinDealDto itself documents/accepts (monthly|annual).
+            # The BE then rejects it downstream because the provisioning intake enum is
+            # UPPERCASE (MONTHLY|ANNUAL) — and sending "ANNUAL" is refused by WinDealDto
+            # first, so NO value satisfies both. Keep the DTO-valid value so the failure
+            # lands on the BE's own case mismatch. Verified 2026-10-06 (see the win bug).
             "billingCycle": "annual",
             "numberOfEmployee": 42,
             "region": "asia-southeast1",
-            "country": "US",
+            "country": country,
             "actualAcvCents": 7_500_000,
             # Required: the UI's "reuse prospect phone" fallback does not fire, so send it.
-            "adminPhoneNumber": {"number": "4155550123", "countryCode": "+1"},
+            "adminPhoneNumber": admin_phone,
             "notes": "QA-AUTO provision-leg",
         }
+        logger.info(
+            "KEPT for provisioning follow-up (not deleted): partner={} deal={} tenantDomain={} "
+            "adminEmail={}",
+            pid,
+            deal_id,
+            tenant_domain,
+            admin_email,
+        )
         won = await sa_deals_client.win_deal(deal_id, win_intake=win_intake)
         assert won.data.get("status") == "won", (
             f"deal must become 'won', got {won.data.get('status')!r}"

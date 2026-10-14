@@ -47,6 +47,9 @@ class _FakeClient:
     async def approve_partner(self, partner_id):
         self.calls.append(("approve", partner_id))
 
+    async def set_partner_approval_config(self, partner_id, *, required_approvers, approvers):
+        self.calls.append(("assign_chain", (partner_id, required_approvers, tuple(approvers))))
+
     async def delete_partner(self, partner_id):
         self.calls.append(("delete", partner_id))
 
@@ -146,9 +149,49 @@ def test_default_does_not_approve():
 
 def test_approve_true_approves_after_creating():
     client = _FakeClient(ids=["pid-1"])
-    _seed(client, _FakeRegistry(), approve=True)
-    assert [kind for kind, _ in client.calls] == ["create", "approve"]
+    _seed(client, _FakeRegistry(), approve=True, approver_user_id="qa-approver-id")
+    # The chain is assigned BEFORE the approve: approving an unassigned chain is refused
+    # with 400 "Approval chain not assigned yet".
+    assert [kind for kind, _ in client.calls] == ["create", "assign_chain", "approve"]
     assert ("approve", "pid-1") in client.calls
+
+
+def test_approve_assigns_exactly_one_approver_and_never_zero():
+    # Count 0 would turn the chain OFF and let the creator approve its own partner — the
+    # very control the chain exists to enforce. Seeding must always assign exactly one
+    # approver, and it must be the QA account.
+    client = _FakeClient(ids=["pid-1"])
+    _seed(client, _FakeRegistry(), approve=True, approver_user_id="qa-approver-id")
+    chain = next(arg for kind, arg in client.calls if kind == "assign_chain")
+    partner_id, required, approvers = chain
+    assert partner_id == "pid-1"
+    assert required == 1, f"must pin exactly one approver, got {required}"
+    assert approvers == ("qa-approver-id",), f"the approver must be the QA account: {approvers}"
+
+
+def test_approver_id_defaults_to_the_one_attached_to_the_creator_client():
+    # The exact call site that broke TC-2061602 (run_20261013_103101): it passed the QA
+    # approver CLIENT but no approver id, so the pin was skipped and the approve was refused
+    # with "Approval chain not assigned yet". The fixture attaches the id to the creator
+    # client, so seeding must pick it up from there.
+    creator = _FakeClient(ids=["pid-1"])
+    creator.approver_user_id = "qa-approver-id"
+    approver = _FakeClient()
+    _seed(creator, _FakeRegistry(), approve=True, approver_client=approver)
+    assert ("assign_chain", ("pid-1", 1, ("qa-approver-id",))) in creator.calls, (
+        "the chain must be pinned to the QA approver even when only approver_client is passed"
+    )
+    assert ("approve", "pid-1") in approver.calls, "the QA approver — not the creator — approves"
+    assert not any(kind == "approve" for kind, _ in creator.calls)
+
+
+def test_approve_without_a_qa_approver_leaves_the_chain_alone():
+    # No ADMIN2_* configured → no id to assign. Seeding must not fall back to count 0.
+    client = _FakeClient(ids=["pid-1"])
+    _seed(client, _FakeRegistry(), approve=True)
+    assert [kind for kind, _ in client.calls] == ["create", "approve"], (
+        "with no approver id the chain must be left untouched, never pinned to 0"
+    )
 
 
 def test_default_payload_is_a_generated_partner():

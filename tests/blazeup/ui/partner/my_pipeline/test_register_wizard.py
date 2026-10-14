@@ -16,13 +16,20 @@ import asyncio
 import time
 
 import pytest
+import pytest_asyncio
 from loguru import logger
 
 from api_clients.blazeup.partner.auth_client import PartnerAuthClient
 from config.settings import Settings
 from pages.blazeup.partner.partner_shell_page import PartnerShellPage
 from pages.blazeup.partner.register_deal_wizard import RegisterDealWizard
-from utils.data_factory import unique_domain, unique_email
+from utils.data_factory import (
+    company_name,
+    contact_country_name,
+    contact_full_name,
+    unique_domain,
+    unique_email,
+)
 from utils.log_helper import async_step
 from utils.login_helpers import login_api
 from utils.partner_portal import portal_client
@@ -83,6 +90,24 @@ async def _classify_domains(settings: Settings) -> tuple[str | None, str | None]
     return taken, available
 
 
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def reserved_domains(settings: Settings) -> tuple[str | None, str | None]:
+    """(taken, available) subdomain labels — probed ONCE, before any portal login.
+
+    This MUST NOT run from inside a test that already has a logged-in portal page.
+    The partner refresh token is single-use/rotating, so the API login inside
+    ``_classify_domains`` invalidates the token the browser is holding and the next
+    navigation bounces to /login. That is exactly what failed _004 and _005 in
+    run_20261009_144113: the UI logged in at 14:54:15, this probe re-logged in at
+    14:54:18, and /deals redirected to /login at 14:54:22.
+
+    A session-scoped fixture is created before any function-scoped page fixture, so
+    the API login always happens first — and the six check-domain calls run once for
+    the whole session instead of once per test.
+    """
+    return await _classify_domains(settings)
+
+
 async def _open_deals(shell: PartnerShellPage) -> None:
     await shell.open("deals")
     await shell.wait_ready("deals")
@@ -99,9 +124,9 @@ async def test_partner_ui_my_pipeline_001(make_partner_page):
     """
     shell = make_partner_page(PartnerShellPage)
     wiz = make_partner_page(RegisterDealWizard)
-    company = f"{_fake_company} {unique_domain().split('.')[0]}"
+    company = company_name("Wizard Co")
     domain = unique_domain().split(".")[0]  # the Domain field is a bare subdomain label
-    contact_name = "QA-AUTO Contact"
+    contact_name = contact_full_name()
     contact_email = unique_email()
 
     async with async_step("Setup: open Deals and launch the Register-a-Deal wizard"):
@@ -113,7 +138,7 @@ async def test_partner_ui_my_pipeline_001(make_partner_page):
         "[1/3] Enter company details + contact; verify each field holds the value"
     ):
         await wiz.fill_company(company, domain)
-        await wiz.select_first_country()
+        await wiz.select_country(contact_country_name())
         await wiz.fill_contact(contact_name, contact_email)
         await wiz.wait_step("Step 1 of 3")  # hold so the filled step-1 form is visible on video
         # Echo: each field actually accepted the entered value (no silent mutation/clear).
@@ -260,7 +285,7 @@ async def test_partner_ui_my_pipeline_003(make_partner_page):
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_my_pipeline_004(make_partner_page, settings):
+async def test_partner_ui_my_pipeline_004(make_partner_page, reserved_domains):
     """PARTNER_UI_MY_PIPELINE_004: an already-reserved domain shows an inline active-account warning.
 
     Entering a subdomain already reserved by another active deal must surface an
@@ -268,7 +293,7 @@ async def test_partner_ui_my_pipeline_004(make_partner_page, settings):
     domain shows no warning (control). The reserved/free state is proven via the
     check-domain API first, so the UI assertion is not circular. UI-only (no submit).
     """
-    taken, available = await _classify_domains(settings)
+    taken, available = reserved_domains
     if not taken:
         pytest.skip(
             f"BLOCKED: no reserved (available=false) domain among {_DOMAIN_CANDIDATES} to drive "
@@ -308,7 +333,9 @@ async def test_partner_ui_my_pipeline_004(make_partner_page, settings):
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_my_pipeline_005(make_partner_page, partner_authenticated_page, settings):
+async def test_partner_ui_my_pipeline_005(
+    make_partner_page, partner_authenticated_page, reserved_domains
+):
     """PARTNER_UI_MY_PIPELINE_005: submit the full wizard on a RESERVED domain (conflict path).
 
     Fills the whole register wizard (company + contact + reserved domain, then deal
@@ -322,7 +349,7 @@ async def test_partner_ui_my_pipeline_005(make_partner_page, partner_authenticat
     the created deal (user to supply the approach). The created deal id is logged so it
     can be located/cleaned manually.
     """
-    taken, _ = await _classify_domains(settings)
+    taken, _ = reserved_domains
     if not taken:
         pytest.skip("BLOCKED: no reserved domain to drive the conflict-queue submission")
     page = partner_authenticated_page
@@ -630,11 +657,9 @@ async def test_partner_ui_my_pipeline_012(make_partner_page, partner_authenticat
     async with async_step("Setup: fill the full wizard with a valid (available) domain"):
         await _open_deals(shell)
         await wiz.open()
-        await wiz.fill_company(
-            f"QA-AUTO Perf {unique_domain().split('.')[0]}", unique_domain().split(".")[0]
-        )
-        await wiz.select_first_country()
-        await wiz.fill_contact("QA-AUTO Contact", unique_email())
+        await wiz.fill_company(company_name("Perf"), unique_domain().split(".")[0])
+        await wiz.select_country(contact_country_name())
+        await wiz.fill_contact(contact_full_name(), unique_email())
         await wiz.click_next()
         await wiz.wait_step("Step 2 of 3")
         await wiz.pick_first_plan()

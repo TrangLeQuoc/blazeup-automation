@@ -64,4 +64,7 @@ class PartnerDetailLocators:
     MEMBER_PASSWORD = "input[type=password]"
     MEMBER_CREATE_BUTTON = "Create Portal User"  # get_by_role button (submits the form)
     MEMBER_DONE_BUTTON = "Done"  # get_by_role button (dismisses the success panel)
-    MEMBER_CREATED_TOAST = "Portal user created successfully"
+    # Confirmation text on the success panel. The FE dropped the "successfully" suffix and
+    # now renders "Portal user created" followed by the new User ID / Email / Password
+    # (verified live 2026-10-08) — match the stable prefix, not the old full sentence.
+    MEMBER_CREATED_TOAST = "Portal user created"

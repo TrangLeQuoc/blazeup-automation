@@ -54,7 +54,7 @@ class PartnerDetailPage(BasePage):
         logger.log("STEP", "Onboard partner [{}]", company)
         cta = main.get_by_role("button", name=L.ONBOARD_BUTTON, exact=False).first
         await cta.wait_for(state="visible", timeout=ready_timeout)
-        await cta.click()
+        await self.click_on(cta, "Onboard Partner (open form)")
         # Wait for the FIELD, not for a guessed number of milliseconds: the form mounts
         # either in a dialog or inline, and on a cold staging load that takes far longer
         # than any fixed sleep we would be willing to pay on a fast one.
@@ -63,9 +63,12 @@ class PartnerDetailPage(BasePage):
         )
         dlg = self.page.locator("[role=dialog]").first
         scope = dlg if await dlg.count() else main
-        await scope.locator(L.ONBOARD_COMPANY).fill(company)
-        await scope.locator(L.ONBOARD_EMAIL).fill(email)
-        await scope.get_by_role("button", name=L.ONBOARD_BUTTON, exact=True).first.click()
+        await self.fill_in(scope.locator(L.ONBOARD_COMPANY), company, "Onboard · Company name")
+        await self.fill_in(scope.locator(L.ONBOARD_EMAIL), email, "Onboard · Contact email")
+        await self.click_on(
+            scope.get_by_role("button", name=L.ONBOARD_BUTTON, exact=True).first,
+            "Onboard Partner (submit)",
+        )
         await self._wait_onboard_settled()
 
     async def _wait_onboard_settled(self, timeout: int = 30_000) -> None:
@@ -100,7 +103,7 @@ class PartnerDetailPage(BasePage):
         )
         await option.wait_for(state="visible", timeout=10_000)
         if await option.get_attribute("aria-selected") != "true":
-            await option.click()
+            await self.click_on(option, f"Status filter · {status}")
         await self.page.keyboard.press("Escape")  # close the listbox if it stays open
 
     async def open_partner(
@@ -116,7 +119,7 @@ class PartnerDetailPage(BasePage):
         await self.filter_status(status)
         row = self._main().locator("tbody tr").filter(has_text=company).first
         await row.wait_for(state="visible", timeout=timeout)
-        await row.click()
+        await self.click_on(row, f"Directory row '{company}' (open detail)")
         await self.wait_detail_ready(timeout=timeout)
 
     async def wait_detail_ready(self, timeout: int = 60_000) -> None:
@@ -191,7 +194,7 @@ class PartnerDetailPage(BasePage):
     # ── Partner-actions workflow (Approve → Deactivate) ───────────────────────
     async def open_actions_menu(self, timeout: int = 15_000) -> None:
         """Open the 'Partner actions' kebab menu (Radix dropdown)."""
-        await self.actions_button().click()
+        await self.click_on(self.actions_button(), "Partner actions (menu)")
         # Radix portals the menu in asynchronously — wait for a real menu item to exist
         # instead of sleeping and hoping. The caller clicks one immediately after.
         await self.page.get_by_role("menuitem").first.wait_for(state="visible", timeout=timeout)
@@ -203,7 +206,7 @@ class PartnerDetailPage(BasePage):
         """Approve a Pending partner (one-click menu item → status becomes Active)."""
         logger.log("STEP", "Actions → Approve Partner")
         await self.open_actions_menu()
-        await self.menu_item(L.ACTION_APPROVE).click()
+        await self.click_on(self.menu_item(L.ACTION_APPROVE), f"Menu · {L.ACTION_APPROVE}")
         # Poll the header until the status flips to Active.
         deadline = time.perf_counter() + timeout / 1000
         while time.perf_counter() < deadline:
@@ -222,12 +225,15 @@ class PartnerDetailPage(BasePage):
         """
         logger.log("STEP", "Actions → Deactivate (reason + confirm)")
         await self.open_actions_menu()
-        await self.menu_item(L.ACTION_DEACTIVATE).click()
+        await self.click_on(self.menu_item(L.ACTION_DEACTIVATE), f"Menu · {L.ACTION_DEACTIVATE}")
         # (No sleep here: the dialog wait below IS the wait for the menu item to act.)
         dlg = self.page.get_by_role("dialog").filter(has_text="Deactivate Partner").first
         await dlg.wait_for(state="visible", timeout=10_000)
-        await dlg.locator(L.DEACTIVATE_REASON).first.fill(reason)
-        await dlg.get_by_role("button", name=L.ACTION_DEACTIVATE, exact=True).first.click()
+        await self.fill_in(dlg.locator(L.DEACTIVATE_REASON).first, reason, "Deactivate · Reason")
+        await self.click_on(
+            dlg.get_by_role("button", name=L.ACTION_DEACTIVATE, exact=True).first,
+            "Deactivate (confirm)",
+        )
         await self._wait_deactivate_outcome(dlg)
         return await self.detail_text()
 
@@ -270,7 +276,7 @@ class PartnerDetailPage(BasePage):
 
     async def open_members(self, timeout: int = 20_000) -> None:
         """Switch to the Members tab and wait for the Portal Users list to render."""
-        await self.tab("Members").click()
+        await self.click_on(self.tab("Members"), "Tab · Members")
         await (
             self._main()
             .get_by_text(L.MEMBERS_HEADING, exact=False)
@@ -289,24 +295,26 @@ class PartnerDetailPage(BasePage):
         add = self.page.get_by_role("button", name=L.MEMBERS_ADD_USER, exact=True).first
         if not (await add.count() and await add.is_visible()):
             add = self.page.get_by_role("button", name=L.MEMBERS_ADD_FIRST_USER, exact=True).first
-        await add.click()
+        await self.click_on(add, "Members · Add User")
         form = self.page.locator("form").filter(has_text=L.MEMBER_CREATE_BUTTON).first
         # Wait for the form itself; on a slow render the old 1s sleep let the fills
         # race the mount and fail on a field that did not exist yet.
         await form.wait_for(state="visible", timeout=20_000)
-        await form.locator(L.MEMBER_FIRST_NAME).fill(first)
-        await form.locator(L.MEMBER_LAST_NAME).fill(last)
-        await form.locator(L.MEMBER_EMAIL).fill(email)
-        logger.log("STEP", "Fill  [member password] = ***")
-        await form.locator(L.MEMBER_PASSWORD).fill(password)
-        await form.get_by_role("button", name=L.MEMBER_CREATE_BUTTON, exact=True).click()
+        await self.fill_in(form.locator(L.MEMBER_FIRST_NAME), first, "Add User · First name")
+        await self.fill_in(form.locator(L.MEMBER_LAST_NAME), last, "Add User · Last name")
+        await self.fill_in(form.locator(L.MEMBER_EMAIL), email, "Add User · Email")
+        await self.fill_in(form.locator(L.MEMBER_PASSWORD), password, "Add User · Password")
+        await self.click_on(
+            form.get_by_role("button", name=L.MEMBER_CREATE_BUTTON, exact=True),
+            f"Add User · {L.MEMBER_CREATE_BUTTON}",
+        )
         done = self.page.get_by_role("button", name=L.MEMBER_DONE_BUTTON, exact=True).first
         await self._wait_member_created(done)
         # Read AFTER the outcome is on screen — the caller asserts on this text, so a
         # premature read used to make a slow-but-successful create look like a failure.
         text = await self.detail_text()
         if await done.count() and await done.is_visible():
-            await done.click()
+            await self.click_on(done, f"Add User · {L.MEMBER_DONE_BUTTON}")
             with contextlib.suppress(PlaywrightTimeoutError):
                 await done.wait_for(state="hidden", timeout=15_000)
         # Dismissing the panel is NOT the same thing as the table having refreshed:

@@ -10,6 +10,7 @@ covered by ``selftests/test_seeded_partner_fixture.py`` in CI, not only locally.
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from pytest_support.approval import assign_single_approver
 from utils.data_factory import make_partner
 
 
@@ -19,6 +20,8 @@ async def seed_partner(
     *,
     approve: bool = False,
     payload: dict[str, Any] | None = None,
+    approver_client=None,
+    approver_user_id: str = "",
 ):
     """Create a throwaway partner and register its deletion in one step.
 
@@ -55,5 +58,23 @@ async def seed_partner(
         register_cleanup(lambda pid=partner_id: sa_partners_client.delete_partner(pid))
     assert partner_id, "precondition: partner must be created"
     if approve:
-        await sa_partners_client.approve_partner(partner_id)  # pending -> active
+        # Approving is deliberately NOT done by `sa_partners_client`: the chain forbids the
+        # REQUESTER from approving its own record, so the creator is the one actor that may
+        # be refused. `approver_client` is the QA approver (a different SA).
+        approver = approver_client or sa_partners_client
+        # Default to the QA approver id the fixture attached to the creator client. A call
+        # site that passed only `approver_client` silently skipped the pin and the approve
+        # was refused — "Approval chain not assigned yet" (TC-2061602, run_20261013_103101).
+        # Taking the default here closes that gap for every call site, present and future.
+        approver_user_id = approver_user_id or getattr(sa_partners_client, "approver_user_id", "")
+        # Pin THIS partner to exactly one approver — the QA account — so the seed depends
+        # neither on the tenant-wide "Required approvers" value nor on who is assigned by
+        # default. See pytest_support.approval for why the count is 1 and never 0.
+        await assign_single_approver(
+            sa_partners_client.set_partner_approval_config,
+            partner_id,
+            approver_user_id,
+            label="partner",
+        )
+        await approver.approve_partner(partner_id)  # pending -> active
     return partner

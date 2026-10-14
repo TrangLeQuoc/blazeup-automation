@@ -296,17 +296,111 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 - PARTNER_UI_MY_PIPELINE_022 — BLOCKED (Negative: không partner nào đăng ký → commission không award — outcome behavior/backend, không có action UI partner). Cơ chế v1 (LLD `commission-recurring-accrual` §6.1): không đăng ký → không có deal WON gắn `wonTenantId` → event `payment.succeeded` cho tenant đó rơi vào `accrual_no_won_deal` và bị skip → không có row `ACCRUED`. Đây là assertion API/log (không có row ACCRUED sau payment cho tenant chưa attribute), không phải UI → nên đặt làm TC API accrual-negative thay vì UI.
 - PARTNER_UI_MY_PIPELINE_023 — BLOCKED (reseller deal → ô end-client price vắng mặt: wizard không cho chọn reseller; feature absent)
 #### PARTNER_UI_MY_PIPELINE_024
-**Ghi chú (BLOCKED):** Click deal card trong pipeline để mở deal detail. Bị chặn bởi BE defect (verify live 2026-07-24): endpoint danh sách deals partner-portal `GET /v1/partner/portal/deals` trả **400 "Invalid id: 'pro-v1'"**, nên pipeline **không bao giờ render deal row/card** (UI fallback về empty-state "No deals found" kể cả khi partner CÓ deal). Root cause = contract drift tham chiếu plan: deal cũ lưu **slug** (`planId:"pro-v1"`) trong khi BE giờ resolve plan bằng Mongo **_id** (ObjectId), nên list partner có deal tham chiếu slug → "Invalid id" → cả list vỡ. Đã xác nhận deal SA vừa register cho partner vẫn không hiện (list giữ 400 ~40s). Không có card để click → không thể thực hiện luồng "mở deal detail". **Bug này chặn luôn các TC deal-list/detail khác** (_015 detail, _025/_026/_027 filter, _033 card tag). Unblock khi BE fix endpoint deals-list (tha/migrate plan-ref slug cũ, hoặc resolve bằng _id) để pipeline render card. **Liên quan:** register giờ cần plan **_id** (slug → 400) — đã cập nhật `pick_billing_plan_id`.
+**Mô tả:** Click 1 deal row trong My Pipeline và xác nhận drawer Deal Detail mở tại chỗ (không đổi route).
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:**
+1. Click deal row đầu tiên → drawer Deal Detail mở.
+   → Expected: dialog có heading "Deal Detail" hiển thị.
+2. Drawer mở tại chỗ (URL vẫn ở /deals).
+   → Expected: URL không đổi — detail là drawer, không phải route mới.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** row deal mở được drawer detail ngay trên trang pipeline.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060224). Hết chặn sau khi BE fix `GET /v1/partner/portal/deals` (trước trả 400 "Invalid id: 'pro-v1'" với plan-ref slug cũ) — probe live lại 2026-10-02: 200, 20 row/trang, tổng 102. Negative/Idempotency: N/A — màn chỉ đọc.
 #### PARTNER_UI_MY_PIPELINE_025
-**Ghi chú (BLOCKED):** Filter deals theo company text để hiển thị deal khớp. Bị chặn bởi cùng BE defect với _024 (verify live 2026-07-24): endpoint deals-list `GET /v1/partner/portal/deals` trả **400 "Invalid id: 'pro-v1'"** — và biến thể search `?search=QA` cũng trả **cùng 400** (filter đi qua cùng endpoint). List vỡ nên không deal nào render → không thể verify "deal khớp được hiển thị". Unblock cùng _024 (BE phải fix endpoint deals-list để tha/resolve plan-ref slug cũ).
+**Mô tả:** Mở nút Filter trên My Pipeline và xác nhận popover filter builder mở ra.
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:**
+1. Click Filter → popover filter mở.
+   → Expected: popover filter (radix) hiển thị.
+2. Popover có filter builder (control 'Add Filter').
+   → Expected: có control "Add Filter" trong popover.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** điểm vào advanced-filter mở được và tương tác được.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060225). Hết chặn sau khi BE fix `GET /v1/partner/portal/deals` (trước trả 400 "Invalid id: 'pro-v1'" với plan-ref slug cũ) — probe live lại 2026-10-02: 200, 20 row/trang, tổng 102. **Re-scope:** intent gốc là "filter theo company text", nhưng portal **không có ô search tự do** — filter là "builder" radix (combobox field, mặc định Deal Type, + Add Filter). TC này cover điểm vào; áp filter và assert kết quả thu hẹp cần spec tương tác builder riêng (follow-up). Việc thu hẹp list thật đã cover ở _035 (stage control). Negative/Idempotency: N/A — chỉ đọc.
 - PARTNER_UI_MY_PIPELINE_026 — BLOCKED (filter theo deal type: deals-list 400 → pipeline rỗng; có nút Filter nhưng 0 deal không verify được kết quả lọc; cùng BE defect _024/_025)
 - PARTNER_UI_MY_PIPELINE_027 — BLOCKED (filter theo module: cùng deals-list 400 + không có concept "module" trong deal model/wizard)
 - PARTNER_UI_MY_PIPELINE_028 — BLOCKED (add shared note vào deal: không có deal detail — deals-list 400, pipeline rỗng, không có deal để mở)
 - PARTNER_UI_MY_PIPELINE_029 — BLOCKED (upload document vào deal: không có deal detail — như _028)
 - PARTNER_UI_MY_PIPELINE_030 — BLOCKED (xem BlazeUp rep được assign: rep assign khi SA approve (bị BUG-UI-005) + deals-list 400, không có deal để mở) **CẬP NHẬT 2026-08-10: BUG-UI-005 đã fix** (`_007` giờ pass) — lý do chặn nêu trên không còn. Kiểm lại xem TC này build được chưa; mới là ứng viên, chưa chắc hết chặn, vì có thể vẫn cần conflict fixture riêng.
 - PARTNER_UI_MY_PIPELINE_031 — BLOCKED (request gia hạn protection thủ công: cần deal approved có protection clock chạy + deal detail — deals-list 400 / chưa SA approve)
-- PARTNER_UI_MY_PIPELINE_032 — BLOCKED (reseller tự mark deal Won: wizard không cho chọn reseller)
-- PARTNER_UI_MY_PIPELINE_033 — BLOCKED (card pipeline hiện tag reseller billing: deals-list 400 → không render card + không có reseller)
+- _(chưa đánh số)_ Reseller tự mark deal Won — BLOCKED (reseller tự mark deal Won: wizard không cho chọn reseller)
+- _(chưa đánh số)_ Tag reseller billing trên card pipeline — BLOCKED (card pipeline hiện tag reseller billing: deals-list 400 → không render card + không có reseller)
+#### PARTNER_UI_MY_PIPELINE_032
+**Mô tả:** Với partner có deal, bảng deals của My Pipeline render row và đủ các cột mong đợi.
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:**
+1. Bảng deals hiện đúng các column header mong đợi.
+   → Expected: header có DEAL ID, DOMAIN, DEAL TYPE, ESTIMATED ACV, STATUS.
+2. Có ít nhất 1 deal row được render.
+   → Expected: ≥ 1 data row (không phải empty-state "No deals found").
+3. Row đầu tiên có Deal ID và STATUS.
+   → Expected: 2 ô đó không rỗng.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** danh sách deal render được (chính regression từng chặn _024/_025).
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060234). Negative/Idempotency: N/A — chỉ đọc.
+
+#### PARTNER_UI_MY_PIPELINE_033
+**Mô tả:** Stage control của pipeline lọc list theo đúng status đó.
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:**
+1. Chọn 1 stage khác rỗng vừa 1 trang (1..20 deal).
+   → Expected: có stage button (khác 'All') với count 1..20.
+2. Click stage và list hiện đúng các deal của stage.
+   → Expected: số row render = count của stage (poll — bảng re-render phía client).
+3. Mọi row render có STATUS của stage đó.
+   → Expected: STATUS từng row khớp stage.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** stage control thu hẹp list chính xác.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060235). Stage control là BUTTON "<Stage> <count>" (All/Pending/Approved/In Progress/Won/Lost/Expired). Negative/Idempotency: N/A — chỉ đọc.
+
+#### PARTNER_UI_MY_PIPELINE_034
+**Mô tả:** Drawer Deal Detail hiện đúng thông tin của deal được click.
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:**
+1. Drawer hiện section DEAL INFO và COMPANY INFO.
+   → Expected: 2 heading section hiển thị trong drawer (mở từ row đầu ở Setup).
+2. Drawer phản ánh đúng deal đã click (text company/domain xuất hiện).
+   → Expected: 1 token từ ô DOMAIN của row xuất hiện trong dialog Deal Detail.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** drawer hiện đúng deal được click, không phải khung rỗng.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060236). Negative/Idempotency: N/A — chỉ đọc.
+
+#### PARTNER_UI_MY_PIPELINE_035
+**Mô tả:** Phân trang — trang 2 load bộ deal khác.
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định. Có hơn 1 trang deal (All > 20); nếu không TC báo BLOCKED.
+**Test Steps:**
+1. Nhảy sang trang 2 → trang deal mới load.
+   → Expected: qua ô "Go to page", row đầu đổi và vẫn có row.
+2. Deal đầu trang 2 khác trang 1.
+   → Expected: Deal ID đầu trang 2 ≠ Deal ID đầu trang 1.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** phân trang pipeline load được row mới.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060238). Footer: "Showing 1 - 20 of 102 | 20 / page | 1..6 | Go to page". Negative/Idempotency: N/A — chỉ đọc.
+
+#### PARTNER_UI_MY_PIPELINE_036
+**Mô tả:** DEAL TYPE / ESTIMATED ACV / STATUS của từng deal row hợp lệ.
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:** (mỗi row 1 step, tối đa 5 row đầu; gom lỗi)
+1..N. Row i: DEAL TYPE / ESTIMATED ACV / STATUS hợp lệ.
+   → Expected: DEAL TYPE ∈ Referral/Reseller/Co-sell; ESTIMATED ACV có số tiền; STATUS ∈ Pending/Approved/Won/Lost/Expired/In Progress/Registered.
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** các cột có kiểu dữ liệu render giá trị hợp lệ trên mọi row.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060239). Soft-collect (`soft=gaps`) để 1 row lỗi không che row khác. Negative/Idempotency: N/A — chỉ đọc.
+
+#### PARTNER_UI_MY_PIPELINE_037
+**Mô tả:** Stage có count = 0 hiện empty state "No deals found".
+**Setup (điều kiện trước):** Login 1 lần bằng user channel-partner dùng chung (partner CÓ deal — 102 deal live ngày 2026-10-02); mở `/deals` qua shell, chờ READY_MARKER "Deal Pipeline" và chờ danh sách deal ổn định.
+**Test Steps:**
+1. Tìm stage có số deal = 0.
+   → Expected: có stage button hiện 0 (vd In Progress / Lost / Expired).
+2. Chuyển sang stage đó → hiện empty state 'No deals found'.
+   → Expected: message empty-state hiển thị.
+3. Không có deal data row nào dưới stage rỗng.
+   → Expected: 0 row có Deal ID "D#…" (row placeholder duy nhất là message empty-state).
+**Teardown:** không — chỉ đọc.
+**Expected (tổng):** stage rỗng hiện empty state rõ ràng, không còn row cũ.
+**Ghi chú:** PASSED — verify 2026-10-14 (TC 12060240). Negative/Idempotency: N/A — chỉ đọc.
+
 ### UI · PARTNER_PORTAL_SHELL
 
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_001
@@ -331,7 +425,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 5. Resources `/resources` → Expected: không tràn ngang. → **PASS**
 6. Tap link sidebar ở mobile → Commissions route + render. → **PASS** (nav mobile dùng được).
 **Expected (tổng):** Mọi trang chính vừa viewport mobile (không tràn ngang), nav truy cập được; tap nav route đúng.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — verify 2026-09-30 (TC 12060102). 4/5 trang vừa + nav mobile OK; **chỉ `/directory` tràn (+93px)** = lỗi responsive layout (**confirm với FE**; bug mới **BUG-UI-010** — khác BUG-UI-002 (Deals, nay đã fix)). **My Apps đã bị bỏ (2026-09-30):** không còn nav, `/apps` → 404, nên đã bỏ khỏi test. Negative: N/A (smoke responsive không có input sai; case "layout không vừa" chính là thứ nó check). Idempotency: N/A (chỉ điều hướng/resize read-only).
+**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — verify 2026-09-30 (TC 12060102). 4/5 trang vừa + nav mobile OK; **chỉ `/directory` tràn (+93px)** = lỗi responsive layout (**confirm với FE**; theo dõi ở **BUG-UI-013** — BUG-UI-010 là cùng defect, đã close 2026-10-08 nên row còn hiệu lực là 013; khác BUG-UI-002 (Deals, nay đã fix)). **My Apps đã bị bỏ (2026-09-30):** không còn nav, `/apps` → 404, nên đã bỏ khỏi test. Negative: N/A (smoke responsive không có input sai; case "layout không vừa" chính là thứ nó check). Idempotency: N/A (chỉ điều hướng/resize read-only).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Ghi chú (BLOCKED):** Partner dual-account chuyển đổi giữa dashboard **Pack** và **Channel**. Không thể tự động hóa — tính năng lẫn test data đều chưa có trên staging (verify live 2026-07-24): (a) **không có account-switcher** trong portal shell — chữ "Select" ở header là badge **tier** (tier=`select`), không phải công tắc đổi account; profile menu chỉ có Profile/Logout; (b) partner đang đăng nhập là **single account** — `GET /v1/partner/auth/me` trả về 1 `partnerId`, `type:"channel"`, `tier:"select"`, không có mảng accounts; (c) **không có khái niệm "Pack"** — enum partner `type` là channel/referral/msp/system_integrator (không có "pack"), nên không thể biểu diễn dual-account Pack↔Channel. Unblock khi BE ship multi-account membership (1 user → 1 account Pack + 1 Channel) + account switcher ở shell, VÀ có test partner dual-account.
 ### UI · PARTNER_TEAM
@@ -1091,7 +1185,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 
 #### PARTNER_API_TENANT_PROVISIONING_ATTRIBUTION_002
 **Mô tả:** Chặng provision của chuỗi close→provision→commission (PRD v1.8 §7.1). Register, approve và WIN một deal referral, rồi assert win thật sự provision được tenant: `wonTenantId` + `goLiveAt` được stamp và `provisioningState='resolved'` trong một khoảng poll có giới hạn. `goLiveAt` là mốc bắt đầu cửa sổ eligibility của commission, nên đây là cổng mà mọi bước commission phía sau phụ thuộc.
-**Setup (điều kiện trước):** 1 partner seed mới + 1 billing plan published; 1 deal referral đã register và approve (status 'approved'). Đường approve/win chạy được qua API (approve truyền plan `_id` catalog; win truyền `adminPhoneNumber` bắt buộc).
+**Setup (điều kiện trước):** 1 partner seed mới + 1 billing plan published; 1 deal referral đã register và approve (status 'approved'). Đường approve/win chạy được qua API (approve truyền plan `_id` catalog; win truyền `adminPhoneNumber` bắt buộc). **Win intake dùng data THẬT (2026-10-02):** admin của tenant là mailbox thật lấy từ `.env` (`PROVISION_ADMIN_EMAIL`/`_FIRST_NAME`/`_LAST_NAME`/`_PHONE`/`_COUNTRY`; COUNTRY là mã ISO 2 chữ, mặc định `VN`, dùng chung cho `country` của tenant, `countryCode` SĐT admin và country của prospect — BE validate `countryCode` theo alpha-2, không phải mã vùng), plus-address mỗi lần chạy (`you+prov-<id>@company.com`) — provisioning gửi login/xác nhận của tenant mới về đó; `tenantDomain` là label `qa-auto-prov-<id>` (không dấu chấm — đúng rule domain). SKIPPED (opt-in, không phải BLOCKED — để CI không đỏ) khi chưa set `PROVISION_ADMIN_EMAIL`.
 **Test Steps:**
 1. Mark deal (đã approved) thành won (win intake kèm `adminPhoneNumber{number,countryCode}` bắt buộc).
    → Expected: HTTP 201; status='won'; message xác nhận provisioning đã kick off.
@@ -1101,7 +1195,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Expected: `wonTenantId` khác rỗng (tenant đã provision) và `goLiveAt` có giá trị (mốc cửa sổ commission).
 4. `provisioningState` đạt 'resolved'.
    → Expected: `provisioningState='resolved'` (không phải 'awaited'/'overdue') — deal không còn chờ provision.
-**Teardown:** không (deal won + tenant provision nếu có vẫn tồn trên staging; data QA-AUTO).
+**Teardown:** không, có chủ đích — dù PASS hay FAIL (thống nhất với BE 2026-10-02). Deal won được chuyển sang service provisioning của team khác xử lý bất đồng bộ; xoá partner giữa chừng sẽ cắt luồng đó và PO không còn gì để kiểm tra. Log in ra `KEPT for provisioning follow-up: partner=… deal=… tenantDomain=… adminEmail=…`. (Trước 2026-10-02 code xoá partner ở teardown, trái với dòng này.)
 **Expected (tổng):** win một deal approved đẩy chuỗi provision async tới hoàn tất — tenant được provision và cửa sổ eligibility commission có thể bắt đầu.
 **Ghi chú (FAIL — tái hiện BUG-API-033):** Phạm vi CHỈ chặng provision; chặng commission/accrual vẫn blocked ở _005/_006 (cần `COMMISSION_ACCRUAL_ENABLED=true` + event `payment.gateway.payment.succeeded`). Hiện FAIL chủ đích: trên staging không deal won nào đạt 'resolved' (byProvisioningState.resolved=0, overdue=117, won=262 tính tới 2026-10-01); `wonTenantId`/`goLiveAt` không bao giờ được stamp. §7.1 ghi BE=Done nhưng provisioning worker có vẻ không chạy trên staging — đã raise theo yêu cầu Khoa thành BUG-API-033. Sẽ chuyển PASS khi provisioning hoàn tất, trở thành regression guard cho §7.1.
 

@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Real test data — used only when the runner's REAL_TEST_DATA flag is on
+# (runner/run_test.py) or for one run with:  python -m runner.run_test ... --real-data
+#
+#     cp config/blazeup/test_data.example.yaml config/blazeup/test_data.yaml
+#
+# test_data.yaml holds personal data and is gitignored — never commit it.
+#
+# Every record still gets a per-run suffix, because staging rejects/flag repeats:
+#   email    you@co.com     -> you+partner-<id>@co.com / you+deal-<id>@... (same inbox;
+#                              the mail server must accept "+", Google/Outlook do)
+#   names    Acme Partners  -> "Acme Partners <id>"
+#   domain   acme           -> "acme-<id>"   (bare subdomain label, no dots)
+# ─────────────────────────────────────────────────────────────────────────────
+
+contact:                      # the real person: partner contact, deal prospect, tenant admin
+  first_name: Jane
+  last_name: Doe
+  email: jane.doe@example.com # REQUIRED — a mailbox you read (invites/credentials land here)
+  phone: "0987654321"         # national format, quoted so a leading 0 is kept
+  country: VN                 # ISO 3166-1 alpha-2 (NOT a dial code)
+  country_name: Viet Nam      # as the register wizard's Country dropdown spells it
+
+partner:                      # the partner organisation SA onboards
+  name: Acme Partners         # REQUIRED
+  website: https://www.example.com
+
+deal:                         # the prospect company a deal is registered for
+  company: Acme Computer      # REQUIRED
+  domain: acme                # label only; "-<id>" is appended per deal
+  headcount: 10
+  industry: Technology
+  region: asia-southeast1     # us-west1 | asia-south1 | me-west1 | asia-southeast1

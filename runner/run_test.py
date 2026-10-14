@@ -24,6 +24,7 @@ Examples:
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -58,6 +59,12 @@ DEFAULT_SKIP_IDS: list[str] = []
 # Set True to export results to a timestamped copy of Partner_Platform_Test_Plan.xlsx
 # after every run.  Override from the CLI with --no-excel-report to skip for one run.
 REPORT_EXCEL: bool = True
+
+# Set True to build test data from config/blazeup/test_data.yaml (a real person /
+# company — mails land in a real inbox) instead of random Faker data. Every record still
+# gets a per-run suffix, so repeated runs never collide. Override from the CLI with
+# --real-data / --no-real-data for one run. Keep False for CI.
+REAL_TEST_DATA: bool = False
 
 # Set True to run AI failure triage automatically when a run has failures,
 # writing ai_triage.md into the result dir. Provider/model come from settings
@@ -403,6 +410,14 @@ def main() -> int:
         f"(default: {REPORT_AI_TRIAGE}). Use --no-ai-triage to skip for one run.",
     )
     out.add_argument(
+        "--real-data",
+        action=argparse.BooleanOptionalAction,
+        default=REAL_TEST_DATA,
+        dest="real_data",
+        help=f"Build test data from config/blazeup/test_data.yaml instead of random data "
+        f"(default: {REAL_TEST_DATA}). Use --real-data / --no-real-data for one run.",
+    )
+    out.add_argument(
         "--debug-log", action="store_true", help="Write DEBUG-level logs to the run log file."
     )
     out.add_argument(
@@ -489,6 +504,16 @@ def main() -> int:
         # one fail fast by themselves (measured: 21 blocked TCs = 10.8s in total).
         if abort:
             return EXIT_ENV_DOWN
+
+    # ── Test-data profile ───────────────────────────────────────────────────
+    # Exported (not passed as an argument): pytest runs in a subprocess that inherits
+    # os.environ, and utils.data_factory reads it there. Always set — explicitly
+    # "random" too — so a value left in the parent shell cannot leak into a run.
+    from utils.data_factory import TEST_DATA_PROFILE_ENV
+
+    os.environ[TEST_DATA_PROFILE_ENV] = "real" if args.real_data else "random"
+    if args.real_data:
+        print("Test data : REAL (config/blazeup/test_data.yaml, unique suffix per record)")
 
     # ── Execute ─────────────────────────────────────────────────────────────
     if repeat > 1:

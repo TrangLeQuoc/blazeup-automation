@@ -38,7 +38,9 @@ class RegisterDealWizard(BasePage):
         hydration and times out under slow cold-loads (the register-wizard flaky).
         ``field_timeout`` is generous to absorb staging cold-loads.
         """
-        await self.page.get_by_role("button", name="Register a deal").first.click()
+        await self.click_on(
+            self.page.get_by_role("button", name="Register a deal").first, "Register a deal"
+        )
         await self.dialog().wait_for(state="visible", timeout=timeout)
         await self.page.locator(L.COMPANY_NAME).wait_for(state="visible", timeout=field_timeout)
         logger.log("STEP", "Opened Register-a-Deal wizard")
@@ -62,14 +64,12 @@ class RegisterDealWizard(BasePage):
     async def fill_company(self, name: str | None, domain: str) -> None:
         """Fill company name (skip when name is None) + domain."""
         if name is not None:
-            await self.page.locator(L.COMPANY_NAME).fill(name)
-        await self.page.locator(L.DOMAIN).fill(domain)
+            await self.fill_in(self.page.locator(L.COMPANY_NAME), name, "Step 1 · Company name")
+        await self.fill_in(self.page.locator(L.DOMAIN), domain, "Step 1 · Domain")
 
     async def fill_domain(self, value: str) -> None:
         """Set the Domain field and blur it (to trigger any field-level validation)."""
-        d = self.page.locator(L.DOMAIN)
-        await d.fill(value)
-        await d.blur()
+        await self.fill_in(self.page.locator(L.DOMAIN), value, "Step 1 · Domain", blur=True)
 
     async def domain_aria_invalid(self) -> bool:
         """True if the Domain field is flagged invalid (aria-invalid='true')."""
@@ -124,19 +124,39 @@ class RegisterDealWizard(BasePage):
 
     async def select_first_country(self) -> None:
         """Open the Country combobox and pick the first option (any valid country)."""
-        await self.page.get_by_text(L.COUNTRY_TRIGGER_TEXT, exact=False).first.click()
-        await self.page.get_by_role("option").first.click()
+        await self.choose(
+            self.page.get_by_text(L.COUNTRY_TRIGGER_TEXT, exact=False).first,
+            self.page.get_by_role("option").first,
+            "Step 1 · Country",
+        )
+
+    async def select_country(self, name: str | None) -> None:
+        """Pick *name* in the Country combobox (as the list spells it, e.g. 'Viet Nam').
+
+        ``None`` keeps the old behaviour (first option) — the random-data profile does
+        not care which country, the real-data profile does.
+        """
+        if not name:
+            await self.select_first_country()
+            return
+        await self.choose(
+            self.page.get_by_text(L.COUNTRY_TRIGGER_TEXT, exact=False).first,
+            self.page.get_by_role("option", name=name, exact=True).first,
+            "Step 1 · Country",
+        )
 
     async def fill_contact(self, name: str, email: str) -> None:
         """Fill the primary-contact full name + email."""
-        await self.page.locator(L.CONTACT_NAME).fill(name)
-        await self.page.locator(L.CONTACT_EMAIL).first.fill(email)
+        await self.fill_in(self.page.locator(L.CONTACT_NAME), name, "Step 1 · Contact full name")
+        await self.fill_in(
+            self.page.locator(L.CONTACT_EMAIL).first, email, "Step 1 · Contact email"
+        )
 
     async def fill_email(self, value: str) -> None:
         """Set only the primary-contact email and blur it (to trigger validation)."""
-        e = self.page.locator(L.CONTACT_EMAIL).first
-        await e.fill(value)
-        await e.blur()
+        await self.fill_in(
+            self.page.locator(L.CONTACT_EMAIL).first, value, "Step 1 · Contact email", blur=True
+        )
 
     async def email_aria_invalid(self) -> bool:
         """True if the contact-email field is flagged invalid (aria-invalid='true')."""
@@ -158,17 +178,27 @@ class RegisterDealWizard(BasePage):
 
     async def pick_first_plan(self) -> None:
         """Open the Plan dropdown and pick the first plan (billing cycle auto-sets)."""
-        await self.dialog().get_by_text("Select a plan", exact=False).first.click()
-        await self.page.get_by_role("option").first.click()
+        await self.choose(
+            self.dialog().get_by_text("Select a plan", exact=False).first,
+            self.page.get_by_role("option").first,
+            "Step 2 · Plan",
+        )
 
     async def fill_seats(self, amount: int = 10) -> None:
         """Fill the granted-seats amount."""
-        await self.page.locator("input[placeholder='Enter the amount']").fill(str(amount))
+        await self.fill_in(
+            self.page.locator("input[placeholder='Enter the amount']"),
+            str(amount),
+            "Step 2 · Granted seats",
+        )
 
     async def pick_first_region(self) -> None:
         """Open the Region dropdown (enabled after a plan is chosen) and pick the first."""
-        await self.dialog().get_by_text("Select a region", exact=False).first.click()
-        await self.page.get_by_role("option").first.click()
+        await self.choose(
+            self.dialog().get_by_text("Select a region", exact=False).first,
+            self.page.get_by_role("option").first,
+            "Step 2 · Region",
+        )
 
     async def pick_expected_close_date(self) -> None:
         """Pick an expected close date in the NEXT month (all days future/enabled).
@@ -181,7 +211,14 @@ class RegisterDealWizard(BasePage):
         before = " ".join((await calendar.inner_text()).split())
         await self.page.get_by_role("button", name="Go to the Next Month").first.click()
         await self._wait_calendar_repainted(calendar, before)
-        await self.page.locator("[role=dialog] button", has_text=re.compile(r"^15$")).first.click()
+        day = self.page.locator("[role=dialog] button", has_text=re.compile(r"^15$")).first
+        await self.click_on(day, "Step 2 · Expected close date = day 15 of next month")
+        field = self.dialog().get_by_text(re.compile(r"\d{1,2}/\d{1,2}/\d{4}")).first
+        with contextlib.suppress(PlaywrightTimeoutError):
+            await field.wait_for(state="visible", timeout=3_000)
+            logger.log(
+                "STEP", "Selected  [Step 2 · Expected close date] = {}", await field.inner_text()
+            )
 
     async def _wait_calendar_repainted(self, calendar, before: str, timeout: int = 5_000) -> None:
         """Wait until the month grid actually changed after 'Go to the Next Month'.
@@ -207,7 +244,7 @@ class RegisterDealWizard(BasePage):
         for name in ("Submit", "Register deal", "Confirm", "Register", "Finish", "Create deal"):
             btn = self.dialog().get_by_role("button", name=name, exact=False).first
             if await btn.count() and await btn.is_visible() and not await btn.is_disabled():
-                await btn.click()
+                await self.click_on(btn, f"Step 3 · {name}")
                 return name
         raise AssertionError("no submit/confirm button found on the wizard summary step")
 
@@ -222,10 +259,10 @@ class RegisterDealWizard(BasePage):
         return not await self.next_button().is_disabled()
 
     async def click_next(self) -> None:
-        await self.next_button().click()
+        await self.click_on(self.next_button(), f"Next ({await self.step_text() or 'wizard'})")
 
     async def click_back(self) -> None:
-        await self.back_button().click()
+        await self.click_on(self.back_button(), f"Back ({await self.step_text() or 'wizard'})")
 
     async def company_value(self) -> str:
         """Current value of the company-name input (to prove data is preserved)."""

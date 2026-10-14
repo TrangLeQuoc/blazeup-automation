@@ -29,15 +29,15 @@ class PartnerDirectoryPage(BasePage):
     async def open_invite(self, timeout: int = 15_000) -> None:
         """Click 'Invite User' and wait for the dialog."""
         logger.log("STEP", "Open Invite User dialog")
-        await self.invite_button().click()
+        await self.click_on(self.invite_button(), "Invite User")
         await self.dialog().wait_for(state="visible", timeout=timeout)
 
     async def fill_invite(self, email: str, first: str, last: str) -> None:
         """Fill the invite form's required fields (email + first/last name)."""
         dlg = self.dialog()
-        await dlg.locator(L.EMAIL_INPUT).fill(email)
-        await dlg.locator(L.FIRST_NAME_INPUT).fill(first)
-        await dlg.locator(L.LAST_NAME_INPUT).fill(last)
+        await self.fill_in(dlg.locator(L.EMAIL_INPUT), email, "Invite · Email")
+        await self.fill_in(dlg.locator(L.FIRST_NAME_INPUT), first, "Invite · First name")
+        await self.fill_in(dlg.locator(L.LAST_NAME_INPUT), last, "Invite · Last name")
 
     async def current_role(self) -> str:
         """Return the Role control's current selection (default 'Viewer'), best-effort."""
@@ -49,8 +49,10 @@ class PartnerDirectoryPage(BasePage):
 
     async def send_invite(self) -> None:
         """Submit the invite (Send Invite)."""
-        logger.log("STEP", "Click Send Invite")
-        await self.dialog().get_by_role("button", name=L.SEND_BUTTON, exact=False).first.click()
+        await self.click_on(
+            self.dialog().get_by_role("button", name=L.SEND_BUTTON, exact=False).first,
+            "Invite · Send Invite",
+        )
 
     async def send_disabled(self) -> bool:
         """True when Send Invite is disabled (required fields not satisfied)."""
@@ -63,8 +65,9 @@ class PartnerDirectoryPage(BasePage):
 
     async def close_credential(self) -> None:
         """Dismiss the credential ('User invited') dialog via its Done button."""
-        logger.log("STEP", "Close credential dialog (Done)")
-        await self.page.get_by_role("button", name="Done", exact=True).first.click()
+        await self.click_on(
+            self.page.get_by_role("button", name="Done", exact=True).first, "Credential · Done"
+        )
 
     async def column_headers(self) -> list[str]:
         """Return the member-table column header texts."""

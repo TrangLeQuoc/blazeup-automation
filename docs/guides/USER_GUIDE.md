@@ -44,7 +44,7 @@ Complete reference for developers and QA engineers working on the BlazeUp automa
                              │ pytest subprocess
 ┌────────────────────────────▼────────────────────────────────────────┐
 │                          pytest                                    │
-│ conftest.py → fixtures.py (session: api_token, partner_auth_state)│
+│ conftest.py → fixtures.py (session: api_token, approver_login)    │
 │ tests/{domain}/{api|ui}/{module}/**                               │
 └────────┬──────────────────────────────────────┬────────────────────┘
          │                                      │
@@ -714,7 +714,7 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 | `settings` | `Settings` | Pydantic config loaded from `config/blazeup/.env` |
 | `result_dir` | `Path` | Timestamped run folder; configures loguru sinks |
 | `fake` | `Faker` | Faker instance for generating test data |
-| `partner_auth_state` | `dict` | Partner-portal storage state from ONE login (incl. the 2FA step). Only the partner side caches a snapshot — see the note below |
+| `approver_login` | `ApproverLogin` | **Session-scoped** login of the QA approver (`ADMIN2_*`), retried on transient errors. When it is unavailable, tests that approve or reject are BLOCKED with the reason — never approved as the creator |
 | `api_token` | `str` | **Session-scoped**: One JWT per session; reused across all API tests. Avoids repeated login. |
 
 ### Function-scoped (created fresh per test)
@@ -730,16 +730,16 @@ All fixtures are defined in `pytest_support/fixtures.py` and auto-discovered via
 | `sa_commissions_client` | `SaCommissionsClient` | SA commissions API client; auto-closed |
 | `sa_cleanup` | `SaCleanup` | Deletes records a UI test created. Logs in **lazily** and never blocks the test — see `utils/ui_cleanup.py` |
 | `authenticated_page` | `Page` | SA page, **freshly logged in for every test** (not a cached snapshot — see the note below) |
-| `partner_authenticated_page` | `Page` | Partner-portal page; fresh context per test, reusing the cached `partner_auth_state`. Honours the `mobile` marker (375×812) |
+| `partner_authenticated_page` | `Page` | Partner-portal page, **freshly logged in (incl. 2FA) for every test**. Honours the `mobile` marker (375×812) |
 | `make_page` | factory | Build an SA page object without boilerplate: `make_page(ShellPage)` |
 | `make_partner_page` | factory | Same, bound to the partner-portal origin |
 | `created_resources` | registry | Track resources a test creates → auto-delete on teardown (LIFO), pass or fail |
 | `tc_logger` *(autouse)* | — | Emits START / PASSED / FAILED / SKIPPED banners; binds the TC ID to every log line |
 
-> **Why the two sides differ:** stgsa's SA auth uses a rotating, single-use refresh
-> cookie — replaying one captured `storage_state` in a second context 401s and the SA
-> micro-frontend never renders. So the SA side logs in fresh per test, while the partner
-> portal (which does not rotate) shares one cached snapshot. See the docstrings in
+> **Why every UI test logs in:** both portals rotate a single-use refresh token — stgsa
+> in a cookie, the partner portal in sessionStorage (`pp_refresh_token`). Replaying one
+> captured session in a second context is refused (SA: 401; partner: bounced to /login,
+> measured 2026-10-09), so neither side can share a cached snapshot. See the docstrings in
 > `pytest_support/fixtures.py`.
 
 ### Usage examples

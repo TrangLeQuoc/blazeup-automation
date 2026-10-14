@@ -429,8 +429,7 @@ grep "TC-" results/run_*/logs/test.log
 | `page` | function | UI test WITHOUT login (login-flow tests) |
 | `browser_context` | function | Unauthenticated browser context (used by `page`) |
 | **Partner / stgpartners UI** | | |
-| `partner_auth_state` | session | Partner-portal login once → cached storage state |
-| `partner_authenticated_page` | function | Partner-portal (stgpartners) UI test, pre-authenticated |
+| `partner_authenticated_page` | function | Partner-portal (stgpartners) UI test, freshly logged in (incl. 2FA) for every test |
 | `make_partner_page` | function | Factory: build a partner page object — `make_partner_page(PartnerShellPage)` |
 | **API** | | |
 | `api_token` | session | SA API test, already have a JWT token |

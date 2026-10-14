@@ -2,10 +2,13 @@
 .env
 config/*/.env
 config/**/.env
+# real test data for --real-data (personal); the committed template is test_data.example.yaml
+config/**/test_data.yaml
 
 # -- Python
 .venv/
-.venv-selftest/          # throwaway env built by `make selftest-ci`
+# throwaway env built by `make selftest-ci` (no inline comments in .gitignore — they become part of the pattern)
+.venv-selftest/
 __pycache__/
 *.py[cod]
 *.pyo

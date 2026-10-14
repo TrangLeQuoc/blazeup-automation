@@ -1,6 +1,7 @@
 """Telling an expired SHARED partner session apart from a page that failed to render.
 
-21 partner-portal TCs run off ONE cached login (the `partner_auth_state` fixture). To a
+Partner-portal TCs log in per test (the shared snapshot was dropped 2026-10-09: the
+portal's pp_refresh_token is single-use, so a replayed session is always signed out). To a
 readiness wait, a dead session and a broken page look the same: the section marker never
 appears. Without a signed-out check every one of those 21 sits out its full 90 s timeout
 and then reports "did not render" — 21 x 90 s of misdirection from one root cause, with

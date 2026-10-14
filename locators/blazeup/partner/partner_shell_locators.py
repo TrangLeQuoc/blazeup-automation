@@ -112,7 +112,9 @@ class PartnerShellLocators:
     # Live nav = 5 items (re-verified 2026-09-30): "My Apps" was REMOVED from the portal
     # (no nav item; /apps now renders a 404 page) — dropped from SECTIONS.
     SECTIONS: dict[str, dict[str, str]] = {
-        "dashboard": {"label": "Dashboard", "route": "/dashboard", "marker": "Tier & Performance"},
+        # Marker changed 2026-10-13: the dashboard redesign removed "Tier & Performance".
+        # Must stay equal to DashboardLocators.READY_MARKER.
+        "dashboard": {"label": "Dashboard", "route": "/dashboard", "marker": "Pipeline Snapshot"},
         "deals": {"label": "Deals", "route": "/deals", "marker": "Deal Pipeline"},
         "commissions": {"label": "Commissions", "route": "/commissions", "marker": "Commissions"},
         "directory": {"label": "Directory", "route": "/directory", "marker": "Directory"},

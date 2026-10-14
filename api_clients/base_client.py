@@ -181,26 +181,25 @@ class BaseClient:
         if self.token:
             headers.setdefault("Authorization", f"Bearer {self.token}")
 
-        # Log the outgoing request (payload + query params), masked & truncated,
-        # so every API call is self-explanatory in the run log.
-        req_parts: list[str] = []
+        # Log the outgoing request as a labelled block — URL, body AND query, each on its
+        # own line and always printed ("(none)" when empty). For a GET the input usually
+        # lives in the URL itself (e.g. /clients/not-an-id); a line that only appeared
+        # when there was a body made those steps read as "response only".
         body = kwargs.get("json", kwargs.get("data"))
-        if body is not None:
-            req_parts.append(f"payload={_preview(body)}")
-        if kwargs.get("params"):
-            req_parts.append(f"params={_preview(kwargs['params'])}")
-        suffix = f"  {' '.join(req_parts)}" if req_parts else ""
-        logger.info("→ {} {}{}", method.upper(), endpoint, suffix)
+        params = kwargs.get("params")
+        logger.info("→ REQUEST  {} {}", method.upper(), endpoint)
+        logger.info("    body  : {}", _preview(body) if body is not None else "(none)")
+        logger.info("    query : {}", _preview(params) if params else "(none)")
 
         # Attach the request to the current Allure step (full, masked) so it is
-        # viewable inside the report, not only in the console log.
-        if body is not None or kwargs.get("params"):
-            req_doc = {"method": method.upper(), "endpoint": endpoint}
-            if body is not None:
-                req_doc["payload"] = body
-            if kwargs.get("params"):
-                req_doc["params"] = kwargs["params"]
-            _attach(f"→ {method.upper()} {endpoint} (request)", req_doc)
+        # viewable inside the report, not only in the console log — always, so a
+        # body-less GET still shows which URL (= which input) was called.
+        req_doc: dict[str, Any] = {"method": method.upper(), "endpoint": endpoint}
+        if body is not None:
+            req_doc["payload"] = body
+        if params:
+            req_doc["params"] = params
+        _attach(f"→ {method.upper()} {endpoint} (request)", req_doc)
 
         # Idempotent methods retry on 5xx/transport errors; POST/PATCH run once
         # so a retry can never double-create a resource.
@@ -226,7 +225,11 @@ class BaseClient:
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             response.extensions["elapsed_ms"] = elapsed_ms
             logger.info(
-                "← {} {} | {} ({}ms)", method.upper(), endpoint, response.status_code, elapsed_ms
+                "← RESPONSE {} ({}ms)  [{} {}]",
+                response.status_code,
+                elapsed_ms,
+                method.upper(),
+                endpoint,
             )
 
             if response.status_code < 500 or attempt == max_attempts:
@@ -237,7 +240,7 @@ class BaseClient:
             raise RuntimeError("HTTP request did not produce a response")
 
         # Echo the response body (masked + truncated) so the result is visible.
-        logger.info("  resp={}", _response_preview(response))
+        logger.info("    body  : {}", _response_preview(response))
         _attach_response(
             f"← {method.upper()} {endpoint} | {response.status_code} (response)", response
         )

@@ -118,16 +118,15 @@ async def test_login_invalid(page, settings):
 | `page` | function | Page that is **not** logged in (login test / no auth needed) |
 | `authenticated_page` | function | SA page that **is** logged in — a fresh login every test (see the note below) |
 | `make_page` | function | Factory that builds an already-logged-in page object |
-| `partner_auth_state` | session | Partner-portal: log in via UI once (incl. 2FA), cache the storage state |
 | `partner_authenticated_page` / `make_partner_page` | function | Same as above, bound to the partner-portal origin |
 | `api_token` | session | API token shared across all API tests |
 | `auth_client` / `sa_partners_client` / `sa_deals_client` / `sa_commissions_client` | function | API client with the token already attached |
 | `sa_cleanup` | function | Deletes records a UI test created; logs in lazily, never blocks the test |
 | `fake` / `test_user` | session/func | Generate dynamic test data (Faker) |
 
-Rule: **one isolated context per test**. Login frequency differs per actor: the partner
-portal logs in once per run (cached snapshot), while the SA side logs in **per test** —
-stgsa's rotating single-use refresh cookie makes a replayed snapshot 401. Never share a
+Rule: **one isolated context per test**, and both actors log in **per test**: stgsa and
+the partner portal each rotate a single-use refresh token, so a replayed snapshot is
+refused (SA: 401; partner: bounced to /login). Never share a
 live `BrowserContext` between tests either way
 (no sharing of cookies/state between tests).
 

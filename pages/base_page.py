@@ -67,6 +67,44 @@ class BasePage:
         logger.debug("Fill selector: {} | Value: {}", selector, masked_value)
         await self._retry(lambda: locator.fill(value, timeout=timeout))
 
+    # ── Locator-level actions that LOG what they do ─────────────────────────────
+    # Page objects mostly build Locators (get_by_role, dialog-scoped, .first) rather than
+    # selector strings, and a bare `locator.fill(...)` leaves no trace in the run log — the
+    # log then reads "[2/3] fill Deal info" with no hint of which field got which value.
+    # These three put every interaction on the log as `Fill [Field] = value`,
+    # `Click [Button]`, `Select [Field] = <the option actually picked>`.
+    _SECRET_WORDS = ("password", "secret", "token", "otp", "2fa")
+
+    def _mask(self, label: str, value: str) -> str:
+        return "***" if any(w in label.lower() for w in self._SECRET_WORDS) else value
+
+    async def fill_in(
+        self, locator: Locator, value: str, label: str, *, blur: bool = False
+    ) -> None:
+        """Fill *locator* with *value*, logging ``Fill [label] = value`` (secrets masked)."""
+        logger.log("STEP", "Fill  [{}] = {}", label, self._mask(label, value))
+        await locator.fill(value)
+        if blur:
+            await locator.blur()
+
+    async def click_on(self, locator: Locator, label: str, **kwargs) -> None:
+        """Click *locator*, logging ``Click [label]``."""
+        logger.log("STEP", "Click  [{}]", label)
+        await locator.click(**kwargs)
+
+    async def choose(self, trigger: Locator, option: Locator, field: str) -> str:
+        """Open a dropdown (*trigger*) and pick *option*; log + return the picked text.
+
+        Reads the option's text BEFORE clicking, so even "pick the first option" logs the
+        real value (``Select [Plan] = Starter Plan (v6)``) instead of an anonymous click.
+        """
+        await trigger.click()
+        await option.wait_for(state="visible")
+        picked = " ".join((await option.inner_text()).split())
+        logger.log("STEP", "Select  [{}] = {}", field, picked)
+        await option.click()
+        return picked
+
     async def get_text(self, selector: str, timeout: int = 10_000) -> str:
         """Return normalized visible text from an element."""
 

@@ -5,6 +5,7 @@ Endpoints here are the SA-side partner management APIs documented in the
 the same SA bearer token as the rest of the admin domain.
 """
 
+import contextlib
 from typing import Any
 
 import httpx
@@ -69,6 +70,27 @@ class PartnerWriteResponse(BaseModel):
 
 class SaPartnersClient(BaseClient):
     """Client for SA-side partner management endpoints (sa-partners-api)."""
+
+    # The approval chain forbids the REQUESTER from approving its own partner, and this is
+    # the client that creates them. The fixture layer attaches the QA approver (a second SA)
+    # plus its user id; `approve_partner` then assigns the chain to that account and lets IT
+    # make the call. Left unset, it behaves as before — valid only while the chain is off.
+    approver_client: "SaPartnersClient | None" = None
+    approver_user_id: str = ""
+
+    async def _pin_single_approver(self, partner_id: str) -> None:
+        """Assign this partner exactly one approver — the QA account — before approving.
+
+        Never 0: a count of 0 turns the chain off and would let the creator approve its own
+        partner, the very control the chain enforces. Best-effort; the approve that follows
+        is what the caller asserts on.
+        """
+        if not self.approver_user_id:
+            return
+        with contextlib.suppress(Exception):
+            await self.set_partner_approval_config(
+                partner_id, required_approvers=1, approvers=[self.approver_user_id]
+            )
 
     async def list_partners(
         self,
@@ -143,7 +165,8 @@ class SaPartnersClient(BaseClient):
         record gains ``approvedAt`` + ``approvedBy``. HTTP is 201 while the body
         ``statusCode`` is 200 (same pattern as create).
         """
-        response = await self.post(
+        await self._pin_single_approver(partner_id)
+        response = await (self.approver_client or self).post(
             f"{_PARTNERS_PATH}/{partner_id}/approve",
             json={},
             expected_status=expected_status,
@@ -151,6 +174,31 @@ class SaPartnersClient(BaseClient):
             timeout=SETUP_HTTP_TIMEOUT_S,
         )
         return PartnerWriteResponse.model_validate(response.json())
+
+    async def set_partner_approval_config(
+        self,
+        partner_id: str,
+        *,
+        required_approvers: int,
+        approvers: list[str] | None = None,
+        expected_status: int | tuple[int, ...] | None = None,
+    ) -> httpx.Response:
+        """PUT the approval chain of ONE pending partner (count + approvers).
+
+        The UI's "Configure approval" dialog; ``requiredApprovers: 0`` turns the chain off
+        for that record only — "any SA user can approve with one click" — leaving the
+        global Approval Settings untouched.
+
+        Seeding uses it to pin the records IT creates, so a test never depends on the
+        tenant-wide "Required approvers" value (0, 1 or N) nor on who is assigned as
+        approver. Returns the raw response: callers treat a refusal as non-fatal (the
+        chain may already be off).
+        """
+        return await self.put(
+            f"{_PARTNERS_PATH}/{partner_id}/approval-config",
+            json={"requiredApprovers": required_approvers, "approvers": approvers or []},
+            expected_status=expected_status,
+        )
 
     async def raw_approve_partner(
         self,

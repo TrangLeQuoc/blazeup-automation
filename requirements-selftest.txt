@@ -15,3 +15,4 @@ httpx         # utils/preflight.py
 openpyxl      # utils/sync_registry.py reads the test plan; selftests read Bug_Tracker.xlsx
 faker         # utils/data_factory.py (pulled in by pytest_support/seeding.py)
 pydantic      # api_clients/* response schemas (selftests import the clients directly)
+pydantic-settings  # config/settings.py — utils/ai_triage.py imports get_settings at module scope

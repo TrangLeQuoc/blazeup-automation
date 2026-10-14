@@ -22,17 +22,17 @@ from utils.log_helper import async_step
 async def test_partner_ui_dashboard_002(make_partner_page):
     """PARTNER_UI_DASHBOARD_002: dashboard KPI cards are available with actionable metrics.
 
-    Opens the Dashboard via the shell, then asserts the KPI cards (Total pipeline
-    ACV / Commission YTD / Active Tenants) each render with a metric value, plus the
-    main dashboard sections. Read-only: works with empty data (values may be 0/USD 0)
-    — it verifies the metric cards RENDER, not any specific figure.
+    Opens the Dashboard via the shell, then asserts the KPI cards (Open pipeline (est.
+    ACV) / Commission paid YTD / Active Clients) each render with a metric value, plus
+    the main dashboard sections. Read-only: works with empty data (values may be 0) —
+    it verifies the metric cards RENDER, not any specific figure.
     """
     shell = make_partner_page(PartnerShellPage)
     dash = make_partner_page(DashboardPage)
 
     async with async_step("Setup: open the Dashboard"):
         await shell.open("dashboard")
-        await shell.wait_ready("dashboard")  # marker "Tier & Performance" in <main>
+        await shell.wait_ready("dashboard")  # marker "Pipeline Snapshot" in <main>
 
     async with async_step("[1/2] KPI cards render, each with a metric value"):
         values: dict[str, str] = {}
