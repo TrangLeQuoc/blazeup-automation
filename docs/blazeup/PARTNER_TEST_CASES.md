@@ -85,7 +85,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 2. The main dashboard sections render.
    → Expected: **Tier & Performance**, **Territory Assignments**, **Action Required**, **Pipeline Snapshot** panels are visible.
 **Expected (overall):** The dashboard renders its KPI metric cards + all main sections (independent of the data).
-**Note:** PASSED — verified 2026-07-28 (TC 12060402). First DASHBOARD content test — establishes the `DashboardPage` page-object (KPI cards, sections). Empty partner data shows "No Data Found" in Action Required / Pipeline Snapshot. Negative counterpart: N/A — read-only view. Idempotency: N/A.
+**Note:** FAILED — 2026-10-14 (TC 12060402): step 1 stops at **Commission YTD** — the live build labels the card "Commission paid YTD". The dashboard is being rebuilt to the agreed Figma design (node 10604-18631) and this TC asserts the DESIGN labels, so it fails for as long as the build differs; Total pipeline ACV and Active Tenants already match. Previously PASSED — verified 2026-07-28. First DASHBOARD content test — establishes the `DashboardPage` page-object (KPI cards, sections). Empty partner data shows "No Data Found" in Action Required / Pipeline Snapshot. Negative counterpart: N/A — read-only view. Idempotency: N/A.
 #### PARTNER_UI_DASHBOARD_003
 **Test Description:** The dashboard Tier Progress component shows progress to the next tier. Read-only.
 **Setup (precondition):** Log in as the channel-partner user; open `/dashboard` and wait for the "Tier & Performance" READY_MARKER.
@@ -114,9 +114,9 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 #### PARTNER_UI_DASHBOARD_006 — BLOCKED (needs downgrade-state fixture)
 **Intent:** Warn of a pending **tier downgrade** — the dashboard shows a 30-day notice + the grace-quarter info (PRD §2.1/§5.5).
 **Block reason:** The test partner is not in a **tier-downgrade-pending** state, and there is no way to seed one (tier downgrade is derived from T12M ARR falling below the current tier's threshold over a grace quarter). With no partner in that state, the 30-day-notice / grace-quarter warning cannot be triggered or verified. Also depends on the tier-qualification math that _005 showed is not fully rendered. Unblock with a partner fixture in the downgrade-pending state (+ the warning UI).
-#### PARTNER_UI_DASHBOARD_007 — PASSED
+#### PARTNER_UI_DASHBOARD_007 — FAILED
 **Test Description:** (Negative guard) The dashboard hides vanity metrics — per PRD §4.3 the first dashboard view shows ONLY actionable/decision-supporting values (pipeline ACV, commission, active tenants, tier progress, action items, pipeline snapshot) and must NOT surface non-actionable "vanity" metrics (page/profile views, impressions, followers, bounce rate, login counts, …).
-**Setup (precondition):** Log in as the channel-partner user; open `/dashboard` and wait for the "Tier & Performance" READY_MARKER.
+**Setup (precondition):** Log in as the channel-partner user; open `/dashboard` and wait for the "Pipeline Snapshot" READY_MARKER.
 **Test Steps:**
 1. Only actionable/decision-supporting KPI metrics are shown.
    → Expected: Total pipeline ACV, Commission YTD, Active Tenants visible.
@@ -125,7 +125,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The page hierarchy still highlights the actionable sections.
    → Expected: Action Required, Tier Progress, Pipeline Snapshot are visible.
 **Expected (overall):** The dashboard surfaces only actionable metrics + the action/tier/pipeline hierarchy; vanity metrics are hidden.
-**Note:** PASSED — TC 12060407, verified 2026-07-30 (ran green once staging recovered; the earlier "pending verify" was a transient staging MFE outage on 2026-07-28, not a test defect). Negative TC by design (guards absence of vanity metrics). Negative counterpart: this IS the negative guard. Idempotency: N/A — read-only view.
+**Note:** FAILED — 2026-10-14 (TC 12060407): step 1 stops at **Commission YTD** (the build shows "Commission paid YTD"), and step 3 would also fail on **Tier Progress**, which the build no longer renders (BUG-UI-014). Both are gaps against the agreed Figma design. Previously PASSED — TC 12060407, verified 2026-07-30 (ran green once staging recovered; the earlier "pending verify" was a transient staging MFE outage on 2026-07-28, not a test defect). Negative TC by design (guards absence of vanity metrics). Negative counterpart: this IS the negative guard. Idempotency: N/A — read-only view.
 #### PARTNER_UI_DASHBOARD_008 — BLOCKED (Blazey AI feature)
 **Intent:** Ask the Blazey AI assistant (dashboard widget) a **deal-status** question → the answer includes the current deal stage, next action, and the BlazeUp rep contact, scoped to the logged-in partner's deals only.
 **Block reason:** Depends on the **Blazey AI assistant** (deferred AI feature) — the widget is not available/testable on the current build — plus real deal data for the partner. Unblock when Blazey ships + the partner has deals.
@@ -188,23 +188,23 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Setup (precondition):** Prove via the partner `check-domain` API which candidate label is reserved (`available=false`) vs free (`available=true`) — so the UI assertion is not circular. Open the wizard with valid company/country/contact. NOTE: the "Domain" field is a **subdomain label** (lowercase/numbers/hyphens, no dots) — placeholder "acme.com" is misleading; a value with dots returns 400 from check-domain.
 **Test Steps:**
 1. Enter the RESERVED domain (proven `available=false`, e.g. "test").
-   → Expected: inline warning shows, e.g. **"This domain is reserved by another active deal. Register will get a conflict queue."** (Next stays enabled — the deal would enter the conflict queue on submit, not blocked.)
+   → Expected: inline warning shows, e.g. **"This domain is already taken. Please try a different one."** (wording since the check-domain change of 2026-10-05 for a domain whose tenant already exists; a domain held by another active deal keeps the older "reserved by another active deal … conflict queue") (Next stays enabled — the deal would enter the conflict queue on submit, not blocked.)
 2. Enter an AVAILABLE domain (proven `available=true`) — control.
    → Expected: no reserved/active-deal warning.
 **Expected (overall):** A reserved domain surfaces the inline active-account/conflict warning; a free domain does not.
-**Note:** PASSED — verified 2026-07-27 (TC 12060204). On blur the field calls `GET /v1/partner/portal/check-domain?domain=<label>`; `available=false` (reason e.g. `deal_won`) drives the inline warning. Reserved/free state is proven via that API first (non-circular). If no reserved label exists among the candidates, the test SKIPS with a clear reason (never false-passes). The submit → conflict-queue outcome is _005. Negative/control: the available-domain branch (no warning) is included. Idempotency: N/A (read-only check).
+**Note:** PASSED — re-verified 2026-10-14 (TC 12060204) after the warning wording changed to "already taken"; it failed 2026-10-13/14 only because the test matched the old wording. Originally verified 2026-07-27. On blur the field calls `GET /v1/partner/portal/check-domain?domain=<label>`; `available=false` (reason e.g. `deal_won`) drives the inline warning. Reserved/free state is proven via that API first (non-circular). If no reserved label exists among the candidates, the test SKIPS with a clear reason (never false-passes). The submit → conflict-queue outcome is _005. Negative/control: the available-domain branch (no warning) is included. Idempotency: N/A (read-only check).
 #### PARTNER_UI_MY_PIPELINE_005
 **Test Description:** Submit the full register wizard on an already-reserved domain (the conflict path). Fills every step (company + contact + reserved domain; deal info: plan / seats / region / expected close date) and submits; a deal is created (would enter the conflict queue).
 **Setup (precondition):** Prove via `check-domain` API a reserved label (available=false). Open the wizard.
 **Test Steps:**
-1. Step 1 with the RESERVED domain → the inline conflict warning shows ("reserved by another active deal … conflict queue"); advance.
+1. Step 1 with the RESERVED domain → the inline warning shows ("This domain is already taken…" for a domain whose tenant exists; "reserved by another active deal … conflict queue" for one held by an active deal); advance.
    → Expected: warning shown; wizard advances to Deal info.
 2. Fill Deal info — plan (billing cycle auto-sets), granted seats, region, expected close date (next month) → advance to Summary.
    → Expected: with Deal info complete, "Next" is enabled; wizard reaches Step 3 of 3 (Summary).
-3. Submit.
+3. Tick "I confirm this deal is in <currency>" (required since 2026-10; "Submit Deal" stays disabled until it is ticked), then click "Submit Deal".
    → Expected: submission succeeds — `POST /v1/partner/portal/deals` returns **201** and a deal id.
 **Expected (overall):** The wizard submits end-to-end on a reserved domain and the deal is created.
-**Note:** PASSED — verified 2026-07-27 (TC 12060205). Full e2e submit works: reserved-domain warning → Deal info → **submit → 201** (deal id logged in the run for manual lookup). **PENDING (verify step — intentionally not asserted yet):** confirming the deal actually LANDS in the conflict queue is deferred — the partner deals-list endpoint is 400 (`_024`) so the deal isn't listable, and there is no delete API to clean up the created deal. **To improve once BE provides a way to fetch/remove the created deal** (user following up with BE). Side-effect: each run creates one non-deletable deal. Negative/conflict-detection is covered by _004 (UI warning) + API `2060204`. Idempotency: N/A here (duplicate-register is _022).
+**Note:** PASSED — re-verified 2026-10-14 (TC 12060205): POST /v1/partner/portal/deals → 201. On 2026-10-14 it had passed FALSELY once: the Summary step gained a required currency confirmation, 'Submit Deal' stayed disabled, the old submit helper clicked the stepper's 'Register company' (back to step 1), and a page-text fallback matched the "Registered" badges of the deals list. The helper now ticks the confirmation and clicks the exact label; the fallback is gone, so only the captured POST proves a submit. Originally verified 2026-07-27. Full e2e submit works: reserved-domain warning → Deal info → **submit → 201** (deal id logged in the run for manual lookup). **PENDING (verify step — intentionally not asserted yet):** confirming the deal actually LANDS in the conflict queue is deferred — the partner deals-list endpoint is 400 (`_024`) so the deal isn't listable, and there is no delete API to clean up the created deal. **To improve once BE provides a way to fetch/remove the created deal** (user following up with BE). Side-effect: each run creates one non-deletable deal. Negative/conflict-detection is covered by _004 (UI warning) + API `2060204`. Idempotency: N/A here (duplicate-register is _022).
 #### PARTNER_UI_MY_PIPELINE_006
 **Test Description:** Negative (required): leaving the primary-contact **email** blank blocks the wizard from advancing; providing a valid email unblocks — proving the email is required.
 **Setup (precondition):** Open the wizard (Step 1); fill every other required field (company name, domain, country, contact name).
@@ -227,18 +227,17 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 **Expected (overall):** A malformed email is rejected with a clear format error; no deal is created.
 **Note:** PASSED — re-verified 2026-08-10 (TC 12060207); previously FAILED by design (`be_gap`, **BUG-UI-004**, now Closed). The FE added the missing validation, so the `be_gap` marker was removed and this TC is back inside the merge gate. Original gap, kept for history: The register wizard performs **no email-format validation**: every malformed email (even `notanemail` / `a b@x.com` with a space) is accepted — the field keeps the value, "Next" stays enabled, and the field is never flagged (`aria-invalid` unset). Same class of gap as _003 (domain). **Confirm with FE** — add email-format validation on the contact email field. Positive sibling: _001. Idempotency: N/A (no submit).
 #### PARTNER_UI_MY_PIPELINE_008
-**Test Description:** Choosing the referral deal type: on this wizard the deal type is Referral (default), and it persists to the Summary. UI-only (no submit).
-**Setup (precondition):** Open the wizard; complete step 1 (company/domain/country/contact).
+**Test Description:** The deal type follows the partner type (requirement 2.2) and persists to the Summary. The expected deal type is looked up for the logged-in partner in `utils/partner_rules.py` — never hard-coded: Channel (= Reseller/VAR) → **Reseller**, Referral → **Referral**; SI and MSP are not defined by the requirement, so the TC reports BLOCKED for them. UI-only (no submit).
+**Setup (precondition):** Read the UI partner's profile (`partner_profile`: code / type / tier) before any UI login; open the wizard; complete step 1 (company/domain/country/contact).
 **Test Steps:**
-1. On Deal info, the deal type shows **Referral** (Reseller/Co-sell are not offered — see _009/_010).
-   → Expected: "Referral" visible; no "Reseller" option present.
+1. On Deal info, the deal type shows the value the partner type maps to, and no other deal type is offered.
+   → Expected: e.g. a Channel partner sees the read-only badge "Reseller"; "Referral" and "Co-sell" are absent.
 2. Complete Deal info (plan/seats/region/date) → continue to Summary.
    → Expected: reaches Step 3 of 3 (Summary).
-3. Summary persists the deal type.
-   → Expected: Summary shows **Deal type = Referral**.
-**Expected (overall):** Referral deal type is captured and persists across navigation to the Summary.
-**Note:** PASSED — verified 2026-07-27 (TC 12060208). On this build the deal type is a **fixed read-only "Referral" badge** (reseller/co-sell are NOT selectable — clicking it opens nothing, there's no deal-type dropdown, and no "Reseller"/"Co-sell" text). Referral implies the direct billing model (business rule); the UI shows only the type label "Referral" (no explicit "direct billing" text). No submit → no side-effect. Idempotency: N/A.
-
+3. Summary persists that deal type.
+   → Expected: Summary shows **Deal type = <the same value>**.
+**Expected (overall):** The wizard gives the partner the deal type its partner type defines, and it persists across navigation to the Summary.
+**Note:** PASSED — re-verified 2026-10-14 (TC 12060208) on PAR-016854 (Channel, Registered): badge **RESELLER**, Summary "Reseller", register POST `dealType=reseller`. History: until 2026-10-09 the wizard showed a fixed "Referral" for every partner and this TC hard-coded "Referral"; it failed 2026-10-13/14 when the Channel partner correctly got "Reseller" — the hard-coded word broke, not the product. The mapping now lives in one place (`utils/partner_rules.py`) for every TC that needs it. Open question for the PO (not a test failure): the PRD rate table gives the Registered tier no Reseller margin ("—"), yet the wizard shows "Margin · 10%".
 #### PARTNER_UI_MY_PIPELINE_009
 **Note (BLOCKED):** Choose reseller deal type → reseller billing path. Blocked (verified live 2026-07-27): the register wizard does **not offer a reseller deal type** — the deal type is a fixed read-only "Referral" badge (no deal-type dropdown; clicking it opens nothing; "Reseller" text is absent). There is no UI control to select reseller, so the reseller billing path cannot be exercised from the wizard. (The API supports dealType `reseller` — see `make_deal` / API deal TCs — so this is a UI gap.) Unblock when the wizard exposes a deal-type selector with reseller.
 
@@ -251,9 +250,9 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 1. Summary shows the entered COMPANY + CONTACT values.
    → Expected: the unique company name, domain, contact name, and email are all visible on the Summary.
 2. Summary shows the DEAL section fields.
-   → Expected: Deal type = **Referral**, plus Expected close date, Plan source, and Country rows are shown.
+   → Expected: Deal type = the value the partner type maps to (`utils/partner_rules.py`; **Reseller** for the Channel test partner), plus Expected close date, Plan source, and Country rows are shown.
 **Expected (overall):** The Summary reflects every entered value for review before submission.
-**Note:** PASSED — verified 2026-07-27 (TC 12060211). Uses 4 unique text inputs (company/domain/contact/email) asserted verbatim on the Summary → strong proof the entered data is displayed. Verified pre-submit (no submit → no side-effect). Idempotency: N/A.
+**Note:** PASSED — re-verified 2026-10-14 (TC 12060211). It failed 2026-10-13/14 only because step 2 hard-coded "Referral"; the deal type now comes from the partner rules (see _008). Originally verified 2026-07-27. Uses 4 unique text inputs (company/domain/contact/email) asserted verbatim on the Summary → strong proof the entered data is displayed. Verified pre-submit (no submit → no side-effect). Idempotency: N/A.
 #### PARTNER_UI_MY_PIPELINE_012
 **Test Description:** Performance — a valid deal registration returns a success response within 2 seconds. Submits the full wizard with a valid (available) domain and measures the register API's own network round-trip.
 **Setup (precondition):** Open the wizard; fill step 1 (company/domain/country/contact) + Deal info (plan/seats/region/expected close date) with a unique available domain.
@@ -425,7 +424,7 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 5. Resources `/resources` → Expected: no h-overflow. → **PASS**
 6. Tap sidebar link at mobile → Commissions routes + renders. → **PASS** (mobile nav is usable).
 **Expected (overall):** Every primary page fits the mobile viewport (no horizontal overflow) with the nav reachable; tapping nav routes correctly.
-**Note:** FAILED (by design / `be_gap`, excluded from merge gate) — verified 2026-09-30 (TC 12060102). 4/5 pages fit + mobile nav works; **only `/directory` overflows (+93px)** = responsive-layout defect (**confirm with FE**; tracked as **BUG-UI-013** — BUG-UI-010 covered the same defect and was closed 2026-10-08, so the live row is 013; distinct from BUG-UI-002, which was Deals and is fixed). **My Apps removed (2026-09-30):** no nav item, `/apps` → 404, so it was dropped from the test. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
+**Note:** PASSED — re-verified 2026-10-09 and 2026-10-14 (TC 12060102): `/directory` now fits the mobile viewport, so the `be_gap` marker was removed (2026-10-13) and the TC is back inside the merge gate. History below. Previously FAILED by design — verified 2026-09-30. 4/5 pages fit + mobile nav works; **only `/directory` overflows (+93px)** = responsive-layout defect (**confirm with FE**; tracked as **BUG-UI-013** — BUG-UI-010 covered the same defect and was closed 2026-10-08, so the live row is 013; distinct from BUG-UI-002, which was Deals and is fixed). **My Apps removed (2026-09-30):** no nav item, `/apps` → 404, so it was dropped from the test. Negative counterpart: N/A (a responsive smoke has no invalid-input surface; the "layout doesn't fit" case is exactly what it checks). Idempotency: N/A (read-only navigation/resize).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Note (BLOCKED):** Dual-account partner switching between **Pack** and **Channel** dashboards. Cannot automate — the feature and the test data do not exist on staging (verified live 2026-07-24): (a) **no account-switcher control** in the portal shell — the header "Select" is the tier badge (tier=`select`), not an account switcher, and the profile menu only offers Profile/Logout; (b) the logged-in partner is a **single account** — `GET /v1/partner/auth/me` returns one `partnerId` with `type:"channel"`, `tier:"select"`, no accounts array; (c) **no "Pack" concept** — the partner `type` enum is channel/referral/msp/system_integrator (no "pack"), so a Pack↔Channel dual-account cannot even be represented. Unblock when BE ships multi-account membership (one user → a Pack + a Channel account) + a shell account switcher, AND a dual-account test partner is provisioned.
 ### UI · PARTNER_TEAM
@@ -530,13 +529,13 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
    → Expected: **Overview**, **Deals**, **Commission**, **Members** tabs are visible (Radix `role="tab"`). **(PASSES.)**
 2. The Overview sections + partner info render.
    → Expected: **Tier & Performance** + **Territory Assignments** sections + partner company name + **Channel** type + **PAR-…** id are visible. **(PASSES.)**
-3. The Partner-actions control renders.
-   → Expected: the **Partner actions** kebab control is visible on the header. **(PASSES.)**
-**Expected (overall):** The SA Partner Detail loads with tabs, sections, partner info, and the actions control.
-**Note:** PASSED, verified 2026-07-31 (TC 12060513). Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-022**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+3. The header as a Pending partner shows it to an SA who is not its assigned approver.
+   → Expected: the **Approval chain** panel reads **"0 / N approved"** (N ≥ 1), and the **Partner actions** kebab (⋮) is **not** shown. **(PASSES.)**
+**Expected (overall):** The SA Partner Detail loads with tabs, sections, partner info, and — for a Pending partner — the approval chain instead of the actions menu.
+**Note:** PASSED — re-verified 2026-10-15 (TC 12060513). Step 3 changed with the approval-chain redesign: the ⋮ **Partner actions** menu is gated — on an **Active** partner it shows to Super Admin users, on a **Pending** partner only to the SA assigned as approver. The test logs in as the creating admin, which the chain never allows as approver, so a Pending partner shows the Approval-chain panel and no ⋮. Until 2026-10-14 step 3 expected the ⋮ (the old "⋮ → Approve" flow) and failed. Previously verified 2026-07-31. Read-only load check (empty-safe). Negative counterpart: N/A — read-only load. Idempotency: N/A. **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-022**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate not in UI)
 **Test Description:** From the SA Partner Detail → **Members** tab, an SA adds a portal user (member) to an active partner; the new user appears in the Portal Users list with **Active** status.
-**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner, **Approve** it (Pending → Active), open the Members tab.
+**Setup (precondition):** Log in as super-admin (stgsa); seed a throwaway partner already **Active** through the API — created by the admin, approved by the QA approver (ADMIN2) — then open it in the Directory (Status = Active) and go to the Members tab.
 **Test Steps:**
 1. The Members tab shows the Portal Users list (empty).
    → Expected: **Portal Users** heading + an **Add User** / **Add First User** control; empty-state "No portal users yet". **(PASSES.)**
@@ -545,17 +544,17 @@ These SA-side partner-management workflows have a "Ready for dev" Figma design (
 3. The new user appears as an Active row.
    → Expected: the new user's row shows the email + **Viewer** role + **Active** status; the header reads **Portal Users (1)**. **(PASSES.)**
 **Expected (overall):** An SA can add a portal user to a partner; it appears Active in the Portal Users list.
-**Note:** PASSED, verified 2026-08-03 (TC 12060514). Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email). **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-022**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
+**Note:** PASSED — re-verified 2026-10-15 (TC 12060514). The setup used to Approve the partner in the UI (⋮ → Approve); since the approval-chain redesign that is shown only to the partner's assigned approver and the creating admin never can be one, so the setup timed out (BUG-UI-013, closed 2026-10-15 as not a bug). Approval is a precondition here, so it now goes through the API QA approver. Previously verified 2026-08-03. Password for the throwaway staging user is generated and never logged. **Scope:** the Members tab exposes only **Add User** (create) + a per-row **Reset Password** action — there is **NO member deactivate / reactivate / suspend / remove** control on this build (verified live 2026-08-03: full row HTML + hover + keyword scan), so the deactivate/reactivate half of the original _014 intent is **not automatable** (UI not implemented). If/when that control ships, extend this TC. Negative counterpart: N/A — happy-path add (form-validation negatives are a separate TC). Idempotency: N/A — each add creates a distinct user (unique email). **Cleanup:** registered — the throwaway partner is deleted via the SA API at teardown — but currently **ineffective**: `DELETE /v1/sa/partners/{id}` only soft-deletes (**BUG-API-022**), so every run still leaves the partner on staging (reported in the run log as `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_015 — PASSED
 **Test Description:** From the SA Partner Detail page, an Active partner is suspended via **Partner actions → Deactivate**. Expected: the partner transitions out of Active (Suspended/Inactive) and portal access is revoked.
-**Setup (precondition):** Log in as super-admin (stgsa); self-seed a throwaway partner (Onboard), find it in the Directory with the **Status filter = Pending** (the Directory defaults to Status = Active), open it and **Approve** it (Pending → Active).
+**Setup (precondition):** Log in as super-admin (stgsa); seed a throwaway partner already **Active** through the API — created by the admin, approved by the QA approver (ADMIN2) — then open it in the Directory (Status = Active). It must read Active.
 **Test Steps:**
 1. Deactivate (suspend) the active partner — Partner actions → Deactivate → fill the required **Reason** in the "Deactivate Partner" dialog → confirm.
    → Expected: the request succeeds (dialog closes, no "Failed to deactivate partner" banner).
 2. The partner is suspended and no error is shown.
    → Expected: no error banner; the status badge changes to Suspended/Inactive (polled — the badge refetches a few seconds after the action).
 **Expected (overall):** An SA can suspend an Active partner from the UI; the partner loses portal access.
-**Note:** PASSED — verified 2026-09-30 (TC 12060515). **BUG-UI-008 fixed by FE:** the Deactivate dialog now has a required Reason textarea (Deactivate stays disabled until filled) and the request succeeds. Also updated 2026-09-30: the Directory now defaults to **Status = Active**, so the just-onboarded (Pending) partner is found by switching the Status filter to Pending first. History: until 2026-07-31 the dialog had no reason field and the BE rejected the call ("reason should not be empty"). Unblocks _016 (reactivate). Negative counterpart: N/A (single state-transition action). Idempotency: N/A. **Cleanup:** registered (SA API delete at teardown) but still only a soft-delete (**BUG-API-022**, `CLEANUP LEAK` in the run log).
+**Note:** PASSED — re-verified 2026-10-15 (TC 12060515). The setup's UI Approve (⋮ → Approve on a Pending partner) no longer exists for the creating admin since the approval-chain redesign (BUG-UI-013, closed 2026-10-15 as not a bug); the partner is now approved through the API QA approver. On the Active partner the ⋮ shows to Super Admin users, so Deactivate is still exercised in the UI. Previously verified 2026-09-30. **BUG-UI-008 fixed by FE:** the Deactivate dialog now has a required Reason textarea (Deactivate stays disabled until filled) and the request succeeds. Also updated 2026-09-30: the Directory now defaults to **Status = Active**, so the just-onboarded (Pending) partner is found by switching the Status filter to Pending first. History: until 2026-07-31 the dialog had no reason field and the BE rejected the call ("reason should not be empty"). Unblocks _016 (reactivate). Negative counterpart: N/A (single state-transition action). Idempotency: N/A. **Cleanup:** registered (SA API delete at teardown) but still only a soft-delete (**BUG-API-022**, `CLEANUP LEAK` in the run log).
 #### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (depends on BUG-UI-008)
 **Test Description:** From the SA Partner Detail page, a **Suspended** partner is reactivated via **Partner actions → Reactivate**; the partner returns to Active and regains portal access.
 **Intent:** Verify the Suspended → Active transition (the mirror of _015).
@@ -647,7 +646,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 3. POST /partner/auth/refresh with an invalid refresh token.
    → Expected: 401.
 **Expected (overall):** Refresh mints a working new access token; invalid refresh rejected.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** PASSED — re-verified 2026-10-14. It failed on 2026-10-13/14 with "the refreshed access token must differ": a TEST timing flaw, not a defect. The access JWT carries only `iat` (whole seconds), `exp`, `sid` and `type` — no `jti` — so a token re-issued within the same second as the login is byte-identical. Probe: 1 s apart the tokens differ and the replaced refresh token is refused (401), so rotation works. The test now waits 1.1 s before refreshing. No sa-plans dependency.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_008
 **Test Description:** Logout invalidates the refresh token.
@@ -673,7 +672,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
 4. Log in with the OLD password.
    → Expected: 401.
 **Expected (overall):** Password change rejects a wrong current; new credentials work, old are rejected.
-**Note:** PASSED — verified 2026-06-25. No sa-plans dependency.
+**Note:** FAILED by design (`be_gap`, excluded from merge gate; **BUG-API-045**) — verified 2026-10-14. Steps 1-3 pass. Step 4: the old password IS refused, but with **400** "Invalid credentials" instead of **401**. It was 401 until 2026-10-09 (PASSED then), and the rest of the partner auth module still answers 401 (wrong current password in step 1, invalid refresh token, missing token). Same cause fails PARTNER_API_PARTNER_TEAM_005. No sa-plans dependency.
 #### PARTNER_API_AUTH_ACCESS_CONTROL_010
 **Test Description:** A partner user requests a self-service password reset (POST /sa-partners-api/v1/partner/auth/forgot-password). Proven by effect, no mailbox needed: the password that worked a moment ago must stop working.
 **Setup (precondition):** An ACTIVE partner and a THROWAWAY user on it. Spends ONE call against the shared per-IP rate budget.
@@ -1076,7 +1075,7 @@ Cross-cutting security/compliance TCs — mostly SA-side / multi-partner / behav
    -> Expected: still no `wonTenantId`, and `provisioningState` still `awaited`.
 **Teardown:** delete the parent partner.
 **Expected (overall):** every invalid link is refused and none of them writes anything.
-**Note:** PASSED. NEGATIVE-ONLY by necessity, not by omission: Guard 3 calls `tenantExists()` against the real tenants collection so a fabricated tenantId is always a 400, and Guard 7 lets one tenant back only ONE won deal — so borrowing a real staging tenant would consume it and corrupt an existing attribution. There is no positive counterpart to pair with under rule 1. Measured 2026-09-24: non-WON 400, ghost tenant 400, platform tenant 400, short reason 400, all three goLiveAt cases 400, ghost deal id 404, malformed deal id 400. Step 6 is the one the others cannot cover — a guard that returns an error but writes anyway is worse than no guard, and nothing else in the suite would notice.
+**Note:** FAILED at setup since 2026-10 - BUG-API-043: the WON deal the guards need cannot be produced while `/win` refuses every billingCycle value (step 1 answers 400 "Tenant provisioning failed: [INVALID_PAYLOAD] intake.billingCycle"). Steps 2-7 never run. Until 2026-10-14 the setup died even earlier, on a TEST defect: it hand-built `tenantDomain` as "qa-auto-link-<id>.example.com", which the BE refuses (dotted domains are invalid since 2026-10-08); it now uses `make_win_intake` with the deal's own bare label. Last PASSED 2026-09-24. NEGATIVE-ONLY by necessity, not by omission: Guard 3 calls `tenantExists()` against the real tenants collection so a fabricated tenantId is always a 400, and Guard 7 lets one tenant back only ONE won deal — so borrowing a real staging tenant would consume it and corrupt an existing attribution. There is no positive counterpart to pair with under rule 1. Measured 2026-09-24: non-WON 400, ghost tenant 400, platform tenant 400, short reason 400, all three goLiveAt cases 400, ghost deal id 404, malformed deal id 400. Step 6 is the one the others cannot cover — a guard that returns an error but writes anyway is worse than no guard, and nothing else in the suite would notice.
 
 ### API · DEAL_APPROVAL_QUEUE
 
@@ -2251,7 +2250,7 @@ that does not exist. Same name as `UI · PARTNER_TEAM` on purpose — one featur
    → Expected: HTTP 200 — the lockout was cleared.
 **Teardown:** delete the parent partner (removes the throwaway member).
 **Expected (overall):** both actions do what they report: the old credential dies, the new one works, and a locked member can log in again only after unlock.
-**Note:** PASSED. Unlike the read endpoints in _001/_003, this pair HONOURS the `{userId}` path parameter. The lockout threshold is not specified in the PRD (§9.1 does not mention lockout) — 4 attempts / 30 minutes is what staging does today, so a change there will surface as a failure at step 5 rather than silently.
+**Note:** FAILED at step 4 since 2026-10-13 — **BUG-API-045** (tracked on PARTNER_API_AUTH_ACCESS_CONTROL_009): after the reset the old password IS refused, but with 400 "Invalid credentials" instead of 401. Steps 5-8 do not run. Previously PASSED. Unlike the read endpoints in _001/_003, this pair HONOURS the `{userId}` path parameter. The lockout threshold is not specified in the PRD (§9.1 does not mention lockout) — 4 attempts / 30 minutes is what staging does today, so a change there will surface as a failure at step 5 rather than silently.
 
 #### PARTNER_API_PARTNER_TEAM_009
 **Test Description:** Negative counterpart of _005: a ghost userId, a malformed userId, and what a REPEAT of each action does.
@@ -2496,7 +2495,7 @@ that does not exist. Same name as `UI · PARTNER_TEAM` on purpose — one featur
    -> Expected: carries _id/planId/displayName/edition/billingCycle/currency/basePrice/status; `status` = `published`; `edition` within (starter|pro|enterprise) - custom/bespoke are excluded by the service, so a row outside that set means the filter regressed; no password/token/secret/credential key.
 3. Check the keys across the catalogue.
    -> Expected: `_id` unique and `planId` unique - the picker must not be able to show a duplicate.
-4. GET .../plans/{_id} for the first row.
+4. GET .../plans/{planId} for the first row, keyed by its `planId` slug (the route is `plans/:planId`).
    -> Expected: the same `_id`, and `planId`/`displayName`/`edition`/`billingCycle`/`currency` identical to the list row; `status` still `published`.
 5. GET the country lookup.
    -> Expected: at least 200 entries (~250 ISO 3166-1 countries; a shorter list means the lookup is truncated and partners cannot register a deal for the missing markets); every row carries a non-blank _id/name/alpha2Code/alpha3Code; alpha2Code is 2 chars and alpha3Code 3; `_id` EQUALS alpha2Code, because the picker submits `_id`; no duplicate alpha2Code.
@@ -2504,7 +2503,7 @@ that does not exist. Same name as `UI · PARTNER_TEAM` on purpose — one featur
    -> Expected: each returns at least one row, every returned name contains the term case-insensitively, and the result is shorter than the full list.
 **Teardown:** delete the parent partner.
 **Expected (overall):** the catalogue exposes published standard plans only and the detail route is exact.
-**Note:** PASSED. Measured 2026-09-23: 3 plans, editions {starter, pro, enterprise}, all `published`. Step 2 is the load-bearing one - this list feeds the deal wizard, so an unpublished or bespoke plan leaking into it would be offered to partners.
+**Note:** PASSED. Measured 2026-09-23: 3 plans, editions {starter, pro, enterprise}, all `published`. Step 2 is the load-bearing one - this list feeds the deal wizard, so an unpublished or bespoke plan leaking into it would be offered to partners. Updated 2026-10-14: step 4 used to look the plan up by `_id`, the only key the BE accepted then (BUG-API-029). The BE now resolves the documented `planId` slug and answers 404 for `_id`, so step 4 failed until it was switched to the slug - a test change, not a product defect.
 
 #### PARTNER_API_PARTNER_PORTAL_010
 **Test Description:** Negative counterpart of _009: the documented plan key, a key that matches nothing, and keys that are not ids at all.
@@ -2515,10 +2514,10 @@ that does not exist. Same name as `UI · PARTNER_TEAM` on purpose — one featur
 2. GET .../plans/{ghost id}.
    -> Expected: HTTP 404 naming the key that was not found.
 3. GET .../plans/{'not-a-plan', '%20', 'null'}.
-   -> Expected: HTTP 400 on each, never 200 and never 5xx.
+   -> Expected: a 4xx on each (400 or 404), never 200 and never 5xx.
 **Teardown:** delete the parent partner.
 **Expected (overall):** the documented key resolves and every invalid key is refused.
-**Note (FAILED - by design, BUG-API-029):** Steps 2-3 pass: a ghost key -> 404 naming it, and all three malformed keys -> 400. Step 1 fails - `full-modules-ss` is the `planId` of a plan the catalogue returned one call earlier, and it answers **400 "Invalid id"**, while that row's `_id` answers 200. `getPlanByPlanId` queries `{ _id: planId }` although the route, its @ApiParam ("Kebab-case plan key, e.g. pro-annual") and the service docstring all say slug. The parameter named `planId` is the only value it will not accept, so a client written from the OpenAPI spec fails every time. Contract-level, not a crash - the deal wizard works because it passes `_id`. Confirm with BE which side is authoritative.
+**Note:** PASSED (2026-10-14) - BUG-API-029 is fixed and closed. Step 1 now resolves: `full-modules-ss` -> 200. Step 2: ghost key -> 404 naming it. Step 3: `not-a-plan` -> 404, `%20` -> 400, `null` -> 404 - every one a 4xx, none a 200 or 5xx, which is what the step asserts. History: the BE used to query `{ _id: planId }`, so the documented slug answered 400 "Invalid id" while `_id` answered 200; it now resolves the slug, and `_id` answers 404. Anything that still calls the detail route with `_id` (the deal wizard did, per the original note) breaks with this fix - checked separately on the UI side.
 
 ### API · SECURITY_COMPLIANCE
 

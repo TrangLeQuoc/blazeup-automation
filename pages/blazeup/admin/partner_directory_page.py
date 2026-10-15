@@ -5,6 +5,8 @@ readiness come from ``ShellPage`` (open("partners") + wait_ready("partners")); t
 object reads the page-specific widgets (summary cards, filters, partner table).
 """
 
+import re
+
 from playwright.async_api import Locator
 
 from locators.blazeup.admin.partner_directory_locators import PartnerDirectoryLocators
@@ -30,8 +32,15 @@ class PartnerDirectoryPage(BasePage):
         return self._main().get_by_text(label, exact=False).first
 
     def filter_control(self, name: str) -> Locator:
-        """Locator for a filter dropdown, rendered as a <button> (e.g. 'Status')."""
-        return self._main().get_by_role("button", name=name, exact=True).first
+        """Locator for a filter dropdown, rendered as a <button> (e.g. 'Status').
+
+        A filter with active selections prefixes their count to its label — the Directory
+        opens with Status = Active, so the button reads "1 Status". An exact "Status" match
+        missed it (TC 12060503, 2026-10-13/14). The pattern allows that count and nothing
+        else, so it still cannot match an unrelated button that merely contains the word.
+        """
+        label = re.compile(rf"^\s*(?:\d+\s+)?{re.escape(name)}\s*$", re.IGNORECASE)
+        return self._main().get_by_role("button", name=label).first
 
     def action_button(self, name: str) -> Locator:
         """Locator for a primary action button (e.g. 'Onboard Partner')."""

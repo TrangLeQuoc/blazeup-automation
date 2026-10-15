@@ -152,6 +152,16 @@ class PartnerDetailPage(BasePage):
     def actions_button(self) -> Locator:
         return self.page.get_by_role("button", name=L.ACTIONS_BUTTON, exact=False).first
 
+    def approval_chain_panel(self) -> Locator:
+        """The 'APPROVAL CHAIN' panel title at the top of the detail page."""
+        return self._main().get_by_text(L.APPROVAL_CHAIN_TITLE, exact=False).first
+
+    async def approval_progress(self) -> tuple[int, int] | None:
+        """``(approved, required)`` from the panel's "<n> / <m> approved" counter, or None."""
+        text = " ".join((await self._main().inner_text()).split())
+        m = re.search(L.APPROVAL_PROGRESS_RE, text, re.IGNORECASE)
+        return (int(m.group(1)), int(m.group(2))) if m else None
+
     async def detail_text(self) -> str:
         return " ".join((await self._main().inner_text()).split())
 

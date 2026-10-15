@@ -11,6 +11,8 @@ Auth flows are not resource-creates → no duplicate-create idempotency TC; each
 embeds its own negative aspect (rejection / invalidation).
 """
 
+import asyncio
+
 import pytest
 from loguru import logger
 
@@ -111,6 +113,12 @@ async def test_partner_api_auth_access_control_007(sa_partners_client, settings,
         )
 
     async with async_step("[1/3] Refresh → a new access token (different from the original)"):
+        # The access JWT carries only iat (WHOLE seconds), exp, sid and type — no jti — so a
+        # token re-issued for the same session within the same second as the login is
+        # byte-identical. Measured 2026-10-14: login and refresh <1 s apart produced equal
+        # tokens; 1 s apart they differ, and the replaced refresh token is then refused (401).
+        # Crossing a second boundary makes "different" a test of the refresh, not of timing.
+        await asyncio.sleep(1.1)
         r = await anon.refresh(refresh)
         new_access = r.json().get("accessToken")
         assert new_access, "refresh must return a new accessToken"
@@ -174,6 +182,7 @@ async def test_partner_api_auth_access_control_008(sa_partners_client, settings,
 
 @pytest.mark.api
 @pytest.mark.regression
+@pytest.mark.be_gap  # BUG-API-045: login answers 400 instead of 401 for invalid credentials
 async def test_partner_api_auth_access_control_009(sa_partners_client, settings, created_resources):
     """PARTNER_API_AUTH_ACCESS_CONTROL_009: change password - new credentials work, old fail.
 

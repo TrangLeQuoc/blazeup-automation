@@ -497,9 +497,17 @@ async def test_partner_api_partner_team_005(sa_partners_client, settings, create
 
     async with async_step("[4/8] The OLD password must stop working"):
         resp = await anon.login(email, old_password, expected_status=None)
-        assert resp.status_code == 401, (
+        # Two different failures, reported separately. Only a 2xx means the old password still
+        # authenticates; any other non-401 means it WAS rejected, just with the wrong status
+        # (2026-10-14: 400 "Invalid credentials") — the old message called that "still
+        # authenticates", which sent the reader after a reset defect that does not exist.
+        assert resp.status_code >= 300, (
             f"the old password still authenticates (HTTP {resp.status_code}) — the reset did "
             "not take effect, so the endpoint reports success it did not deliver"
+        )
+        assert resp.status_code == 401, (
+            f"the old password is rejected, but with HTTP {resp.status_code} instead of 401 "
+            f"({resp.text[:120]}) — a failed authentication must answer 401"
         )
         logger.info("CHECK old password → 401 → OK")
 

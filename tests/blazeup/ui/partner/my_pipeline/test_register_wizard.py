@@ -33,6 +33,7 @@ from utils.data_factory import (
 from utils.log_helper import async_step
 from utils.login_helpers import login_api
 from utils.partner_portal import portal_client
+from utils.partner_rules import DEAL_TYPE_LABELS, RuleNotSpecified, expected_deal_type
 
 _fake_company = "QA-AUTO Wizard Co"
 
@@ -396,23 +397,22 @@ async def test_partner_ui_my_pipeline_005(
     async with async_step("[3/3] Submit the deal"):
         label = await wiz.submit()
         await _wait_captured(page, submitted)
-        if submitted:
-            assert submitted["status"] in (200, 201, 202), f"deal submit failed: {submitted}"
-            data = submitted.get("body") or {}
-            deal_id = data.get("data", {}).get("_id") if isinstance(data, dict) else None
-            logger.info(
-                "CHECK submit → OK ('{}' → POST {} {}, dealId={})",
-                label,
-                submitted["url"],
-                submitted["status"],
-                deal_id,
-            )
-        else:
-            txt = (await shell.page_text()).lower()
-            assert any(
-                k in txt for k in ("success", "registered", "submitted", "conflict", "pending")
-            ), "no submission-success indicator found after submit"
-            logger.info("CHECK submit → OK (UI success indicator present)")
+        # The register POST is the only proof a deal was submitted. There used to be a
+        # page-text fallback ("success" / "registered" / … anywhere on the page) — the deals
+        # list behind the wizard always shows "Registered" status badges, so it PASSED this TC
+        # on 2026-10-14 while no request had been sent at all (the click had landed on the
+        # stepper and gone back to step 1).
+        assert submitted, f"no register POST was sent after clicking '{label}'"
+        assert submitted["status"] in (200, 201, 202), f"deal submit failed: {submitted}"
+        data = submitted.get("body") or {}
+        deal_id = data.get("data", {}).get("_id") if isinstance(data, dict) else None
+        logger.info(
+            "CHECK submit → OK ('{}' → POST {} {}, dealId={})",
+            label,
+            submitted["url"],
+            submitted["status"],
+            deal_id,
+        )
 
     logger.warning(
         "PENDING (verify): conflict-queue landing is NOT asserted yet — partner deals-list is 400 "
@@ -514,37 +514,59 @@ async def test_partner_ui_my_pipeline_007(make_partner_page):
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_my_pipeline_008(make_partner_page):
-    """PARTNER_UI_MY_PIPELINE_008: deal type is Referral (default) and persists to the summary.
+async def test_partner_ui_my_pipeline_008(make_partner_page, partner_profile):
+    """PARTNER_UI_MY_PIPELINE_008: deal type follows the partner type and persists to the summary.
 
-    On this wizard build the deal type is fixed to **Referral** (a read-only badge —
-    Reseller/Co-sell are NOT offered; see _009/_010, blocked). This verifies the
-    referral deal type is captured on Deal info and persists to the Summary step
-    after navigation. Referral implies the direct billing model (business rule); the
-    UI shows the type as "Referral" (no separate "direct billing" label). No submit.
+    The wizard fixes the deal type FROM THE PARTNER TYPE (requirement 2.2, mapped once in
+    ``utils.partner_rules``): a Channel partner (= Reseller/VAR) gets "Reseller", a Referral
+    partner gets "Referral". The expected value is looked up for the account under test —
+    never hard-coded — must be the only deal type offered on Deal info (a read-only badge),
+    and must persist to the Summary. No submit.
+
+    History: until 2026-10-09 the wizard showed a fixed "Referral" for every partner and this
+    TC hard-coded that word. From 2026-10-13 the Channel test partner (PAR-016854) gets
+    "Reseller" — which is what requirement 2.2 says — so the hard-coded word broke, not the
+    product.
     """
+    try:
+        rule = expected_deal_type(partner_profile.get("type"))
+    except RuleNotSpecified as exc:
+        pytest.skip(f"BLOCKED: {exc}")
+    expected = rule.deal_type_label
+    others = [label for code, label in DEAL_TYPE_LABELS.items() if code != rule.deal_type]
     shell = make_partner_page(PartnerShellPage)
     wiz = make_partner_page(RegisterDealWizard)
 
     async with async_step("Setup: open the wizard; complete step 1"):
+        logger.info(
+            "SETUP: partner {} is {} → expected deal type {!r} ({})",
+            partner_profile.get("code"),
+            rule.sa_label,
+            expected,
+            rule.evidence,
+        )
         await _open_deals(shell)
         await wiz.open()
-        await wiz.fill_company("QA-AUTO Referral", unique_domain().split(".")[0])
+        await wiz.fill_company("QA-AUTO DealType", unique_domain().split(".")[0])
         await wiz.select_first_country()
         await wiz.fill_contact("QA-AUTO Contact", unique_email())
 
     async with async_step(
-        "[1/3] Deal info shows deal type = Referral (reseller/co-sell not offered)"
+        "[1/3] Deal info shows the deal type fixed by the partner type (req 2.2), no other offered"
     ):
         await wiz.click_next()
         await wiz.wait_step("Step 2 of 3")
-        assert await wiz.dialog().get_by_text("Referral", exact=False).first.is_visible(), (
-            "Deal info must show the deal type 'Referral'"
+        assert await wiz.dialog().get_by_text(expected, exact=False).first.is_visible(), (
+            f"a {rule.sa_label} partner ({partner_profile.get('code')}) must get deal type "
+            f"{expected!r} on Deal info — requirement 2.2: {rule.requirement_type}"
         )
-        assert await wiz.dialog().get_by_text("Reseller", exact=False).count() == 0, (
-            "reseller must not be offered (deal type is fixed to Referral on this build)"
+        offered = [
+            label for label in others if await wiz.dialog().get_by_text(label, exact=False).count()
+        ]
+        assert not offered, (
+            f"only {expected!r} may be offered to a {rule.sa_label} partner, also found {offered}"
         )
-        logger.info("CHECK deal type → OK (Referral; reseller/co-sell not offered in UI)")
+        logger.info("CHECK deal type → OK ({}; {} not offered)", expected, ", ".join(others))
 
     async with async_step("[2/3] Complete Deal info and continue to the Summary"):
         await wiz.pick_first_plan()
@@ -554,22 +576,22 @@ async def test_partner_ui_my_pipeline_008(make_partner_page):
         await wiz.click_next()
         await wiz.wait_step("Step 3 of 3")
 
-    async with async_step("[3/3] Summary persists deal type = Referral"):
+    async with async_step("[3/3] Summary persists that deal type"):
         summary = wiz.dialog()
         assert await summary.get_by_text("Deal type", exact=False).first.is_visible(), (
             "summary must show the Deal type row"
         )
-        assert await summary.get_by_text("Referral", exact=False).first.is_visible(), (
-            "deal type must persist as 'Referral' on the summary after navigation"
+        assert await summary.get_by_text(expected, exact=False).first.is_visible(), (
+            f"deal type must persist as {expected!r} on the summary after navigation"
         )
-        logger.info("CHECK persist → OK (summary shows Deal type = Referral)")
+        logger.info("CHECK persist → OK (summary shows Deal type = {})", expected)
 
-    logger.info("RESULT: referral deal type captured and persisted to the summary")
+    logger.info("RESULT: deal type follows the partner type and persists to the summary")
 
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_my_pipeline_011(make_partner_page):
+async def test_partner_ui_my_pipeline_011(make_partner_page, partner_profile):
     """PARTNER_UI_MY_PIPELINE_011: the Summary step displays all entered data.
 
     Fills the wizard with known unique values (company / domain / contact name /
@@ -614,11 +636,19 @@ async def test_partner_ui_my_pipeline_011(make_partner_page):
         logger.info("CHECK entered data → OK (company/domain/contact/email all shown on summary)")
 
     async with async_step("[2/2] Summary shows the DEAL section fields (type, plan, close date)"):
-        for label in ("Deal type", "Referral", "Expected close date", "Plan source", "Country"):
+        # The deal type is whatever requirement 2.2 gives THIS partner (utils.partner_rules) —
+        # a hard-coded "Referral" broke when the Channel test partner rightly got "Reseller".
+        try:
+            deal_type = expected_deal_type(partner_profile.get("type")).deal_type_label
+        except RuleNotSpecified as exc:
+            pytest.skip(f"BLOCKED: {exc}")
+        for label in ("Deal type", deal_type, "Expected close date", "Plan source", "Country"):
             assert await summary.get_by_text(label, exact=False).first.is_visible(), (
                 f"summary must show the '{label}' field"
             )
-        logger.info("CHECK deal section → OK (Deal type=Referral, plan, close date, country shown)")
+        logger.info(
+            "CHECK deal section → OK (Deal type={}, plan, close date, country shown)", deal_type
+        )
 
     logger.info("RESULT: the review Summary displays all entered data")
 

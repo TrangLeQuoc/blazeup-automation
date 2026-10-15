@@ -50,7 +50,7 @@ def _data(resp):
 async def test_partner_api_partner_portal_009(sa_partners_client, settings, created_resources):
     """PARTNER_API_PARTNER_PORTAL_009: partner reads the billing plan catalogue - published only.
 
-    GET /portal/plans and GET /portal/plans/{id}. Asserts the envelope, that EVERY row is a
+    GET /portal/plans and GET /portal/plans/{planId}. Asserts the envelope, that EVERY row is a
     published standard edition (the service filters to starter/pro/enterprise and excludes
     custom/bespoke, so a row outside that set means the filter regressed), the row schema, and
     that the detail route returns the same plan the list advertised.
@@ -101,7 +101,10 @@ async def test_partner_api_partner_portal_009(sa_partners_client, settings, crea
 
     async with async_step("[5/7] The detail route returns the plan that was asked for"):
         wanted = plans[0]
-        got = _data(await portal.get_plan(str(wanted["_id"])))
+        # Keyed by the `planId` SLUG — the route is `plans/:planId` and its @ApiParam documents
+        # a kebab-case slug. The BE used to query { _id: planId } so only `_id` worked
+        # (BUG-API-029); it now resolves the slug and answers 404 for `_id` (2026-10-14).
+        got = _data(await portal.get_plan(str(wanted["planId"])))
         assert str(got.get("_id")) == str(wanted["_id"]), (
             f"asked for plan {wanted['_id']} and received {got.get('_id')}"
         )
@@ -159,7 +162,8 @@ async def test_partner_api_partner_portal_010(sa_partners_client, settings, crea
 
     The step that matters most is the CONTRACT one: the route is declared `plans/:planId` and
     its OpenAPI `@ApiParam` documents a kebab-case slug, so the row's own `planId` must work.
-    It does not — see BUG-API-029.
+    It used not to (BUG-API-029, closed: the BE now resolves the slug, verified 2026-10-14);
+    the step stays as the regression guard.
 
     All cases run and failures are collected.
     """

@@ -24,14 +24,16 @@ class DashboardPage(BasePage):
         return self.page.locator("main").get_by_text(label, exact=False).first
 
     async def kpi_value(self, label: str) -> str:
-        """Return the metric value shown with a KPI card (e.g. '3,505,844'), or ''.
+        """Return the metric value shown with a KPI card (e.g. 'USD 426K'), or ''.
 
-        Cards render as "<value> <label>" in <main> (e.g. "3,505,844 Open pipeline (est.
-        ACV)"; older builds prefixed "USD"),
-        so read the normalized main text and pull the value right before the label.
+        Cards render as "<value> <label>" in <main>, so read the normalized main text and
+        pull the value right before the label. Accepts every form seen so far: the design's
+        currency-coded compact amounts ("USD 426K", "USD 24,000.00"), plain counts ("11"),
+        and interim builds' bare amounts ("3,505,844").
         """
         text = " ".join((await self.page.locator("main").inner_text()).split())
-        m = re.search(r"(USD\s*[\d,]+(?:\.\d+)?|\b\d[\d,]*)\s*" + re.escape(label), text)
+        amount = r"\d[\d,]*(?:\.\d+)?[KMB]?"
+        m = re.search(rf"((?:[A-Z]{{3}}\s*)?{amount})\s*" + re.escape(label), text)
         return m.group(1) if m else ""
 
     def section(self, name: str) -> Locator:

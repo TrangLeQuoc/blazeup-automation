@@ -12,7 +12,8 @@ import pytest
 from loguru import logger
 
 from pages.blazeup.admin.partner_detail_page import PartnerDetailPage
-from utils.data_factory import unique_email
+from pytest_support.seeding import seed_partner
+from utils.data_factory import make_partner, unique_email
 from utils.log_helper import async_step
 
 # Backend validation strings echoed in the failure banner (contract mismatch proof).
@@ -21,24 +22,31 @@ _BE_ERROR_MARKERS = ("Failed to deactivate", "Server Error", "reason should not 
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_sa_partner_module_015(sa_cleanup, make_page, created_resources):
+async def test_partner_ui_sa_partner_module_015(sa_partners_client, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_015: suspend (deactivate) an active partner.
 
-    Self-seeds a throwaway partner, approves it to Active, then deactivates it (with a
+    Seeds a throwaway partner already approved to Active, then deactivates it (with a
     reason) and asserts the partner is suspended (no longer Active) with no error banner.
+
+    The partner is created and approved through the API, by the QA approver
+    (``seed_partner`` → approval library): a Pending partner's "⋮ → Approve" is shown only
+    to its ASSIGNED approver since the approval-chain redesign, and the creating admin can
+    never be one (BUG-UI-013, closed 2026-10-15 as not a bug). Once Active, the ⋮ menu
+    shows to Super Admin users — which the automation admin is — so Deactivate is still
+    exercised through the UI.
     """
     detail = make_page(PartnerDetailPage)
     company = "QA-AUTO Suspend " + unique_email().split("@")[0].split("+")[1]
-    email = unique_email()
 
-    async with async_step("Setup: onboard a throwaway partner and approve it to Active"):
-        await detail.open_directory()
-        await detail.onboard_partner(company, email)
-        # Register cleanup as soon as the record exists (before the assertions). This TC
-        # can fail mid-way, so registering it late would leak the partner.
-        created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
-        await detail.open_partner(company)
-        await detail.approve_partner()
+    async with async_step("Setup: seed an Active partner (API, QA approver) and open its detail"):
+        # seed_partner registers the deletion at creation time — this TC can fail mid-way.
+        await seed_partner(
+            sa_partners_client,
+            created_resources.add,
+            approve=True,
+            payload=make_partner(name=company),
+        )
+        await detail.open_partner(company, status="Active")
         status = await detail.status()
         assert status == "Active", f"precondition: partner must be Active, got {status!r}"
         logger.info("SETUP → partner {} is Active", company)

@@ -21,7 +21,7 @@ Every case runs against a deal this TC created itself, and nothing is ever succe
 import pytest
 from loguru import logger
 
-from utils.data_factory import make_deal, make_prospect
+from utils.data_factory import make_deal, make_prospect, make_win_intake
 from utils.log_helper import async_step
 from utils.partner_portal import mint_partner_session
 
@@ -73,27 +73,28 @@ async def test_partner_api_deal_registration_pipeline_037(
         registered_id = (registered.get("data") or {}).get("_id")
         assert registered_id, "precondition: the partner must be able to register a deal"
 
-        won = (await portal.register_deal(make_deal(None, plan_id, **make_prospect()))).json()
+        won_payload = make_deal(None, plan_id, **make_prospect())
+        won = (await portal.register_deal(won_payload)).json()
         won_id = (won.get("data") or {}).get("_id")
         assert won_id, "precondition: a second deal is needed to drive to WON"
         await sa_deals_client.approve_deal(won_id, plan_id=plan_id)
+        # The shared factory, not a hand-written body: this one built
+        # "qa-auto-link-<id>.example.com", and the BE refuses any dotted tenantDomain with 400
+        # "lowercase letters, numbers and hyphens only" (since 2026-10-08) — so the setup died
+        # before the win was even attempted. make_win_intake keeps the deal's OWN bare label and
+        # sends the required adminPhoneNumber.
         win_result = await sa_deals_client.win_deal(
             won_id,
-            win_intake={
-                "companyWebsite": "https://qa-auto-link-tenant.example.com",
-                "industry": "Technology",
-                "adminFirstName": "QA",
-                "adminLastName": "LinkTenant",
-                "adminEmail": "qa.auto+linktenant@mailinator.com",
-                "companyName": "QA-AUTO LinkTenant Co",
-                "tenantDomain": f"qa-auto-link-{won_id[-6:]}.example.com",
-                "planId": plan_id,
-                "billingCycle": "annual",
-                "numberOfEmployee": 10,
-                "region": "asia-southeast1",
-                "country": "US",
-                "actualAcvCents": 1_000_000,
-            },
+            win_intake=make_win_intake(
+                plan_id,
+                tenant_domain=won_payload["tenantDomain"],
+                companyWebsite="https://qa-auto-link-tenant.example.com",
+                adminLastName="LinkTenant",
+                adminEmail="qa.auto+linktenant@mailinator.com",
+                companyName="QA-AUTO LinkTenant Co",
+                numberOfEmployee=10,
+                actualAcvCents=1_000_000,
+            ),
         )
         assert win_result.data.get("status") == "won", "precondition: the deal must reach WON"
         closed_at = win_result.data.get("closedAt")

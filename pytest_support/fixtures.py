@@ -24,12 +24,14 @@ from api_clients.blazeup.admin.auth_client import AuthClient
 from api_clients.blazeup.admin.partner.sa_commissions_client import SaCommissionsClient
 from api_clients.blazeup.admin.partner.sa_deals_client import SaDealsClient
 from api_clients.blazeup.admin.partner.sa_partners_client import SaPartnersClient
+from api_clients.blazeup.partner.auth_client import PartnerAuthClient
 from config.settings import Settings, get_settings
 from pages.blazeup.partner.login_page import PartnerLoginPage
 from pytest_support.approval import ApproverLogin, BlockedApprover, assign_single_approver
 from pytest_support.seeding import seed_partner
 from utils.helpers import blocked_reason, require_credentials
 from utils.login_helpers import login_api, login_ui
+from utils.partner_portal import portal_client
 from utils.screenshot_on_fail import attach_screenshot
 from utils.ui_cleanup import SaCleanup
 
@@ -662,6 +664,42 @@ async def approver_login(settings: Settings) -> AsyncGenerator[ApproverLogin]:
 async def approver_api_token(approver_login: ApproverLogin) -> AsyncGenerator[str]:
     """The QA approver's token — empty when it is unavailable (see ``approver_login``)."""
     yield approver_login.token
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def partner_profile(settings: Settings) -> AsyncGenerator[dict[str, Any]]:
+    """The partner record of the account the portal UI tests log in with — read ONCE.
+
+    Gives ``code`` / ``type`` / ``tier`` / ``status``, so a test asks the partner rules
+    (``utils.partner_rules``) what THIS partner should see instead of hard-coding it.
+
+    Session-scoped on purpose: it is created before any function-scoped page fixture, so
+    its API login happens before every portal UI login. The partner refresh token is
+    single-use — an API login made after the browser logged in invalidates the browser's
+    session (TC _004/_005, 2026-10-13).
+    """
+    pbase = str(settings.partner_base_url).rstrip("/")
+    try:
+        email, password = require_credentials(settings.partner_email, settings.partner_password)
+        token = await login_api(
+            str(settings.api_base_url).rstrip("/"),
+            pbase,
+            email,
+            password,
+            auth_cls=PartnerAuthClient,
+            totp_secret=settings.partner_totp_secret,
+        )
+        client = portal_client(settings, token, app_origin=pbase)
+        try:
+            body = (await client.get_dashboard()).json()
+        finally:
+            await client.close()
+    except Exception as exc:  # noqa: BLE001 — precondition failure → BLOCKED, not a test defect
+        pytest.skip(f"BLOCKED: could not read the UI partner's profile — {blocked_reason(exc)}")
+    partner = (body.get("data") or {}).get("partner") or {}
+    profile = {k: partner.get(k) for k in ("code", "type", "tier", "status")}
+    logger.info("UI partner profile: {}", profile)
+    yield profile
 
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session")

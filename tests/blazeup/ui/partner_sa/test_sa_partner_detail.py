@@ -2,8 +2,9 @@
 
 PARTNER_UI_SA_PARTNER_MODULE_013 — the SA-side Partner Detail page loads with its
 tabs (Overview / Deals / Commission / Members), the partner-info + Tier & Performance
-+ Territory Assignments sections, and the Partner-actions control. Self-seeds a
-throwaway partner via "Onboard Partner" (the Directory list is unreliable on staging).
++ Territory Assignments sections, and — for the Pending partner it onboards — the
+Approval-chain panel without the Partner-actions menu. Self-seeds a throwaway partner
+via "Onboard Partner" (the Directory list is unreliable on staging).
 """
 
 import pytest
@@ -21,8 +22,15 @@ async def test_partner_ui_sa_partner_module_013(sa_cleanup, make_page, created_r
 
     Onboards a throwaway partner, opens its detail, and confirms the detail chrome
     renders: the Overview/Deals/Commission/Members tabs, the Tier & Performance +
-    Territory Assignments sections, the partner info (id + type + tier), and the
-    Partner-actions control. Read-only load check (empty-safe).
+    Territory Assignments sections, the partner info (id + type + tier), and the header
+    as a Pending partner shows it. Read-only load check (empty-safe).
+
+    Header rule since the approval-chain redesign (confirmed 2026-10-15): the ⋮ "Partner
+    actions" menu shows on a PENDING partner only to the SA assigned as its approver. The
+    test logs in as the creating admin, which the chain never allows as approver — so the
+    expected header is the Approval-chain panel ("0 / N approved") and NO ⋮. Until
+    2026-10-14 this step asserted the ⋮ was visible, which belonged to the old
+    "⋮ → Approve" flow.
     """
     detail = make_page(PartnerDetailPage)
     company = partner_name("Detail")
@@ -63,10 +71,22 @@ async def test_partner_ui_sa_partner_module_013(sa_cleanup, make_page, created_r
             "CHECK sections + info → OK ({} + partner info)", ", ".join(PartnerDetailPage.SECTIONS)
         )
 
-    async with async_step("[3/3] The Partner-actions control renders"):
-        assert await detail.actions_button().is_visible(), (
-            "the 'Partner actions' control must be visible on the detail header"
+    async with async_step(
+        "[3/3] Pending partner: Approval chain shown, no Partner actions for a non-assigned SA"
+    ):
+        assert await detail.approval_chain_panel().is_visible(), (
+            "a Pending partner's detail must show the Approval chain panel"
         )
-        logger.info("CHECK actions control → OK")
+        progress = await detail.approval_progress()
+        assert progress is not None and progress[0] == 0 and progress[1] >= 1, (
+            f"a freshly onboarded partner must read '0 / N approved' (N >= 1), got {progress}"
+        )
+        assert not await detail.actions_button().is_visible(), (
+            "the 'Partner actions' menu must be hidden on a Pending partner for an SA who is "
+            "not its assigned approver — and the creating admin never can be one"
+        )
+        logger.info(
+            "CHECK header → OK (Approval chain {}/{} approved, no Partner actions)", *progress
+        )
 
-    logger.info("RESULT: SA Partner Detail loads with tabs, sections, info, and actions control")
+    logger.info("RESULT: SA Partner Detail loads with tabs, sections, info, and approval chain")

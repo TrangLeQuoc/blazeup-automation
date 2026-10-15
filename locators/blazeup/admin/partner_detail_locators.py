@@ -25,9 +25,18 @@ class PartnerDetailLocators:
     STATUS_FILTER_OPTION = "[role=listbox] [role=option]"
 
     # ── Detail page ───────────────────────────────────────────────────────────
+    # The ⋮ kebab in the header (no visible text; this is its aria-label). Its visibility
+    # is GATED since the approval-chain redesign (confirmed with the user 2026-10-15):
+    #   Active partner  → shown to Super Admin users (both automation accounts are)
+    #   Pending partner → shown ONLY to the SA assigned as approver in the chain
     ACTIONS_BUTTON = "Partner actions"  # get_by_role button (kebab menu, aria-label)
     TABS = ("Overview", "Deals", "Commission", "Members")
     SECTIONS = ("Tier & Performance", "Territory Assignments")
+
+    # Approval-chain panel at the top of the detail page: title "APPROVAL CHAIN", a
+    # "<approved> / <required> approved" counter, the approver avatars and "Configure".
+    APPROVAL_CHAIN_TITLE = "Approval chain"
+    APPROVAL_PROGRESS_RE = r"(\d+)\s*/\s*(\d+)\s*approved"
 
     # Status badge in the header. Probed live 2026-08-10 on an active and a suspended
     # partner: the badge is a standalone text node, so an EXACT match hits exactly one
@@ -38,8 +47,11 @@ class PartnerDetailLocators:
     STATUS_VALUES = ("Active", "Suspended", "Pending", "Inactive")
 
     # ── Partner actions (state-gated menu items) ──────────────────────────────
-    # Pending → "Approve Partner"; Active → "Deactivate" (= suspend) + tier upgrades;
+    # Active → "Deactivate" (= suspend) + "Upgrade to Select/Advanced/Premier";
     # Deactivated → "Reactivate"/"Activate". Live label is "Deactivate", NOT "Suspend".
+    # Pending → approval now goes through the Approval-chain panel, by the ASSIGNED
+    # approver only; the old "⋮ → Approve" as the creating admin no longer exists, so test
+    # setups approve through the API QA approver instead (see test_sa_partner_member.py).
     ACTION_APPROVE = "Approve"
     ACTION_DEACTIVATE = "Deactivate"
     # Required 'reason' textarea in the Deactivate Partner dialog (Deactivate stays

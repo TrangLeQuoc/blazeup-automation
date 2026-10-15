@@ -18,9 +18,20 @@ from playwright.async_api import expect as pw_expect
 from locators.blazeup.partner.register_wizard_locators import RegisterWizardLocators as L
 from pages.base_page import BasePage
 
-# Inline warning shown when the entered domain is already reserved (active deal /
-# account). Matched by its wording (no stable selector on this build).
-_DOMAIN_WARNING_RE = re.compile(r"reserved|active deal|conflict", re.IGNORECASE)
+# Inline warning shown when the entered domain cannot be used as-is. Matched by its wording
+# (no stable selector on this build). Two wordings exist:
+#   * "This domain is already taken. Please try a different one." — a tenant already exists
+#     on that domain. Introduced by the check-domain change of 2026-10-05 (Khoa); this is
+#     what a taken label such as "test" shows now.
+#   * "This domain is reserved by another active deal. Register will get a conflict queue."
+#     — the original wording, for a domain held by another partner's active deal.
+_DOMAIN_WARNING_RE = re.compile(r"already taken|reserved|active deal|conflict", re.IGNORECASE)
+
+# Summary step. EXACT labels only: a loose "Register" matches the stepper button
+# "Register company" and navigates back to step 1.
+_SUBMIT_LABEL_RE = re.compile(r"^\s*(submit deal|submit|register deal|create deal)\s*$", re.I)
+# Required before 'Submit Deal' enables: "I confirm this deal is in USD" (since 2026-10).
+_CURRENCY_CONFIRM_RE = re.compile(r"I confirm this deal is in", re.IGNORECASE)
 
 
 class RegisterDealWizard(BasePage):
@@ -239,14 +250,46 @@ class RegisterDealWizard(BasePage):
             await self.page.wait_for_timeout(100)
         logger.warning("Calendar did not repaint after advancing the month")
 
-    async def submit(self) -> str:
-        """On the summary step, click the primary submit/confirm button. Returns its label."""
-        for name in ("Submit", "Register deal", "Confirm", "Register", "Finish", "Create deal"):
-            btn = self.dialog().get_by_role("button", name=name, exact=False).first
-            if await btn.count() and await btn.is_visible() and not await btn.is_disabled():
-                await self.click_on(btn, f"Step 3 · {name}")
-                return name
-        raise AssertionError("no submit/confirm button found on the wizard summary step")
+    async def submit(self, timeout: int = 5_000) -> str:
+        """On the Summary step: confirm the deal currency, then click the submit button.
+
+        Returns the button's label. Two things changed on this step (probed 2026-10-14):
+
+        * a REQUIRED checkbox — "I confirm this deal is in <CURRENCY>" — keeps 'Submit Deal'
+          disabled until it is ticked;
+        * the old loose name list ('Submit', …, 'Register') then skipped the disabled
+          'Submit Deal' and matched the STEPPER button 'Register company', clicking the wizard
+          back to step 1. No deal was ever sent, and one TC still passed on a page-text
+          fallback.
+
+        So the confirmation is ticked when present, the button is matched by its EXACT label,
+        and a submit button that stays disabled fails loudly with the step's text instead of
+        falling through to some other button.
+        """
+        await self._confirm_deal_currency()
+        btn = self.dialog().get_by_role("button", name=_SUBMIT_LABEL_RE).first
+        if not await btn.count():
+            raise AssertionError("no submit button on the wizard Summary step")
+        with contextlib.suppress(AssertionError):
+            await pw_expect(btn).to_be_enabled(timeout=timeout)
+        label = " ".join((await btn.inner_text()).split())
+        if await btn.is_disabled():
+            tail = " ".join((await self.dialog().inner_text()).split())[-300:]
+            raise AssertionError(f"'{label}' stays disabled on the Summary step — {tail!r}")
+        await self.click_on(btn, f"Step 3 · {label}")
+        return label
+
+    async def _confirm_deal_currency(self) -> None:
+        """Tick 'I confirm this deal is in <CURRENCY>' if the Summary step shows it."""
+        box = self.dialog().get_by_role("checkbox", name=_CURRENCY_CONFIRM_RE)
+        if await box.count():
+            if not await box.first.is_checked():
+                await self.click_on(box.first, "Step 3 · confirm deal currency")
+            return
+        # Custom control without an accessible checkbox role: its label text toggles it.
+        text = self.dialog().get_by_text(_CURRENCY_CONFIRM_RE).first
+        if await text.count() and await text.is_visible():
+            await self.click_on(text, "Step 3 · confirm deal currency")
 
     def next_button(self) -> Locator:
         return self.dialog().get_by_role("button", name="Next").first

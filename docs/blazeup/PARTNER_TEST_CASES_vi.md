@@ -85,7 +85,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 2. Các section chính render.
    → Expected: **Tier & Performance**, **Territory Assignments**, **Action Required**, **Pipeline Snapshot** hiển thị.
 **Expected (tổng):** Dashboard render KPI metric card + tất cả section chính (không phụ thuộc data).
-**Ghi chú:** PASSED — verified 2026-07-28 (TC 12060402). Content-test DASHBOARD đầu tiên — dựng nền page-object `DashboardPage` (KPI cards, sections). Data partner rỗng hiện "No Data Found" ở Action Required / Pipeline Snapshot. Negative: N/A — view read-only. Idempotency: N/A.
+**Ghi chú:** FAILED — 2026-10-14 (TC 12060402): bước 1 dừng ở **Commission YTD** — build hiện tại ghi "Commission paid YTD". Dashboard đang được làm lại theo Figma đã thống nhất (node 10604-18631) và TC này kiểm theo NHÃN CỦA DESIGN, nên còn fail chừng nào build còn lệch; Total pipeline ACV và Active Tenants đã khớp. Trước đây PASSED — verified 2026-07-28. Content-test DASHBOARD đầu tiên — dựng nền page-object `DashboardPage` (KPI cards, sections). Data partner rỗng hiện "No Data Found" ở Action Required / Pipeline Snapshot. Negative: N/A — view read-only. Idempotency: N/A.
 #### PARTNER_UI_DASHBOARD_003
 **Mô tả test:** Component Tier Progress trên dashboard hiển thị tiến độ lên tier tiếp theo. Read-only.
 **Chuẩn bị (điều kiện tiên quyết):** Đăng nhập user channel-partner; mở `/dashboard` và chờ READY_MARKER "Tier & Performance".
@@ -114,9 +114,9 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 #### PARTNER_UI_DASHBOARD_006 — BLOCKED (cần fixture trạng thái downgrade)
 **Intent:** Cảnh báo **tier downgrade pending** — dashboard hiện notice 30 ngày + thông tin grace-quarter (PRD §2.1/§5.5).
 **Lý do block:** Partner test không ở trạng thái **tier-downgrade-pending**, và không có đường seed (downgrade suy ra từ T12M ARR tụt dưới threshold của tier hiện tại qua 1 grace quarter). Không có partner ở trạng thái đó → không trigger/verify được notice 30 ngày + grace quarter. Cũng phụ thuộc tier-qualification math mà _005 đã cho thấy UI chưa render đủ. Unblock với partner fixture ở trạng thái downgrade-pending (+ UI cảnh báo).
-#### PARTNER_UI_DASHBOARD_007 — PASSED
+#### PARTNER_UI_DASHBOARD_007 — FAILED
 **Mô tả test:** (Negative guard) Dashboard ẩn vanity metrics — theo PRD §4.3, view dashboard đầu tiên chỉ hiển thị giá trị actionable/decision-supporting (pipeline ACV, commission, active tenants, tier progress, action items, pipeline snapshot) và KHÔNG surface vanity metric (page/profile views, impressions, followers, bounce rate, login count, …).
-**Chuẩn bị (điều kiện tiên quyết):** Đăng nhập user channel-partner; mở `/dashboard` và chờ READY_MARKER "Tier & Performance".
+**Chuẩn bị (điều kiện tiên quyết):** Đăng nhập user channel-partner; mở `/dashboard` và chờ READY_MARKER "Pipeline Snapshot".
 **Các bước:**
 1. Chỉ KPI metric actionable/decision-supporting hiển thị.
    → Expected: Total pipeline ACV, Commission YTD, Active Tenants hiển thị.
@@ -125,7 +125,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. Hierarchy trang vẫn highlight các section actionable.
    → Expected: Action Required, Tier Progress, Pipeline Snapshot hiển thị.
 **Expected (tổng):** Dashboard chỉ surface metric actionable + hierarchy action/tier/pipeline; vanity metric bị ẩn.
-**Ghi chú:** PASSED — TC 12060407, verified 2026-07-30 (chạy xanh khi staging hồi; "pending verify" trước đó là do staging MFE outage tạm thời 2026-07-28, không phải lỗi test). Negative TC by design (guard vắng mặt vanity metric); đây chính là negative counterpart. Idempotency: N/A — view read-only.
+**Ghi chú:** FAILED — 2026-10-14 (TC 12060407): bước 1 dừng ở **Commission YTD** (build ghi "Commission paid YTD"), và bước 3 cũng sẽ fail ở **Tier Progress**, thứ build không còn render (BUG-UI-014). Cả hai đều là chỗ build lệch Figma đã thống nhất. Trước đây PASSED — TC 12060407, verified 2026-07-30 (chạy xanh khi staging hồi; "pending verify" trước đó là do staging MFE outage tạm thời 2026-07-28, không phải lỗi test). Negative TC by design (guard vắng mặt vanity metric); đây chính là negative counterpart. Idempotency: N/A — view read-only.
 #### PARTNER_UI_DASHBOARD_008 — BLOCKED (feature Blazey AI)
 **Intent:** Hỏi Blazey (widget trên dashboard) câu **status deal** → trả lời gồm stage hiện tại, next action, contact của BlazeUp rep; scope đúng deal của partner đang login.
 **Lý do block:** Phụ thuộc **Blazey AI assistant** (feature AI defer) — widget chưa có/không test được trên build hiện tại — + cần deal data thật. Unblock khi Blazey ra + partner có deal.
@@ -188,23 +188,23 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Chuẩn bị (điều kiện tiên quyết):** Chứng minh qua API partner `check-domain` label ứng viên nào reserved (`available=false`) vs free (`available=true`) — để assertion UI không vòng vo. Mở wizard với company/country/contact hợp lệ. LƯU Ý: field "Domain" là **subdomain label** (lowercase/số/gạch nối, KHÔNG dấu chấm) — placeholder "acme.com" gây nhầm; giá trị có dấu chấm → check-domain trả 400.
 **Các bước:**
 1. Nhập domain RESERVED (đã chứng minh `available=false`, vd "test").
-   → Expected: hiện inline warning, vd **"This domain is reserved by another active deal. Register will get a conflict queue."** (Next vẫn enabled — deal sẽ vào conflict queue khi submit, không bị chặn.)
+   → Expected: hiện inline warning, vd **"This domain is already taken. Please try a different one."** (câu mới từ thay đổi check-domain ngày 2026-10-05, cho domain đã có tenant; domain đang bị deal active khác giữ thì vẫn là câu cũ "reserved by another active deal … conflict queue") (Next vẫn enabled — deal sẽ vào conflict queue khi submit, không bị chặn.)
 2. Nhập domain AVAILABLE (đã chứng minh `available=true`) — control.
    → Expected: không có warning reserved/active-deal.
 **Expected (tổng):** Domain reserved hiện inline warning active-account/conflict; domain free thì không.
-**Ghi chú:** PASSED — verified 2026-07-27 (TC 12060204). Khi blur, field gọi `GET /v1/partner/portal/check-domain?domain=<label>`; `available=false` (reason vd `deal_won`) trigger warning inline. Trạng thái reserved/free được chứng minh qua API trước (không vòng vo). Nếu không có label reserved nào trong danh sách ứng viên, test SKIP với lý do rõ (không false-pass). Kết quả submit → conflict-queue là _005. Negative/control: nhánh domain available (không warning) đã bao gồm. Idempotency: N/A (read-only check).
+**Ghi chú:** PASSED — verify lại 2026-10-14 (TC 12060204) sau khi câu cảnh báo đổi thành "already taken"; fail ngày 13–14/10 chỉ vì test còn khớp câu cũ. Verify lần đầu 2026-07-27. Khi blur, field gọi `GET /v1/partner/portal/check-domain?domain=<label>`; `available=false` (reason vd `deal_won`) trigger warning inline. Trạng thái reserved/free được chứng minh qua API trước (không vòng vo). Nếu không có label reserved nào trong danh sách ứng viên, test SKIP với lý do rõ (không false-pass). Kết quả submit → conflict-queue là _005. Negative/control: nhánh domain available (không warning) đã bao gồm. Idempotency: N/A (read-only check).
 #### PARTNER_UI_MY_PIPELINE_005
 **Mô tả test:** Submit toàn bộ register wizard với domain đã reserved (nhánh conflict). Điền hết các bước (company + contact + domain reserved; deal info: plan / seats / region / expected close date) rồi submit; deal được tạo (sẽ vào conflict queue).
 **Chuẩn bị (điều kiện tiên quyết):** Chứng minh qua API `check-domain` 1 label reserved (available=false). Mở wizard.
 **Các bước:**
-1. Step 1 với domain RESERVED → hiện inline warning conflict ("reserved by another active deal … conflict queue"); advance.
+1. Step 1 với domain RESERVED → hiện inline warning ("This domain is already taken…" với domain đã có tenant; "reserved by another active deal … conflict queue" với domain đang bị deal active giữ); advance.
    → Expected: warning hiện; wizard sang Deal info.
 2. Điền Deal info — plan (billing cycle tự set), granted seats, region, expected close date (tháng sau) → sang Summary.
    → Expected: Deal info đủ → "Next" enabled; wizard tới Step 3 of 3 (Summary).
-3. Submit.
+3. Tick "I confirm this deal is in <currency>" (bắt buộc từ 2026-10; "Submit Deal" bị khoá cho tới khi tick), rồi bấm "Submit Deal".
    → Expected: submit thành công — `POST /v1/partner/portal/deals` trả **201** + deal id.
 **Expected (tổng):** Wizard submit e2e với domain reserved và deal được tạo.
-**Ghi chú:** PASSED — verified 2026-07-27 (TC 12060205). Full e2e submit chạy được: reserved-domain warning → Deal info → **submit → 201** (deal id đã log trong run để tra tay). **PENDING (bước verify — cố ý CHƯA assert):** xác nhận deal thực sự VÀO conflict queue được hoãn — endpoint deals-list partner đang 400 (`_024`) nên deal không list được, và không có API xóa để dọn deal vừa tạo. **Sẽ improve khi BE cung cấp cách fetch/remove deal** (user đang làm việc với BE). Side-effect: mỗi run tạo 1 deal không xóa được. Negative/phát hiện-conflict đã cover ở _004 (UI warning) + API `2060204`. Idempotency: N/A ở đây (duplicate-register là _022).
+**Ghi chú:** PASSED — verify lại 2026-10-14 (TC 12060205): POST /v1/partner/portal/deals → 201. Ngày 2026-10-14 từng PASS GIẢ một lần: bước Summary có thêm ô xác nhận tiền tệ bắt buộc, 'Submit Deal' bị khoá, helper submit cũ bấm nhầm 'Register company' trên thanh tiến trình (quay về bước 1), và nhánh dự phòng tìm thấy chữ "Registered" trong danh sách deal. Helper giờ tick ô xác nhận và bấm đúng tên nút; nhánh dự phòng đã bỏ, chỉ lệnh POST bắt được mới chứng minh đã submit. Verify lần đầu 2026-07-27. Full e2e submit chạy được: reserved-domain warning → Deal info → **submit → 201** (deal id đã log trong run để tra tay). **PENDING (bước verify — cố ý CHƯA assert):** xác nhận deal thực sự VÀO conflict queue được hoãn — endpoint deals-list partner đang 400 (`_024`) nên deal không list được, và không có API xóa để dọn deal vừa tạo. **Sẽ improve khi BE cung cấp cách fetch/remove deal** (user đang làm việc với BE). Side-effect: mỗi run tạo 1 deal không xóa được. Negative/phát hiện-conflict đã cover ở _004 (UI warning) + API `2060204`. Idempotency: N/A ở đây (duplicate-register là _022).
 #### PARTNER_UI_MY_PIPELINE_006
 **Mô tả test:** Negative (required): để trống **email** primary-contact → chặn wizard advance; điền email hợp lệ → bỏ chặn — chứng minh email là required.
 **Chuẩn bị (điều kiện tiên quyết):** Mở wizard (Step 1); điền mọi field required khác (company name, domain, country, contact name).
@@ -227,18 +227,17 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 **Expected (tổng):** Email malformed bị từ chối với format error rõ ràng; không tạo deal.
 **Ghi chú:** PASSED — verify lại 2026-08-10 (TC 12060207); trước đây FAILED có chủ đích (`be_gap`, **BUG-UI-004**, nay đã Closed). FE đã bổ sung validation, nên marker `be_gap` được gỡ và TC này quay lại trong merge gate. Gap gốc, giữ lại để tra cứu: Register wizard **không validate email format**: mọi email malformed (kể cả `notanemail` / `a b@x.com` có space) đều được chấp nhận — field giữ giá trị, "Next" vẫn enabled, field không bao giờ bị flag (`aria-invalid` không set). Cùng loại gap với _003 (domain). **Confirm với FE** — thêm validate email-format ở field contact email. Positive sibling: _001. Idempotency: N/A (không submit).
 #### PARTNER_UI_MY_PIPELINE_008
-**Mô tả test:** Chọn referral deal type: trên wizard này deal type là Referral (mặc định) và persist tới Summary. Chỉ UI (không submit).
-**Chuẩn bị (điều kiện tiên quyết):** Mở wizard; hoàn tất step 1 (company/domain/country/contact).
+**Mô tả test:** Deal type đi theo loại partner (requirement 2.2) và được giữ nguyên tới Summary. Deal type mong đợi được tra cho partner đang đăng nhập trong `utils/partner_rules.py` — không viết cứng: Channel (= Reseller/VAR) → **Reseller**, Referral → **Referral**; SI và MSP chưa được requirement định nghĩa nên TC báo BLOCKED với hai loại này. Chỉ UI (không submit).
+**Chuẩn bị (điều kiện tiên quyết):** Đọc profile của partner UI (`partner_profile`: code / type / tier) trước mọi lần login UI; mở wizard; hoàn tất step 1 (company/domain/country/contact).
 **Các bước:**
-1. Ở Deal info, deal type hiển thị **Referral** (Reseller/Co-sell không có — xem _009/_010).
-   → Expected: "Referral" hiển thị; không có option "Reseller".
+1. Ở Deal info, deal type hiển thị đúng giá trị mà loại partner ánh xạ tới, và không có deal type nào khác.
+   → Expected: vd partner Channel thấy badge read-only "Reseller"; không có "Referral" và "Co-sell".
 2. Hoàn tất Deal info (plan/seats/region/date) → sang Summary.
    → Expected: tới Step 3 of 3 (Summary).
-3. Summary persist deal type.
-   → Expected: Summary hiển thị **Deal type = Referral**.
-**Expected (tổng):** Referral deal type được capture và persist qua navigation tới Summary.
-**Ghi chú:** PASSED — verified 2026-07-27 (TC 12060208). Trên build này deal type là **badge "Referral" read-only cố định** (reseller/co-sell KHÔNG chọn được — click không mở gì, không có dropdown deal-type, không có text "Reseller"/"Co-sell"). Referral implies direct billing model (nghiệp vụ); UI chỉ hiển thị nhãn "Referral" (không có chữ "direct billing" riêng). Không submit → không side-effect. Idempotency: N/A.
-
+3. Summary giữ nguyên deal type đó.
+   → Expected: Summary hiển thị **Deal type = <cùng giá trị>**.
+**Expected (tổng):** Wizard cấp cho partner đúng deal type mà loại partner quy định, và giá trị đó giữ nguyên tới Summary.
+**Ghi chú:** PASSED — verify lại 2026-10-14 (TC 12060208) trên PAR-016854 (Channel, Registered): badge **RESELLER**, Summary "Reseller", POST đăng ký gửi `dealType=reseller`. Lịch sử: đến 2026-10-09 wizard hiện cố định "Referral" cho mọi partner và TC viết cứng "Referral"; ngày 13–14/10 TC fail khi partner Channel được cấp đúng "Reseller" — vỡ là do chữ viết cứng, không phải product. Ánh xạ giờ nằm ở một chỗ (`utils/partner_rules.py`) cho mọi TC cần dùng. Câu hỏi mở cho PO (không phải lỗi test): bảng hoa hồng PRD ghi tier Registered không có Reseller margin ("—"), nhưng wizard hiện "Margin · 10%".
 #### PARTNER_UI_MY_PIPELINE_009
 **Ghi chú (BLOCKED):** Chọn reseller deal type → reseller billing path. Blocked (verify live 2026-07-27): register wizard **không có reseller deal type** — deal type là badge "Referral" read-only cố định (không có dropdown deal-type; click không mở gì; không có text "Reseller"). Không có control UI để chọn reseller, nên không thể exercise reseller billing path từ wizard. (API hỗ trợ dealType `reseller` — xem `make_deal` / API deal TCs — nên đây là gap UI.) Unblock khi wizard có deal-type selector với reseller.
 
@@ -251,9 +250,9 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 1. Summary hiển thị các giá trị COMPANY + CONTACT đã nhập.
    → Expected: company name, domain, contact name, email (unique) đều hiển thị trên Summary.
 2. Summary hiển thị các field phần DEAL.
-   → Expected: Deal type = **Referral**, cùng Expected close date, Plan source, Country.
+   → Expected: Deal type = giá trị loại partner ánh xạ tới (`utils/partner_rules.py`; **Reseller** với partner test loại Channel), cùng Expected close date, Plan source, Country.
 **Expected (tổng):** Summary phản ánh mọi giá trị đã nhập để review trước khi submit.
-**Ghi chú:** PASSED — verified 2026-07-27 (TC 12060211). Dùng 4 text input unique (company/domain/contact/email) assert verbatim trên Summary → bằng chứng mạnh data nhập được hiển thị. Verify trước submit (không submit → không side-effect). Idempotency: N/A.
+**Ghi chú:** PASSED — verify lại 2026-10-14 (TC 12060211). Fail ngày 13–14/10 chỉ vì bước 2 viết cứng "Referral"; deal type giờ lấy từ bảng quy tắc partner (xem _008). Verify lần đầu 2026-07-27. Dùng 4 text input unique (company/domain/contact/email) assert verbatim trên Summary → bằng chứng mạnh data nhập được hiển thị. Verify trước submit (không submit → không side-effect). Idempotency: N/A.
 #### PARTNER_UI_MY_PIPELINE_012
 **Mô tả test:** Performance — đăng ký deal hợp lệ trả success response trong 2 giây. Submit toàn bộ wizard với domain hợp lệ (available) và đo round-trip mạng của API register.
 **Chuẩn bị (điều kiện tiên quyết):** Mở wizard; điền step 1 (company/domain/country/contact) + Deal info (plan/seats/region/expected close date) với domain unique available.
@@ -425,7 +424,7 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 5. Resources `/resources` → Expected: không tràn ngang. → **PASS**
 6. Tap link sidebar ở mobile → Commissions route + render. → **PASS** (nav mobile dùng được).
 **Expected (tổng):** Mọi trang chính vừa viewport mobile (không tràn ngang), nav truy cập được; tap nav route đúng.
-**Ghi chú:** FAILED (by design / `be_gap`, loại khỏi merge gate) — verify 2026-09-30 (TC 12060102). 4/5 trang vừa + nav mobile OK; **chỉ `/directory` tràn (+93px)** = lỗi responsive layout (**confirm với FE**; theo dõi ở **BUG-UI-013** — BUG-UI-010 là cùng defect, đã close 2026-10-08 nên row còn hiệu lực là 013; khác BUG-UI-002 (Deals, nay đã fix)). **My Apps đã bị bỏ (2026-09-30):** không còn nav, `/apps` → 404, nên đã bỏ khỏi test. Negative: N/A (smoke responsive không có input sai; case "layout không vừa" chính là thứ nó check). Idempotency: N/A (chỉ điều hướng/resize read-only).
+**Ghi chú:** PASSED — verify lại 2026-10-09 và 2026-10-14 (TC 12060102): `/directory` giờ đã vừa viewport mobile, nên marker `be_gap` đã được gỡ (2026-10-13) và TC quay lại merge gate. Lịch sử bên dưới. Trước đây FAILED có chủ đích — verify 2026-09-30. 4/5 trang vừa + nav mobile OK; **chỉ `/directory` tràn (+93px)** = lỗi responsive layout (**confirm với FE**; theo dõi ở **BUG-UI-013** — BUG-UI-010 là cùng defect, đã close 2026-10-08 nên row còn hiệu lực là 013; khác BUG-UI-002 (Deals, nay đã fix)). **My Apps đã bị bỏ (2026-09-30):** không còn nav, `/apps` → 404, nên đã bỏ khỏi test. Negative: N/A (smoke responsive không có input sai; case "layout không vừa" chính là thứ nó check). Idempotency: N/A (chỉ điều hướng/resize read-only).
 #### PARTNER_UI_PARTNER_PORTAL_SHELL_003
 **Ghi chú (BLOCKED):** Partner dual-account chuyển đổi giữa dashboard **Pack** và **Channel**. Không thể tự động hóa — tính năng lẫn test data đều chưa có trên staging (verify live 2026-07-24): (a) **không có account-switcher** trong portal shell — chữ "Select" ở header là badge **tier** (tier=`select`), không phải công tắc đổi account; profile menu chỉ có Profile/Logout; (b) partner đang đăng nhập là **single account** — `GET /v1/partner/auth/me` trả về 1 `partnerId`, `type:"channel"`, `tier:"select"`, không có mảng accounts; (c) **không có khái niệm "Pack"** — enum partner `type` là channel/referral/msp/system_integrator (không có "pack"), nên không thể biểu diễn dual-account Pack↔Channel. Unblock khi BE ship multi-account membership (1 user → 1 account Pack + 1 Channel) + account switcher ở shell, VÀ có test partner dual-account.
 ### UI · PARTNER_TEAM
@@ -530,13 +529,13 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
    → Expected: tab **Overview**, **Deals**, **Commission**, **Members** hiển thị (Radix `role="tab"`). **(PASS.)**
 2. Section Overview + thông tin partner render.
    → Expected: section **Tier & Performance** + **Territory Assignments** + tên công ty + type **Channel** + id **PAR-…** hiển thị. **(PASS.)**
-3. Control Partner-actions render.
-   → Expected: control **Partner actions** (kebab) hiển thị trên header. **(PASS.)**
-**Expected (tổng):** Partner Detail load với tabs, sections, thông tin partner và control actions.
-**Note:** PASSED, verify 2026-07-31 (TC 12060513). Check load read-only (an toàn khi rỗng). Negative: N/A — chỉ load read-only. Idempotency: N/A. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-022**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+3. Header của partner Pending khi người xem không phải người được assign duyệt.
+   → Expected: khối **Approval chain** hiện **"0 / N approved"** (N ≥ 1), và nút kebab **Partner actions** (⋮) **không** hiện. **(PASS.)**
+**Expected (tổng):** Partner Detail load với tabs, sections, thông tin partner, và — với partner Pending — khối approval chain thay cho menu actions.
+**Note:** PASSED — verify lại 2026-10-15 (TC 12060513). Bước 3 đổi theo thiết kế approval chain: menu ⋮ **Partner actions** được giới hạn — partner **Active** thì hiện cho Super Admin, partner **Pending** thì chỉ hiện cho SA được assign duyệt. Test đăng nhập bằng admin tạo partner, mà chain không bao giờ cho người tạo làm người duyệt, nên partner Pending hiện khối Approval chain và không có ⋮. Đến 2026-10-14 bước 3 vẫn chờ ⋮ (luồng cũ "⋮ → Approve") nên fail. Verify trước đó 2026-07-31. Check load read-only (an toàn khi rỗng). Negative: N/A — chỉ load read-only. Idempotency: N/A. **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-022**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_014 — PASSED (add member; deactivate/reactivate chưa có UI)
 **Mô tả:** Từ trang Partner Detail phía SA → tab **Members**, SA thêm 1 portal user (member) cho partner đang active; user mới xuất hiện trong danh sách Portal Users với status **Active**.
-**Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm, **Approve** (Pending → Active), mở tab Members.
+**Setup (điều kiện):** Login super-admin (stgsa); tạo sẵn 1 partner tạm ở trạng thái **Active** qua API — admin tạo, QA approver (ADMIN2) duyệt — rồi mở nó trong Directory (Status = Active) và vào tab Members.
 **Test Steps:**
 1. Tab Members hiện danh sách Portal Users (rỗng).
    → Expected: heading **Portal Users** + control **Add User** / **Add First User**; empty-state "No portal users yet". **(PASS.)**
@@ -545,17 +544,17 @@ Các workflow partner-management phía SA này có design Figma "Ready for dev" 
 3. User mới xuất hiện ở row Active.
    → Expected: row của user mới hiện email + role **Viewer** + status **Active**; header hiện **Portal Users (1)**. **(PASS.)**
 **Expected (tổng):** SA thêm được portal user cho partner; user hiện Active trong danh sách Portal Users.
-**Note:** PASSED, verify 2026-08-03 (TC 12060514). Password của user tạm (staging) được sinh ngẫu nhiên và **không log**. **Phạm vi:** tab Members chỉ có **Add User** (tạo) + action **Reset Password** trên từng row — **KHÔNG có** control member deactivate / reactivate / suspend / remove nào trên build này (verify live 2026-08-03: full HTML row + hover + quét keyword), nên phần deactivate/reactivate của intent gốc _014 **không tự động hóa được** (UI chưa có). Khi control đó lên, mở rộng thêm cho TC này. Negative: N/A — happy-path add (validate form là TC riêng). Idempotency: N/A — mỗi lần add tạo user khác nhau (email unique). **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-022**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
+**Note:** PASSED — verify lại 2026-10-15 (TC 12060514). Setup trước đây Approve partner trên UI (⋮ → Approve); từ khi có approval chain, thao tác này chỉ hiện cho người được assign duyệt, mà admin tạo partner không bao giờ được assign, nên setup bị timeout (BUG-UI-013, close 2026-10-15 — not a bug). Việc duyệt chỉ là điều kiện tiên quyết, nên giờ đi qua API bằng QA approver. Verify trước đó 2026-08-03. Password của user tạm (staging) được sinh ngẫu nhiên và **không log**. **Phạm vi:** tab Members chỉ có **Add User** (tạo) + action **Reset Password** trên từng row — **KHÔNG có** control member deactivate / reactivate / suspend / remove nào trên build này (verify live 2026-08-03: full HTML row + hover + quét keyword), nên phần deactivate/reactivate của intent gốc _014 **không tự động hóa được** (UI chưa có). Khi control đó lên, mở rộng thêm cho TC này. Negative: N/A — happy-path add (validate form là TC riêng). Idempotency: N/A — mỗi lần add tạo user khác nhau (email unique). **Cleanup:** đã đăng ký — partner tạm được xoá qua SA API ở teardown — nhưng hiện **chưa có tác dụng**: `DELETE /v1/sa/partners/{id}` chỉ soft-delete (**BUG-API-022**), nên mỗi lần chạy vẫn để lại partner trên staging (log `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_015 — PASSED
 **Mô tả:** Từ trang Partner Detail phía SA, suspend một partner đang Active qua **Partner actions → Deactivate**. Kỳ vọng: partner chuyển khỏi Active (Suspended/Inactive) và mất quyền truy cập portal.
-**Setup (điều kiện):** Login super-admin (stgsa); tự tạo 1 partner tạm (Onboard), tìm nó trong Directory với **filter Status = Pending** (Directory mặc định lọc Status = Active), mở ra và **Approve** (Pending → Active).
+**Setup (điều kiện):** Login super-admin (stgsa); tạo sẵn 1 partner tạm ở trạng thái **Active** qua API — admin tạo, QA approver (ADMIN2) duyệt — rồi mở nó trong Directory (Status = Active). Badge phải là Active.
 **Test Steps:**
 1. Deactivate (suspend) partner đang active — Partner actions → Deactivate → nhập **Reason** (bắt buộc) trong dialog "Deactivate Partner" → confirm.
    → Expected: request thành công (dialog đóng, không có banner "Failed to deactivate partner").
 2. Partner bị suspend, không có lỗi.
    → Expected: không có banner lỗi; badge status chuyển sang Suspended/Inactive (poll — badge refetch sau vài giây).
 **Expected (tổng):** SA suspend được partner Active từ UI; partner mất quyền truy cập portal.
-**Note:** PASSED — verify 2026-09-30 (TC 12060515). **BUG-UI-008 đã được FE fix:** dialog Deactivate giờ có ô Reason bắt buộc (nút Deactivate disabled tới khi nhập) và request thành công. Cũng cập nhật 2026-09-30: Directory giờ mặc định **Status = Active**, nên partner vừa onboard (Pending) được tìm bằng cách chuyển filter Status sang Pending trước. Lịch sử: tới 2026-07-31 dialog không có ô reason và BE reject ("reason should not be empty"). Gỡ chặn _016 (reactivate). Negative: N/A (1 action chuyển state). Idempotency: N/A. **Cleanup:** đã đăng ký (xoá qua SA API ở teardown) nhưng vẫn chỉ soft-delete (**BUG-API-022**, log `CLEANUP LEAK`).
+**Note:** PASSED — verify lại 2026-10-15 (TC 12060515). Bước Approve trên UI của setup (⋮ → Approve trên partner Pending) không còn với admin tạo partner kể từ khi có approval chain (BUG-UI-013, close 2026-10-15 — not a bug); partner giờ được duyệt qua API bằng QA approver. Với partner Active, ⋮ hiện cho Super Admin nên Deactivate vẫn được kiểm trên UI. Verify trước đó 2026-09-30. **BUG-UI-008 đã được FE fix:** dialog Deactivate giờ có ô Reason bắt buộc (nút Deactivate disabled tới khi nhập) và request thành công. Cũng cập nhật 2026-09-30: Directory giờ mặc định **Status = Active**, nên partner vừa onboard (Pending) được tìm bằng cách chuyển filter Status sang Pending trước. Lịch sử: tới 2026-07-31 dialog không có ô reason và BE reject ("reason should not be empty"). Gỡ chặn _016 (reactivate). Negative: N/A (1 action chuyển state). Idempotency: N/A. **Cleanup:** đã đăng ký (xoá qua SA API ở teardown) nhưng vẫn chỉ soft-delete (**BUG-API-022**, log `CLEANUP LEAK`).
 #### PARTNER_UI_SA_PARTNER_MODULE_016 — BLOCKED (phụ thuộc BUG-UI-008)
 **Mô tả:** Từ trang Partner Detail phía SA, reactivate một partner đang **Suspended** qua **Partner actions → Reactivate**; partner trở lại Active và có lại quyền truy cập portal.
 **Intent:** Verify chuyển state Suspended → Active (đối xứng với _015).
@@ -647,7 +646,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 3. POST /partner/auth/refresh với một refresh token không hợp lệ.
    → Expected: 401.
 **Expected (tổng):** Refresh cấp một access token mới hoạt động; refresh không hợp lệ bị từ chối.
-**Ghi chú:** PASSED — verified 2026-06-25. Không phụ thuộc sa-plans.
+**Ghi chú:** PASSED — verify lại 2026-10-14. Ngày 13–14/10 từng fail với "the refreshed access token must differ": lỗi canh thời gian của TEST, không phải defect. Access JWT chỉ có `iat` (tính theo giây), `exp`, `sid`, `type` — không có `jti` — nên token cấp lại trong cùng giây với lúc login giống hệt từng byte. Probe: cách nhau 1 giây thì token khác, và refresh token cũ bị từ chối (401), tức xoay vòng token hoạt động đúng. Test giờ chờ 1.1 giây trước khi refresh. Không phụ thuộc sa-plans.
 
 #### PARTNER_API_AUTH_ACCESS_CONTROL_008
 **Mô tả test:** Logout invalidate refresh token.
@@ -673,7 +672,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
 4. Login bằng password CŨ.
    → Expected: 401.
 **Expected (tổng):** Đổi password từ chối một current sai; credential mới hoạt động, cũ bị từ chối.
-**Ghi chú:** PASSED — verified 2026-06-25. Không phụ thuộc sa-plans.
+**Ghi chú:** FAILED by design (`be_gap`, loại khỏi merge gate; **BUG-API-045**) — verified 2026-10-14. Bước 1–3 pass. Bước 4: mật khẩu cũ ĐÃ bị từ chối, nhưng trả **400** "Invalid credentials" thay vì **401**. Đến 2026-10-09 vẫn là 401 (khi đó PASSED), và các phần khác của module auth partner vẫn trả 401 (sai mật khẩu hiện tại ở bước 1, refresh token sai, thiếu token). Cùng nguyên nhân làm fail PARTNER_API_PARTNER_TEAM_005. Không phụ thuộc sa-plans.
 #### PARTNER_API_AUTH_ACCESS_CONTROL_010
 **Mô tả:** Partner user tự yêu cầu reset mật khẩu (POST /sa-partners-api/v1/partner/auth/forgot-password). Chứng minh bằng hiệu ứng, không cần mailbox: mật khẩu vừa dùng được phải ngừng hoạt động.
 **Setup (tiền điều kiện):** Partner ACTIVE và một user THROWAWAY trên đó. Tốn MỘT lần gọi trong quota per-IP dùng chung.
@@ -1076,7 +1075,7 @@ TC bảo mật/tuân thủ cross-cutting — phần lớn SA-side / multi-partne
    → Mong đợi: vẫn chưa có `wonTenantId`, và `provisioningState` vẫn `awaited`.
 **Teardown:** xoá partner cha.
 **Mong đợi (tổng thể):** mọi link không hợp lệ đều bị từ chối và không lần nào ghi gì cả.
-**Ghi chú:** PASSED. CHỈ NEGATIVE vì bắt buộc, không phải vì bỏ sót: Guard 3 gọi `tenantExists()` trên collection tenants thật nên tenantId bịa luôn là 400, và Guard 7 chỉ cho một tenant back MỘT deal WON — nên mượn một tenant thật của staging sẽ tiêu mất nó và làm hỏng attribution đang có. Không có positive để ghép cặp theo rule 1. Đo 2026-09-24: non-WON 400, tenant ma 400, platform tenant 400, reason ngắn 400, cả ba case goLiveAt 400, deal id ma 404, deal id sai định dạng 400. Bước 6 là bước các bước khác không phủ được — một guard trả lỗi nhưng vẫn ghi thì còn tệ hơn không có guard, và không gì khác trong suite nhận ra điều đó.
+**Ghi chú:** FAILED ở setup từ 2026-10 — BUG-API-043: không tạo được deal WON mà các guard cần, vì `/win` từ chối mọi giá trị billingCycle (bước 1 trả 400 "Tenant provisioning failed: [INVALID_PAYLOAD] intake.billingCycle"). Bước 2–7 không được chạy. Trước 2026-10-14 setup còn chết sớm hơn vì lỗi của TEST: tự ghép `tenantDomain` thành "qa-auto-link-<id>.example.com", mà BE từ chối domain có dấu chấm (từ 2026-10-08); nay dùng `make_win_intake` với nhãn thuần của chính deal. PASSED lần cuối 2026-09-24. CHỈ NEGATIVE vì bắt buộc, không phải vì bỏ sót: Guard 3 gọi `tenantExists()` trên collection tenants thật nên tenantId bịa luôn là 400, và Guard 7 chỉ cho một tenant back MỘT deal WON — nên mượn một tenant thật của staging sẽ tiêu mất nó và làm hỏng attribution đang có. Không có positive để ghép cặp theo rule 1. Đo 2026-09-24: non-WON 400, tenant ma 400, platform tenant 400, reason ngắn 400, cả ba case goLiveAt 400, deal id ma 404, deal id sai định dạng 400. Bước 6 là bước các bước khác không phủ được — một guard trả lỗi nhưng vẫn ghi thì còn tệ hơn không có guard, và không gì khác trong suite nhận ra điều đó.
 
 ### API · DEAL_APPROVAL_QUEUE
 
@@ -2251,7 +2250,7 @@ với `UI · PARTNER_TEAM` là có chủ đích — một feature, hai tầng.
    → Kỳ vọng: HTTP 200 — khoá đã được gỡ.
 **Dọn dẹp:** xoá partner cha (kéo theo thành viên throwaway).
 **Kỳ vọng tổng thể:** cả hai hành động làm đúng điều chúng báo: credential cũ chết, credential mới sống, và thành viên bị khoá chỉ đăng nhập lại được sau khi unlock.
-**Ghi chú:** PASSED. Khác với các endpoint đọc ở _001/_003, cặp này **tôn trọng** path param `{userId}`. Ngưỡng khoá **không được quy định trong PRD** (§9.1 không nhắc lockout) — 4 lần / 30 phút là thực tế staging hôm nay, nên nếu BE đổi thì bước 5 sẽ đỏ chứ không trôi qua im lặng.
+**Ghi chú:** FAILED ở bước 4 từ 2026-10-13 — **BUG-API-045** (theo dõi trên PARTNER_API_AUTH_ACCESS_CONTROL_009): sau khi reset, mật khẩu cũ ĐÃ bị từ chối, nhưng trả 400 "Invalid credentials" thay vì 401. Bước 5–8 không chạy. Trước đây PASSED. Khác với các endpoint đọc ở _001/_003, cặp này **tôn trọng** path param `{userId}`. Ngưỡng khoá **không được quy định trong PRD** (§9.1 không nhắc lockout) — 4 lần / 30 phút là thực tế staging hôm nay, nên nếu BE đổi thì bước 5 sẽ đỏ chứ không trôi qua im lặng.
 
 #### PARTNER_API_PARTNER_TEAM_009
 **Mô tả:** Bản negative của _005: userId ma, userId sai định dạng, và hành vi khi **lặp lại** mỗi hành động.
@@ -2496,7 +2495,7 @@ với `UI · PARTNER_TEAM` là có chủ đích — một feature, hai tầng.
    → Mong đợi: có _id/planId/displayName/edition/billingCycle/currency/basePrice/status; `status` = `published`; `edition` thuộc (starter|pro|enterprise) — custom/bespoke bị service loại, nên một dòng ngoài tập này nghĩa là filter đã hỏng; không có key password/token/secret/credential.
 3. Kiểm khoá trên toàn catalogue.
    → Mong đợi: `_id` duy nhất và `planId` duy nhất — picker không được phép hiện trùng.
-4. GET .../plans/{_id} của dòng đầu.
+4. GET .../plans/{planId} của dòng đầu, dùng slug `planId` của dòng đó (route là `plans/:planId`).
    → Mong đợi: cùng `_id`, và `planId`/`displayName`/`edition`/`billingCycle`/`currency` giống hệt dòng trong list; `status` vẫn `published`.
 5. GET lookup quốc gia.
    → Mong đợi: ít nhất 200 dòng (~250 nước theo ISO 3166-1; ngắn hơn nghĩa là lookup bị cắt và partner không đăng ký deal được cho các thị trường thiếu); mỗi dòng có _id/name/alpha2Code/alpha3Code không rỗng; alpha2Code 2 ký tự, alpha3Code 3 ký tự; `_id` BẰNG alpha2Code vì picker submit `_id`; không trùng alpha2Code.
@@ -2504,7 +2503,7 @@ với `UI · PARTNER_TEAM` là có chủ đích — một feature, hai tầng.
    → Mong đợi: mỗi lần trả ít nhất một dòng, mọi tên trả về đều chứa từ khoá không phân biệt hoa thường, và kết quả ngắn hơn danh sách đầy đủ.
 **Teardown:** xoá partner cha.
 **Mong đợi (tổng thể):** catalogue chỉ lộ plan published thuộc edition chuẩn, route chi tiết trả chính xác.
-**Ghi chú:** PASSED. Đo 2026-09-23: 3 plan, edition {starter, pro, enterprise}, tất cả `published`. Bước 2 là bước chịu lực — list này nuôi deal wizard, nên một plan chưa publish hoặc bespoke lọt vào là nó sẽ được chào cho partner.
+**Ghi chú:** PASSED. Đo 2026-09-23: 3 plan, edition {starter, pro, enterprise}, tất cả `published`. Bước 2 là bước chịu lực — list này nuôi deal wizard, nên một plan chưa publish hoặc bespoke lọt vào là nó sẽ được chào cho partner. Cập nhật 2026-10-14: bước 4 trước đây tra plan bằng `_id`, khoá duy nhất BE nhận lúc đó (BUG-API-029). Nay BE tra theo slug `planId` như tài liệu và trả 404 cho `_id`, nên bước 4 fail cho tới khi đổi sang slug — đây là thay đổi phía test, không phải lỗi product.
 
 #### PARTNER_API_PARTNER_PORTAL_010
 **Mô tả:** Cặp negative của _009: khoá plan đúng như tài liệu, khoá không khớp gì, và khoá không phải id.
@@ -2515,10 +2514,10 @@ với `UI · PARTNER_TEAM` là có chủ đích — một feature, hai tầng.
 2. GET .../plans/{ghost id}.
    → Mong đợi: HTTP 404 nêu rõ khoá không tìm thấy.
 3. GET .../plans/{'not-a-plan', '%20', 'null'}.
-   → Mong đợi: HTTP 400 mỗi cái, không bao giờ 200 và không bao giờ 5xx.
+   → Mong đợi: mỗi cái trả 4xx (400 hoặc 404), không bao giờ 200 và không bao giờ 5xx.
 **Teardown:** xoá partner cha.
 **Mong đợi (tổng thể):** khoá theo tài liệu thì resolve được, mọi khoá không hợp lệ đều bị từ chối.
-**Ghi chú (FAILED — chủ đích, BUG-API-029):** Bước 2–3 pass: ghost key → 404 nêu tên, cả ba khoá sai định dạng → 400. Bước 1 fail — `full-modules-ss` chính là `planId` của plan mà catalogue trả về ở call ngay trước đó, vậy mà nó trả **400 "Invalid id"**, trong khi `_id` của đúng dòng đó thì 200. `getPlanByPlanId` query `{ _id: planId }` dù route, @ApiParam ("Kebab-case plan key, e.g. pro-annual") và docstring service đều nói là slug. Tham số tên `planId` là thứ duy nhất nó KHÔNG nhận, nên client viết theo OpenAPI spec sẽ fail 100%. Đây là lỗi contract chứ không phải crash — deal wizard chạy được vì nó truyền `_id`. Cần BE xác nhận bên nào là chuẩn.
+**Ghi chú:** PASSED (2026-10-14) — BUG-API-029 đã được sửa và close. Bước 1 giờ resolve được: `full-modules-ss` → 200. Bước 2: ghost key → 404 nêu tên. Bước 3: `not-a-plan` → 404, `%20` → 400, `null` → 404 — đều là 4xx, không có 200 hay 5xx, đúng điều bước này kiểm. Lịch sử: BE từng query `{ _id: planId }`, nên slug theo tài liệu trả 400 "Invalid id" còn `_id` thì 200; nay BE tra theo slug và `_id` trả 404. Nơi nào còn gọi route chi tiết bằng `_id` (theo ghi chú cũ, deal wizard từng làm vậy) sẽ hỏng sau bản sửa này — kiểm riêng ở phía UI.
 
 ### API · SECURITY_COMPLIANCE
 

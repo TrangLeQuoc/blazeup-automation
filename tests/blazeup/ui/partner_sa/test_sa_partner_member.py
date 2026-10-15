@@ -17,7 +17,8 @@ from loguru import logger
 
 from locators.blazeup.admin.partner_detail_locators import PartnerDetailLocators
 from pages.blazeup.admin.partner_detail_page import PartnerDetailPage
-from utils.data_factory import unique_email
+from pytest_support.seeding import seed_partner
+from utils.data_factory import make_partner, unique_email
 from utils.log_helper import async_step
 
 
@@ -28,25 +29,33 @@ def _throwaway_password() -> str:
 
 @pytest.mark.ui
 @pytest.mark.regression
-async def test_partner_ui_sa_partner_module_014(sa_cleanup, make_page, created_resources):
+async def test_partner_ui_sa_partner_module_014(sa_partners_client, make_page, created_resources):
     """PARTNER_UI_SA_PARTNER_MODULE_014: add a portal user (member) to a partner.
 
-    Self-seeds a throwaway partner, approves it to Active, opens the Members tab
+    Seeds a throwaway partner already approved to Active, opens the Members tab
     (empty), adds a portal user, and confirms the new user appears as an Active
     row and the Portal Users count reflects it.
+
+    The partner is created and approved through the API, by the QA approver
+    (``seed_partner`` → approval library). Since the approval-chain redesign a Pending
+    partner's "⋮ → Approve" is shown only to its ASSIGNED approver, and the creating
+    admin can never be one — the old UI approve step timed out (BUG-UI-013, closed
+    2026-10-15 as not a bug). Approval is a precondition here, not what is under test.
     """
     detail = make_page(PartnerDetailPage)
     company = "QA-AUTO Member " + unique_email().split("@")[0].split("+")[1]
     member_email = unique_email()
 
-    async with async_step("Setup: onboard a throwaway partner and approve it to Active"):
-        await detail.open_directory()
-        await detail.onboard_partner(company, unique_email())
-        # Register cleanup as soon as the record exists (before the assertions). Deleting
-        # the partner also removes the portal user added below, so one cleanup covers both.
-        created_resources.add(lambda: sa_cleanup.delete_partner_by_name(company))
-        await detail.open_partner(company)
-        await detail.approve_partner()
+    async with async_step("Setup: seed an Active partner (API, QA approver) and open its detail"):
+        # seed_partner registers the deletion at creation time; deleting the partner also
+        # removes the portal user added below, so one cleanup covers both.
+        await seed_partner(
+            sa_partners_client,
+            created_resources.add,
+            approve=True,
+            payload=make_partner(name=company),
+        )
+        await detail.open_partner(company, status="Active")
         logger.info("SETUP → partner {} is Active", company)
 
     async with async_step("[1/3] The Members tab shows the Portal Users list (empty)"):
