@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e0aed044f27cfdd2df",
+    "partnerId": "6ae2e3e0aed044f27cfdd2b4",
+    "email": "qa.auto+gbarnes-74d6550ded77@mailinator.com",
+    "firstName": "Arthur",
+    "lastName": "Andrews",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:48.501Z",
+    "invitationExpiresAt": "2026-11-01T06:12:48.501Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

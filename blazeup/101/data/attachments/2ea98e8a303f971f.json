@@ -1,0 +1,7 @@
+{
+  "statusCode": 404,
+  "message": "Partner not found",
+  "error": "Not Found",
+  "timestamp": "2026-10-29T06:12:57.278Z",
+  "path": "/sa-partners-api/v1/sa/partner-users"
+}

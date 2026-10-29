@@ -1,0 +1,39 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6ae2e3e5aed044f27cfdd430",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Jones PLC",
+    "code": "PAR-103163",
+    "email": "qa.auto+brookenelson-9561287ac158@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://burke-huber.org/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "approvalChain": [
+      {
+        "approverId": "6ac751ab1a5808f89a8fe3d4",
+        "decision": "approved",
+        "decidedAt": "2026-10-29T06:12:53.644Z"
+      }
+    ],
+    "requiredApprovers": 1,
+    "approvalRequesterId": "6aa38ceace02b83220d35283",
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-10-29T06:12:53.396Z",
+    "updatedAt": "2026-10-29T06:12:53.695Z",
+    "approvedAt": "2026-10-29T06:12:53.680Z",
+    "approvedBy": "6ac751ab1a5808f89a8fe3d4"
+  },
+  "message": "Partner approved successfully"
+}

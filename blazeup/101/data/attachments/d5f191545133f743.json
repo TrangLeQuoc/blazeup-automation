@@ -1,0 +1,9 @@
+{
+  "statusCode": 400,
+  "message": [
+    "property email should not exist"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-10-29T06:12:52.085Z",
+  "path": "/sa-partners-api/v1/partner/auth/activate"
+}

@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Petersen, Miles and Kent",
+    "code": "PAR-413166",
+    "email": "qa.auto+amitchell-78696bc6a89a@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://www.hansen.net/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "approvalChain": [],
+    "requiredApprovers": 0,
+    "approvalRequesterId": "6aa38ceace02b83220d35283",
+    "schemaVersion": 1,
+    "_id": "6ae2e3eaaed044f27cfdd595",
+    "payoutAccounts": [],
+    "createdAt": "2026-10-29T06:12:58.181Z",
+    "updatedAt": "2026-10-29T06:12:58.181Z"
+  },
+  "message": "Partner created successfully"
+}

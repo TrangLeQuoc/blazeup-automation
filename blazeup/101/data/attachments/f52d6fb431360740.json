@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e4aed044f27cfdd3ef",
+    "partnerId": "6ae2e3e4aed044f27cfdd3c4",
+    "email": "qa.auto+terrence64-bf64fbbf99f6@mailinator.com",
+    "firstName": "Patricia",
+    "lastName": "Gray",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:52.692Z",
+    "invitationExpiresAt": "2026-11-01T06:12:52.692Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

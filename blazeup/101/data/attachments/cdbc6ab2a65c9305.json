@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e7aed044f27cfdd491",
+    "partnerId": "6ae2e3e5aed044f27cfdd466",
+    "email": "qa.auto+brookestevenson-78b2138f2f32@mailinator.com",
+    "firstName": "Carly",
+    "lastName": "Hess",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:55.121Z",
+    "invitationExpiresAt": "2026-11-01T06:12:55.121Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

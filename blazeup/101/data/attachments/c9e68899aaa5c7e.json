@@ -1,0 +1,39 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6ae2e3e8aed044f27cfdd50a",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Stein Group",
+    "code": "PAR-061611",
+    "email": "qa.auto+gbrennan-df492061d5a3@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "http://bennett-kelley.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "active",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "approvalChain": [
+      {
+        "approverId": "6ac751ab1a5808f89a8fe3d4",
+        "decision": "approved",
+        "decidedAt": "2026-10-29T06:12:56.929Z"
+      }
+    ],
+    "requiredApprovers": 1,
+    "approvalRequesterId": "6aa38ceace02b83220d35283",
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-10-29T06:12:56.684Z",
+    "updatedAt": "2026-10-29T06:12:56.974Z",
+    "approvedAt": "2026-10-29T06:12:56.967Z",
+    "approvedBy": "6ac751ab1a5808f89a8fe3d4"
+  },
+  "message": "Partner approved successfully"
+}

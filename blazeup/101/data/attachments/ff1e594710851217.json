@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e9aed044f27cfdd567",
+    "email": "qa.auto+dianesimmons-000b921cd547@mailinator.com",
+    "firstName": "Amy",
+    "lastName": "Arroyo",
+    "role": "admin"
+  }
+}

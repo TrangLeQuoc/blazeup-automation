@@ -1,0 +1,10 @@
+{
+  "method": "PUT",
+  "endpoint": "sa-partners-api/v1/sa/partners/6ae2e3dfaed044f27cfdd27e/approval-config",
+  "payload": {
+    "requiredApprovers": 1,
+    "approvers": [
+      "6ac751ab1a5808f89a8fe3d4"
+    ]
+  }
+}

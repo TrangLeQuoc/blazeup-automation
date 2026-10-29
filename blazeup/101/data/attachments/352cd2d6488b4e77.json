@@ -1,0 +1,7 @@
+{
+  "statusCode": 409,
+  "message": "Users can be invited only into an active partner organisation.",
+  "error": "Conflict",
+  "timestamp": "2026-10-29T06:12:57.787Z",
+  "path": "/sa-partners-api/v1/sa/partner-users"
+}

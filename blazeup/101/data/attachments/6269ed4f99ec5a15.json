@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/directory/users",
+  "payload": {
+    "email": "pta.qa.auto+isaacharper-ecfac59d77e2@mailinator.com",
+    "firstName": "Erica",
+    "lastName": "Mahoney",
+    "role": "sales"
+  }
+}

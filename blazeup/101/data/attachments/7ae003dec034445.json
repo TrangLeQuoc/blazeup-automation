@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Jones PLC",
+    "email": "qa.auto+brookenelson-9561287ac158@mailinator.com",
+    "type": "channel",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://burke-huber.org/"
+  }
+}

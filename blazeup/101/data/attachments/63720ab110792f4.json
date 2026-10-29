@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Harris-Lopez",
+    "email": "qa.auto+robertroach-378f09f1aa25@mailinator.com",
+    "type": "channel",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://davis.info/"
+  }
+}

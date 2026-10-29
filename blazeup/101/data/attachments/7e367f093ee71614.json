@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e4aed044f27cfdd3c4",
+    "email": "qa.auto+terrence64-bf64fbbf99f6@mailinator.com",
+    "firstName": "Patricia",
+    "lastName": "Gray",
+    "role": "admin"
+  }
+}

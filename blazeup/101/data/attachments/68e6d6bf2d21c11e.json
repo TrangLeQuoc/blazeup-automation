@@ -1,0 +1,7 @@
+{
+  "statusCode": 401,
+  "message": "Partner access token required",
+  "error": "Unauthorized",
+  "timestamp": "2026-10-29T06:12:55.255Z",
+  "path": "/sa-partners-api/v1/partner/directory/users"
+}

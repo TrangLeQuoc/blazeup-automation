@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e5aed044f27cfdd466",
+    "email": "qa.auto+brookestevenson-78b2138f2f32@mailinator.com",
+    "firstName": "Carly",
+    "lastName": "Hess",
+    "role": "admin"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e0aed044f27cfdd2ea",
+    "email": "qa.auto+vcross-b6d3b7a7e546@mailinator.com",
+    "firstName": "Heather",
+    "lastName": "Johnson",
+    "role": "admin"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3dfaed044f27cfdd273",
+    "partnerId": "6ae2e3deaed044f27cfdd248",
+    "email": "qa.auto+oconnorkevin-4c9b0dede6fb@mailinator.com",
+    "firstName": "Donald",
+    "lastName": "Graham",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:47.138Z",
+    "invitationExpiresAt": "2026-11-01T06:12:47.138Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

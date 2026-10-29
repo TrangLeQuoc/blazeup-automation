@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e5aed044f27cfdd425",
+    "partnerId": "6ae2e3e4aed044f27cfdd3fa",
+    "email": "qa.auto+sheltonsherri-a955f8c4436a@mailinator.com",
+    "firstName": "Nicole",
+    "lastName": "Scott",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:53.216Z",
+    "invitationExpiresAt": "2026-11-01T06:12:53.216Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

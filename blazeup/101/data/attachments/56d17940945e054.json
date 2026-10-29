@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Rojas, Rogers and Clark",
+    "email": "qa.auto+laura90-ff4f7e3f2374@mailinator.com",
+    "type": "channel",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://www.munoz-roberts.org/"
+  }
+}

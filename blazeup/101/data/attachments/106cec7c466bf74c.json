@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partners",
+  "payload": {
+    "name": "QA-AUTO Cisneros, Farley and Park",
+    "email": "qa.auto+tiffany55-93a2625c1d3f@mailinator.com",
+    "type": "channel",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://williams.com/"
+  }
+}

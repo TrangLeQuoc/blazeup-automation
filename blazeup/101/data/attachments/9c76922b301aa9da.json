@@ -1,0 +1,10 @@
+{
+  "statusCode": 400,
+  "message": [
+    "token must be shorter than or equal to 512 characters",
+    "token must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-10-29T06:12:51.816Z",
+  "path": "/sa-partners-api/v1/partner/auth/activate"
+}

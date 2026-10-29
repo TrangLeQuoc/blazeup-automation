@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e4aed044f27cfdd3fa",
+    "email": "qa.auto+sheltonsherri-a955f8c4436a@mailinator.com",
+    "firstName": "Nicole",
+    "lastName": "Scott",
+    "role": "admin"
+  }
+}

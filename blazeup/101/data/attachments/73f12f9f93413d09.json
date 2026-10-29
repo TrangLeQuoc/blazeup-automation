@@ -1,0 +1,4 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/partner/directory/users/000000000000000000000000/resend-invitation"
+}

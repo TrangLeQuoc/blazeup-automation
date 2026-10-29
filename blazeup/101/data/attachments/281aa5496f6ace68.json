@@ -1,0 +1,36 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6ae2e3e4aed044f27cfdd3fa",
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Chapman, Ware and Myers",
+    "code": "PAR-801233",
+    "email": "qa.auto+luis46-7769428d2534@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "https://dalton.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "approvalChain": [
+      {
+        "approverId": "6ac751ab1a5808f89a8fe3d4",
+        "decision": "pending"
+      }
+    ],
+    "requiredApprovers": 1,
+    "approvalRequesterId": "6aa38ceace02b83220d35283",
+    "schemaVersion": 1,
+    "payoutAccounts": [],
+    "createdAt": "2026-10-29T06:12:52.850Z",
+    "updatedAt": "2026-10-29T06:12:52.940Z"
+  },
+  "message": "Approval config updated successfully"
+}

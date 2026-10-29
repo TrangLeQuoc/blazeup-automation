@@ -1,0 +1,22 @@
+{
+  "statusCode": 200,
+  "data": {
+    "_id": "6ac751ab1a5808f89a8fe3d4",
+    "fullName": "QA Automation",
+    "email": "trang.le+automation@terralogic.com",
+    "verify": false,
+    "isFirstLogin": false,
+    "phone": {
+      "countryCode": "",
+      "number": "",
+      "fullNumber": "",
+      "extension": ""
+    },
+    "isAdmin": false,
+    "companies": [],
+    "uid": "yWG1ombGueYwCE9M8LW5eyGocN03",
+    "tenantInfo": null,
+    "signInRole": [],
+    "customization": null
+  }
+}

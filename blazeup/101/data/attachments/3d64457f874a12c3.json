@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e1aed044f27cfdd322",
+    "email": "qa.auto+victoriasantana-c7a5b7880c86@mailinator.com",
+    "firstName": "Kenneth",
+    "lastName": "Stewart",
+    "role": "admin"
+  }
+}

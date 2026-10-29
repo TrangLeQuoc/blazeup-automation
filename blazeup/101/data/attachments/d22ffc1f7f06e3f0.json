@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3deaed044f27cfdd23d",
+    "partnerId": "6ae2e3ddaed044f27cfdd20c",
+    "email": "qa.auto+ericaodonnell-87d1083d946f@mailinator.com",
+    "firstName": "Joanne",
+    "lastName": "Baker",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:46.077Z",
+    "invitationExpiresAt": "2026-11-01T06:12:46.077Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

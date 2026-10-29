@@ -1,0 +1,11 @@
+{
+  "statusCode": 400,
+  "message": [
+    "password must be at most 72 bytes",
+    "password must be longer than or equal to 8 characters",
+    "password must be a string"
+  ],
+  "error": "Bad Request",
+  "timestamp": "2026-10-29T06:12:51.870Z",
+  "path": "/sa-partners-api/v1/partner/auth/activate"
+}

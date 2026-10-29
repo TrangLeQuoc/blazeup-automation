@@ -1,0 +1,31 @@
+{
+  "statusCode": 200,
+  "data": {
+    "tenantId": "blazeup-platform",
+    "name": "QA-AUTO Edwards, Clark and Gray",
+    "code": "PAR-026180",
+    "email": "qa.auto+debramiller-739bc31c0108@mailinator.com",
+    "phone": {
+      "number": "4155552671",
+      "countryCode": "US"
+    },
+    "website": "http://www.morrison.com/",
+    "tier": "registered",
+    "type": "channel",
+    "status": "pending",
+    "regions": [],
+    "address": null,
+    "contacts": [],
+    "certifications": [],
+    "totalArrCents": 0,
+    "approvalChain": [],
+    "requiredApprovers": 0,
+    "approvalRequesterId": "6aa38ceace02b83220d35283",
+    "schemaVersion": 1,
+    "_id": "6ae2e3e4aed044f27cfdd3c4",
+    "payoutAccounts": [],
+    "createdAt": "2026-10-29T06:12:52.303Z",
+    "updatedAt": "2026-10-29T06:12:52.303Z"
+  },
+  "message": "Partner created successfully"
+}

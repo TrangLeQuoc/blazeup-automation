@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e3aed044f27cfdd3b9",
+    "partnerId": "6ae2e3e3aed044f27cfdd38e",
+    "email": "qa.auto+kristen56-4e3a206e39cd@mailinator.com",
+    "firstName": "Ana",
+    "lastName": "Arellano",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:51.626Z",
+    "invitationExpiresAt": "2026-11-01T06:12:51.626Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

@@ -1,0 +1,112 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"PARTNER_API_PARTNER_TEAM_026: pending user in lists + reset-password blocked, no token data.
+
+TC-PTA-54/58. The portal list shows the pending row with ``invitationSentAt`` /
+``invitationExpiresAt`` and no token/secret fields; reset-password on a pending user is
+409 (the admin must use Resend instead).
+","0","test_partner_api_partner_team_026","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_024: no credentials - 401 on invite, resend and cancel.
+
+TC-PTA-65. The three authenticated routes refuse an anonymous caller; activate (public)
+is the only route that does not. Needs no session.
+","277","test_partner_api_partner_team_024","API","2026-10-29","passed","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_010: portal invite - pending_activation user, no credential returned.
+
+TC-PTA-01. A partner admin invites a member: 201, the documented key set, status
+``pending_activation``, a 72 h expiry, and no password/token material in the body.
+","0","test_partner_api_partner_team_010","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_027: [SA] SA invite - pending user, `password` key 400, unknown org 404.
+
+TC-PTA-02/04/12. Needs the SA login (SKIPS locally). SA invites into an ACTIVE org: 201,
+``status: pending_activation``, no tempPassword; a `password` body key is 400; an unknown
+partnerId is 404 and a malformed one 400.
+","739","test_partner_api_partner_team_027","API","2026-10-29","passed","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_011: invite with `password` or any undeclared key - 400, nothing created.
+
+TC-PTA-04/05. The invite DTO is strict: the removed ``password`` key and an arbitrary
+extra key (``partnerId`` included on the portal route) are both rejected, and no row
+is written.
+","0","test_partner_api_partner_team_011","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_019: activate body validation - missing/non-string/extra keys -> 400.
+
+TC-PTA-28. The public route is strict: a missing token or password, non-string values and
+any undeclared key are all 400 validation errors (not the invalid-link body, not 5xx).
+Needs no mailbox.
+","470","test_partner_api_partner_team_019","API","2026-10-29","passed","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_017: password shorter than 8 [token] - 400 and the token survives.
+
+TC-PTA-23. A rejected password must not burn the one-time link: the same token still
+activates with a valid password afterwards.
+","0","test_partner_api_partner_team_017","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_025: resend/cancel on unknown or malformed id - one 404 shape.
+
+TC-PTA-41/52. A well-formed unknown id, a malformed id and (for cancel) an already-
+cancelled id all answer 404 with the same message shape - no oracle for other orgs' ids.
+","0","test_partner_api_partner_team_025","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_021: resend cooldown - 429 within 60 s of invite and of a resend.
+
+TC-PTA-42/44. The cooldown starts at the invite: an immediate resend is 429
+(""Please wait a minute...""); after 61 s a resend is 200 and an immediate second one is
+429 again. Takes ~65 s.
+","0","test_partner_api_partner_team_021","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_020: resend [token] - 200, previous link dies, new link works.
+
+TC-PTA-26/37. After the 60 s cooldown a resend returns 200 with a fresh expiry and rotates
+the token: the first link is now ``activation_link_invalid`` and only the new one activates.
+","0","test_partner_api_partner_team_020","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_018: 72-byte password limit [token] - 73 bytes rejected, 72 accepted.
+
+TC-PTA-23/28. bcrypt truncates at 72 bytes, so the API caps the password in UTF-8 BYTES
+(a multi-byte character counts more than one). 73 bytes -> 400 with the token intact;
+exactly 72 bytes -> 200 and that password logs in.
+","0","test_partner_api_partner_team_018","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_028: [SA] invite into a non-active org - 409.
+
+TC-PTA-11. Needs the SA login (SKIPS locally). A partner still `pending` (never approved)
+cannot receive invitees: 409 ""only into an active partner organisation"", and no user row
+is created.
+","279","test_partner_api_partner_team_028","API","2026-10-29","passed","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_015: unknown and malformed tokens - one shared invalid-link body.
+
+TC-PTA-27. A random 43-char token, wrong-length strings and an empty/blank token all get
+HTTP 400 ``activation_link_invalid`` with the identical body, so nothing distinguishes
+""never existed"" from ""malformed"". Needs no mailbox.
+","354","test_partner_api_partner_team_015","API","2026-10-29","passed","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_016: reuse of a used token [token] - 400 activation_link_invalid.
+
+TC-PTA-24. The second activation with the same token is refused with the same body as
+an unknown token, and the first password keeps working (not overwritten).
+","0","test_partner_api_partner_team_016","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_014: activate [token] - password set, no session, user can log in.
+
+TC-PTA-21/22. Valid token + a policy password -> 200 ``{data: {email}}`` with no
+accessToken/refreshToken; the user then logs in with that password and shows as active.
+","0","test_partner_api_partner_team_014","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_029: [SA] SA resend/cancel in any org + cross-org 404 for a portal admin.
+
+TC-PTA-38/50/41/52/64. Needs the SA login (SKIPS locally). SA resends (after the 60 s
+cooldown) and cancels a pending user of org B; a portal admin of org A gets the same 404
+for org B's user id as for an unknown id, and org B's user is unchanged by that attempt.
+","493","test_partner_api_partner_team_029","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_013: pending user login - identical to an unknown email.
+
+TC-PTA-55. A pending_activation user cannot log in (there is no password yet) and the
+rejection is byte-for-byte the ""Invalid credentials"" an unknown email gets.
+","0","test_partner_api_partner_team_013","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_023: non-admin role [token] - invite/resend/cancel -> 403.
+
+TC-PTA-62. A `viewer` (activated, logged in) cannot invite, resend or cancel; the pending
+target is untouched afterwards.
+","0","test_partner_api_partner_team_023","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_012: duplicate email - one generic 409, no existing-account hint.
+
+TC-PTA-07. Re-inviting a pending address AND inviting an address that already belongs to
+an active user both answer the same generic 409, so the route cannot be used to probe
+which emails exist.
+","0","test_partner_api_partner_team_012","API","2026-10-29","skipped","2026-10-29","","partner","",""
+"PARTNER_API_PARTNER_TEAM_022: cancel invitation - user gone, link dead, email re-invitable.
+
+TC-PTA-49/51. Cancel -> 200 ``{userId, cancelled: true}``; the row leaves the list, the
+link (if a mailbox is wired) stops working, a second cancel is 404, and the same email can
+be invited again with a NEW userId.
+","0","test_partner_api_partner_team_022","API","2026-10-29","skipped","2026-10-29","","partner","",""

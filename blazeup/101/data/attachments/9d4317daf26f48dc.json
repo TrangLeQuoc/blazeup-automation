@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e2aed044f27cfdd34d",
+    "partnerId": "6ae2e3e1aed044f27cfdd322",
+    "email": "qa.auto+victoriasantana-c7a5b7880c86@mailinator.com",
+    "firstName": "Kenneth",
+    "lastName": "Stewart",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:50.263Z",
+    "invitationExpiresAt": "2026-11-01T06:12:50.263Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e8aed044f27cfdd4d4",
+    "email": "qa.auto+pinedakayla-2e2e2c389bd1@mailinator.com",
+    "firstName": "Katherine",
+    "lastName": "Davidson",
+    "role": "admin"
+  }
+}

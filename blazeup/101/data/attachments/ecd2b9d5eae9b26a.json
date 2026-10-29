@@ -1,0 +1,16 @@
+{
+  "statusCode": 200,
+  "data": {
+    "userId": "6ae2e3e1aed044f27cfdd315",
+    "partnerId": "6ae2e3e0aed044f27cfdd2ea",
+    "email": "qa.auto+vcross-b6d3b7a7e546@mailinator.com",
+    "firstName": "Heather",
+    "lastName": "Johnson",
+    "role": "admin",
+    "status": "pending_activation",
+    "invitationSentAt": "2026-10-29T06:12:49.244Z",
+    "invitationExpiresAt": "2026-11-01T06:12:49.244Z",
+    "activationEmailSent": true
+  },
+  "message": "Invitation sent"
+}

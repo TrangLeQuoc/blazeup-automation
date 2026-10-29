@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "000000000000000000000000",
+    "email": "qa.auto+laurengillespie-3a0399e3f235@mailinator.com",
+    "firstName": "Nicole",
+    "lastName": "Holmes",
+    "role": "admin"
+  }
+}

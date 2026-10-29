@@ -1,0 +1,7 @@
+{
+  "statusCode": 400,
+  "message": "This activation link is invalid or has already been used.",
+  "error": "activation_link_invalid",
+  "timestamp": "2026-10-29T06:12:49.563Z",
+  "path": "/sa-partners-api/v1/partner/auth/activate"
+}

@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "endpoint": "sa-partners-api/v1/sa/partner-users",
+  "payload": {
+    "partnerId": "6ae2e3e8aed044f27cfdd50a",
+    "email": "qa.auto+dawsonrebecca-c4ab15549630@mailinator.com",
+    "firstName": "Megan",
+    "lastName": "Stark",
+    "role": "admin",
+    "password": "***"
+  }
+}
