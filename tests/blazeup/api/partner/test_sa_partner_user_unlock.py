@@ -24,7 +24,12 @@ from loguru import logger
 
 from utils.data_factory import make_partner_user
 from utils.log_helper import async_step
-from utils.partner_portal import mint_partner_session, partner_login, portal_client
+from utils.partner_portal import (
+    mint_partner_session,
+    partner_login,
+    portal_client,
+    resolve_invitee_password,
+)
 
 # Cap on the discovery loop: high enough to find a threshold well above the measured 4,
 # low enough that an unthrottled endpoint fails fast instead of hammering staging.
@@ -57,7 +62,8 @@ async def test_partner_api_partner_users_015(sa_partners_client, settings, creat
 
         invited = await sa_partners_client.invite_partner_user(make_partner_user(partner_id))
         victim = invited.data
-        email, password = victim.get("email"), victim.get("tempPassword")
+        email = victim.get("email")
+        password = await resolve_invitee_password(settings, victim)
         user_id = victim.get("userId")
         assert email and password and user_id, f"invite did not return usable creds: {victim}"
 
@@ -68,7 +74,7 @@ async def test_partner_api_partner_users_015(sa_partners_client, settings, creat
     async with async_step("[2/6] Baseline: the throwaway user can log in"):
         resp = await partner_login(anon, email, password)
         assert resp.status_code == 200, (
-            f"the invited user cannot log in with its own tempPassword (HTTP "
+            f"the invited user cannot log in with its own initial password (HTTP "
             f"{resp.status_code}) — the fixture is broken, not the endpoint under test"
         )
         logger.info("CHECK baseline login → 200 → OK")
@@ -143,7 +149,8 @@ async def test_partner_api_partner_users_016(sa_partners_client, settings, creat
 
         invited = await sa_partners_client.invite_partner_user(make_partner_user(partner_id))
         victim = invited.data
-        email, password = victim.get("email"), victim.get("tempPassword")
+        email = victim.get("email")
+        password = await resolve_invitee_password(settings, victim)
         user_id = victim.get("userId")
         assert email and password and user_id, f"invite did not return usable creds: {victim}"
         anon = portal_client(settings)

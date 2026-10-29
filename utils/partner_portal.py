@@ -14,12 +14,17 @@ Usage in a test::
 """
 
 import asyncio
+import base64
 import contextlib
+import json
+import secrets
+from dataclasses import dataclass, field
 
 import pytest
 from loguru import logger
 
 from api_clients.blazeup.partner.partner_portal_client import PartnerPortalClient
+from utils.activation_link import get_activation_token, skip_reason
 from utils.data_factory import make_partner, make_partner_user
 from utils.helpers import blocked_reason
 
@@ -77,11 +82,55 @@ def portal_client(
     )
 
 
-async def provision_partner_user(sa_partners_client) -> dict:
+def fresh_ip_headers() -> dict:
+    """An ``X-Forwarded-For`` with a random private IP — its own per-IP throttle bucket.
+
+    Activation is throttled 10 attempts / 15 min per client IP; without this, a few tests in
+    one run (all from one IP) would exhaust the bucket and turn into false 429s.
+    """
+    return {
+        "X-Forwarded-For": f"10.{secrets.randbelow(256)}.{secrets.randbelow(256)}.{1 + secrets.randbelow(254)}"
+    }
+
+
+def new_password() -> str:
+    """A policy-compliant throwaway password (>= 8 chars, < 72 bytes) for activations."""
+    return "Act!" + secrets.token_urlsafe(12)
+
+
+async def resolve_invitee_password(settings, invited: dict) -> str:
+    """Return a password the freshly invited user can log in with, whichever invite flow runs.
+
+    ``temp_password`` flow (pre BLAZ7-17): the invite response carries ``tempPassword``.
+    ``activation`` flow: the invite carries no credential, so read the emailed link through
+    ``utils.activation_link``, activate with a generated password and return it. SKIPS (not
+    fails) when no activation-link source is configured — a missing mailbox is an
+    environment limit, not a defect.
+    """
+    if settings.partner_invite_flow == "temp_password":
+        password = invited.get("tempPassword")
+        if not password:
+            raise RuntimeError("invite did not return a tempPassword (legacy flow selected)")
+        return password
+    email = invited.get("email")
+    token = await get_activation_token(settings, email)
+    if not token:
+        pytest.skip(f"BLOCKED: cannot activate the invitee — {skip_reason()}")
+    password = new_password()
+    anon = portal_client(settings)
+    try:
+        await anon.activate(token, password, headers=fresh_ip_headers())
+    finally:
+        await anon.close()
+    return password
+
+
+async def provision_partner_user(sa_partners_client, settings=None) -> dict:
     """SA-side setup → login credentials for a fresh, active partner user.
 
     Creates + approves a partner (pending → active) and invites a user. Returns
-    ``{partner_id, user_id, email, password}`` (password = the invite tempPassword).
+    ``{partner_id, user_id, email, password}`` (password = the invite tempPassword, or the one
+    chosen at activation when ``settings`` is given and the activation flow is on).
     The caller deletes the partner for cleanup.
     """
     partner = await sa_partners_client.create_partner(make_partner())
@@ -98,10 +147,14 @@ async def provision_partner_user(sa_partners_client) -> dict:
         "partner_id": pid,
         "user_id": invited.data.get("userId"),
         "email": invited.data.get("email"),
-        "password": invited.data.get("tempPassword"),
+        "password": None,
     }
+    if settings is None:  # legacy callers: temp-password flow
+        creds["password"] = invited.data.get("tempPassword")
+    else:
+        creds["password"] = await resolve_invitee_password(settings, invited.data)
     if not (creds["email"] and creds["password"]):
-        raise RuntimeError("invite did not return email + tempPassword")
+        raise RuntimeError("invite did not yield email + a usable password")
     logger.info("SETUP: [3] SA invited partner user {} (role admin)", creds["email"])
     return creds
 
@@ -117,12 +170,15 @@ async def mint_partner_session(
     for closing it and deleting the partner (register both with ``created_resources``).
     ``user_id`` is returned so tests can seed user-scoped data (e.g. grant a cert).
     """
+    if settings.partner_session_source == "env":
+        env = await open_env_session(settings)
+        return env.portal, env.partner_id, env.user_id
     # Establishing the session (SA create/approve/invite + partner login) is a
     # PRECONDITION, not the feature under test. If it can't be established — auth
     # rejected, service 5xx/unreachable — the test is BLOCKED (env), not FAILED.
     creds = None
     try:
-        creds = await provision_partner_user(sa_partners_client)
+        creds = await provision_partner_user(sa_partners_client, settings)
         anon = portal_client(settings)
         try:
             resp = await partner_login(anon, creds["email"], creds["password"])
@@ -141,3 +197,67 @@ async def mint_partner_session(
 
     portal = portal_client(settings, token)
     return portal, creds["partner_id"], creds["user_id"]
+
+
+def _jwt_claims(token: str) -> dict:
+    """Decode (without verifying) a JWT payload — only to read ``sub`` / ``partnerId``."""
+    try:
+        seg = token.split(".")[1]
+        return json.loads(base64.urlsafe_b64decode(seg + "=" * (-len(seg) % 4)))
+    except (IndexError, ValueError):
+        return {}
+
+
+@dataclass
+class PortalSession:
+    """A partner-admin portal session plus what is needed to clean up after it."""
+
+    portal: PartnerPortalClient
+    partner_id: str
+    user_id: str
+    minted: bool  # True = SA created the org (delete it); False = shared env org (leave it)
+    invited_user_ids: list[str] = field(default_factory=list)
+
+
+async def open_env_session(settings) -> PortalSession:
+    """Log in as the pre-seeded org admin from PARTNER_EMAIL / PARTNER_PASSWORD (no SA needed).
+
+    Opt-in through ``PARTNER_SESSION_SOURCE=env``. SKIPS when the credentials are missing or
+    rejected. The org is shared and NEVER deleted — tests clean up only the users they invite.
+    """
+    if not (settings.partner_email and settings.partner_password):
+        pytest.skip("BLOCKED: PARTNER_SESSION_SOURCE=env but PARTNER_EMAIL/PARTNER_PASSWORD unset")
+    anon = portal_client(settings)
+    try:
+        resp = await partner_login(anon, settings.partner_email, settings.partner_password)
+        token = resp.json().get("accessToken") if resp.status_code in (200, 201) else None
+    finally:
+        await anon.close()
+    if not token:
+        pytest.skip(f"BLOCKED: seeded partner login rejected (HTTP {resp.status_code})")
+    claims = _jwt_claims(token)
+    logger.info(
+        "SETUP: seeded partner-admin session acquired (partnerId={})", claims.get("partnerId")
+    )
+    return PortalSession(
+        portal_client(settings, token), claims.get("partnerId", ""), claims.get("sub", ""), False
+    )
+
+
+async def open_portal_session(settings, created_resources, sa=None) -> PortalSession:
+    """One entry point for tests: an admin portal session from the env org OR a minted partner.
+
+    ``PARTNER_SESSION_SOURCE=env`` logs in as the seeded org admin and needs no SA client;
+    ``mint`` needs ``sa`` (the ``sa_partners_client`` fixture). Cleanup (close the client,
+    delete a minted partner) is registered here.
+    """
+    if settings.partner_session_source == "env":
+        sess = await open_env_session(settings)
+    else:
+        if sa is None:
+            pytest.skip("BLOCKED: PARTNER_SESSION_SOURCE=mint needs the SA client")
+        portal, pid, uid = await mint_partner_session(sa, settings)
+        created_resources.add(lambda: sa.delete_partner(pid))
+        sess = PortalSession(portal, pid, uid, True)
+    created_resources.add(sess.portal.close)
+    return sess
