@@ -16,10 +16,10 @@ from loguru import logger
 
 from utils.data_factory import make_deal, make_partner, make_prospect
 from utils.log_helper import async_step
-from utils.partner_portal import mint_partner_session, portal_client
+from utils.partner_portal import mint_partner_session, portal_client, resolve_invitee_password
 
-# Never present on a team-member record — the invite response carries tempPassword by
-# design (the admin has to pass it on), but nothing that LISTS or READS members may.
+# Never present on a team-member record. Since BLAZ7-17 the invite response carries no
+# credential either (the invitee activates through an e-mailed link); legacy envs still did.
 _SENSITIVE = ("password", "token", "secret", "credential", "tempPassword")
 
 # From the OpenAPI spec 2026-09-16 (DirectoryInvitePartnerUserDto).
@@ -472,8 +472,9 @@ async def test_partner_api_partner_team_005(sa_partners_client, settings, create
         created_resources.add(portal.close)
 
         member = _envelope(await portal.invite_team_member(_member_payload()))["data"]
-        user_id, email, old_password = member["userId"], member["email"], member.get("tempPassword")
-        assert old_password, "the invite must return a tempPassword to log in with"
+        user_id, email = member["userId"], member["email"]
+        old_password = await resolve_invitee_password(settings, member)
+        assert old_password, "the invitee must have a password to log in with"
 
         anon = portal_client(settings)
         created_resources.add(anon.close)
@@ -574,6 +575,8 @@ async def test_partner_api_partner_team_009(sa_partners_client, settings, create
 
         member = _envelope(await portal.invite_team_member(_member_payload()))["data"]
         user_id, email = member["userId"], member["email"]
+        # Pending users answer 409 on reset-password/unlock (BLAZ7-17) — activate first.
+        await resolve_invitee_password(settings, member)
         anon = portal_client(settings)
         created_resources.add(anon.close)
         logger.info("SETUP: throwaway member={}", user_id)

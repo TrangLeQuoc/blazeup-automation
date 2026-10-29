@@ -407,6 +407,28 @@ class SaPartnersClient(BaseClient):
             expected_status=expected_status,
         )
 
+    async def resend_partner_user_invitation(
+        self,
+        user_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """POST SA-side resend of a pending partner-user invitation (BLAZ7-17)."""
+        return await self.post(
+            f"{_PARTNER_USERS_PATH}/{user_id}/resend-invitation", expected_status=expected_status
+        )
+
+    async def cancel_partner_user_invitation(
+        self,
+        user_id: str,
+        *,
+        expected_status: int | tuple[int, ...] | None = 200,
+    ) -> httpx.Response:
+        """POST SA-side cancel of a pending partner-user invitation (BLAZ7-17)."""
+        return await self.post(
+            f"{_PARTNER_USERS_PATH}/{user_id}/cancel-invitation", expected_status=expected_status
+        )
+
     async def reset_partner_user_password(
         self,
         user_id: str,

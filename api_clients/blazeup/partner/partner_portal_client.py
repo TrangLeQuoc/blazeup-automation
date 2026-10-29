@@ -415,8 +415,10 @@ class PartnerPortalClient(BaseClient):
         """POST an invite for a new team member.
 
         DTO (from the OpenAPI spec, 2026-09-16): ``email``, ``firstName``, ``lastName``
-        required; ``role`` (``admin``/``sales``/``finance``/``viewer``) and ``password``
-        optional. The 201 body carries ``tempPassword`` — the list endpoint must not.
+        required; ``role`` (``admin``/``sales``/``finance``/``viewer``) optional. Since
+        BLAZ7-17 the invite is strict: a ``password`` key is a 400, and the 201 body carries
+        no credential — the invitee gets an activation link by e-mail
+        (``status: pending_activation``).
         """
         return await self.post(_DIRECTORY, json=payload, expected_status=expected_status)
 
@@ -497,3 +499,49 @@ class PartnerPortalClient(BaseClient):
     ) -> httpx.Response:
         """POST an unlock for a locked-out team member."""
         return await self.post(f"{_DIRECTORY}/{user_id}/unlock", expected_status=expected_status)
+
+    # ── Invitation lifecycle (BLAZ7-17) ──────────────────────────────────────
+
+    async def activate(
+        self,
+        token: str,
+        password: str,
+        *,
+        expected_status: _StatusArg = 200,
+        headers: dict | None = None,
+    ) -> httpx.Response:
+        """POST the PUBLIC activation (``{token, password}``) → 200 ``{data: {email}}``, no session.
+
+        The route is throttled per client IP (10 attempts / 15 min); pass an ``X-Forwarded-For``
+        in ``headers`` to give each test its own bucket (the BE trusts one proxy hop).
+        """
+        return await self.post(
+            f"{_AUTH}/activate",
+            json={"token": token, "password": password},
+            expected_status=expected_status,
+            headers=headers,
+        )
+
+    async def activate_raw(
+        self, body: dict, *, expected_status: _StatusArg = None, headers: dict | None = None
+    ) -> httpx.Response:
+        """POST an arbitrary body to the public activation route (negative / strictness cases)."""
+        return await self.post(
+            f"{_AUTH}/activate", json=body, expected_status=expected_status, headers=headers
+        )
+
+    async def resend_team_invitation(
+        self, user_id: str, *, expected_status: _StatusArg = 200
+    ) -> httpx.Response:
+        """POST resend of a pending invitation — rotates the link; 60 s cooldown, 5 per 24 h."""
+        return await self.post(
+            f"{_DIRECTORY}/{user_id}/resend-invitation", expected_status=expected_status
+        )
+
+    async def cancel_team_invitation(
+        self, user_id: str, *, expected_status: _StatusArg = 200
+    ) -> httpx.Response:
+        """POST cancel of a pending invitation — the email can be invited again afterwards."""
+        return await self.post(
+            f"{_DIRECTORY}/{user_id}/cancel-invitation", expected_status=expected_status
+        )

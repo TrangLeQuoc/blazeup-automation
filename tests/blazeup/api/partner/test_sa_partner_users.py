@@ -12,6 +12,7 @@ from loguru import logger
 
 from utils.data_factory import make_partner, make_partner_user, unique_email
 from utils.log_helper import async_step
+from utils.partner_portal import resolve_invitee_password
 
 # A user must never expose credential material in the SA list (the invite response
 # carries tempPassword for hand-off, but the list must not).
@@ -148,7 +149,7 @@ async def test_partner_api_partner_users_011(sa_partners_client):
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_002(sa_partners_client, seeded_partner):
+async def test_partner_api_partner_users_002(sa_partners_client, seeded_partner, settings):
     """PARTNER_API_PARTNER_USERS_002: SA invites a partner-portal user - user created with role + hand-off credential.
 
     Contract on ``POST /sa-partners-api/v1/sa/partner-users``: a valid invite
@@ -186,13 +187,23 @@ async def test_partner_api_partner_users_002(sa_partners_client, seeded_partner)
             )
         logger.info("CHECK echo → OK (partnerId/email/firstName/lastName/role stored as sent)")
 
-    async with async_step("[3/4] User is usable (active + temp credential for hand-off)"):
-        # BE model: invite creates an ACTIVE user + a tempPassword (plan says 'pending' — see Note).
-        assert resp.data.get("status") == "active", (
-            f"invited user must be usable, got status={resp.data.get('status')!r}"
-        )
-        assert resp.data.get("tempPassword"), "invite must return a tempPassword for SA hand-off"
-        logger.info("CHECK lifecycle → OK (status='active', tempPassword issued)")
+    async with async_step("[3/4] User lifecycle matches the invite flow of this environment"):
+        if settings.partner_invite_flow == "temp_password":
+            # Legacy BE model: invite creates an ACTIVE user + a tempPassword for SA hand-off.
+            assert resp.data.get("status") == "active", (
+                f"invited user must be usable, got status={resp.data.get('status')!r}"
+            )
+            assert resp.data.get("tempPassword"), (
+                "invite must return a tempPassword for SA hand-off"
+            )
+            logger.info("CHECK lifecycle → OK (legacy: status='active', tempPassword issued)")
+        else:
+            # BLAZ7-17: the invitee activates through an e-mailed link; no credential is returned.
+            assert resp.data.get("status") == "pending_activation", (
+                f"invite must leave the user pending, got status={resp.data.get('status')!r}"
+            )
+            assert "tempPassword" not in resp.data, "invite must not return a tempPassword"
+            logger.info("CHECK lifecycle → OK (status='pending_activation', no credential)")
 
     async with async_step("[4/4] User is retrievable in the partner's user list"):
         listed = await sa_partners_client.list_partner_users(partner_id=pid, limit=50)
@@ -298,7 +309,7 @@ async def test_partner_api_partner_users_013(sa_partners_client, seeded_partner)
 
 @pytest.mark.api
 @pytest.mark.regression
-async def test_partner_api_partner_users_003(sa_partners_client, seeded_partner):
+async def test_partner_api_partner_users_003(sa_partners_client, seeded_partner, settings):
     """PARTNER_API_PARTNER_USERS_003: SA resets a partner-portal user's password - fresh credential, repeatable.
 
     Contract on ``POST /sa-partners-api/v1/sa/partner-users/{userId}/reset-password``:
@@ -320,6 +331,9 @@ async def test_partner_api_partner_users_003(sa_partners_client, seeded_partner)
         uid = invited.data.get("userId")
         assert uid, "precondition: partner user must be invited"
         old_temp = invited.data.get("tempPassword")
+        if settings.partner_invite_flow != "temp_password":
+            # A pending user answers 409 on reset-password (BLAZ7-17) — activate it first.
+            await resolve_invitee_password(settings, invited.data)
         logger.info("SETUP: partner {} + user {}", partner.data.get("code"), uid)
 
     async with async_step("[1/3] Reset the user's password"):

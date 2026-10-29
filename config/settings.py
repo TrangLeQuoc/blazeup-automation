@@ -73,6 +73,24 @@ class Settings(BaseSettings):
     # tenant `country` as alpha-2 ('VN'). One value drives the tenant country, the admin
     # phone's countryCode and the prospect country, so the three can never disagree.
     provision_admin_country: str = Field(default="VN", pattern=r"^[A-Z]{2}$")
+    # ── Partner invite -> activation (BLAZ7-17) ─────────────────────────────
+    # The backend replaced "invite returns a tempPassword" with "invite mails a one-time
+    # activation link". ``activation`` is the post-deploy behaviour (default);
+    # ``temp_password`` keeps the legacy flow switchable for an environment that has not
+    # been deployed yet. Helpers in utils/partner_portal.py branch on this.
+    partner_invite_flow: Literal["activation", "temp_password"] = Field(default="activation")
+    # Where a test reads the emailed link from. ``none`` (default) = no mailbox, so every
+    # test that needs a token SKIPS. ``kafka-local`` = docker-exec rpk against the local
+    # notify topic. ``cmd`` = run ACTIVATION_LINK_CMD, which prints the latest notification
+    # or e-mail body to stdout (the hook for a staging mailbox/API).
+    activation_link_source: Literal["none", "kafka-local", "cmd"] = Field(default="none")
+    activation_link_cmd: str | None = Field(default=None)
+    activation_kafka_container: str = Field(default="pta-kafka")
+    activation_kafka_topic: str = Field(default="local.notify.main")
+    # ``mint`` (default) = SA creates+approves a partner and invites a user. ``env`` = log in
+    # with PARTNER_EMAIL / PARTNER_PASSWORD (a pre-seeded ACTIVE org admin) — for a backend
+    # where no SA login exists, e.g. a local stack.
+    partner_session_source: Literal["mint", "env"] = Field(default="mint")
     headless: bool = Field(default=True)
     browser: Literal["chromium", "firefox", "webkit"] = Field(default="chromium")
     slow_mo: int = Field(default=0, ge=0)

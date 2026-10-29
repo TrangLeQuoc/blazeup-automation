@@ -20,7 +20,12 @@ from loguru import logger
 
 from utils.data_factory import make_partner_user
 from utils.log_helper import async_step
-from utils.partner_portal import mint_partner_session, partner_login, portal_client
+from utils.partner_portal import (
+    mint_partner_session,
+    partner_login,
+    portal_client,
+    resolve_invitee_password,
+)
 
 # From partner-bank-account.schema.ts.
 _PAYOUT_METHODS = ("bank_transfer", "swift", "wise", "paypal")
@@ -220,7 +225,9 @@ async def test_partner_api_commissions_payouts_021(sa_partners_client, settings,
         viewer_creds = invited.data
         anon = portal_client(settings)
         try:
-            login = await partner_login(anon, viewer_creds["email"], viewer_creds["tempPassword"])
+            login = await partner_login(
+                anon, viewer_creds["email"], await resolve_invitee_password(settings, viewer_creds)
+            )
             viewer_token = login.json().get("accessToken")
         finally:
             await anon.close()

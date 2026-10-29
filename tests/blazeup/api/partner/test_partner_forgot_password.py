@@ -26,7 +26,12 @@ from loguru import logger
 
 from utils.data_factory import make_partner_user, unique_email
 from utils.log_helper import async_step
-from utils.partner_portal import mint_partner_session, partner_login, portal_client
+from utils.partner_portal import (
+    mint_partner_session,
+    partner_login,
+    portal_client,
+    resolve_invitee_password,
+)
 
 # The exact text the controller returns for every outcome (partner-auth.controller.ts:40).
 _GENERIC = "If an account exists for that email, we've sent password-reset instructions."
@@ -57,7 +62,8 @@ async def test_partner_api_auth_access_control_010(sa_partners_client, settings,
 
         invited = await sa_partners_client.invite_partner_user(make_partner_user(partner_id))
         victim = invited.data
-        email, old_password = victim.get("email"), victim.get("tempPassword")
+        email = victim.get("email")
+        old_password = await resolve_invitee_password(settings, victim)
         assert email and old_password, f"invite did not return usable creds: {victim}"
 
         anon = portal_client(settings)
@@ -67,7 +73,7 @@ async def test_partner_api_auth_access_control_010(sa_partners_client, settings,
     async with async_step("[2/4] Baseline: the current password authenticates"):
         resp = await partner_login(anon, email, old_password)
         assert resp.status_code == 200, (
-            f"the invited user cannot log in with its own tempPassword (HTTP "
+            f"the invited user cannot log in with its own initial password (HTTP "
             f"{resp.status_code}) — the fixture is broken, not the endpoint under test"
         )
         logger.info("CHECK baseline login → 200 → OK")
